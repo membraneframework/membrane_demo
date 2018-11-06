@@ -1,14 +1,34 @@
-# Sample Membrane Pipeline
+# Membrane Demo
 
-## How to run
+This repository contains two demos that can help understanding how to use Membrane Framework.
 
-To start the project run `iex -S mix`. It will start an interactive shell with project loaded.
+## First Pipeline Demo
 
-Then run following:
+### How to run
+
+To start the demo pipeline run the following commands in `iex -S mix`:
+
+```elixir
+{:ok, pid} = Membrane.Pipeline.start_link(Membrane.Demo.MP3.Pipeline, "sample.mp3")
+Membrane.Pipeline.play(pid)
 ```
-{:ok, pid} = Membrane.Pipeline.start_link(MembraneMP3Demo.Pipeline, "sample.mp3", [])
+
+## First Element Demo
+
+### How to run
+
+To start the "first element" demo, run the following commands in `iex -S mix`:
+
+```elixir
+{:ok, pid} = Membrane.Pipeline.start_link(Membrane.Demo.FirstElement.Pipeline, "sample.mp3")
+Membrane.Pipeline.play(pid)
 ```
 
-It will prepare pipeline to start.
+## Copyright and License
 
-Run `Membrane.Pipeline.play(pid)` to start and `Membrane.Pipeline.stop(pid)`
+Copyright 2018, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
+
+[![Software Mansion](https://membraneframework.github.io/static/logo/swm_logo_readme.png)](
+https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
+
+Licensed under the [Apache License, Version 2.0](LICENSE)

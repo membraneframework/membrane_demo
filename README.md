@@ -1,14 +1,31 @@
-# Sample Membrane Pipeline
+# Membrane Demo
 
-## How to run
+This repository contains two demos that can help understanding how to use Membrane Framework.
 
-To start the project run `iex -S mix`. It will start an interactive shell with project loaded.
+## First Pipeline Demo
 
-Then run following:
+### How to run
+
+To start the demo pipeline run the following commands in `iex -S mix`:
+
 ```
-{:ok, pid} = Membrane.Pipeline.start_link(MembraneMP3Demo.Pipeline, "sample.mp3", [])
+{:ok, pid} = Membrane.Pipeline.start_link(Membrane.Demo.MP3.Pipeline, "sample.mp3")
+Membrane.Pipeline.play(pid)
 ```
 
-It will prepare pipeline to start.
+## First Element Demo
 
-Run `Membrane.Pipeline.play(pid)` to start and `Membrane.Pipeline.stop(pid)`
+### How to run
+
+To start the "first element" demo, run the following commands in `iex -S mix`:
+
+```
+{:ok, pid} = Membrane.Pipeline.start_link(Membrane.Demo.FirstElement.Pipeline, "sample.mp3")
+Membrane.Pipeline.play(pid)
+```
+
+
+
+
+
+

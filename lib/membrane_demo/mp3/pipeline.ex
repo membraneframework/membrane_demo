@@ -1,4 +1,4 @@
-defmodule MembraneMP3Demo.Pipeline do
+defmodule Membrane.Demo.MP3.Pipeline do
   use Membrane.Pipeline
 
   @moduledoc """

@@ -21,8 +21,7 @@ defmodule Membrane.Demo.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
-      mod: {Membrane.Demo.App, []}
+      extra_applications: [:logger]
     ]
   end
 

@@ -39,13 +39,13 @@ defmodule Membrane.Demo.FirstElement.Element do
 
   @impl true
   def handle_demand(:output, size, :bytes, _context, state) do
-    {{:ok, [demand: {:input, size}]}, state}
+    {{:ok, demand: {:input, size}}, state}
   end
 
   @impl true
   def handle_process(:input, %Membrane.Buffer{} = buffer, _, state) do
     new_state = %{state | counter: state.counter + 1}
-    {{:ok, [buffer: {:output, buffer}]}, new_state}
+    {{:ok, buffer: {:output, buffer}}, new_state}
   end
 
   @impl true
@@ -59,6 +59,6 @@ defmodule Membrane.Demo.FirstElement.Element do
     # reset the timer
     new_state = %{state | counter: 0}
 
-    {{:ok, [notify: notification]}, new_state}
+    {{:ok, notify: notification}, new_state}
   end
 end

@@ -29,17 +29,12 @@ defmodule Membrane.Demo.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:membrane_core, github: "membraneframework/membrane-core", override: true},
-      {:membrane_element_file, github: "membraneframework/membrane-element-file"},
-      {:membrane_element_portaudio, github: "membraneframework/membrane-element-portaudio"},
-      {:membrane_element_ffmpeg_swresample,
-       github: "membraneframework/membrane-element-ffmpeg-swresample"},
-      {:membrane_element_mad, github: "membraneframework/membrane-element-mad"},
-      {:membrane_caps_audio_raw,
-       github: "membraneframework/membrane-caps-audio-raw", override: true},
-      {:bunch, github: "membraneframework/bunch", override: true},
-      {:membrane_loggers, github: "membraneframework/membrane-loggers"},
-      {:membrane_common_c, github: "membraneframework/membrane-common-c", override: true}
+      {:membrane_core, "~> 0.2.0"},
+      {:membrane_element_file, "~> 0.2.0"},
+      {:membrane_element_portaudio, "~> 0.2.0"},
+      {:membrane_element_ffmpeg_swresample, "~> 0.2.0"},
+      {:membrane_element_mad, "~> 0.2.0"},
+      {:membrane_loggers, "~> 0.2.0"}
     ]
   end
 end

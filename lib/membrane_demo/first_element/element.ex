@@ -10,9 +10,9 @@ defmodule Membrane.Demo.FirstElement.Element do
     ]
   )
 
-  def_input_pads input: [demand_unit: :bytes, caps: :any]
+  def_input_pads input: [availability: :always, mode: :pull, demand_unit: :bytes, caps: :any]
 
-  def_output_pads output: [caps: :any]
+  def_output_pads output: [availability: :always, mode: :pull, caps: :any]
 
   @impl true
   def handle_init(%__MODULE{interval: interval}) do

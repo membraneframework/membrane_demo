@@ -2,7 +2,7 @@ defmodule Membrane.Demo.MixProject do
   use Mix.Project
 
   @version "0.2.0"
-  @github_url "https://github.com/membraneframework/membrane-element-mad"
+  @github_url "https://github.com/membraneframework/membrane-demo"
 
   def project do
     [

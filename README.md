@@ -24,11 +24,14 @@ To start the "first element" demo, run the following commands in `iex -S mix`:
 Membrane.Pipeline.play(pid)
 ```
 
+## Sample License
+
+Sample is provided under Creative Commons. Song is called Swan Song by [Paper Navy](https://papernavy.bandcamp.com/album/all-grown-up).
+
 ## Copyright and License
 
 Copyright 2018, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
 
-[![Software Mansion](https://membraneframework.github.io/static/logo/swm_logo_readme.png)](
-https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
+[![Software Mansion](https://membraneframework.github.io/static/logo/swm_logo_readme.png)](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
 
 Licensed under the [Apache License, Version 2.0](LICENSE)

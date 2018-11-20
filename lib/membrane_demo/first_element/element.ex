@@ -15,7 +15,7 @@ defmodule Membrane.Demo.FirstElement.Element do
   def_output_pads output: [availability: :always, mode: :pull, caps: :any]
 
   @impl true
-  def handle_init(%__MODULE{interval: interval}) do
+  def handle_init(%__MODULE__{interval: interval}) do
     state = %{
       interval: interval,
       counter: 0,

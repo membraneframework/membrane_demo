@@ -2,6 +2,11 @@
 
 This repository contains two demos that can help understanding how to use Membrane Framework.
 
+## Prerequisites
+
+1. Make sure you have Elixir installed on your machine. See: https://elixir-lang.org/install.html
+1. Fetch the required dependencies by running `mix deps.get`
+
 ## First Pipeline Demo
 
 ### How to run

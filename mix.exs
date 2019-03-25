@@ -1,7 +1,7 @@
 defmodule Membrane.Demo.MixProject do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "0.3.0"
   @github_url "https://github.com/membraneframework/membrane-demo"
 
   def project do
@@ -28,11 +28,11 @@ defmodule Membrane.Demo.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:membrane_core, "~> 0.2.0"},
-      {:membrane_element_file, "~> 0.2.0"},
-      {:membrane_element_portaudio, "~> 0.2.0"},
-      {:membrane_element_ffmpeg_swresample, "~> 0.2.0"},
-      {:membrane_element_mad, "~> 0.2.0"},
+      {:membrane_core, "~> 0.3.0"},
+      {:membrane_element_file, "~> 0.2.3"},
+      {:membrane_element_portaudio, "~> 0.2.3"},
+      {:membrane_element_ffmpeg_swresample, "~> 0.2.3"},
+      {:membrane_element_mad, "~> 0.2.3"},
       {:membrane_loggers, "~> 0.2.0"}
     ]
   end

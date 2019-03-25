@@ -1,18 +1,23 @@
 defmodule Membrane.Demo.FirstElement.Element do
   use Membrane.Element.Base.Filter
 
-  def_options(
-    interval: [
-      type: :integer,
-      default: 1000,
-      description:
-        "Amount of the time in millisecods, telling how often statistics should be sent and zeroed"
-    ]
-  )
+  def_options interval: [
+                type: :integer,
+                default: 1000,
+                description:
+                  "Amount of the time in millisecods, telling how often statistics should be sent and zeroed"
+              ]
 
-  def_input_pads input: [availability: :always, mode: :pull, demand_unit: :bytes, caps: :any]
+  def_input_pad :input,
+    availability: :always,
+    mode: :pull,
+    demand_unit: :bytes,
+    caps: :any
 
-  def_output_pads output: [availability: :always, mode: :pull, caps: :any]
+  def_output_pad :output,
+    availability: :always,
+    mode: :pull,
+    caps: :any
 
   @impl true
   def handle_init(%__MODULE__{interval: interval}) do

@@ -5,14 +5,21 @@ defmodule Membrane.Demo.FirstElement.Element do
                 type: :integer,
                 default: 1000,
                 description:
-                  "Amount of the time in millisecods, telling how often statistics should be sent and zeroed"
+                  "Amount of the time in milliseconds, telling how often statistics should be sent and zeroed"
               ]
 
   def_input_pad :input,
     availability: :always,
     mode: :pull,
     demand_unit: :bytes,
-    caps: :any
+    caps: :any,
+    options: [
+      divisor: [
+        type: :integer,
+        default: 1,
+        description: "Number by which the counter will be divided before sending notification"
+      ]
+    ]
 
   def_output_pad :output,
     availability: :always,
@@ -20,7 +27,7 @@ defmodule Membrane.Demo.FirstElement.Element do
     caps: :any
 
   @impl true
-  def handle_init(%__MODULE__{interval: interval}) do
+  def handle_init(%__MODULE{interval: interval}) do
     state = %{
       interval: interval,
       counter: 0,
@@ -48,17 +55,17 @@ defmodule Membrane.Demo.FirstElement.Element do
   end
 
   @impl true
-  def handle_process(:input, %Membrane.Buffer{} = buffer, _, state) do
+  def handle_process(:input, %Membrane.Buffer{} = buffer, _context, state) do
     new_state = %{state | counter: state.counter + 1}
     {{:ok, buffer: {:output, buffer}}, new_state}
   end
 
   @impl true
-  def handle_other(:tick, _ctx, state) do
-    # create structure to send
+  def handle_other(:tick, ctx, state) do
+    # create the term to send
     notification = {
       :counter,
-      state.counter
+      div(state.counter, ctx.pads.input.options.divisor)
     }
 
     # reset the timer

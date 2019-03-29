@@ -18,7 +18,7 @@ defmodule Membrane.Demo.FirstElement.Pipeline do
         }
       },
       # Here is a declaration of our element
-      counter: %Membrane.Demo.FirstElement.Element{interval: 500},
+      counter: %Membrane.Demo.FirstElement.Element{interval: 5000},
       sink: Membrane.Element.PortAudio.Sink
     ]
 
@@ -26,7 +26,7 @@ defmodule Membrane.Demo.FirstElement.Pipeline do
       {:file_src, :output} => {:decoder, :input},
       {:decoder, :output} => {:converter, :input},
       # link element between converter and sink
-      {:converter, :output} => {:counter, :input},
+      {:converter, :output} => {:counter, :input, pad: [divisor: 10]},
       {:counter, :output} => {:sink, :input}
     }
 

@@ -11,7 +11,7 @@ This repository contains two demos that can help understanding how to use Membra
 
 ### How to run
 
-To start the demo pipeline run the following commands in `iex -S mix`:
+To start the demo pipeline run `mix run --no-halt run_pipeline_demo.exs` or type the following commands into an IEx shell (started by `iex -S mix`):
 
 ```elixir
 alias Membrane.Demo.MP3.Pipeline
@@ -23,7 +23,8 @@ Pipeline.play(pid)
 
 ### How to run
 
-To start the "first element" demo, run the following commands in `iex -S mix`:
+To start the demo pipeline run `mix run --no-halt run_element_demo.exs` or type the following commands into an IEx shell (started by `iex -S mix`):
+
 
 ```elixir
 alias Membrane.Demo.FirstElement.Pipeline

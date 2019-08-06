@@ -1,0 +1,16 @@
+version: 2.0
+jobs:
+  build:
+    docker:
+      - image: membrane/bionic-membrane:latest
+    environment:
+      MIX_ENV: test
+    working_directory: '~/app'
+
+    steps:
+      - checkout 
+      - run: mix deps.get
+      - run: apt-get install -qq portaudio19-dev libmad0-dev
+      - run: mix deps.compile --all
+      - run: mix format --check-formatted
+      - run: mix test

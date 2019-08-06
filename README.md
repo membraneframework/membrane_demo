@@ -1,5 +1,7 @@
 # Membrane Demo
 
+[![CircleCI](https://circleci.com/gh/membraneframework/membrane-demo.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane-demo)
+
 This repository contains two demos that can help understanding how to use Membrane Framework.
 
 ## Prerequisites

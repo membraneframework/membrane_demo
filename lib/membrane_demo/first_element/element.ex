@@ -1,5 +1,5 @@
 defmodule Membrane.Demo.FirstElement.Element do
-  use Membrane.Element.Base.Filter
+  use Membrane.Filter
 
   def_options interval: [
                 type: :integer,

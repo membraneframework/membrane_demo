@@ -1,9 +1,9 @@
 defmodule Membrane.Demo.MP3.Pipeline do
-  use Membrane.Pipeline
-
   @moduledoc """
   Sample Membrane pipeline that will play an `.mp3` file.
   """
+
+  use Membrane.Pipeline
 
   @doc """
   In order to play `.mp3` file we need to read it first.
@@ -22,10 +22,11 @@ defmodule Membrane.Demo.MP3.Pipeline do
   That's where `SWResample.Converter` comes into play. It will consume data that
   doesn't suite our needs and will yield data in format we want.
   """
+  @impl true
   def handle_init(path_to_mp3) do
-    children = [
+    children = %{
       # Stream from file
-      file_src: %Membrane.Element.File.Source{location: path_to_mp3},
+      file: %Membrane.Element.File.Source{location: path_to_mp3},
       # Decode frames
       decoder: Membrane.Element.Mad.Decoder,
       # Convert Raw :s24le to Raw :s16le
@@ -37,24 +38,14 @@ defmodule Membrane.Demo.MP3.Pipeline do
         }
       },
       # Stream data into PortAudio to play it on speakers.
-      sink: Membrane.Element.PortAudio.Sink
+      portaudio: Membrane.Element.PortAudio.Sink
+    }
+
+    # Setup the flow of the data
+    links = [
+      link(:file) |> to(:decoder) |> to(:converter) |> to(:portaudio)
     ]
 
-    # Map that describes how we want data to flow
-    # It is formated as such
-    # {:child, :output_pad} => {:another_child, :input_pad}
-
-    links = %{
-      {:file_src, :output} => {:decoder, :input},
-      {:decoder, :output} => {:converter, :input},
-      {:converter, :output} => {:sink, :input}
-    }
-
-    spec = %Membrane.Pipeline.Spec{
-      children: children,
-      links: links
-    }
-
-    {{:ok, spec}, %{}}
+    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
   end
 end

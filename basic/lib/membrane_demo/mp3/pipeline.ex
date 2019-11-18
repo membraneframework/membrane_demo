@@ -1,4 +1,4 @@
-defmodule Membrane.Demo.MP3.Pipeline do
+defmodule Membrane.Demo.Basic.MP3.Pipeline do
   @moduledoc """
   Sample Membrane pipeline that will play an `.mp3` file.
   """

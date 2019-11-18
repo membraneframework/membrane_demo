@@ -9,13 +9,11 @@ jobs:
 
     steps:
       - checkout
-      - run: cd basic
-      - run: mix deps.get
-      - run: mix deps.compile --all
-      - run: mix format --check-formatted
-      - run: mix test
-      - run: cd ../rtp
-      - run: mix deps.get
-      - run: mix deps.compile --all
-      - run: mix format --check-formatted
-      - run: mix test
+      - run: cd basic && mix deps.get
+      - run: cd basic && mix deps.compile --all
+      - run: cd basic && mix format --check-formatted
+      - run: cd basic && mix test
+      - run: cd rtp && mix deps.get
+      - run: cd rtp && mix deps.compile --all
+      - run: cd rtp && mix format --check-formatted
+      - run: cd rtp && mix test

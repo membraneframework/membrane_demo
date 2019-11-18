@@ -1,4 +1,4 @@
-defmodule Membrane.Demo.MixProject do
+defmodule Membrane.Demo.Basic.MixProject do
   use Mix.Project
 
   @version "0.3.0"
@@ -6,11 +6,11 @@ defmodule Membrane.Demo.MixProject do
 
   def project do
     [
-      app: :membrane_demo,
+      app: :membrane_demo_basic,
       version: @version,
       elixir: "~> 1.7",
       name: "Membrane Demo",
-      description: "Membrane Multimedia Framework (Demo Applications)",
+      description: "Membrane Multimedia Framework (Basic Demo Applications)",
       homepage_url: "https://membraneframework.org",
       source_url: @github_url,
       start_permanent: Mix.env() == :prod,

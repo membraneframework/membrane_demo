@@ -1,4 +1,4 @@
-defmodule Membrane.Demo.FirstElement.Pipeline do
+defmodule Membrane.Demo.Basic.FirstElement.Pipeline do
   @moduledoc """
   Pipeline that contains created element
   """
@@ -19,7 +19,7 @@ defmodule Membrane.Demo.FirstElement.Pipeline do
         }
       },
       # Here is a declaration of our element
-      counter: %Membrane.Demo.FirstElement.Element{interval: 5000},
+      counter: %Membrane.Demo.Basic.FirstElement.Element{interval: 5000},
       sink: PortAudio.Sink
     }
 

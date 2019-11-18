@@ -1,8 +1,6 @@
-# Membrane Demo
+# Membrane Demo - Basic
 
-[![CircleCI](https://circleci.com/gh/membraneframework/membrane-demo.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane-demo)
-
-This repository contains two demos that can help understanding how to use Membrane Framework.
+This project contains two demos that can help understanding how to use Membrane Framework.
 
 ## Prerequisites
 
@@ -16,7 +14,7 @@ This repository contains two demos that can help understanding how to use Membra
 To start the demo pipeline run `mix run --no-halt run_pipeline_demo.exs` or type the following commands into an IEx shell (started by `iex -S mix`):
 
 ```elixir
-alias Membrane.Demo.MP3.Pipeline
+alias Membrane.Demo.Basic.MP3.Pipeline
 {:ok, pid} = Pipeline.start_link("sample.mp3")
 Pipeline.play(pid)
 ```
@@ -29,7 +27,7 @@ To start the demo pipeline run `mix run --no-halt run_element_demo.exs` or type 
 
 
 ```elixir
-alias Membrane.Demo.FirstElement.Pipeline
+alias Membrane.Demo.Basic.FirstElement.Pipeline
 {:ok, pid} = Pipeline.start_link("sample.mp3")
 Pipeline.play(pid)
 ```

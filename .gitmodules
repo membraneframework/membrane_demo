@@ -1,0 +1,3 @@
+[submodule "rtp"]
+	path = rtp
+	url = git@github.com:membraneframework/membrane-demo-bin-rtp.git

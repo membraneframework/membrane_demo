@@ -1,4 +1,4 @@
-defmodule Membrane.Demo.FirstElement.Element do
+defmodule Membrane.Demo.Basic.FirstElement.Element do
   use Membrane.Filter
 
   def_options interval: [

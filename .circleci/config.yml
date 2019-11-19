@@ -13,6 +13,7 @@ jobs:
       - run: cd basic && mix deps.compile --all
       - run: cd basic && mix format --check-formatted
       - run: cd basic && mix test
+      - run: git submodule init && git submodule update
       - run: cd rtp && mix deps.get
       - run: cd rtp && mix deps.compile --all
       - run: cd rtp && mix format --check-formatted

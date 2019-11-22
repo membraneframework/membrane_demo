@@ -30,7 +30,8 @@ defmodule Membrane.Demo.RTP.MixProject do
       {:membrane_element_ffmpeg_h264, "~> 0.2.0"},
       {:membrane_element_rtp_h264, "~> 0.2.0"},
       {:membrane_element_sdl, "~> 0.3.0"},
-      {:membrane_element_portaudio, "~> 0.3.0"}
+      {:membrane_element_portaudio, "~> 0.3.0"},
+      {:membrane_loggers, "~> 0.3.0"}
     ]
   end
 end

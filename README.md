@@ -1,4 +1,4 @@
-# Membrane Demo - Basic
+# Membrane Demo
 
 [![CircleCI](https://circleci.com/gh/membraneframework/membrane-demo.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane-demo)
 

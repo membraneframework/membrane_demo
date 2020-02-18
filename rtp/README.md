@@ -17,9 +17,8 @@ embedded within a pipeline (or another bin). Bins' pads proxy the stream between
 
 You have to have installed the following packages on your system:
 
+* FFmpeg 4.x
 * SDL 2
-* gstreamer
-* ffmpeg 4.x
 * PortAudio
 
 ## Run the demo

@@ -19,7 +19,7 @@ You have to have installed the following packages on your system:
 
 * SDL 2
 * gstreamer
-* ffmpeg
+* ffmpeg 4.x
 * PortAudio
 
 ## Run the demo

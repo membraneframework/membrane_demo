@@ -10,15 +10,17 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
       app_source: %Membrane.Element.UDP.Source{
         local_port_no: port,
         recv_buffer_size: 100_000,
-        packets_per_buffer: 20
+        # packets_per_buffer: 20
       },
       rtp: %Membrane.Bin.RTP.Receiver{
-        fmt_mapping: %{96 => "H264", 97 => "AAC", 101 => "H264"},
+        fmt_mapping: %{96 => "H264",  127 =>"AAC"},
         pt_to_depayloader: &payload_type_to_depayloader/1
       },
-      hls: %Membrane.Element.HTTPAdaptiveStream.Sink{
-        playlist_name: "index",
-        storage: %Membrane.Element.HTTPAdaptiveStream.Storage.File{location: "output"}
+      hls: %Membrane.HTTPAdaptiveStream.Sink{
+        # it is a default name
+        # manifest_name: "index",
+        manifest_module: Membrane.HTTPAdaptiveStream.HLS,
+        storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: "output"}
       }
     }
 
@@ -42,8 +44,8 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
         framerate: {30, 1},
         alignment: :nal
       },
-      video_payloader: Membrane.Element.MP4.Payloader.H264,
-      video_cmaf_muxer: Membrane.Element.MP4.CMAF.Muxer
+      video_payloader: Membrane.MP4.Payloader.H264,
+      video_cmaf_muxer: Membrane.MP4.CMAF.Muxer
     }
 
     links = [
@@ -71,8 +73,8 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
       # fills dropped frames with empty audio, because Safari player doesn't
       # care about audio timestamps; assumes initial timestamp is equal to 0
       # audio_filler: %Membrane.AAC.Filler{},
-      audio_payloader: Membrane.Element.MP4.Payloader.AAC,
-      audio_cmaf_muxer: Membrane.Element.MP4.CMAF.Muxer
+      audio_payloader: Membrane.MP4.Payloader.AAC,
+      audio_cmaf_muxer: Membrane.MP4.CMAF.Muxer
     }
 
     links = [

@@ -28,8 +28,9 @@ defmodule Membrane.Demo.RtpToHls.MixProject do
       {:membrane_element_ffmpeg_h264,
        git: "git@github.com:membraneframework/membrane-element-ffmpeg-h264.git"},
       {:membrane_http_adaptive_stream_plugin,
-       git: "git@github.com:membraneframework/membrane-element-http-adaptive-stream.git", override: true},
-       {:membrane_aac_format, "~> 0.1.0"},
+       git: "git@github.com:membraneframework/membrane-element-http-adaptive-stream.git",
+       override: true},
+      {:membrane_aac_format, "~> 0.1.0"},
       {:membrane_mp4_plugin, git: "git@github.com:membraneframework/membrane-element-mp4.git"},
       {:membrane_element_rtp_aac,
        git: "git@github.com:membraneframework/membrane-element-rtp-aac.git"},
@@ -43,7 +44,8 @@ defmodule Membrane.Demo.RtpToHls.MixProject do
       {:turbojpeg, git: "git@github.com:membraneframework/elixir-turbojpeg.git"},
       {:membrane_element_fake, "~> 0.3"},
       {:membrane_loggers, "~> 0.3.0"},
-      {:membrane_aac_plugin, github: "membraneframework/membrane_aac_plugin"}
+      {:membrane_aac_plugin, github: "membraneframework/membrane_aac_plugin"},
+      {:crc, "~> 0.10", override: true}
     ]
   end
 end

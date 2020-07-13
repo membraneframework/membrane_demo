@@ -9,11 +9,11 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     children = %{
       app_source: %Membrane.Element.UDP.Source{
         local_port_no: port,
-        recv_buffer_size: 100_000,
+        recv_buffer_size: 100_000
         # packets_per_buffer: 20
       },
       rtp: %Membrane.Bin.RTP.Receiver{
-        fmt_mapping: %{96 => "H264",  127 =>"AAC"},
+        fmt_mapping: %{96 => "H264", 127 => "AAC"},
         pt_to_depayloader: &payload_type_to_depayloader/1
       },
       hls: %Membrane.HTTPAdaptiveStream.Sink{
@@ -42,7 +42,8 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
       },
       video_nal_parser: %Membrane.Element.FFmpeg.H264.Parser{
         framerate: {30, 1},
-        alignment: :nal
+        alignment: :au,
+        attach_nalus?: true
       },
       video_payloader: Membrane.MP4.Payloader.H264,
       video_cmaf_muxer: Membrane.MP4.CMAF.Muxer

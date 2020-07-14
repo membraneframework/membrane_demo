@@ -73,7 +73,7 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
       },
       # fills dropped frames with empty audio, because Safari player doesn't
       # care about audio timestamps; assumes initial timestamp is equal to 0
-      # audio_filler: %Membrane.AAC.Filler{},
+      # audio_filler: Membrane.AAC.Filler,
       audio_payloader: Membrane.MP4.Payloader.AAC,
       audio_cmaf_muxer: Membrane.MP4.CMAF.Muxer
     }

@@ -14,6 +14,7 @@ defmodule Membrane.Demo.RtpToHls.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
+      mod: {Membrane.Demo.RtpToHls, []},
       extra_applications: [:logger]
     ]
   end

@@ -1,6 +1,8 @@
 # Membrane Demo - RTP to HLS
 This project demonstrates handling RTP streams and converting them to HLS streams.
 
+The whole idea has been described in [this blog post](https://blog.swmansion.com/live-video-streaming-in-elixir-made-simple-with-membrane-fc5b2083982d).
+
 ## Prerequisites
 You must have following packages installed on your system:
 

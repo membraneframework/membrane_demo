@@ -12,13 +12,14 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
         recv_buffer_size: 100_000
         # packets_per_buffer: 20
       },
-      rtp: %Membrane.Bin.RTP.Receiver{
-        fmt_mapping: %{96 => "H264", 127 => "AAC"},
-        pt_to_depayloader: &payload_type_to_depayloader/1
+      rtp: %Membrane.RTP.Session.ReceiveBin{
+        fmt_mapping: %{96 => :H264, 127 => :AAC},
+        custom_depayloaders: %{
+          :H264 => Membrane.RTP.H264.Depayloader,
+          :AAC => %Membrane.RTP.AAC.Depayloader{channels: 1}
+        }
       },
       hls: %Membrane.HTTPAdaptiveStream.Sink{
-        # it is a default name
-        # manifest_name: "index",
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
         storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: "output"}
       }
@@ -33,10 +34,10 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
   end
 
   @impl true
-  def handle_notification({:new_rtp_stream, ssrc, "H264"}, :rtp, state) do
+  def handle_notification({:new_rtp_stream, ssrc, :H264}, :rtp, state) do
     children = %{
       # TODO: remove when moved to the RTP bin
-      video_timestamper: %Membrane.Element.RTP.Timestamper{
+      video_timestamper: %Membrane.RTP.Timestamper{
         resolution: Ratio.new(Time.second(), 90_000),
         init_timestamp: 0
       },
@@ -64,10 +65,10 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     {{:ok, spec: spec}, state}
   end
 
-  def handle_notification({:new_rtp_stream, ssrc, "AAC"}, :rtp, state) do
+  def handle_notification({:new_rtp_stream, ssrc, :AAC}, :rtp, state) do
     children = %{
       # TODO: remove when moved to the RTP bin
-      audio_timestamper: %Membrane.Element.RTP.Timestamper{
+      audio_timestamper: %Membrane.RTP.Timestamper{
         resolution: Ratio.new(Time.second(), 44100),
         init_timestamp: 0
       },
@@ -113,9 +114,4 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
   def handle_notification(_notification, _element, state) do
     {:ok, state}
   end
-
-  # TODO When RTP.AAC becomes public and bin by default uses it, we can discard
-  # this custom mapping
-  defp payload_type_to_depayloader("H264"), do: Membrane.Element.RTP.H264.Depayloader
-  defp payload_type_to_depayloader("AAC"), do: %Membrane.Element.RTP.AAC.Depayloader{channels: 1}
 end

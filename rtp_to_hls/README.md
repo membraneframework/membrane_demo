@@ -6,9 +6,7 @@ The whole idea has been described in [this blog post](https://blog.swmansion.com
 ## Prerequisites
 You must have following packages installed on your system:
 
-* jpeg-turbo
 * ffmpeg 4.*
-
 
 ## Run the demo
 Create output directory inside of this demo folder:

@@ -9,7 +9,7 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     children = %{
       app_source: %Membrane.Element.UDP.Source{
         local_port_no: port,
-        recv_buffer_size: 100_0000
+        recv_buffer_size: 500_000
         # packets_per_buffer: 20
       },
       rtp: %Membrane.RTP.Session.ReceiveBin{

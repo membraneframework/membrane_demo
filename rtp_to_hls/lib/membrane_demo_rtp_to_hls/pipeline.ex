@@ -9,7 +9,7 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     children = %{
       app_source: %Membrane.Element.UDP.Source{
         local_port_no: port,
-        recv_buffer_size: 100_000
+        recv_buffer_size: 100_0000
         # packets_per_buffer: 20
       },
       rtp: %Membrane.RTP.Session.ReceiveBin{
@@ -21,6 +21,7 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
       },
       hls: %Membrane.HTTPAdaptiveStream.Sink{
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
+        target_window_duration: 10 |> Membrane.Time.seconds(),
         storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: "output"}
       }
     }
@@ -38,8 +39,7 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     children = %{
       # TODO: remove when moved to the RTP bin
       video_timestamper: %Membrane.RTP.Timestamper{
-        resolution: Ratio.new(Time.second(), 90_000),
-        init_timestamp: 0
+        resolution: Ratio.new(Time.second(), 90_000)
       },
       video_nal_parser: %Membrane.Element.FFmpeg.H264.Parser{
         framerate: {30, 1},
@@ -69,8 +69,7 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     children = %{
       # TODO: remove when moved to the RTP bin
       audio_timestamper: %Membrane.RTP.Timestamper{
-        resolution: Ratio.new(Time.second(), 44100),
-        init_timestamp: 0
+        resolution: Ratio.new(Time.second(), 44100)
       },
       # fills dropped frames with empty audio, because Safari player doesn't
       # care about audio timestamps; assumes initial timestamp is equal to 0

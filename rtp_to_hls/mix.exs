@@ -22,11 +22,11 @@ defmodule Membrane.Demo.RtpToHls.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:membrane_core, "~> 0.5.1"},
+      {:membrane_core, "~> 0.5.2"},
       {:membrane_element_udp, "~> 0.3.2"},
       {:membrane_element_file, "~> 0.3.0"},
       {:membrane_element_ffmpeg_h264, "~> 0.3.0"},
-       {:membrane_http_adaptive_stream_plugin, "~> 0.1.0"},
+      {:membrane_http_adaptive_stream_plugin, "~> 0.1.0"},
       {:membrane_aac_format, "~> 0.1.0"},
       {:membrane_mp4_plugin, "~> 0.3.0"},
       {:membrane_rtp_aac_plugin, "~> 0.1.0-alpha"},

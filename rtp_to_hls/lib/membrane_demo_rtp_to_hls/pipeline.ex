@@ -10,7 +10,6 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
       app_source: %Membrane.Element.UDP.Source{
         local_port_no: port,
         recv_buffer_size: 500_000
-        # packets_per_buffer: 20
       },
       rtp: %Membrane.RTP.Session.ReceiveBin{
         fmt_mapping: %{96 => :H264, 127 => :AAC},
@@ -71,8 +70,8 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
       audio_timestamper: %Membrane.RTP.Timestamper{
         resolution: Ratio.new(Time.second(), 44100)
       },
-      # fills dropped frames with empty audio, because Safari player doesn't
-      # care about audio timestamps; assumes initial timestamp is equal to 0
+      # fills dropped frames with empty audio, needed for players that
+      # don't care about audio timestamps, like Safari
       # audio_filler: Membrane.AAC.Filler,
       audio_payloader: Membrane.MP4.Payloader.AAC,
       audio_cmaf_muxer: Membrane.MP4.CMAF.Muxer

@@ -16,7 +16,6 @@ defmodule Membrane.Demo.RTP.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {Membrane.Demo.RTP, []},
       extra_applications: [:logger]
     ]
   end
@@ -24,16 +23,16 @@ defmodule Membrane.Demo.RTP.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-      {:membrane_core, "0.5.0"},
-      {:membrane_bin_rtp, "0.1.0"},
+      {:membrane_core,
+       github: "membraneframework/membrane_core", branch: "fix/playback", override: true},
+      {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin", branch: :sending},
       {:membrane_element_udp, "~> 0.3.0"},
-      {:membrane_element_ffmpeg_h264, "~> 0.2.0"},
-      {:membrane_element_rtp_h264, "~> 0.2.0"},
-      {:membrane_element_sdl, "~> 0.3.0"},
-      {:membrane_element_portaudio, "~> 0.3.0"},
-      {:membrane_loggers, "~> 0.3.0"}
+      {:membrane_element_ffmpeg_h264, "~> 0.4.0"},
+      {:membrane_rtp_h264_plugin,
+       github: "membraneframework/membrane_rtp_h264_plugin", branch: :develop},
+      {:membrane_element_sdl, github: "membraneframework/membrane-element-sdl", branch: :unifex},
+      {:membrane_element_hackney, "~> 0.3.0"},
+      {:libsrtp, github: "membraneframework/elixir_libsrtp", branch: "develop"}
     ]
   end
 end

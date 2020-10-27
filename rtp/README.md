@@ -2,16 +2,8 @@
 
 This project demonstrates handling RTP in Membrane.
 
-This example uses [RTP bin](https://github.com/membraneframework/membrane-bin-rtp) that is responsible for
+This example uses [RTP plugin](https://github.com/membraneframework/membrane_rtp_plugin) that is responsible for
 receiving and interpreting RTP streams.
-
-## Bins
-
-This demo is also a presentation of a new Membrane v0.5 feature: Bins.
-
-Bins are entities that enable creating reusable, dynamically customisable groups of elements.
-Bins can spawn their children like pipelines and have pads like elements, so they can be
-embedded within a pipeline (or another bin). Bins' pads proxy the stream between their siblings and children.
 
 ## Prerequisites
 

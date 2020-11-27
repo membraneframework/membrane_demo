@@ -26,11 +26,11 @@ defmodule Membrane.Demo.Basic.MP3.Pipeline do
   def handle_init(path_to_mp3) do
     children = %{
       # Stream from file
-      file: %Membrane.Element.File.Source{location: path_to_mp3},
+      file: %Membrane.File.Source{location: path_to_mp3},
       # Decode frames
-      decoder: Membrane.Element.Mad.Decoder,
+      decoder: Membrane.MP3.MAD.Decoder,
       # Convert Raw :s24le to Raw :s16le
-      converter: %Membrane.Element.FFmpeg.SWResample.Converter{
+      converter: %Membrane.FFmpeg.SWResample.Converter{
         output_caps: %Membrane.Caps.Audio.Raw{
           format: :s16le,
           sample_rate: 48000,
@@ -38,7 +38,7 @@ defmodule Membrane.Demo.Basic.MP3.Pipeline do
         }
       },
       # Stream data into PortAudio to play it on speakers.
-      portaudio: Membrane.Element.PortAudio.Sink
+      portaudio: Membrane.PortAudio.Sink
     }
 
     # Setup the flow of the data

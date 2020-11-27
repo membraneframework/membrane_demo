@@ -15,7 +15,7 @@ defmodule Membrane.Demo.RtpToHls.MixProject do
   def application do
     [
       mod: {Membrane.Demo.RtpToHls, []},
-      extra_applications: []
+      extra_applications: [:logger]
     ]
   end
 

@@ -4,13 +4,13 @@ defmodule Membrane.Demo.Basic.FirstElement.Pipeline do
   """
 
   use Membrane.Pipeline
-  alias Membrane.Element.{File, Mad, FFmpeg, PortAudio}
+  alias Membrane.{File, MP3.MAD, FFmpeg, PortAudio}
 
   @impl true
   def handle_init(path_to_mp3) do
     children = %{
       file: %File.Source{location: path_to_mp3},
-      decoder: Mad.Decoder,
+      decoder: MAD.Decoder,
       converter: %FFmpeg.SWResample.Converter{
         output_caps: %Membrane.Caps.Audio.Raw{
           format: :s16le,
@@ -36,7 +36,7 @@ defmodule Membrane.Demo.Basic.FirstElement.Pipeline do
   end
 
   @impl true
-  def handle_notification(notification, _elem_name, state) do
+  def handle_notification(notification, _from, _ctx, state) do
     IO.inspect(notification)
     {:ok, state}
   end

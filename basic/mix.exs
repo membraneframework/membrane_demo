@@ -8,7 +8,7 @@ defmodule Membrane.Demo.Basic.MixProject do
     [
       app: :membrane_demo_basic,
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.10",
       name: "Membrane Demo",
       description: "Membrane Multimedia Framework (Basic Demo Applications)",
       homepage_url: "https://membraneframework.org",
@@ -28,12 +28,11 @@ defmodule Membrane.Demo.Basic.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:membrane_core, "~> 0.5.0"},
-      {:membrane_element_file, "~> 0.3.0"},
-      {:membrane_element_portaudio, "~> 0.3.1"},
-      {:membrane_element_ffmpeg_swresample, "~> 0.3.0"},
-      {:membrane_element_mad, "~> 0.3.0"},
-      {:membrane_loggers, "~> 0.3.0"},
+      {:membrane_core, "~> 0.6.0", override: true},
+      {:membrane_file_plugin, "~> 0.5.0"},
+      {:membrane_portaudio_plugin, "~> 0.4.0"},
+      {:membrane_ffmpeg_swresample_plugin, "~> 0.4.0"},
+      {:membrane_mp3_mad_plugin, "~> 0.4.0"},
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false}
     ]
   end

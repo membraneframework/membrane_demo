@@ -17,13 +17,7 @@ You must have following packages installed on your system:
 
 ## Run the demo
 
-Create output directory inside of this demo folder:
-
-```bash
-mkdir output
-```
-
-Next run the project with:
+Run the project with:
 
 ```bash
 mix run --no-halt

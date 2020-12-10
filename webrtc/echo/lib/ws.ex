@@ -30,12 +30,27 @@ defmodule WS do
     WebSockex.send_frame(pid, frame)
   end
 
-  def send_candidate(pid, cand, sdpMLineIndex, sdpMid, from, to) do
+  def send_offer(pid, sdp, from, to) do
     msg =
       Poison.encode!(%{
-        "to" => [to],
-        "event" => "candidate",
+        "to" => to,
+        "event" => "offer",
         "from" => from,
+        "data" => %{
+          "type" => "offer",
+          "sdp" => sdp
+        }
+      })
+
+    frame = {:text, msg}
+    WebSockex.send_frame(pid, frame)
+  end
+
+  def send_candidate(pid, cand, sdpMLineIndex, sdpMid, to) do
+    msg =
+      Poison.encode!(%{
+        "to" => to,
+        "event" => "candidate",
         "data" => %{
           "candidate" => cand,
           "sdpMLineIndex" => sdpMLineIndex,

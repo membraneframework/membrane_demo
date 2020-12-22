@@ -13,7 +13,7 @@ function startStreaming(webSocketUrl, localVideoFunction, remoteVideoFunction) {
     rtcConfig = config;
     onRemoteVideo = remoteVideoFunction;
     navigator.getUserMedia(
-        {audio: true, video: true},
+        {audio: true, video: false},
         (stream) => {localVideoFunction(stream); openConnection(webSocketUrl);}, 
         (e) => {alert(e)});
 }
@@ -33,11 +33,11 @@ function onError(data, from) {
 function onJoined(data, from) {
     let peer_id = data.peer_id;
     startRTCConnection(peer_id);
-    rtcConnections[peer_id].createOffer(
-        getHandleDescription(peer_id, "offer"),
-        console.dir, 
-        offerOptions
-    );    
+    //rtcConnections[peer_id].createOffer(
+    //    getHandleDescription(peer_id, "offer"),
+    //    console.dir, 
+    //    offerOptions
+    //);    
 }
 
 function onCandidateMessage(data, from) {

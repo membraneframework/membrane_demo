@@ -1,10 +1,10 @@
-defmodule Membrane.Demo.Basic.FirstElement.Pipeline do
+defmodule Membrane.Demo.BasicElement.Pipeline do
   @moduledoc """
-  Pipeline that contains created element
+  Pipeline that contains `Membrane.Demo.BasicElement.Counter` element.
   """
 
   use Membrane.Pipeline
-  alias Membrane.{File, MP3.MAD, FFmpeg, PortAudio}
+  alias Membrane.{File, FFmpeg, MP3.MAD, PortAudio, Time}
 
   @impl true
   def handle_init(path_to_mp3) do
@@ -18,8 +18,8 @@ defmodule Membrane.Demo.Basic.FirstElement.Pipeline do
           channels: 2
         }
       },
-      # Here is a declaration of our element
-      counter: %Membrane.Demo.Basic.FirstElement.Element{interval: 5000},
+      # Here is the declaration of our element
+      counter: %Membrane.Demo.BasicElement.Counter{interval: 5 |> Time.seconds()},
       sink: PortAudio.Sink
     }
 

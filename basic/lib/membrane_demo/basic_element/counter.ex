@@ -1,11 +1,20 @@
-defmodule Membrane.Demo.Basic.FirstElement.Element do
+defmodule Membrane.Demo.BasicElement.Counter do
+  @moduledoc """
+  Membrane element counting incoming buffers.
+
+  Count of buffers divided by `divisor` (passed via `:input` pad options)
+  is sent as a `{:counter, number}` notification once every `interval`
+  (passed via element options).
+  """
   use Membrane.Filter
 
   def_options interval: [
-                type: :integer,
+                spec: Membrane.Time.non_neg_t(),
                 default: 1000,
-                description:
-                  "Amount of the time in milliseconds, telling how often statistics should be sent and zeroed"
+                description: """
+                Amount of the time in milliseconds, telling how often
+                the count of buffers should be sent and zeroed.
+                """
               ]
 
   def_input_pad :input,
@@ -30,8 +39,7 @@ defmodule Membrane.Demo.Basic.FirstElement.Element do
   def handle_init(%__MODULE{interval: interval}) do
     state = %{
       interval: interval,
-      counter: 0,
-      timer: nil
+      counter: 0
     }
 
     {:ok, state}
@@ -39,14 +47,12 @@ defmodule Membrane.Demo.Basic.FirstElement.Element do
 
   @impl true
   def handle_prepared_to_stopped(_ctx, state) do
-    {:ok, :cancel} = :timer.cancel(state.timer)
-    {:ok, %{state | counter: 0, timer: nil}}
+    {{:ok, stop_timer: :timer}, %{state | counter: 0}}
   end
 
   @impl true
   def handle_prepared_to_playing(_ctx, state) do
-    {:ok, timer} = :timer.send_interval(state.interval, :tick)
-    {:ok, %{state | timer: timer}}
+    {{:ok, start_timer: {:timer, state.interval}}, state}
   end
 
   @impl true
@@ -56,19 +62,19 @@ defmodule Membrane.Demo.Basic.FirstElement.Element do
 
   @impl true
   def handle_process(:input, %Membrane.Buffer{} = buffer, _context, state) do
-    new_state = %{state | counter: state.counter + 1}
-    {{:ok, buffer: {:output, buffer}}, new_state}
+    state = %{state | counter: state.counter + 1}
+    {{:ok, buffer: {:output, buffer}}, state}
   end
 
   @impl true
-  def handle_other(:tick, ctx, state) do
+  def handle_tick(:timer, ctx, state) do
     # create the term to send
     notification = {
       :counter,
       div(state.counter, ctx.pads.input.options.divisor)
     }
 
-    # reset the timer
+    # reset the counter
     new_state = %{state | counter: 0}
 
     {{:ok, notify: notification}, new_state}

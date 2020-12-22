@@ -1,3 +1,3 @@
-alias Membrane.Demo.Basic.MP3.Pipeline
-{:ok, pid} = Pipeline.start_link("sample.mp3")
-Pipeline.play(pid)
+alias Membrane.Demo.BasicPipeline
+{:ok, pid} = BasicPipeline.start_link("sample.mp3")
+BasicPipeline.play(pid)

@@ -9,17 +9,21 @@ This project contains two demos that can help understanding how to use Membrane 
 
 ## First Pipeline Demo
 
+This demo shows how to create a pipeline that plays an mp3 file.
+
 ### How to run
 
 To start the demo pipeline run `mix run --no-halt run_pipeline_demo.exs` or type the following commands into an IEx shell (started by `iex -S mix`):
 
 ```elixir
-alias Membrane.Demo.Basic.MP3.Pipeline
-{:ok, pid} = Pipeline.start_link("sample.mp3")
-Pipeline.play(pid)
+alias Membrane.Demo.BasicPipeline
+{:ok, pid} = BasicPipeline.start_link("sample.mp3")
+BasicPipeline.play(pid)
 ```
 
 ## First Element Demo
+
+This demo shows how to create a simple element and plug it into a pipeline.
 
 ### How to run
 
@@ -27,7 +31,7 @@ To start the demo pipeline run `mix run --no-halt run_element_demo.exs` or type 
 
 
 ```elixir
-alias Membrane.Demo.Basic.FirstElement.Pipeline
+alias Membrane.Demo.BasicElement.Pipeline
 {:ok, pid} = Pipeline.start_link("sample.mp3")
 Pipeline.play(pid)
 ```

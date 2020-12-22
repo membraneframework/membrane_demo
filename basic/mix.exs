@@ -30,9 +30,9 @@ defmodule Membrane.Demo.Basic.MixProject do
     [
       {:membrane_core, "~> 0.6.0", override: true},
       {:membrane_file_plugin, "~> 0.5.0"},
-      {:membrane_portaudio_plugin, "~> 0.4.0"},
-      {:membrane_ffmpeg_swresample_plugin, "~> 0.4.0"},
-      {:membrane_mp3_mad_plugin, "~> 0.4.0"},
+      {:membrane_portaudio_plugin, "~> 0.5.1"},
+      {:membrane_ffmpeg_swresample_plugin, "~> 0.5.0"},
+      {:membrane_mp3_mad_plugin, "~> 0.5.0"},
       {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false}
     ]
   end

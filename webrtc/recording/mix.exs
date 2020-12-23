@@ -3,7 +3,7 @@ defmodule Recording.MixProject do
 
   def project do
     [
-      app: :recording,
+      app: :membrane_recording,
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
@@ -13,6 +13,7 @@ defmodule Recording.MixProject do
 
   def application do
     [
+      mod: {Membrane.Recording.App, []},
       extra_applications: [:logger]
     ]
   end
@@ -31,7 +32,11 @@ defmodule Recording.MixProject do
       {:membrane_dtls_plugin, "~> 0.1.0"},
       {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin"},
       {:membrane_rtp_opus_plugin, "~> 0.2.0"},
-      {:membrane_opus_plugin, "~> 0.2.0"}
+      {:membrane_opus_plugin, "~> 0.2.0"},
+      {:membrane_webrtc_server, "~> 0.1.0"},
+      {:jason, "~> 1.1"},
+      {:plug, "~> 1.7"},
+      {:plug_cowboy, "~> 2.0"}
     ]
   end
 end

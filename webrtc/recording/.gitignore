@@ -22,3 +22,9 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 recording-*.tar
 
+/priv/static/output/*
+!/priv/static/output/.gitkeep
+
+
+/priv/certs/*
+!/priv/certs/.gitkeep

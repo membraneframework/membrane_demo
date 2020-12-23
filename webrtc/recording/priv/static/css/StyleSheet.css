@@ -1,0 +1,23 @@
+body {
+  margin:40px auto;
+  max-width:900px;
+  line-height:1.6;
+  font-size:18px;
+  color:white;
+  background-color: black;
+  font-family: arial;
+}
+
+h1, h2, h3 {
+  line-height:1.2;
+  font-weight:normal;
+}
+
+video {
+  max-width: 100%;
+  width: 400px; 
+}
+
+button {
+  margin: 10px;
+}

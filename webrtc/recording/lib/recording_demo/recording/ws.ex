@@ -1,12 +1,8 @@
-defmodule WS do
+defmodule RecordingDemo.Recording.WS do
   use WebSockex
 
-  def start_link(url, state) do
-    extra_headers = [
-      {"cookie", "credentials={\"username\":\"USERNAME\",\"password\":\"PASSWORD\"}"}
-    ]
-
-    WebSockex.start_link(url, __MODULE__, state, extra_headers: extra_headers)
+  def start_link(url, options) do
+    WebSockex.start_link(url, __MODULE__, options)
   end
 
   @impl true

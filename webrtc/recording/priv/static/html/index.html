@@ -16,7 +16,8 @@
     <template id="template">
         <video playsinline autoplay></video>
     </template>
-    <button onclick="record()">Record</button>
+    <button id="recording_btn" onclick="onRecord()">Record</button>
+    <div style="display:none" id="recording_msg">Recording...</div>
 </body>
 
 </html>

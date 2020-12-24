@@ -1,7 +1,7 @@
-defmodule Membrane.Recording.Pipeline do
+defmodule RecordingDemo.Recording.Pipeline do
   use Membrane.Pipeline
 
-  alias Membrane.Recording.{SDPUtils, TimeLimiter}
+  alias RecordingDemo.Recording.{SDPUtils, TimeLimiter, WS}
 
   require Membrane.Logger
 
@@ -57,7 +57,7 @@ defmodule Membrane.Recording.Pipeline do
     spec = %ParentSpec{
       children: %{
         video_file_sink: %Membrane.File.Sink{
-          location: "#{:code.priv_dir(:membrane_recording)}/static/output/#{state.output_name}"
+          location: "#{:code.priv_dir(:recording_demo)}/static/output/#{state.output_name}"
         },
         time_limiter: %TimeLimiter{time_limit: 10 |> Membrane.Time.seconds()}
       },

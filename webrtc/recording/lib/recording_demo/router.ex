@@ -1,9 +1,9 @@
-defmodule Example.Simple.Router do
+defmodule RecordingDemo.Router do
   use Plug.Router
 
   plug(Plug.Static,
     at: "/",
-    from: :membrane_recording
+    from: :recording_demo
   )
 
   plug(:match)

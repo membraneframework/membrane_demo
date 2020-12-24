@@ -1,4 +1,4 @@
-defmodule Example.Membrane.Peer do
+defmodule RecordingDemo.Signaling.MembranePeer do
   @moduledoc false
 
   use Membrane.WebRTC.Server.Peer

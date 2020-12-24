@@ -1,4 +1,4 @@
-defmodule Membrane.Recording.SDPUtils do
+defmodule RecordingDemo.Recording.SDPUtils do
   def get_remote_credentials(sdp) do
     attributes = List.first(sdp.media).attributes
 

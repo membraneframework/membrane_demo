@@ -1,4 +1,4 @@
-defmodule Membrane.Recording.TimeLimiter do
+defmodule RecordingDemo.Recording.TimeLimiter do
   use Membrane.Filter
 
   def_input_pad :input, caps: :any, demand_unit: :buffers

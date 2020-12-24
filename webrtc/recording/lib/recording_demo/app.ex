@@ -1,8 +1,8 @@
 defmodule Membrane.Recording.App do
   @moduledoc false
   use Application
-  alias Membrane.WebRTC.Server.Peer
-  alias Membrane.WebRTC.Server.Room
+  alias Membrane.WebRTC.Server.{Peer, Room}
+  alias RecordingDemo.{Router, Signaling}
 
   @impl true
   def start(_type, _args) do
@@ -14,8 +14,7 @@ defmodule Membrane.Recording.App do
           dispatch: dispatch(),
           port: 8443,
           ip: {0, 0, 0, 0},
-          password: "PASSWORD",
-          otp_app: :membrane_recording,
+          otp_app: :recording_demo,
           # Attach your SSL certificate and key files here
           keyfile: "priv/certs/key.pem",
           certfile: "priv/certs/certificate.pem"
@@ -31,10 +30,10 @@ defmodule Membrane.Recording.App do
     [
       {:_,
        [
-         {"/record", Membrane.WebRTC.Server.Peer, %Peer.Options{module: Example.Simple.Peer}},
+         {"/record", Peer, %Peer.Options{module: Signaling.JSPeer}},
          {"/membrane/[:room]", Membrane.WebRTC.Server.Peer,
-          %Peer.Options{module: Example.Membrane.Peer}},
-         {:_, Plug.Cowboy.Handler, {Example.Simple.Router, []}}
+          %Peer.Options{module: Signaling.MembranePeer}},
+         {:_, Plug.Cowboy.Handler, {Router, []}}
        ]}
     ]
   end

@@ -6,23 +6,27 @@ defmodule Membrane.Recording.App do
 
   @impl true
   def start(_type, _args) do
+    config = Application.get_all_env(:recording_demo) |> Map.new()
+
     children = [
       Plug.Cowboy.child_spec(
         scheme: :https,
-        plug: Example.Simple.Router,
+        # FIXME: Routers leak - they're spawned on each "/" request and are not terminated
+        # can be seen in observer
+        plug: Router,
         options: [
           dispatch: dispatch(),
-          port: 8443,
-          ip: {0, 0, 0, 0},
+          port: config.port,
+          ip: config.ip,
           otp_app: :recording_demo,
           # Attach your SSL certificate and key files here
-          keyfile: "priv/certs/key.pem",
-          certfile: "priv/certs/certificate.pem"
+          keyfile: config.keyfile,
+          certfile: config.certfile
         ]
       )
     ]
 
-    opts = [strategy: :one_for_one, name: Example.Simple.Application]
+    opts = [strategy: :one_for_one, name: __MODULE__]
     Supervisor.start_link(children, opts)
   end
 

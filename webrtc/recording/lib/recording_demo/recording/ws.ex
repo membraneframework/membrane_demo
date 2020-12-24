@@ -50,6 +50,15 @@ defmodule RecordingDemo.Recording.WS do
     |> do_send(pid)
   end
 
+  def send_recording(pid, from, to) do
+    %{
+      "from" => from,
+      "to" => to,
+      "event" => "recording"
+    }
+    |> do_send(pid)
+  end
+
   def send_recorded(pid, file_name, from, to) do
     %{
       "from" => from,

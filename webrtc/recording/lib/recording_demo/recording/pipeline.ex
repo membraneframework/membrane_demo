@@ -7,6 +7,8 @@ defmodule RecordingDemo.Recording.Pipeline do
 
   @impl true
   def handle_init(opts) do
+    Membrane.Logger.info("Starting recording pipeline, room: #{opts.room}")
+
     children = %{
       ice: %Membrane.ICE.Bin{
         stun_servers: ["64.233.161.127:19302"],
@@ -43,7 +45,7 @@ defmodule RecordingDemo.Recording.Pipeline do
     }
 
     play(self())
-    {{:ok, spec: spec}, state}
+    {{:ok, log_metadata: [room: opts.room], spec: spec}, state}
   end
 
   defp hex_dump(digest_str) do
@@ -54,6 +56,9 @@ defmodule RecordingDemo.Recording.Pipeline do
 
   @impl true
   def handle_notification({:new_rtp_stream, ssrc, 96}, _from, _ctx, state) do
+    Membrane.Logger.info("Received RTP stream")
+    WS.send_recording(state.ws, state.peer_id, "all")
+
     spec = %ParentSpec{
       children: %{
         video_file_sink: %Membrane.File.Sink{
@@ -98,6 +103,11 @@ defmodule RecordingDemo.Recording.Pipeline do
   end
 
   @impl true
+  def handle_norification({:new_remote_candidate_full, _candidate}, :ice, _ctx, state) do
+    {:ok, state}
+  end
+
+  @impl true
   def handle_notification(:candidate_gathering_done, :ice, _ctx, state) do
     {:ok, state}
   end
@@ -110,8 +120,9 @@ defmodule RecordingDemo.Recording.Pipeline do
 
   @impl true
   def handle_element_end_of_stream({:video_file_sink, :input}, _ctx, state) do
+    Membrane.Logger.info("Recording finished")
     WS.send_recorded(state.ws, state.output_name, state.peer_id, "all")
-    stop(self())
+    stop_and_terminate(self())
     {:ok, state}
   end
 

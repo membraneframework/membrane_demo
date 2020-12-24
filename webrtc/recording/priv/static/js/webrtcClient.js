@@ -65,8 +65,13 @@ function onOffer(data, from) {
     );    
 }
 
+function onRecording(data, from) {
+    document.querySelector("#recording_msg").innerHTML = "Recording..."
+}
+
 function onRecorded(data, from) {
     window.location.href = "https://" + window.location.host + "/output/" + data.file_name;
+    document.querySelector("#recording_msg").innerHTML = "Finished, downloading the recording..."
 }
 
 const messageEventListeners = {
@@ -77,6 +82,7 @@ const messageEventListeners = {
     joined: onJoined,
     left: onLeft,
     offer: onOffer,
+    recording: onRecording,
     recorded: onRecorded
 };
 
@@ -115,5 +121,7 @@ function getHandleDescription(peer_id, event) {
 }
 
 function record() {
-  socket.send(JSON.stringify({to: "all", event: "record"}));
+    document.querySelector("#recording_btn").style.display = "none";
+    document.querySelector("#recording_msg").style.display = "block";
+    socket.send(JSON.stringify({to: "all", event: "record"}));
 }

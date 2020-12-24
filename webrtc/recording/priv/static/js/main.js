@@ -16,10 +16,4 @@ function setupVideo(id, stream) {
     document.getElementById(id).srcObject = stream;
 }
 
-function onRecord() {
-    document.querySelector("#recording_btn").style.display = "none";
-    document.querySelector("#recording_msg").style.display = "block";
-    record();
-}
-
 startStreaming(webSocketUrl, setupLocalVideo, setupVideo);

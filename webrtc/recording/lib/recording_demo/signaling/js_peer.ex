@@ -9,6 +9,7 @@ defmodule RecordingDemo.Signaling.JSPeer do
   @impl true
   def parse_request(_request) do
     room_name = UUID.uuid1()
+    Logger.info("New client peer, room: #{room_name}")
     {:ok, _pid} = Room.start_supervised(%Room.Options{module: Signaling.Room, name: room_name})
     {:ok, %{}, %{room_name: room_name}, room_name}
   end
@@ -27,5 +28,10 @@ defmodule RecordingDemo.Signaling.JSPeer do
   @impl true
   def on_receive(message, context, state) do
     super(message, context, state)
+  end
+
+  @impl true
+  def on_terminate(_context, state) do
+    Logger.info("Terminating client peer, room: #{state.room_name}")
   end
 end

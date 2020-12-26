@@ -2,9 +2,19 @@
 
 App recording 10-second h264 video from the browser. Tested only on Chrome. 
 
+## Dependencies
+
+### Mac OS X
+
+```
+brew install srtp libnice clang-format ffmpeg
+```
+
 ## Usage
 
-Firstly, generate certificate, as described in the [signaling server readme](https://github.com/membraneframework/membrane_demo/tree/master/webrtc/simple#https). Then type:
+Firstly, generate certificate, as described in the [signaling server readme](https://github.com/membraneframework/membrane_demo/tree/master/webrtc/simple#https). 
+
+In order to run, type:
 
 ```
 mix deps.get

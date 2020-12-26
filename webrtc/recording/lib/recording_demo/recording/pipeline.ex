@@ -103,7 +103,7 @@ defmodule RecordingDemo.Recording.Pipeline do
   end
 
   @impl true
-  def handle_norification({:new_remote_candidate_full, _candidate}, :ice, _ctx, state) do
+  def handle_notification({:new_remote_candidate_full, _candidate}, :ice, _ctx, state) do
     {:ok, state}
   end
 

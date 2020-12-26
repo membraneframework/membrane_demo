@@ -7,7 +7,7 @@ App recording 10-second h264 video from the browser. Tested only on Chrome.
 ### Mac OS X
 
 ```
-brew install srtp libnice clang-format ffmpeg
+brew install srtp libnice clang-format ffmpeg opus
 ```
 
 ## Usage

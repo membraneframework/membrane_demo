@@ -3,8 +3,7 @@ defmodule Membrane.Echo.Pipeline do
 
   require Membrane.Logger
 
-  alias Membrane.File
-  alias Membrane.Protocol.SDP
+  alias EchoDemo.Echo.SDPUtils
 
   @audio_ssrc 4_112_531_724
   @video_ssrc 3_766_692_804
@@ -19,8 +18,7 @@ defmodule Membrane.Echo.Pipeline do
         handshake_opts: [client_mode: false, dtls_srtp: true]
       },
       rtp: %Membrane.RTP.SessionBin{
-        secure?: true,
-        custom_depayloaders: %{:OPUS => Membrane.RTP.Opus.Depayloader}
+        secure?: true
       },
       funnel: Membrane.Funnel
     }
@@ -186,12 +184,10 @@ defmodule Membrane.Echo.Pipeline do
         {{:ok, actions}, state}
       "offer" ->
         {:ok, offer} = ExSDP.parse(msg["data"]["sdp"])
-        fmt_mappings = get_fmt_mappings(offer)
         state = Map.put(state, :offer, offer)
         state = Map.put(state, :from, msg["to"])
         state = Map.put(state, :to, msg["from"])
-        state = Map.put(state, :fmt_mappings, fmt_mappings)
-        remote_credentials = get_remote_credentials(offer)
+        remote_credentials = SDPUtils.get_remote_credentials(offer)
         {{:ok, forward: {:ice, {:set_remote_credentials, remote_credentials}}}, state}
 
       "candidate" ->
@@ -213,7 +209,7 @@ defmodule Membrane.Echo.Pipeline do
   end
 
   def send_offer(state) do
-    offer = create_offer(state[:ice_ufrag], state[:ice_pwd], state[:fingerprint])
+    offer = SDPUtils.create_offer(state[:ice_ufrag], state[:ice_pwd], state[:fingerprint])
     WS.send_offer(state[:ws_pid], offer, state[:from], "all")
   end
 
@@ -223,110 +219,9 @@ defmodule Membrane.Echo.Pipeline do
     end)
   end
 
-  def get_remote_credentials(offer) do
-    attributes = List.first(offer.media).attributes
-
-    attributes
-    |> Enum.reject(fn %ExSDP.Attribute{key: key} -> key not in ["ice-ufrag", "ice-pwd"] end)
-    |> Enum.map_join(" ", fn %ExSDP.Attribute{value: value} -> value end)
-  end
-
-  def get_fmt_mappings(offer) do
-    res =
-      offer.media
-      |> Enum.map(fn m ->
-        l =
-          m.attributes
-          |> Enum.reject(fn %ExSDP.Attribute{key: key} -> key != :rtpmap end)
-          |> Enum.map(fn a -> {a.value.payload_type, a.value.encoding} end)
-
-        {m.type, l}
-      end)
-
-#    IO.inspect(res, label: "result")
-    res
-  end
-
-  def parse_answer(sdp, state) do
+  def parse_answer(sdp, _state) do
     {:ok, sdp} = sdp |> ExSDP.parse()
-    remote_credentials = get_remote_credentials(sdp)
+    remote_credentials = SDPUtils.get_remote_credentials(sdp)
     [forward: {:ice, {:set_remote_credentials, remote_credentials}}]
-  end
-
-  def create_offer(ice_ufrag, ice_pwd, fingerprint) do
-    {:ok, sdp} = get_example_offer_sdp()
-    prepare_sdp(sdp, ice_ufrag, ice_pwd, fingerprint)
-  end
-
-  def prepare_sdp(sdp, ice_ufrag, ice_pwd, fingerprint) do
-    media =
-      sdp.media
-      |> Enum.map(fn m ->
-        new_attr =
-          m.attributes
-          |> Enum.map(fn %ExSDP.Attribute{key: key} = a ->
-            case key do
-              "ice-ufrag" -> %ExSDP.Attribute{a | value: ice_ufrag}
-              "ice-pwd" -> %ExSDP.Attribute{a | value: ice_pwd}
-              "fingerprint" -> %ExSDP.Attribute{a | value: "sha-256 " <> fingerprint}
-              _ -> a
-            end
-          end)
-
-        %ExSDP.Media{m | attributes: new_attr}
-      end)
-
-    %ExSDP{sdp | media: media} |> ExSDP.serialize()
-  end
-
-  def get_example_offer_sdp() do
-    """
-    v=0
-    o=- 7263753815578774817 2 IN IP4 127.0.0.1
-    s=-
-    t=0 0
-    a=group:BUNDLE 0 1
-    a=msid-semantic: WMS 0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANS
-    m=audio 9 UDP/TLS/RTP/SAVPF 111
-    c=IN IP4 0.0.0.0
-    a=rtcp:9 IN IP4 0.0.0.0
-    a=ice-ufrag:1PSY
-    a=ice-pwd:ejBMY08jZ4EWoJbIfuJsgRIS
-    a=ice-options:trickle
-    a=fingerprint:sha-256 24:2D:06:61:0E:59:54:0E:69:08:A4:9F:0A:D9:17:4B:89:50:11:A2:20:65:68:0B:61:11:51:57:EA:F6:11:E4
-    a=setup:actpass
-    a=mid:0
-    a=sendrecv
-    a=msid:0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANS 0c68dcf5-db98-4c3f-b0f2-ff1918ed80ba
-    a=rtcp-mux
-    a=rtpmap:111 opus/48000/2
-    a=rtcp-fb:111 transport-cc
-    a=fmtp:111 minptime=10;useinbandfec=1
-    a=ssrc:4112531724 cname:HPd3XfRHXYUxzfsJ
-    m=video 9 UDP/TLS/RTP/SAVPF 108
-    c=IN IP4 0.0.0.0
-    a=rtcp:9 IN IP4 0.0.0.0
-    a=ice-ufrag:1PSY
-    a=ice-pwd:ejBMY08jZ4EWoJbIfuJsgRIS
-    a=ice-options:trickle
-    a=fingerprint:sha-256 24:2D:06:61:0E:59:54:0E:69:08:A4:9F:0A:D9:17:4B:89:50:11:A2:20:65:68:0B:61:11:51:57:EA:F6:11:E4
-    a=setup:actpass
-    a=mid:1
-    a=sendrecv
-    a=msid:0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANS a60cccca-f708-49e7-89d0-4be0524658a5
-    a=rtcp-mux
-    a=rtcp-rsize
-    a=rtpmap:108 H264/90000
-    a=rtcp-fb:108 goog-remb
-    a=rtcp-fb:108 transport-cc
-    a=rtcp-fb:108 ccm fir
-    a=rtcp-fb:108 nack
-    a=rtcp-fb:108 nack pli
-    a=fmtp:108 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f
-    a=ssrc-group:FID 3766692804 1412308393
-    a=ssrc:3766692804 cname:HPd3XfRHXYUxzfsJ
-    a=ssrc:1412308393 cname:HPd3XfRHXYUxzfsJ
-    """
-    |> ExSDP.parse()
   end
 end

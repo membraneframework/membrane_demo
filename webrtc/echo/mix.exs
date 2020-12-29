@@ -33,7 +33,7 @@ defmodule Echo.MixProject do
       {:ex_sdp, "~> 0.2.0"},
       {:membrane_ice_plugin, github: "membraneframework/membrane_ice_plugin", override: true},
       {:membrane_dtls_plugin, "0.1.0"},
-      {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin", branch: "fix-stopping-srtp"},
+      {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin"},
       {:membrane_rtp_opus_plugin, "~> 0.2.0"},
       {:membrane_opus_plugin, "~> 0.2.0"}
     ]

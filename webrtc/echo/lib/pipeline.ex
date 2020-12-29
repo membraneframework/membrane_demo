@@ -192,7 +192,6 @@ defmodule Membrane.Echo.Pipeline do
         state = Map.put(state, :to, msg["from"])
         state = Map.put(state, :fmt_mappings, fmt_mappings)
         remote_credentials = get_remote_credentials(offer)
-        send_answer(state)
         {{:ok, forward: {:ice, {:set_remote_credentials, remote_credentials}}}, state}
 
       "candidate" ->
@@ -211,11 +210,6 @@ defmodule Membrane.Echo.Pipeline do
 
   def get_pt(list) do
     list |> Enum.map(fn {pt, _en} -> pt end)
-  end
-
-  def send_answer(state) do
-    answer = create_answer(state[:ice_ufrag], state[:ice_pwd], state[:fingerprint])
-    WS.send_answer(state[:ws_pid], answer, state[:from], state[:to])
   end
 
   def send_offer(state) do
@@ -261,11 +255,6 @@ defmodule Membrane.Echo.Pipeline do
 
   def create_offer(ice_ufrag, ice_pwd, fingerprint) do
     {:ok, sdp} = get_example_offer_sdp()
-    prepare_sdp(sdp, ice_ufrag, ice_pwd, fingerprint)
-  end
-
-  def create_answer(ice_ufrag, ice_pwd, fingerprint) do
-    {:ok, sdp} = get_example_answer_sdp()
     prepare_sdp(sdp, ice_ufrag, ice_pwd, fingerprint)
   end
 
@@ -334,57 +323,6 @@ defmodule Membrane.Echo.Pipeline do
     a=rtcp-fb:108 nack
     a=rtcp-fb:108 nack pli
     a=fmtp:108 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f
-    a=ssrc-group:FID 3766692804 1412308393
-    a=ssrc:3766692804 cname:HPd3XfRHXYUxzfsJ
-    a=ssrc:1412308393 cname:HPd3XfRHXYUxzfsJ
-    """
-    |> ExSDP.parse()
-  end
-
-  def get_example_answer_sdp() do
-    """
-    v=0
-    o=- 7263753815578774817 2 IN IP4 127.0.0.1
-    s=-
-    t=0 0
-    a=group:BUNDLE 0 1
-    a=msid-semantic: WMS 0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANS
-    m=audio 9 UDP/TLS/RTP/SAVPF 111
-    c=IN IP4 0.0.0.0
-    a=rtcp:9 IN IP4 0.0.0.0
-    a=ice-ufrag:1PSY
-    a=ice-pwd:ejBMY08jZ4EWoJbIfuJsgRIS
-    a=ice-options:trickle
-    a=fingerprint:sha-256 24:2D:06:61:0E:59:54:0E:69:08:A4:9F:0A:D9:17:4B:89:50:11:A2:20:65:68:0B:61:11:51:57:EA:F6:11:E4
-    a=setup:active
-    a=mid:0
-    a=sendrecv
-    a=msid:0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANS 0c68dcf5-db98-4c3f-b0f2-ff1918ed80ba
-    a=rtcp-mux
-    a=rtpmap:111 opus/48000/2
-    a=rtcp-fb:111 transport-cc
-    a=fmtp:111 minptime=10;useinbandfec=1
-    a=ssrc:4112531724 cname:HPd3XfRHXYUxzfsJ
-    m=video 9 UDP/TLS/RTP/SAVPF 108
-    c=IN IP4 0.0.0.0
-    a=rtcp:9 IN IP4 0.0.0.0
-    a=ice-ufrag:1PSY
-    a=ice-pwd:ejBMY08jZ4EWoJbIfuJsgRIS
-    a=ice-options:trickle
-    a=fingerprint:sha-256 24:2D:06:61:0E:59:54:0E:69:08:A4:9F:0A:D9:17:4B:89:50:11:A2:20:65:68:0B:61:11:51:57:EA:F6:11:E4
-    a=setup:active
-    a=mid:1
-    a=sendrecv
-    a=msid:0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANS a60cccca-f708-49e7-89d0-4be0524658a5
-    a=rtcp-mux
-    a=rtcp-rsize
-    a=rtpmap:108 H264/90000
-    a=rtcp-fb:108 goog-remb
-    a=rtcp-fb:108 transport-cc
-    a=rtcp-fb:108 ccm fir
-    a=rtcp-fb:108 nack
-    a=rtcp-fb:108 nack pli
-    a=fmtp:108 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f
     a=ssrc-group:FID 3766692804 1412308393
     a=ssrc:3766692804 cname:HPd3XfRHXYUxzfsJ
     a=ssrc:1412308393 cname:HPd3XfRHXYUxzfsJ

@@ -20,7 +20,7 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
         rtp: %RTP.SessionBin{
           secure?: secure?,
           srtp_policies: [
-            %LibSRTP.Policy{
+            %ExLibSRTP.Policy{
               ssrc: :any_inbound,
               key: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
             }
@@ -37,14 +37,14 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
   end
 
   @impl true
-  def handle_notification({:new_rtp_stream, ssrc, :H264}, :rtp, _ctx, state) do
+  def handle_notification({:new_rtp_stream, ssrc, 96}, :rtp, _ctx, state) do
     state = Map.put(state, :video, ssrc)
     actions = handle_stream(state)
     {{:ok, actions}, state}
   end
 
   @impl true
-  def handle_notification({:new_rtp_stream, ssrc, :OPUS}, :rtp, _ctx, state) do
+  def handle_notification({:new_rtp_stream, ssrc, 120}, :rtp, _ctx, state) do
     state = Map.put(state, :audio, ssrc)
     actions = handle_stream(state)
     {{:ok, actions}, state}

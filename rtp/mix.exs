@@ -23,26 +23,18 @@ defmodule Membrane.Demo.RTP.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:membrane_core,
-       github: "membraneframework/membrane_core", branch: "fix/playback", override: true},
-      {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin", branch: :sending},
-      # {:membrane_element_udp, "~> 0.3.0"},
-      {:membrane_element_udp, github: "membraneframework/membrane-element-udp", branch: :caps},
-      {:membrane_h264_ffmpeg_plugin, "~> 0.5.0"},
-      {:membrane_rtp_h264_plugin,
-       github: "membraneframework/membrane_rtp_h264_plugin", branch: :develop},
-      # {:membrane_rtp_h264_plugin,
-      #  github: "membraneframework/membrane_rtp_h264_plugin", branch: :develop},
-      {:membrane_opus_plugin, github: "membraneframework/membrane_opus_plugin", branch: :parser},
-      # {:membrane_rtp_opus_plugin, github: "membraneframework/membrane_rtp_opus_plugin"},
-      {:membrane_rtp_opus_plugin,
-       github: "membraneframework/membrane_rtp_opus_plugin", branch: :payloader},
-      {:membrane_sdl_plugin, "~> 0.4.0"},
-      {:membrane_portaudio_plugin, github: "membraneframework/membrane_portaudio_plugin"},
-      {:membrane_element_hackney, "~> 0.3.0"},
-      {:membrane_realtimer_plugin,
-       github: "membraneframework/membrane_realtimer_plugin", branch: :develop},
-      {:libsrtp, github: "membraneframework/elixir_libsrtp", branch: "develop"}
+      {:membrane_core, "~> 0.6.1"},
+      {:membrane_rtp_plugin, "~> 0.5.0"},
+      {:membrane_element_udp, "~> 0.4.0"},
+      {:membrane_h264_ffmpeg_plugin, "~> 0.7.0"},
+      {:membrane_rtp_h264_plugin, "~> 0.4.0"},
+      {:membrane_opus_plugin, "~> 0.2.1"},
+      {:membrane_rtp_opus_plugin, "~> 0.2.0"},
+      {:membrane_sdl_plugin, "~> 0.5.0"},
+      {:membrane_portaudio_plugin, "~> 0.5.1"},
+      {:membrane_hackney_plugin, "~> 0.4.0"},
+      {:ex_libsrtp, "~> 0.1.0"},
+      {:membrane_realtimer_plugin, "~> 0.1.0"}
     ]
   end
 end

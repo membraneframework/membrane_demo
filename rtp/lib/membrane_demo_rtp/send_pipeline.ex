@@ -15,18 +15,18 @@ defmodule Membrane.Demo.RTP.SendPipeline do
 
     spec = %ParentSpec{
       children: [
-        video_src: %Membrane.Element.Hackney.Source{
+        video_src: %Membrane.Hackney.Source{
           location: "https://membraneframework.github.io/static/samples/ffmpeg-testsrc.h264"
         },
-        video_parser: %Membrane.H264.FFmpeg.Parser{framerate: {30, 1}},
-        audio_src: %Membrane.Element.Hackney.Source{
+        video_parser: %Membrane.H264.FFmpeg.Parser{framerate: {30, 1}, alignment: :nal},
+        audio_src: %Membrane.Hackney.Source{
           location: "https://membraneframework.github.io/static/samples/beep.opus"
         },
         audio_parser: Membrane.Opus.Parser,
         rtp: %RTP.SessionBin{
           secure?: secure?,
           srtp_policies: [
-            %LibSRTP.Policy{
+            %ExLibSRTP.Policy{
               ssrc: :any_inbound,
               key: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
             }

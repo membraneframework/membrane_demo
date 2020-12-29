@@ -3,7 +3,7 @@ defmodule Echo.MixProject do
 
   def project do
     [
-      app: :echo,
+      app: :echo_demo,
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
@@ -11,9 +11,9 @@ defmodule Echo.MixProject do
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
+      mod: {Membrane.Echo.App, []},
       extra_applications: [:logger]
     ]
   end
@@ -35,7 +35,8 @@ defmodule Echo.MixProject do
       {:membrane_dtls_plugin, "0.1.0"},
       {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin"},
       {:membrane_rtp_opus_plugin, "~> 0.2.0"},
-      {:membrane_opus_plugin, "~> 0.2.0"}
+      {:membrane_opus_plugin, "~> 0.2.0"},
+      {:plug_cowboy, "~> 2.0"}
     ]
   end
 end

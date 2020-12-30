@@ -27,7 +27,7 @@ defmodule Recording.MixProject do
       {:membrane_rtp_h264_plugin, "~> 0.4.0"},
       {:membrane_dtls_plugin, "~> 0.1.0"},
       {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin"},
-      {:membrane_rtp_vp9_plugin, github: "membraneframework/membrane_rtp_vp9_plugin", branch: "merged-2-3-4"},
+      {:membrane_rtp_vp9_plugin, github: "membraneframework/membrane_rtp_vp9_plugin", branch: "integration-test"},
       {:membrane_element_ivf,
        github: "membraneframework/membrane-element-ivf",
        branch: :"moved-from-vp9-plugin"},

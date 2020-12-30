@@ -8,7 +8,6 @@ defmodule Membrane.Demo.RtpToHls do
   streams.
   """
 
-
   use Application
   alias Membrane.Demo.RtpToHls.Pipeline
 

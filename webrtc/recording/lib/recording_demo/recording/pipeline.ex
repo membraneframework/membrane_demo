@@ -2,6 +2,7 @@ defmodule RecordingDemo.Recording.Pipeline do
   use Membrane.Pipeline
 
   alias RecordingDemo.Recording.{SDPUtils, TimeLimiter, WS}
+  alias Membrane.Element.IVF
 
   require Membrane.Logger
 
@@ -36,7 +37,7 @@ defmodule RecordingDemo.Recording.Pipeline do
     state = %{
       room: opts.room,
       output_name:
-        "#{Membrane.Time.pretty_now() |> String.replace("\:", "-")}_#{:erlang.phash2(make_ref())}.h264",
+        "#{Membrane.Time.pretty_now() |> String.replace("\:", "-")}_#{:erlang.phash2(make_ref())}.ivf",
       candidates: [],
       ws: nil,
       peer_id: nil,
@@ -55,7 +56,7 @@ defmodule RecordingDemo.Recording.Pipeline do
   end
 
   @impl true
-  def handle_notification({:new_rtp_stream, ssrc, 96}, _from, _ctx, state) do
+  def handle_notification({:new_rtp_stream, ssrc, 98}, _from, _ctx, state) do
     Membrane.Logger.info("Received RTP stream")
     WS.send_recording(state.ws, state.peer_id, "all")
 
@@ -64,12 +65,15 @@ defmodule RecordingDemo.Recording.Pipeline do
         video_file_sink: %Membrane.File.Sink{
           location: "#{:code.priv_dir(:recording_demo)}/static/output/#{state.output_name}"
         },
-        time_limiter: %TimeLimiter{time_limit: 10 |> Membrane.Time.seconds()}
+        time_limiter: %TimeLimiter{time_limit: 10 |> Membrane.Time.seconds()},
+        ivf_writter:
+           %IVF.VP9{width: 400, height: 300, scale: 1, rate: 30}
       },
       links: [
         link(:rtp)
-        |> via_out(Pad.ref(:output, ssrc), options: [encoding: :H264, clock_rate: 90000])
+        |> via_out(Pad.ref(:output, ssrc), options: [encoding: :VP9, clock_rate: 90_000])
         |> to(:time_limiter)
+        |> to(:ivf_writter)
         |> to(:video_file_sink)
       ]
     }

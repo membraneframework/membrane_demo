@@ -20,13 +20,17 @@ defmodule Recording.MixProject do
 
   defp deps do
     [
-      {:membrane_core, "~> 0.6.1"},
+      {:membrane_core, "~> 0.6.1", override: true},
       {:membrane_file_plugin, "~> 0.5.0"},
       {:membrane_hackney_plugin, "~> 0.4.0"},
       {:membrane_h264_ffmpeg_plugin, "~> 0.6.0"},
       {:membrane_rtp_h264_plugin, "~> 0.4.0"},
       {:membrane_dtls_plugin, "~> 0.1.0"},
-      {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin", branch: "deps"},
+      {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin"},
+      {:membrane_rtp_vp9_plugin, github: "membraneframework/membrane_rtp_vp9_plugin", branch: "merged-2-3-4"},
+      {:membrane_element_ivf,
+       github: "membraneframework/membrane-element-ivf",
+       branch: :"moved-from-vp9-plugin"},
       {:membrane_rtp_opus_plugin, "~> 0.2.0"},
       {:membrane_opus_plugin, "~> 0.2.0"},
       {:membrane_webrtc_server, "~> 0.1.0"},

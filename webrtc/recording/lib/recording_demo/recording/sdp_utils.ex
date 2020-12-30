@@ -46,7 +46,7 @@ defmodule RecordingDemo.Recording.SDPUtils do
     s=-
     t=0 0
     a=group:BUNDLE 1
-    m=video 9 UDP/TLS/RTP/SAVPF 96
+    m=video 9 UDP/TLS/RTP/SAVPF 98
     c=IN IP4 0.0.0.0
     a=ice-ufrag:1PSY
     a=ice-pwd:ejBMY08jZ4EWoJbIfuJsgRIS
@@ -58,8 +58,8 @@ defmodule RecordingDemo.Recording.SDPUtils do
     a=msid:0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANS a60cccca-f708-49e7-89d0-4be0524658a5
     a=rtcp-mux
     a=rtcp-rsize
-    a=rtpmap:96 H264/90000
-    a=fmtp:96 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f
+    a=rtpmap:98 VP9/90000
+    a=fmtp:98 profile-id=0
     a=ssrc-group:FID 3766692804
     a=ssrc:3766692804 cname:HPd3XfRHXYUxzfsJ
     """

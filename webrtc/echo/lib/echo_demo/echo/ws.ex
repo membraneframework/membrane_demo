@@ -31,7 +31,6 @@ defmodule EchoDemo.Echo.WS do
     send(pid, frame)
   end
 
-
   # Server API
   @impl true
   def init(req, state) do
@@ -56,9 +55,11 @@ defmodule EchoDemo.Echo.WS do
         {:ok, pid} = EchoDemo.Echo.Pipeline.start_link(ws_pid: self())
         EchoDemo.Echo.Pipeline.play(pid)
         {:ok, Map.put(state, :pipeline, pid)}
+
       "stop" ->
         EchoDemo.Echo.Pipeline.stop(state[:pipeline])
         {:ok, state}
+
       _ ->
         send(state[:pipeline], {:event, msg})
         {:ok, state}

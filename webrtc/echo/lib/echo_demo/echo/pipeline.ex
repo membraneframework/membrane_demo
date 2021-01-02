@@ -48,6 +48,7 @@ defmodule EchoDemo.Echo.Pipeline do
       :offer_sent => false,
       :ws_pid => opts[:ws_pid]
     }
+
     {{:ok, spec: spec}, state}
   end
 
@@ -70,8 +71,8 @@ defmodule EchoDemo.Echo.Pipeline do
         |> via_in(Pad.ref(:input, @audio_ssrc))
         |> to(:rtp)
         |> via_out(Pad.ref(:rtp_output, @audio_ssrc),
-             options: [payload_type: 111, encoding: :OPUS, clock_rate: 48000]
-           )
+          options: [payload_type: 111, encoding: :OPUS, clock_rate: 48000]
+        )
         |> to(:funnel)
       ]
     }
@@ -84,7 +85,7 @@ defmodule EchoDemo.Echo.Pipeline do
     spec = %ParentSpec{
       children: %{
         realtimer_video: Membrane.Realtimer,
-         video_parser: %Membrane.H264.FFmpeg.Parser{framerate: {30, 1}, alignment: :nal},
+        video_parser: %Membrane.H264.FFmpeg.Parser{framerate: {30, 1}, alignment: :nal}
       },
       links: [
         link(:rtp)
@@ -146,6 +147,7 @@ defmodule EchoDemo.Echo.Pipeline do
       "answer" ->
         actions = parse_answer(msg["data"]["sdp"], state)
         {{:ok, actions}, state}
+
       "candidate" ->
         candidate = msg["data"]["candidate"]
         {{:ok, forward: {:ice, {:set_remote_candidate, "a=" <> candidate, 1}}}, state}
@@ -166,7 +168,8 @@ defmodule EchoDemo.Echo.Pipeline do
   end
 
   defp send_buffered_candidates(state) do
-    state[:candidates] |> Enum.each(fn cand ->
+    state[:candidates]
+    |> Enum.each(fn cand ->
       WS.send_candidate(state[:ws_pid], cand, 0, 0)
     end)
   end

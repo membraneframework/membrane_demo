@@ -33,10 +33,10 @@ defmodule Membrane.Echo.App do
   defp dispatch do
     [
       {:_,
-        [
-          {"/ws/echo", EchoDemo.Echo.WS, []},
-          {:_, Plug.Cowboy.Handler, {Router, []}}
-        ]}
+       [
+         {"/ws/echo", EchoDemo.Echo.WS, []},
+         {:_, Plug.Cowboy.Handler, {Router, []}}
+       ]}
     ]
   end
 end

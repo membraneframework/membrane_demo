@@ -109,6 +109,7 @@ defmodule EchoDemo.Echo.Pipeline do
     {:ok, state}
   end
 
+  @impl true
   def handle_notification({:local_credentials, credentials} = msg, _from, _ctx, state) do
     Membrane.Logger.info("#{inspect(msg)}")
     [ice_ufrag, ice_pwd] = String.split(credentials, " ")
@@ -120,34 +121,23 @@ defmodule EchoDemo.Echo.Pipeline do
     {:ok, state}
   end
 
+  @impl true
   def handle_notification({:new_candidate_full, cand}, _from, _ctx, %{offer_sent: false} = state) do
     candidates = Map.get(state, :candidates, [])
-    candidates = [String.slice(cand, 2..-1)] ++ candidates
+    candidates = [cand] ++ candidates
     state = Map.put(state, :candidates, candidates)
     {:ok, state}
   end
 
+  @impl true
   def handle_notification({:new_candidate_full, cand}, _from, _ctx, %{offer_sent: true} = state) do
     WS.send_candidate(state[:ws_pid], cand, 0, 0)
     {:ok, state}
   end
 
-  def handle_notification(notification, from, _ctx, state) do
-    Membrane.Logger.warn(
-      "unhandled notification: #{inspect(notification)}} from: #{inspect(from)}"
-    )
-
+  @impl true
+  def handle_notification(_notification, _from, _ctx, state) do
     {:ok, state}
-  end
-
-  @impl true
-  def handle_other({:set_remote_credentials, remote_credentials}, _ctx, state) do
-    {{:ok, forward: {:ice, {:set_remote_credentials, remote_credentials}}}, state}
-  end
-
-  @impl true
-  def handle_other({:set_remote_candidate, candidate}, _ctx, state) do
-    {{:ok, forward: {:ice, {:set_remote_candidate, candidate, 1}}}, state}
   end
 
   @impl true
@@ -170,18 +160,18 @@ defmodule EchoDemo.Echo.Pipeline do
     {{:ok, forward: {:ice, other}}, state}
   end
 
-  def send_offer(state) do
+  defp send_offer(state) do
     offer = SDPUtils.create_offer(state[:ice_ufrag], state[:ice_pwd], state[:fingerprint])
     WS.send_offer(state[:ws_pid], offer)
   end
 
-  def send_buffered_candidates(state) do
+  defp send_buffered_candidates(state) do
     state[:candidates] |> Enum.each(fn cand ->
       WS.send_candidate(state[:ws_pid], cand, 0, 0)
     end)
   end
 
-  def parse_answer(sdp, _state) do
+  defp parse_answer(sdp, _state) do
     {:ok, sdp} = sdp |> ExSDP.parse()
     remote_credentials = SDPUtils.get_remote_credentials(sdp)
     [forward: {:ice, {:set_remote_credentials, remote_credentials}}]

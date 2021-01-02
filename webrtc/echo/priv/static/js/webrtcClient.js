@@ -79,6 +79,10 @@ function getHandleDescription(event) {
     }
 }
 
-function echo() {
-    socket.send(JSON.stringify({event: "echo"}));
+function start_echo() {
+    socket.send(JSON.stringify({event: "start"}));
+}
+
+function stop_echo() {
+    socket.send(JSON.stringify({event: "stop"}));
 }

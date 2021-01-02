@@ -34,7 +34,7 @@ defmodule Membrane.Echo.App do
     [
       {:_,
         [
-          {"/echo", EchoDemo.Echo.WS, []},
+          {"/ws/echo", EchoDemo.Echo.WS, []},
           {:_, Plug.Cowboy.Handler, {Router, []}}
         ]}
     ]

@@ -52,10 +52,13 @@ defmodule EchoDemo.Echo.WS do
   @impl true
   def websocket_handle({:json, msg}, state) do
     case msg["event"] do
-      "echo" ->
+      "start" ->
         {:ok, pid} = EchoDemo.Echo.Pipeline.start_link(ws_pid: self())
         EchoDemo.Echo.Pipeline.play(pid)
         {:ok, Map.put(state, :pipeline, pid)}
+      "stop" ->
+        EchoDemo.Echo.Pipeline.stop(state[:pipeline])
+        {:ok, state}
       _ ->
         send(state[:pipeline], {:event, msg})
         {:ok, state}

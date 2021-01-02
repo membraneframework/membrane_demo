@@ -2,9 +2,17 @@ defmodule EchoDemo.Echo.SDPUtils do
   def get_remote_credentials(sdp) do
     attributes = List.first(sdp.media).attributes
 
-    attributes
-    |> Enum.reject(fn %ExSDP.Attribute{key: key} -> key not in ["ice-ufrag", "ice-pwd"] end)
-    |> Enum.map_join(" ", fn %ExSDP.Attribute{value: value} -> value end)
+    attributes =
+      attributes
+      |> Enum.reject(fn %ExSDP.Attribute{key: key} -> key not in ["ice-ufrag", "ice-pwd"] end)
+
+    %ExSDP.Attribute{value: ice_ufrag} =
+      attributes |> Enum.find(fn %ExSDP.Attribute{key: key} -> key == "ice-ufrag" end)
+
+    %ExSDP.Attribute{value: ice_pwd} =
+      attributes |> Enum.find(fn %ExSDP.Attribute{key: key} -> key == "ice-pwd" end)
+
+    ice_ufrag <> " " <> ice_pwd
   end
 
   def create_offer(ice_ufrag, ice_pwd, fingerprint) do

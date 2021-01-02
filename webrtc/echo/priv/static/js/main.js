@@ -1,10 +1,5 @@
 const room = document.location.href.split("/").slice(-1)[0]
-const webSocketUrl = "wss://" + window.location.host + "/webrtc/" + room;
-
-const credentials = {
-    username: "USERNAME",
-    password: "PASSWORD"
-}
+const webSocketUrl = "wss://" + window.location.host + "/echo";
 
 function setupLocalVideo(stream) {
     setupVideo("local", stream);
@@ -22,5 +17,4 @@ function setupVideo(id, stream) {
     document.getElementById(id).srcObject = stream;
 } 
 
-document.cookie = "credentials=" + JSON.stringify(credentials)
 startStreaming(webSocketUrl, setupLocalVideo, setupVideo);

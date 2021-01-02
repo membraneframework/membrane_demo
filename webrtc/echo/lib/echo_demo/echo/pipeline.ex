@@ -1,15 +1,16 @@
-defmodule Membrane.Echo.Pipeline do
+defmodule EchoDemo.Echo.Pipeline do
   use Membrane.Pipeline
 
   require Membrane.Logger
 
   alias EchoDemo.Echo.SDPUtils
+  alias EchoDemo.Echo.WS
 
   @audio_ssrc 4_112_531_724
   @video_ssrc 3_766_692_804
 
   @impl true
-  def handle_init(_) do
+  def handle_init(opts) do
     children = %{
       ice: %Membrane.ICE.Bin{
         stun_servers: ["64.233.161.127:19302"],
@@ -43,10 +44,9 @@ defmodule Membrane.Echo.Pipeline do
     }
 
     state = %{
-      :from => nil,
-      :to => nil,
       :candidates => [],
-      :authenticated => false
+      :offer_sent => false,
+      :ws_pid => opts[:ws_pid]
     }
     {{:ok, spec: spec}, state}
   end
@@ -55,11 +55,6 @@ defmodule Membrane.Echo.Pipeline do
     digest_str
     |> :binary.bin_to_list()
     |> Enum.map_join(":", &Base.encode16(<<&1>>))
-  end
-
-  def handle_prepared_to_playing(_ctx, state) do
-    {:ok, ws_pid} = WS.start_link("wss://localhost:8443/webrtc/room", %{parent: self()})
-    {:ok, Map.put(state, :ws_pid, ws_pid)}
   end
 
   @impl true
@@ -108,46 +103,33 @@ defmodule Membrane.Echo.Pipeline do
     {{:ok, spec: spec}, state}
   end
 
-  def handle_notification(
-        {:component_ready, component_id, handshake_data} = msg,
-        _from,
-        _ctx,
-        state
-      ) do
-    Membrane.Logger.info("#{inspect(msg)}")
-    new_state = Map.put(state, :ready_component, component_id)
-    new_state = Map.put(new_state, :handshake_data, handshake_data)
-    {:ok, new_state}
-  end
-
   @impl true
   def handle_notification({:handshake_init_data, _component_id, fingerprint}, _from, _ctx, state) do
-    new_state = Map.put(state, :fingerprint, hex_dump(fingerprint))
-    {:ok, new_state}
+    state = Map.put(state, :fingerprint, hex_dump(fingerprint))
+    {:ok, state}
   end
 
   def handle_notification({:local_credentials, credentials} = msg, _from, _ctx, state) do
     Membrane.Logger.info("#{inspect(msg)}")
     [ice_ufrag, ice_pwd] = String.split(credentials, " ")
-    new_state = Map.put(state, :ice_ufrag, ice_ufrag)
-    new_state = Map.put(new_state, :ice_pwd, ice_pwd)
-    {:ok, new_state}
+    state = Map.put(state, :ice_ufrag, ice_ufrag)
+    state = Map.put(state, :ice_pwd, ice_pwd)
+    state = Map.put(state, :offer_sent, true)
+    send_offer(state)
+    send_buffered_candidates(state)
+    {:ok, state}
   end
 
-  def handle_notification({:new_candidate_full, cand}, _from, _ctx, %{authenticated: false} = state) do
+  def handle_notification({:new_candidate_full, cand}, _from, _ctx, %{offer_sent: false} = state) do
     candidates = Map.get(state, :candidates, [])
     candidates = [String.slice(cand, 2..-1)] ++ candidates
     state = Map.put(state, :candidates, candidates)
     {:ok, state}
   end
 
-  def handle_notification({:new_candidate_full, cand}, _from, _ctx, %{authenticated: true} = state) do
-    WS.send_candidate(state[:ws_pid], cand, 0, 0, "all")
+  def handle_notification({:new_candidate_full, cand}, _from, _ctx, %{offer_sent: true} = state) do
+    WS.send_candidate(state[:ws_pid], cand, 0, 0)
     {:ok, state}
-  end
-
-  def handle_notification({:new_remote_candidate_full, cand}, _from, _ctx, state) do
-    {{:ok, forward: {:ice, {:set_remote_candidate, cand, 1}}}, state}
   end
 
   def handle_notification(notification, from, _ctx, state) do
@@ -170,26 +152,10 @@ defmodule Membrane.Echo.Pipeline do
 
   @impl true
   def handle_other({:event, msg}, _ctx, state) do
-    msg = Poison.decode!(msg)
-
     case msg["event"] do
-      "authenticated" ->
-        state = Map.put(state, :to, msg["from"])
-        send_offer(state)
-        send_buffered_candidates(state)
-        state = Map.put(state, :authenticated, true)
-        {:ok, state}
       "answer" ->
         actions = parse_answer(msg["data"]["sdp"], state)
         {{:ok, actions}, state}
-      "offer" ->
-        {:ok, offer} = ExSDP.parse(msg["data"]["sdp"])
-        state = Map.put(state, :offer, offer)
-        state = Map.put(state, :from, msg["to"])
-        state = Map.put(state, :to, msg["from"])
-        remote_credentials = SDPUtils.get_remote_credentials(offer)
-        {{:ok, forward: {:ice, {:set_remote_credentials, remote_credentials}}}, state}
-
       "candidate" ->
         candidate = msg["data"]["candidate"]
         {{:ok, forward: {:ice, {:set_remote_candidate, "a=" <> candidate, 1}}}, state}
@@ -204,18 +170,14 @@ defmodule Membrane.Echo.Pipeline do
     {{:ok, forward: {:ice, other}}, state}
   end
 
-  def get_pt(list) do
-    list |> Enum.map(fn {pt, _en} -> pt end)
-  end
-
   def send_offer(state) do
     offer = SDPUtils.create_offer(state[:ice_ufrag], state[:ice_pwd], state[:fingerprint])
-    WS.send_offer(state[:ws_pid], offer, state[:from], "all")
+    WS.send_offer(state[:ws_pid], offer)
   end
 
   def send_buffered_candidates(state) do
     state[:candidates] |> Enum.each(fn cand ->
-      WS.send_candidate(state[:ws_pid], cand, 0, 0, "all")
+      WS.send_candidate(state[:ws_pid], cand, 0, 0)
     end)
   end
 

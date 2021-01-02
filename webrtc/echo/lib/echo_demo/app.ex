@@ -15,7 +15,7 @@ defmodule Membrane.Echo.App do
         # can be seen in observer
         plug: Router,
         options: [
-#          dispatch: dispatch(),
+          dispatch: dispatch(),
           port: config.port,
           ip: config.ip,
           otp_app: :echo_demo,
@@ -30,15 +30,13 @@ defmodule Membrane.Echo.App do
     Supervisor.start_link(children, opts)
   end
 
-#  defp dispatch do
-#    [
-#      {:_,
-#        [
-#          {"/record", Peer, %Peer.Options{module: Signaling.JSPeer}},
-#          {"/membrane/[:room]", Membrane.WebRTC.Server.Peer,
-#            %Peer.Options{module: Signaling.MembranePeer}},
-#          {:_, Plug.Cowboy.Handler, {Router, []}}
-#        ]}
-#    ]
-#  end
+  defp dispatch do
+    [
+      {:_,
+        [
+          {"/echo", EchoDemo.Echo.WS, []},
+          {:_, Plug.Cowboy.Handler, {Router, []}}
+        ]}
+    ]
+  end
 end

@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>WebRTC Server</title>
+        <title>Membrane WebRTC echo demo</title>
         <link rel="stylesheet" href="css/StyleSheet.css" />
         <script src="js/adapter.js"></script>        
         <script src="js/webrtcClient.js"></script>
@@ -8,11 +8,12 @@
         <script src="js/main.js"></script>
     </head>
     <body>
-        <h1>Membrane Signaling Server</h1>
+        <h1>Membrane WebRTC echo demo</h1>
         <div id="videochat">
         </div>
         <template id="template">
           <video playsinline autoplay></video>
         </template>
+        <button id="echo_btn" onclick="echo()">Echo</button>
     </body>
 </html>

@@ -67,7 +67,7 @@ defmodule RecordingDemo.Recording.Pipeline do
         },
         time_limiter: %TimeLimiter{time_limit: 10 |> Membrane.Time.seconds()},
         ivf_writter:
-           %IVF.VP9{width: 400, height: 300, scale: 1, rate: 30}
+           %IVF{width: 400, height: 300, scale: 1, rate: 30}
       },
       links: [
         link(:rtp)

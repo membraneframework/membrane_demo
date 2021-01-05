@@ -3,8 +3,9 @@ defmodule EchoDemo.Echo.Pipeline do
 
   require Membrane.Logger
 
-  alias EchoDemo.Echo.SDPUtils
+  alias Membrane.WebRTC
   alias EchoDemo.Echo.WS
+  alias ExSDP.Media
 
   @audio_ssrc 4_112_531_724
   @video_ssrc 3_766_692_804
@@ -59,7 +60,7 @@ defmodule EchoDemo.Echo.Pipeline do
   end
 
   @impl true
-  def handle_notification({:new_rtp_stream, ssrc, 111}, _from, _ctx, state) do
+  def handle_notification({:new_rtp_stream, ssrc, 120}, _from, _ctx, state) do
     spec = %ParentSpec{
       children: %{
         realtimer_audio: Membrane.Realtimer
@@ -71,7 +72,7 @@ defmodule EchoDemo.Echo.Pipeline do
         |> via_in(Pad.ref(:input, @audio_ssrc))
         |> to(:rtp)
         |> via_out(Pad.ref(:rtp_output, @audio_ssrc),
-          options: [payload_type: 111, encoding: :OPUS, clock_rate: 48000]
+          options: [payload_type: 120, encoding: :OPUS, clock_rate: 48000]
         )
         |> to(:funnel)
       ]
@@ -81,7 +82,7 @@ defmodule EchoDemo.Echo.Pipeline do
   end
 
   @impl true
-  def handle_notification({:new_rtp_stream, ssrc, 108}, _from, _ctx, state) do
+  def handle_notification({:new_rtp_stream, ssrc, 96}, _from, _ctx, state) do
     spec = %ParentSpec{
       children: %{
         realtimer_video: Membrane.Realtimer,
@@ -95,7 +96,7 @@ defmodule EchoDemo.Echo.Pipeline do
         |> via_in(Pad.ref(:input, @video_ssrc))
         |> to(:rtp)
         |> via_out(Pad.ref(:rtp_output, @video_ssrc),
-          options: [payload_type: 108, encoding: :H264, clock_rate: 90000]
+          options: [payload_type: 96, encoding: :H264, clock_rate: 90000]
         )
         |> to(:funnel)
       ]
@@ -106,7 +107,7 @@ defmodule EchoDemo.Echo.Pipeline do
 
   @impl true
   def handle_notification({:handshake_init_data, _component_id, fingerprint}, _from, _ctx, state) do
-    state = Map.put(state, :fingerprint, hex_dump(fingerprint))
+    state = Map.put(state, :fingerprint, {:sha256, hex_dump(fingerprint)})
     {:ok, state}
   end
 
@@ -163,8 +164,10 @@ defmodule EchoDemo.Echo.Pipeline do
   end
 
   defp send_offer(state) do
-    offer = SDPUtils.create_offer(state[:ice_ufrag], state[:ice_pwd], state[:fingerprint])
-    WS.send_offer(state[:ws_pid], offer)
+    ssrcs = %{:audio => [@audio_ssrc], :video => [@video_ssrc]}
+    opts = %WebRTC.SDP.Opts{ssrcs: ssrcs}
+    offer = WebRTC.SDP.create_offer(state[:ice_ufrag], state[:ice_pwd], state[:fingerprint], opts)
+    WS.send_offer(state[:ws_pid], to_string(offer))
   end
 
   defp send_buffered_candidates(state) do
@@ -176,7 +179,14 @@ defmodule EchoDemo.Echo.Pipeline do
 
   defp parse_answer(sdp, _state) do
     {:ok, sdp} = sdp |> ExSDP.parse()
-    remote_credentials = SDPUtils.get_remote_credentials(sdp)
+    remote_credentials = get_remote_credentials(sdp)
     [forward: {:ice, {:set_remote_credentials, remote_credentials}}]
+  end
+
+  defp get_remote_credentials(sdp) do
+    media = List.first(sdp.media)
+    {_key, ice_ufrag} = Media.get_attribute(media, :ice_ufrag)
+    {_key, ice_pwd} = Media.get_attribute(media, :ice_pwd)
+    ice_ufrag <> " " <> ice_pwd
   end
 end

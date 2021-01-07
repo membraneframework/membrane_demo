@@ -3,7 +3,7 @@
 This project demonstrates handling RTP in Membrane.
 
 This example uses [RTP plugin](https://github.com/membraneframework/membrane_rtp_plugin) that is responsible for
-receiving and interpreting RTP streams.
+receiving and sending RTP streams.
 
 ## Prerequisites
 

@@ -2,16 +2,8 @@
 
 This project demonstrates handling RTP in Membrane.
 
-This example uses [RTP bin](https://github.com/membraneframework/membrane-bin-rtp) that is responsible for
-receiving and interpreting RTP streams.
-
-## Bins
-
-This demo is also a presentation of a new Membrane v0.5 feature: Bins.
-
-Bins are entities that enable creating reusable, dynamically customisable groups of elements.
-Bins can spawn their children like pipelines and have pads like elements, so they can be
-embedded within a pipeline (or another bin). Bins' pads proxy the stream between their siblings and children.
+This example uses [RTP plugin](https://github.com/membraneframework/membrane_rtp_plugin) that is responsible for
+receiving and sending RTP streams.
 
 ## Prerequisites
 
@@ -26,12 +18,18 @@ You have to have installed the following packages on your system:
 To run this project, type
 
 ```bash
-mix run --no-halt
+mix run --no-halt receive.exs
 ```
 
-It will start a server listening for UDP connections on port 5000.
+and in another terminal
 
-Then, you can send any h.264 video or mp3 audio via RTP to have them played. Examples below show how to generate a sample RTP stream with GStreamer.
+```bash
+mix run --no-halt send.exs
+```
+
+You should be able to see an SDL player showing an example video.
+
+The stream can also be sent with GStreamer:
 
 ```bash
 # For audio
@@ -40,8 +38,6 @@ gst-launch-1.0 -v audiotestsrc ! lamemp3enc ! rtpmpapay pt=127 ! udpsink host=12
 # For video
 gst-launch-1.0 -v videotestsrc ! video/x-raw,format=I420 ! x264enc ! rtph264pay pt=96 ! udpsink host=127.0.0.1 port=5000
 ```
-
-You should be able to see an SDL player showing an example video and hear a sample audio.
 
 ## Copyright and License
 

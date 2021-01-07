@@ -16,7 +16,6 @@ defmodule Membrane.Demo.RTP.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {Membrane.Demo.RTP, []},
       extra_applications: [:logger]
     ]
   end
@@ -24,16 +23,18 @@ defmodule Membrane.Demo.RTP.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
-      {:membrane_core, "0.5.0"},
-      {:membrane_bin_rtp, "0.1.0"},
-      {:membrane_element_udp, "~> 0.3.0"},
-      {:membrane_element_ffmpeg_h264, "~> 0.2.0"},
-      {:membrane_element_rtp_h264, "~> 0.2.0"},
-      {:membrane_element_sdl, "~> 0.3.0"},
-      {:membrane_element_portaudio, "~> 0.3.0"},
-      {:membrane_loggers, "~> 0.3.0"}
+      {:membrane_core, "~> 0.6.1"},
+      {:membrane_rtp_plugin, "~> 0.5.0"},
+      {:membrane_element_udp, "~> 0.4.0"},
+      {:membrane_h264_ffmpeg_plugin, "~> 0.7.0"},
+      {:membrane_rtp_h264_plugin, "~> 0.4.0"},
+      {:membrane_opus_plugin, "~> 0.2.1"},
+      {:membrane_rtp_opus_plugin, "~> 0.2.0"},
+      {:membrane_sdl_plugin, "~> 0.5.0"},
+      {:membrane_portaudio_plugin, "~> 0.5.1"},
+      {:membrane_hackney_plugin, "~> 0.4.0"},
+      {:ex_libsrtp, "~> 0.1.0"},
+      {:membrane_realtimer_plugin, "~> 0.1.0"}
     ]
   end
 end

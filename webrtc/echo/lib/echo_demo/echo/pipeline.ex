@@ -81,7 +81,7 @@ defmodule EchoDemo.Echo.Pipeline do
   end
 
   @impl true
-  def handle_notification({:new_rtp_stream, ssrc, 108}, _from, _ctx, state) do
+  def handle_notification({:new_rtp_stream, ssrc, 98}, _from, _ctx, state) do
     spec = %ParentSpec{
       children: %{
         realtimer_video: Membrane.Realtimer,
@@ -89,13 +89,12 @@ defmodule EchoDemo.Echo.Pipeline do
       },
       links: [
         link(:rtp)
-        |> via_out(Pad.ref(:output, ssrc), options: [encoding: :H264, clock_rate: 90000])
+        |> via_out(Pad.ref(:output, ssrc), options: [encoding: :VP9, clock_rate: 90_000])
         |> to(:realtimer_video)
-        |> to(:video_parser)
         |> via_in(Pad.ref(:input, @video_ssrc))
         |> to(:rtp)
         |> via_out(Pad.ref(:rtp_output, @video_ssrc),
-          options: [payload_type: 108, encoding: :H264, clock_rate: 90000]
+          options: [payload_type: 98, encoding: :VP9, clock_rate: 90_000]
         )
         |> to(:funnel)
       ]

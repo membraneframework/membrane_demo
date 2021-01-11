@@ -65,7 +65,7 @@ defmodule EchoDemo.Echo.SDPUtils do
     a=rtcp-fb:111 transport-cc
     a=fmtp:111 minptime=10;useinbandfec=1
     a=ssrc:4112531724 cname:HPd3XfRHXYUxzfsJ
-    m=video 9 UDP/TLS/RTP/SAVPF 108
+    m=video 9 UDP/TLS/RTP/SAVPF 98
     c=IN IP4 0.0.0.0
     a=rtcp:9 IN IP4 0.0.0.0
     a=ice-ufrag:1PSY
@@ -78,13 +78,13 @@ defmodule EchoDemo.Echo.SDPUtils do
     a=msid:0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANS a60cccca-f708-49e7-89d0-4be0524658a5
     a=rtcp-mux
     a=rtcp-rsize
-    a=rtpmap:108 H264/90000
-    a=rtcp-fb:108 goog-remb
-    a=rtcp-fb:108 transport-cc
-    a=rtcp-fb:108 ccm fir
-    a=rtcp-fb:108 nack
-    a=rtcp-fb:108 nack pli
-    a=fmtp:108 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f
+    a=rtpmap:98 VP9/90000
+    a=rtcp-fb:98 goog-remb
+    a=rtcp-fb:98 transport-cc
+    a=rtcp-fb:98 ccm fir
+    a=rtcp-fb:98 nack
+    a=rtcp-fb:98 nack pli
+    a=fmtp:98 profile-id=0
     a=ssrc-group:FID 3766692804 1412308393
     a=ssrc:3766692804 cname:HPd3XfRHXYUxzfsJ
     a=ssrc:1412308393 cname:HPd3XfRHXYUxzfsJ

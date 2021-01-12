@@ -82,6 +82,7 @@ defmodule EchoDemo.Echo.Pipeline do
 
   @impl true
   def handle_notification({:new_rtp_stream, ssrc, 98}, _from, _ctx, state) do
+    IO.inspect(ssrc, label: "###")
     spec = %ParentSpec{
       children: %{
         realtimer_video: Membrane.Realtimer,

@@ -1,2 +1,3 @@
 webrtc/recording/
 .vscode/
+webrtc/echo/test/results/hanging_video.ivf

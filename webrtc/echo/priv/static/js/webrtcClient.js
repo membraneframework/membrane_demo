@@ -8,7 +8,7 @@ function startStreaming(webSocketUrl, localVideoFunction, remoteVideoFunction) {
     rtcConfig = config;
     onRemoteVideo = remoteVideoFunction;
     navigator.getUserMedia(
-        {audio: true, video: true},
+        {audio: false, video: true},
         (stream) => {localVideoFunction(stream); openConnection(webSocketUrl);}, 
         (e) => {alert(e)});
 }

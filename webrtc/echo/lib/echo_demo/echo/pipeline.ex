@@ -60,35 +60,12 @@ defmodule EchoDemo.Echo.Pipeline do
   end
 
   @impl true
-  def handle_notification({:new_rtp_stream, ssrc, 111}, _from, _ctx, state) do
-    # spec = %ParentSpec{
-    #   children: %{
-    #     realtimer_audio: Membrane.Realtimer
-    #   },
-    #   links: [
-    #     link(:rtp)
-    #     |> via_out(Pad.ref(:output, ssrc), options: [encoding: :OPUS, clock_rate: 48000])
-    #     |> to(:realtimer_audio)
-    #     |> via_in(Pad.ref(:input, @audio_ssrc))
-    #     |> to(:rtp)
-    #     |> via_out(Pad.ref(:rtp_output, @audio_ssrc),
-    #       options: [payload_type: 111, encoding: :OPUS, clock_rate: 48000]
-    #     )
-    #     |> to(:funnel)
-    #   ]
-    # }
-
-    # {{:ok, spec: spec}, state}
-    {:ok, state}
-  end
-
-  @impl true
   def handle_notification({:new_rtp_stream, ssrc, 98}, _from, _ctx, state) do
     spec = %ParentSpec{
       children: %{
         realtimer_video: Membrane.Realtimer,
         deserializer: IVF.Deserializer,
-        file_source: %Membrane.File.Source{location: "/Users/andrzej/Membrane/membrane_demo/webrtc/echo/results/no_hanging_video.ivf"}
+        file_source: %Membrane.File.Source{location: "/Users/andrzej/Membrane/membrane_demo/webrtc/echo/results/output2.ivf"}
       },
 
       links: [

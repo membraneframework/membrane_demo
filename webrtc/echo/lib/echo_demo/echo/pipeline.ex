@@ -88,7 +88,7 @@ defmodule EchoDemo.Echo.Pipeline do
       children: %{
         realtimer_video: Membrane.Realtimer,
         deserializer: IVF.Deserializer,
-        file_source: %Membrane.File.Source{location: "/test/fixtures/hanging_video.ivf"}
+        file_source: %Membrane.File.Source{location: "/Users/andrzej/Membrane/membrane_demo/webrtc/echo/results/no_hanging_video.ivf"}
       },
 
       links: [

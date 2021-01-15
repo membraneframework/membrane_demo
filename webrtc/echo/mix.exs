@@ -30,6 +30,7 @@ defmodule Echo.MixProject do
       {:membrane_funnel_plugin, "~> 0.1.0"},
       {:membrane_ice_plugin, path: "~/Membrane/membrane_ice_plugin", override: true},
       {:membrane_h264_ffmpeg_plugin, "~> 0.7.0"},
+      {:membrane_ivf_plugin, github: "membraneframework/membrane_ivf_plugin", branch: "deserializer"},
       {:membrane_rtp_vp9_plugin, github: "membraneframework/membrane_rtp_vp9_plugin", branch: "payloader"},
       {:membrane_rtp_h264_plugin, github: "membraneframework/membrane_rtp_h264_plugin"},
       {:ex_sdp, "~> 0.2.0"},
@@ -37,7 +38,8 @@ defmodule Echo.MixProject do
       {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin"},
       {:membrane_rtp_opus_plugin, "~> 0.2.0"},
       {:membrane_opus_plugin, "~> 0.2.0"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:membrane_element_tee, "~> 0.3.0"}
     ]
   end
 end

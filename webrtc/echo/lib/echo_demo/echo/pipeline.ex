@@ -2,6 +2,7 @@ defmodule EchoDemo.Echo.Pipeline do
   use Membrane.Pipeline
 
   require Membrane.Logger
+  alias Membrane.Element.{IVF, Tee}
 
   alias EchoDemo.Echo.SDPUtils
   alias EchoDemo.Echo.WS
@@ -60,37 +61,49 @@ defmodule EchoDemo.Echo.Pipeline do
 
   @impl true
   def handle_notification({:new_rtp_stream, ssrc, 111}, _from, _ctx, state) do
-    spec = %ParentSpec{
-      children: %{
-        realtimer_audio: Membrane.Realtimer
-      },
-      links: [
-        link(:rtp)
-        |> via_out(Pad.ref(:output, ssrc), options: [encoding: :OPUS, clock_rate: 48000])
-        |> to(:realtimer_audio)
-        |> via_in(Pad.ref(:input, @audio_ssrc))
-        |> to(:rtp)
-        |> via_out(Pad.ref(:rtp_output, @audio_ssrc),
-          options: [payload_type: 111, encoding: :OPUS, clock_rate: 48000]
-        )
-        |> to(:funnel)
-      ]
-    }
+    # spec = %ParentSpec{
+    #   children: %{
+    #     realtimer_audio: Membrane.Realtimer
+    #   },
+    #   links: [
+    #     link(:rtp)
+    #     |> via_out(Pad.ref(:output, ssrc), options: [encoding: :OPUS, clock_rate: 48000])
+    #     |> to(:realtimer_audio)
+    #     |> via_in(Pad.ref(:input, @audio_ssrc))
+    #     |> to(:rtp)
+    #     |> via_out(Pad.ref(:rtp_output, @audio_ssrc),
+    #       options: [payload_type: 111, encoding: :OPUS, clock_rate: 48000]
+    #     )
+    #     |> to(:funnel)
+    #   ]
+    # }
 
-    {{:ok, spec: spec}, state}
+    # {{:ok, spec: spec}, state}
+    {:ok, state}
   end
 
   @impl true
   def handle_notification({:new_rtp_stream, ssrc, 98}, _from, _ctx, state) do
-    IO.inspect(ssrc, label: "###")
     spec = %ParentSpec{
       children: %{
+        tee: Tee.Parallel,
         realtimer_video: Membrane.Realtimer,
-        video_parser: %Membrane.H264.FFmpeg.Parser{framerate: {30, 1}, alignment: :nal}
+        # deserializer: IVF.Deserializer,
+        serializer: %IVF.Serializer{width: 400, height: 300, scale: 1, rate: 30},
+        # file_source: %Membrane.File.Source{location: "/Users/andrzej/Membrane/membrane_demo/webrtc/echo/test/results/recorded.ivf"},
+        file_sink: %Membrane.File.Sink{location: "/Users/andrzej/Membrane/membrane_demo/webrtc/echo/test/results/hanging_video.ivf"}
       },
+
       links: [
         link(:rtp)
         |> via_out(Pad.ref(:output, ssrc), options: [encoding: :VP9, clock_rate: 90_000])
+        |> to(:tee)
+        |> to(:serializer)
+        |> to(:file_sink),
+
+        # link(:file_source)
+        # |> to(:deserializer)
+        link(:tee)
         |> to(:realtimer_video)
         |> via_in(Pad.ref(:input, @video_ssrc))
         |> to(:rtp)

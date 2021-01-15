@@ -86,24 +86,14 @@ defmodule EchoDemo.Echo.Pipeline do
   def handle_notification({:new_rtp_stream, ssrc, 98}, _from, _ctx, state) do
     spec = %ParentSpec{
       children: %{
-        tee: Tee.Parallel,
         realtimer_video: Membrane.Realtimer,
-        # deserializer: IVF.Deserializer,
-        serializer: %IVF.Serializer{width: 400, height: 300, scale: 1, rate: 30},
-        # file_source: %Membrane.File.Source{location: "/Users/andrzej/Membrane/membrane_demo/webrtc/echo/test/results/recorded.ivf"},
-        file_sink: %Membrane.File.Sink{location: "/Users/andrzej/Membrane/membrane_demo/webrtc/echo/test/results/hanging_video.ivf"}
+        deserializer: IVF.Deserializer,
+        file_source: %Membrane.File.Source{location: "/test/fixtures/hanging_video.ivf"}
       },
 
       links: [
-        link(:rtp)
-        |> via_out(Pad.ref(:output, ssrc), options: [encoding: :VP9, clock_rate: 90_000])
-        |> to(:tee)
-        |> to(:serializer)
-        |> to(:file_sink),
-
-        # link(:file_source)
-        # |> to(:deserializer)
-        link(:tee)
+        link(:file_source)
+        |> to(:deserializer)
         |> to(:realtimer_video)
         |> via_in(Pad.ref(:input, @video_ssrc))
         |> to(:rtp)

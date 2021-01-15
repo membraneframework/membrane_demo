@@ -70,8 +70,8 @@ defmodule EchoDemo.Echo.Pipeline do
       children: %{
         tee: Tee.Parallel,
         realtimer_video: Membrane.Realtimer,
-        serializer: %IVF.Serializer{width: 400, height: 300, rate: 30},
-        file_sink: %Membrane.File.Sink{location: "/Users/andrzej/Membrane/membrane_demo/webrtc/echo/test/results/hanging_video.ivf"}
+        serializer: %IVF.Serializer{width: 400, height: 300, rate: Membrane.Time.second()},
+        file_sink: %Membrane.File.Sink{location: "/Users/andrzej/Membrane/membrane_demo/webrtc/echo/results/no_hanging_video.ivf"}
       },
 
       links: [

@@ -28,7 +28,7 @@ defmodule Echo.MixProject do
       {:membrane_realtimer_plugin,
        github: "membraneframework/membrane_realtimer_plugin"},
       {:membrane_funnel_plugin, "~> 0.1.0"},
-      {:membrane_ice_plugin, path: "~/Membrane/membrane_ice_plugin", override: true},
+      {:membrane_ice_plugin, github: "membraneframework/membrane_ice_plugin", override: true},
       {:membrane_h264_ffmpeg_plugin, "~> 0.7.0"},
       {:membrane_ivf_plugin, github: "membraneframework/membrane_ivf_plugin", branch: "deserializer"},
       {:membrane_rtp_vp9_plugin, github: "membraneframework/membrane_rtp_vp9_plugin", branch: "payloader"},

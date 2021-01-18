@@ -79,11 +79,6 @@ defmodule EchoDemo.Echo.SDPUtils do
     a=rtcp-mux
     a=rtcp-rsize
     a=rtpmap:98 VP9/90000
-    a=rtcp-fb:98 goog-remb
-    a=rtcp-fb:98 transport-cc
-    a=rtcp-fb:98 ccm fir
-    a=rtcp-fb:98 nack
-    a=rtcp-fb:98 nack pli
     a=fmtp:98 profile-id=0
     a=ssrc-group:FID 3766692804 1412308393
     a=ssrc:3766692804 cname:HPd3XfRHXYUxzfsJ

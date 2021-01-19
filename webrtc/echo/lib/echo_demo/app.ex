@@ -23,7 +23,8 @@ defmodule Membrane.Echo.App do
           keyfile: config.keyfile,
           certfile: config.certfile
         ]
-      )
+      ),
+      %{id: EchoDemo.Echo.Pipeline, start: {EchoDemo.Echo.Pipeline, :start_link, []}}
     ]
 
     opts = [strategy: :one_for_one, name: __MODULE__]

@@ -2,7 +2,7 @@ defmodule EchoDemo.Echo.WS do
   @behaviour :cowboy_websocket
 
   # Client API
-  def send_offer(pid, sdp) do
+  def offer_msg(sdp) do
     msg =
       Poison.encode!(%{
         "event" => "offer",
@@ -12,11 +12,10 @@ defmodule EchoDemo.Echo.WS do
         }
       })
 
-    frame = {:text, msg}
-    send(pid, frame)
+    {:text, msg}
   end
 
-  def send_candidate(pid, cand, sdpMLineIndex, sdpMid) do
+  def candidate_msg(cand, sdpMLineIndex, sdpMid) do
     msg =
       Poison.encode!(%{
         "event" => "candidate",
@@ -27,8 +26,7 @@ defmodule EchoDemo.Echo.WS do
         }
       })
 
-    frame = {:text, msg}
-    send(pid, frame)
+    {:text, msg}
   end
 
   # Server API
@@ -52,16 +50,15 @@ defmodule EchoDemo.Echo.WS do
   def websocket_handle({:json, msg}, state) do
     case msg["event"] do
       "start" ->
-        {:ok, pid} = EchoDemo.Echo.Pipeline.start_link(ws_pid: self())
-        EchoDemo.Echo.Pipeline.play(pid)
-        {:ok, Map.put(state, :pipeline, pid)}
+        send(EchoDemo.Echo.Pipeline, {:new_peer, self()})
+        {:ok, state}
 
       "stop" ->
-        EchoDemo.Echo.Pipeline.stop(state[:pipeline])
+        Membrane.Pipeline.stop_and_terminate(EchoDemo.Echo.Pipeline)
         {:ok, state}
 
       _ ->
-        send(state[:pipeline], {:event, msg})
+        send(EchoDemo.Echo.Pipeline, {:event, self(), msg})
         {:ok, state}
     end
   end

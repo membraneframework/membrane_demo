@@ -128,7 +128,8 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
     [ice_ufrag, ice_pwd] = String.split(credentials, " ")
 
     actions =
-      notify_offer(ice_ufrag, ice_pwd, state.dtls_fingerprint) ++ notify_candidates(state.candidates)
+      notify_offer(ice_ufrag, ice_pwd, state.dtls_fingerprint) ++
+        notify_candidates(state.candidates)
 
     {{:ok, actions}, %{state | candidates: [], offer_sent: true}}
   end

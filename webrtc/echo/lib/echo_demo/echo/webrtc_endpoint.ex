@@ -115,7 +115,6 @@ defmodule WebRTCEndpoint do
   @impl true
   def handle_notification({:new_rtp_stream, ssrc, pt}, _from, _ctx, state) do
     %{encoding_name: encoding} = Membrane.RTP.PayloadFormat.get_payload_type_mapping(pt)
-    IO.inspect({:new_stream, encoding})
     {{:ok, notify: {:new_stream, encoding, {encoding, ssrc}}}, state}
   end
 

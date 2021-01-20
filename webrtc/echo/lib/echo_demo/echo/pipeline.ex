@@ -15,20 +15,26 @@ defmodule EchoDemo.Echo.Pipeline do
 
   @impl true
   def handle_other({:new_peer, ws_pid}, ctx, state) do
-    endpoint = {:endpoint, ws_pid}
-    children = %{endpoint => WebRTCEndpoint}
+    if Map.has_key?(ctx.children, {:endpoint, ws_pid}) do
+      Membrane.Logger.warn("Peer already connected, ignoring")
+      {:ok, state}
+    else
+      Membrane.Logger.info("New peer #{inspect(ws_pid)}")
+      endpoint = {:endpoint, ws_pid}
+      children = %{endpoint => WebRTCEndpoint}
 
-    links =
-      Enum.flat_map(Map.keys(ctx.children), fn
-        {:tee, _id, encoding} = tee ->
-          [link(tee) |> via_in(:input, options: [encoding: encoding]) |> to(endpoint)]
+      links =
+        Enum.flat_map(Map.keys(ctx.children), fn
+          {:tee, _id, encoding} = tee ->
+            [link(tee) |> via_in(:input, options: [encoding: encoding]) |> to(endpoint)]
 
-        _child ->
-          []
-      end)
+          _child ->
+            []
+        end)
 
-    spec = %ParentSpec{children: children, links: links}
-    {{:ok, spec: spec}, state}
+      spec = %ParentSpec{children: children, links: links}
+      {{:ok, spec: spec}, state}
+    end
   end
 
   @impl true
@@ -38,6 +44,7 @@ defmodule EchoDemo.Echo.Pipeline do
 
   @impl true
   def handle_notification({:new_stream, encoding, output_id}, endpoint, ctx, state) do
+    Membrane.Logger.info("New incoming RTP #{encoding} stream")
     tee = {:tee, output_id, encoding}
     fake = {:fake, output_id}
     children = %{tee => Membrane.Element.Tee.Parallel, fake => Membrane.Element.Fake.Sink.Buffers}

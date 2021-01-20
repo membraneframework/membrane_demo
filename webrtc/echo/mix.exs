@@ -1,9 +1,9 @@
-defmodule Echo.MixProject do
+defmodule VideoRoom.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :echo_demo,
+      app: :membrane_videoroom_demo,
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
@@ -13,7 +13,7 @@ defmodule Echo.MixProject do
 
   def application do
     [
-      mod: {Membrane.Echo.App, []},
+      mod: {VideoRoom.App, []},
       extra_applications: [:logger]
     ]
   end

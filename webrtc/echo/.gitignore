@@ -24,6 +24,6 @@ erl_crash.dump
 *.ez
 
 # Ignore package tarball (built via "mix hex.build").
-echo-*.tar
+videoroom-*.tar
 
 .elixir_ls

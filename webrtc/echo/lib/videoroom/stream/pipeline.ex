@@ -1,4 +1,4 @@
-defmodule EchoDemo.Echo.Pipeline do
+defmodule VideoRoom.Stream.Pipeline do
   use Membrane.Pipeline
 
   require Membrane.Logger
@@ -21,7 +21,7 @@ defmodule EchoDemo.Echo.Pipeline do
     else
       Membrane.Logger.info("New peer #{inspect(ws_pid)}")
       endpoint = {:endpoint, ws_pid}
-      children = %{endpoint => WebRTCEndpoint}
+      children = %{endpoint => VideoRoom.Stream.WebRTCEndpoint}
 
       links =
         Enum.flat_map(Map.keys(ctx.children), fn

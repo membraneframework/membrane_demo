@@ -1,5 +1,5 @@
 const room = document.location.href.split("/").slice(-1)[0]
-const webSocketUrl = "wss://" + window.location.host + "/ws/echo";
+const webSocketUrl = "wss://" + window.location.host + "/ws";
 
 function setupLocalVideo(stream) {
     setupVideo("local", stream);

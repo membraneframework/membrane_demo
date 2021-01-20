@@ -3,7 +3,9 @@ body {
   max-width:900px;
   line-height:1.6;
   font-size:18px;
-  color:#444;
+  color:rgb(211, 211, 211);
+  font-family: arial;
+  background-color: black;
 }
 
 h1, h2, h3 {

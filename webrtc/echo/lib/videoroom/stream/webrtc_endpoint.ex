@@ -1,4 +1,4 @@
-defmodule WebRTCEndpoint do
+defmodule VideoRoom.Stream.WebRTCEndpoint do
   use Membrane.Bin
   require Membrane.Logger
 
@@ -10,8 +10,8 @@ defmodule WebRTCEndpoint do
 
   def_output_pad :output, demand_unit: :buffers, caps: :any, availability: :on_request
 
-  alias EchoDemo.Echo.SDPUtils
-  alias EchoDemo.Echo.WS
+  alias VideoRoom.Stream.SDPUtils
+  alias VideoRoom.WS
 
   @impl true
   def handle_init(_opts) do

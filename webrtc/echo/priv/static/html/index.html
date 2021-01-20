@@ -1,20 +1,23 @@
 <html>
-    <head>
-        <title>Membrane WebRTC echo demo</title>
-        <link rel="stylesheet" href="css/StyleSheet.css" />
-        <script src="js/adapter.js"></script>        
-        <script src="js/webrtcClient.js"></script>
-        <script src="js/config.js"></script>
-        <script src="js/main.js"></script>
-    </head>
-    <body>
-        <h1>Membrane WebRTC echo demo</h1>
-        <div id="videochat">
-        </div>
-        <template id="template">
-          <video playsinline autoplay></video>
-        </template>
-        <button id="echo_start_btn" onclick="start_echo()">Start</button>
-        <button id="echo_stop_btn" onclick="stop_echo()">Stop</button>
-    </body>
+
+<head>
+    <title>Membrane WebRTC video room demo</title>
+    <link rel="stylesheet" href="css/StyleSheet.css" />
+    <script src="js/adapter.js"></script>
+    <script src="js/webrtcClient.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+</head>
+
+<body>
+    <h2>Membrane WebRTC video room demo</h2>
+    <div id="videochat">
+    </div>
+    <template id="template">
+        <video playsinline autoplay></video>
+    </template>
+    <button id="start_btn" onclick="start()">Start</button>
+    <button id="stop_btn" onclick="stop()">Stop</button>
+</body>
+
 </html>

@@ -1,4 +1,4 @@
-defmodule EchoDemo.Echo.WS do
+defmodule VideoRoom.WS do
   @behaviour :cowboy_websocket
 
   # Client API
@@ -50,15 +50,15 @@ defmodule EchoDemo.Echo.WS do
   def websocket_handle({:json, msg}, state) do
     case msg["event"] do
       "start" ->
-        send(EchoDemo.Echo.Pipeline, {:new_peer, self()})
+        send(VideoRoom.Stream.Pipeline, {:new_peer, self()})
         {:ok, state}
 
       "stop" ->
-        Membrane.Pipeline.stop_and_terminate(EchoDemo.Echo.Pipeline)
+        Membrane.Pipeline.stop_and_terminate(VideoRoom.Stream.Pipeline)
         {:ok, state}
 
       _ ->
-        send(EchoDemo.Echo.Pipeline, {:event, self(), msg})
+        send(VideoRoom.Stream.Pipeline, {:event, self(), msg})
         {:ok, state}
     end
   end

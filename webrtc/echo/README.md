@@ -1,6 +1,4 @@
-# Membrane WebRTC echo demo
-
-App sending back audio (OPUS) and video (H264) to web browser. Tested only on Chrome. 
+# Membrane WebRTC video room demo
 
 ## Dependencies
 

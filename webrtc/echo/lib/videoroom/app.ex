@@ -1,12 +1,12 @@
-defmodule Membrane.Echo.App do
+defmodule VideoRoom.App do
   @moduledoc false
   use Application
 
-  alias EchoDemo.Router
+  alias VideoRoom.Router
 
   @impl true
   def start(_type, _args) do
-    config = Application.get_all_env(:echo_demo) |> Map.new()
+    config = Application.get_all_env(:membrane_videoroom_demo) |> Map.new()
 
     children = [
       Plug.Cowboy.child_spec(
@@ -18,13 +18,13 @@ defmodule Membrane.Echo.App do
           dispatch: dispatch(),
           port: config.port,
           ip: config.ip,
-          otp_app: :echo_demo,
+          otp_app: :membrane_videoroom_demo,
           # Attach your SSL certificate and key files here
           keyfile: config.keyfile,
           certfile: config.certfile
         ]
       ),
-      %{id: EchoDemo.Echo.Pipeline, start: {EchoDemo.Echo.Pipeline, :start_link, []}}
+      %{id: VideoRoom.Pipeline, start: {VideoRoom.Stream.Pipeline, :start_link, []}}
     ]
 
     opts = [strategy: :one_for_one, name: __MODULE__]
@@ -35,7 +35,7 @@ defmodule Membrane.Echo.App do
     [
       {:_,
        [
-         {"/ws/echo", EchoDemo.Echo.WS, []},
+         {"/ws", VideoRoom.WS, []},
          {:_, Plug.Cowboy.Handler, {Router, []}}
        ]}
     ]

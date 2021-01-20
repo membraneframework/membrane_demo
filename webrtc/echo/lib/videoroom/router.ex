@@ -1,9 +1,9 @@
-defmodule EchoDemo.Router do
+defmodule VideoRoom.Router do
   use Plug.Router
 
   plug(Plug.Static,
     at: "/",
-    from: :echo_demo
+    from: :membrane_videoroom_demo
   )
 
   plug(:match)

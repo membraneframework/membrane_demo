@@ -1,4 +1,4 @@
-defmodule EchoDemo.Echo.SDPUtils do
+defmodule VideoRoom.Stream.SDPUtils do
   def get_remote_credentials(sdp) do
     attributes = List.first(sdp.media).attributes
 

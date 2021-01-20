@@ -1,32 +1,22 @@
 defmodule VideoRoom.WS do
   @behaviour :cowboy_websocket
 
-  # Client API
-  def offer_msg(sdp) do
-    msg =
-      Poison.encode!(%{
-        "event" => "offer",
-        "data" => %{
-          "type" => "offer",
-          "sdp" => sdp
-        }
-      })
+  alias VideoRoom.Stream.Pipeline
 
-    {:text, msg}
+  def signal(pid, {:sdp_offer, sdp}) do
+    do_signal(pid, :offer, %{type: :offer, sdp: sdp})
   end
 
-  def candidate_msg(cand, sdpMLineIndex, sdpMid) do
-    msg =
-      Poison.encode!(%{
-        "event" => "candidate",
-        "data" => %{
-          "candidate" => cand,
-          "sdpMLineIndex" => sdpMLineIndex,
-          "sdpMid" => sdpMid
-        }
-      })
+  def signal(pid, {:candidate, candidate, sdp_mline_index, sdp_mid}) do
+    do_signal(pid, :candidate, %{
+      "candidate" => candidate,
+      "sdpMLineIndex" => sdp_mline_index,
+      "sdpMid" => sdp_mid
+    })
+  end
 
-    {:text, msg}
+  defp do_signal(pid, event, data) do
+    send(pid, {:text, Poison.encode!(%{event: event, data: data})})
   end
 
   # Server API
@@ -48,19 +38,16 @@ defmodule VideoRoom.WS do
 
   @impl true
   def websocket_handle({:json, msg}, state) do
-    case msg["event"] do
-      "start" ->
-        send(VideoRoom.Stream.Pipeline, {:new_peer, self()})
-        {:ok, state}
+    msg =
+      case msg["event"] do
+        "start" -> {:new_peer, self()}
+        "answer" -> {:signal, self(), {:sdp_answer, msg["data"]["sdp"]}}
+        "candidate" -> {:signal, self(), {:candidate, msg["data"]["candidate"]}}
+        _event -> nil
+      end
 
-      "stop" ->
-        Membrane.Pipeline.stop_and_terminate(VideoRoom.Stream.Pipeline)
-        {:ok, state}
-
-      _ ->
-        send(VideoRoom.Stream.Pipeline, {:event, self(), msg})
-        {:ok, state}
-    end
+    if msg, do: send(Pipeline, msg)
+    {:ok, state}
   end
 
   @impl true

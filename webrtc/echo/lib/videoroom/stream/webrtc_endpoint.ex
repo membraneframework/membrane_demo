@@ -11,7 +11,6 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
   def_output_pad :output, demand_unit: :buffers, caps: :any, availability: :on_request
 
   alias VideoRoom.Stream.SDPUtils
-  alias VideoRoom.WS
 
   @impl true
   def handle_init(_opts) do
@@ -50,6 +49,7 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
     state = %{
       candidates: [],
       offer_sent: false,
+      dtls_fingerprint: nil,
       ssrcs: %{OPUS: [110, 120, 130], H264: [210, 220, 230]}
     }
 
@@ -120,26 +120,22 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
 
   @impl true
   def handle_notification({:handshake_init_data, _component_id, fingerprint}, _from, _ctx, state) do
-    state = Map.put(state, :fingerprint, hex_dump(fingerprint))
-    {:ok, state}
+    {:ok, %{state | dtls_fingerprint: hex_dump(fingerprint)}}
   end
 
   @impl true
-  def handle_notification({:local_credentials, credentials} = msg, _from, _ctx, state) do
-    Membrane.Logger.info("#{inspect(msg)}")
+  def handle_notification({:local_credentials, credentials}, _from, _ctx, state) do
     [ice_ufrag, ice_pwd] = String.split(credentials, " ")
-    state = Map.put(state, :ice_ufrag, ice_ufrag)
-    state = Map.put(state, :ice_pwd, ice_pwd)
-    state = Map.put(state, :offer_sent, true)
-    actions = notify_offer(state) ++ notify_candidates(state.candidates)
-    {{:ok, actions}, %{state | candidates: []}}
+
+    actions =
+      notify_offer(ice_ufrag, ice_pwd, state.dtls_fingerprint) ++ notify_candidates(state.candidates)
+
+    {{:ok, actions}, %{state | candidates: [], offer_sent: true}}
   end
 
   @impl true
   def handle_notification({:new_candidate_full, cand}, _from, _ctx, %{offer_sent: false} = state) do
-    candidates = Map.get(state, :candidates, [])
-    candidates = [cand] ++ candidates
-    state = Map.put(state, :candidates, candidates)
+    state = Map.update!(state, :candidates, &[cand | &1])
     {:ok, state}
   end
 
@@ -154,40 +150,25 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
   end
 
   @impl true
-  def handle_other({:event, msg}, _ctx, state) do
-    case msg["event"] do
-      "answer" ->
-        actions = parse_answer(msg["data"]["sdp"], state)
-        {{:ok, actions}, state}
-
-      "candidate" ->
-        candidate = msg["data"]["candidate"]
-        {{:ok, forward: {:ice, {:set_remote_candidate, "a=" <> candidate, 1}}}, state}
-
-      _ ->
-        {:ok, state}
-    end
+  def handle_other({:signal, {:sdp_answer, sdp}}, _ctx, state) do
+    {:ok, sdp} = sdp |> ExSDP.parse()
+    remote_credentials = SDPUtils.get_remote_credentials(sdp)
+    {{:ok, forward: {:ice, {:set_remote_credentials, remote_credentials}}}, state}
   end
 
   @impl true
-  def handle_other(other, _ctx, state) do
-    {{:ok, forward: {:ice, other}}, state}
+  def handle_other({:signal, {:candidate, candidate}}, _ctx, state) do
+    {{:ok, forward: {:ice, {:set_remote_candidate, "a=" <> candidate, 1}}}, state}
   end
 
-  defp notify_offer(state) do
-    offer = SDPUtils.create_offer(state[:ice_ufrag], state[:ice_pwd], state[:fingerprint])
-    [notify: {:signal, WS.offer_msg(offer)}]
+  defp notify_offer(ice_ufrag, ice_pwd, dtls_fingerprint) do
+    offer = SDPUtils.create_offer(ice_ufrag, ice_pwd, dtls_fingerprint)
+    [notify: {:signal, {:sdp_offer, offer}}]
   end
 
   defp notify_candidates(candidates) do
     Enum.flat_map(candidates, fn cand ->
-      [notify: {:signal, WS.candidate_msg(cand, 0, "audio1")}]
+      [notify: {:signal, {:candidate, cand, 0, "audio1"}}]
     end)
-  end
-
-  defp parse_answer(sdp, _state) do
-    {:ok, sdp} = sdp |> ExSDP.parse()
-    remote_credentials = SDPUtils.get_remote_credentials(sdp)
-    [forward: {:ice, {:set_remote_credentials, remote_credentials}}]
   end
 end

@@ -38,8 +38,8 @@ defmodule VideoRoom.Stream.Pipeline do
   end
 
   @impl true
-  def handle_other({:event, ws_pid, event}, _ctx, state) do
-    {{:ok, forward: {{:endpoint, ws_pid}, {:event, event}}}, state}
+  def handle_other({:signal, ws_pid, msg}, _ctx, state) do
+    {{:ok, forward: {{:endpoint, ws_pid}, {:signal, msg}}}, state}
   end
 
   @impl true
@@ -68,7 +68,7 @@ defmodule VideoRoom.Stream.Pipeline do
 
   @impl true
   def handle_notification({:signal, message}, {:endpoint, ws_pid}, _ctx, state) do
-    send(ws_pid, message)
+    VideoRoom.WS.signal(ws_pid, message)
     {:ok, state}
   end
 end

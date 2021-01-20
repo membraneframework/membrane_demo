@@ -59,7 +59,7 @@ defmodule VideoRoom.Stream.SDPUtils do
     a=setup:actpass
     a=mid:audio1
     a=sendrecv
-    a=msid:0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANS 0c68dcf5-db98-4c3f-b0f2-ff1918ed80b1
+    a=msid:stream1 stream1-audio
     a=rtcp-mux
     a=rtpmap:120 opus/48000/2
     a=fmtp:120 minptime=10;useinbandfec=1
@@ -74,7 +74,7 @@ defmodule VideoRoom.Stream.SDPUtils do
     a=setup:actpass
     a=mid:audio2
     a=sendonly
-    a=msid:0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANT 0c68dcf5-db98-4c3f-b0f2-ff1918ed80b2
+    a=msid:stream2 stream2-audio
     a=rtcp-mux
     a=rtpmap:120 opus/48000/2
     a=fmtp:120 minptime=10;useinbandfec=1
@@ -89,7 +89,7 @@ defmodule VideoRoom.Stream.SDPUtils do
     a=setup:actpass
     a=mid:audio3
     a=sendonly
-    a=msid:0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANU 0c68dcf5-db98-4c3f-b0f2-ff1918ed80b3
+    a=msid:stream3 stream3-audio
     a=rtcp-mux
     a=rtpmap:120 opus/48000/2
     a=fmtp:120 minptime=10;useinbandfec=1
@@ -104,7 +104,7 @@ defmodule VideoRoom.Stream.SDPUtils do
     a=setup:actpass
     a=mid:video1
     a=sendrecv
-    a=msid:0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANS a60cccca-f708-49e7-89d0-4be0524658a5
+    a=msid:stream1 stream1-video
     a=rtcp-mux
     a=rtcp-rsize
     a=rtpmap:96 H264/90000
@@ -122,7 +122,7 @@ defmodule VideoRoom.Stream.SDPUtils do
     a=setup:actpass
     a=mid:video2
     a=sendonly
-    a=msid:0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANT a60cccca-f708-49e7-89d0-4be0524658a6
+    a=msid:stream2 stream2-video
     a=rtcp-mux
     a=rtcp-rsize
     a=rtpmap:96 H264/90000
@@ -140,7 +140,7 @@ defmodule VideoRoom.Stream.SDPUtils do
     a=setup:actpass
     a=mid:video3
     a=sendonly
-    a=msid:0YiRg3sIeAEZEhwD3ANvRbn7UFf3BjYBeANU a60cccca-f708-49e7-89d0-4be0524658a7
+    a=msid:stream3 stream3-video
     a=rtcp-mux
     a=rtcp-rsize
     a=rtpmap:96 H264/90000

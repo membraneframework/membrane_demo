@@ -39,10 +39,11 @@ defmodule EchoDemo.Echo.Pipeline do
   @impl true
   def handle_notification({:new_stream, encoding, output_id}, endpoint, ctx, state) do
     tee = {:tee, output_id, encoding}
-    children = %{tee => Membrane.Element.Tee.Parallel}
+    fake = {:fake, output_id}
+    children = %{tee => Membrane.Element.Tee.Parallel, fake => Membrane.Element.Fake.Sink.Buffers}
 
     links =
-      [link(endpoint) |> via_out(Pad.ref(:output, output_id)) |> to(tee)] ++
+      [link(endpoint) |> via_out(Pad.ref(:output, output_id)) |> to(tee), link(tee) |> to(fake)] ++
         Enum.flat_map(Map.keys(ctx.children), fn
           ^endpoint ->
             []

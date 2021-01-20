@@ -8,7 +8,7 @@ function startStreaming(webSocketUrl, localVideoFunction, remoteVideoFunction) {
     rtcConfig = config;
     onRemoteVideo = remoteVideoFunction;
     navigator.getUserMedia(
-        {audio: true, video: true},
+        {audio: true, video: {width: 1280, height: 720}},
         (stream) => {localVideoFunction(stream); openConnection(webSocketUrl);}, 
         (e) => {alert(e)});
 }
@@ -59,7 +59,10 @@ function startRTCConnection() {
 }
 
 function getHandleTrack() {
-    return (event) => {onRemoteVideo("peer", event.streams[0]);};
+    return (event) => {
+        console.log(event)
+        onRemoteVideo(event.streams[0].id, event.streams[0]);
+    };
 }
 
 function getOnIceCandidate() {

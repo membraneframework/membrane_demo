@@ -13,9 +13,6 @@ defmodule WebRTCEndpoint do
   alias EchoDemo.Echo.SDPUtils
   alias EchoDemo.Echo.WS
 
-  @audio_ssrc 4_112_531_724
-  @video_ssrc 3_766_692_804
-
   @impl true
   def handle_init(_opts) do
     children = %{
@@ -51,9 +48,9 @@ defmodule WebRTCEndpoint do
     }
 
     state = %{
-      :candidates => [],
-      :offer_sent => false,
-      :ssrcs => [{4_112_531_724, 3_766_692_804}, {4_112_531_725, 3_766_692_805}]
+      candidates: [],
+      offer_sent: false,
+      ssrcs: %{OPUS: [110, 120, 130], H264: [210, 220, 230]}
     }
 
     {{:ok, spec: spec}, state}
@@ -68,17 +65,7 @@ defmodule WebRTCEndpoint do
   @impl true
   def handle_pad_added(Pad.ref(:input, _ref) = pad, ctx, state) do
     %{encoding: encoding} = ctx.options
-
-    {_children, _input_link, ssrc} =
-      case encoding do
-        :H264 ->
-          children = %{h264_parser: %Membrane.H264.FFmpeg.Parser{alignment: :nal}}
-          link = link_bin_input(pad) |> to(:h264_parser)
-          {children, link, @video_ssrc}
-
-        :OPUS ->
-          {%{}, link_bin_input(pad), @audio_ssrc}
-      end
+    {ssrc, state} = get_and_update_in(state, [:ssrcs, encoding], fn [h | t] -> {h, t} end)
 
     children = %{}
     input_link = link_bin_input(pad)
@@ -128,6 +115,7 @@ defmodule WebRTCEndpoint do
   @impl true
   def handle_notification({:new_rtp_stream, ssrc, pt}, _from, _ctx, state) do
     %{encoding_name: encoding} = Membrane.RTP.PayloadFormat.get_payload_type_mapping(pt)
+    IO.inspect({:new_stream, encoding})
     {{:ok, notify: {:new_stream, encoding, {encoding, ssrc}}}, state}
   end
 
@@ -144,8 +132,8 @@ defmodule WebRTCEndpoint do
     state = Map.put(state, :ice_ufrag, ice_ufrag)
     state = Map.put(state, :ice_pwd, ice_pwd)
     state = Map.put(state, :offer_sent, true)
-    actions = notify_offer(state) ++ notify_buffered_candidates(state)
-    {{:ok, actions}, state}
+    actions = notify_offer(state) ++ notify_candidates(state.candidates)
+    {{:ok, actions}, %{state | candidates: []}}
   end
 
   @impl true
@@ -158,7 +146,7 @@ defmodule WebRTCEndpoint do
 
   @impl true
   def handle_notification({:new_candidate_full, cand}, _from, _ctx, %{offer_sent: true} = state) do
-    {{:ok, notify: {:signal, WS.candidate_msg(cand, 0, 0)}}, state}
+    {{:ok, notify_candidates([cand])}, state}
   end
 
   @impl true
@@ -192,10 +180,9 @@ defmodule WebRTCEndpoint do
     [notify: {:signal, WS.offer_msg(offer)}]
   end
 
-  defp notify_buffered_candidates(state) do
-    state[:candidates]
-    |> Enum.flat_map(fn cand ->
-      [notify: {:signal, WS.candidate_msg(cand, 0, 0)}]
+  defp notify_candidates(candidates) do
+    Enum.flat_map(candidates, fn cand ->
+      [notify: {:signal, WS.candidate_msg(cand, 0, "audio1")}]
     end)
   end
 

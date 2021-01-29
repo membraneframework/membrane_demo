@@ -30,10 +30,15 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
     ice_output_pad = Pad.ref(:output, 1)
     ice_input_pad = Pad.ref(:input, 1)
 
+    rtp_input_ref = make_ref()
+
     links = [
+      link(:rtp)
+      |> via_out(Pad.ref(:rtcp_output, rtp_input_ref))
+      |> to(:ice_funnel),
       link(:ice)
       |> via_out(ice_output_pad)
-      |> via_in(:rtp_input)
+      |> via_in(Pad.ref(:rtp_input, rtp_input_ref))
       |> to(:rtp),
       link(:ice_funnel)
       |> via_out(:output)
@@ -67,47 +72,45 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
     %{encoding: encoding} = ctx.options
     {ssrc, state} = get_and_update_in(state, [:ssrcs, encoding], fn [h | t] -> {h, t} end)
 
-    children = %{}
-    input_link = link_bin_input(pad)
-
-    spec = %ParentSpec{
-      children: children,
-      links: [
-        input_link
-        |> via_in(Pad.ref(:input, ssrc))
-        |> to(:rtp)
-        |> via_out(Pad.ref(:rtp_output, ssrc), options: [encoding: encoding])
-        |> to(:ice_funnel)
-      ]
-    }
-
-    {{:ok, spec: spec}, state}
-  end
-
-  @impl true
-  def handle_pad_added(Pad.ref(:output, {encoding, ssrc}) = pad, _ctx, state) do
     spec =
       case encoding do
         :H264 ->
           %ParentSpec{
             children: %{{:h264_parser, ssrc} => %Membrane.H264.FFmpeg.Parser{alignment: :nal}},
             links: [
-              link(:rtp)
-              |> via_out(Pad.ref(:output, ssrc), options: [encoding: encoding])
+              link_bin_input(pad)
               |> to({:h264_parser, ssrc})
-              |> to_bin_output(pad)
+              |> via_in(Pad.ref(:input, ssrc))
+              |> to(:rtp)
+              |> via_out(Pad.ref(:rtp_output, ssrc), options: [encoding: encoding])
+              |> to(:ice_funnel)
             ]
           }
 
         :OPUS ->
           %ParentSpec{
             links: [
-              link(:rtp)
-              |> via_out(Pad.ref(:output, ssrc), options: [encoding: encoding])
-              |> to_bin_output(pad)
+              link_bin_input(pad)
+              |> via_in(Pad.ref(:input, ssrc))
+              |> to(:rtp)
+              |> via_out(Pad.ref(:rtp_output, ssrc), options: [encoding: encoding])
+              |> to(:ice_funnel)
             ]
           }
       end
+
+    {{:ok, spec: spec}, state}
+  end
+
+  @impl true
+  def handle_pad_added(Pad.ref(:output, {encoding, ssrc}) = pad, _ctx, state) do
+    spec = %ParentSpec{
+      links: [
+        link(:rtp)
+        |> via_out(Pad.ref(:output, ssrc), options: [encoding: encoding])
+        |> to_bin_output(pad)
+      ]
+    }
 
     {{:ok, spec: spec}, state}
   end
@@ -169,7 +172,7 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
 
   defp notify_candidates(candidates) do
     Enum.flat_map(candidates, fn cand ->
-      [notify: {:signal, {:candidate, cand, 0, "audio1"}}]
+      [notify: {:signal, {:candidate, cand, 0, "audio0"}}]
     end)
   end
 end

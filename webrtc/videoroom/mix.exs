@@ -34,8 +34,7 @@ defmodule VideoRoom.MixProject do
        github: "membraneframework/membrane_h264_ffmpeg_plugin", branch: "wait-for-keyframe"},
       # {:membrane_rtp_h264_plugin, "~> 0.4.0"},
       {:membrane_rtp_h264_plugin,
-       github: "membraneframework/membrane_rtp_h264_plugin", branch: "fix-event"},
-      {:ex_sdp, "~> 0.2.0"},
+       github: "membraneframework/membrane_rtp_h264_plugin", branch: "fix-event", override: true},
       {:membrane_ice_plugin, "~> 0.3.1"},
       {:membrane_dtls_plugin, "~> 0.2.0"},
       # {:membrane_rtp_plugin, "~> 0.5.0"},
@@ -46,7 +45,9 @@ defmodule VideoRoom.MixProject do
       {:membrane_opus_plugin, "~> 0.2.0"},
       {:membrane_element_tee, "~> 0.4.1"},
       {:membrane_element_fake, "~> 0.4.0"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:membrane_webrtc_plugin,
+       github: "membraneframework/membrane_webrtc_plugin", branch: "develop"}
     ]
   end
 end

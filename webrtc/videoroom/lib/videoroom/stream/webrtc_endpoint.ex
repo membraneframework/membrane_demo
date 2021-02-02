@@ -10,7 +10,8 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
 
   def_output_pad :output, demand_unit: :buffers, caps: :any, availability: :on_request
 
-  alias VideoRoom.Stream.SDPUtils
+  alias Membrane.WebRTC.SDP
+  alias ExSDP.Media
 
   @impl true
   def handle_init(_opts) do
@@ -123,7 +124,7 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
 
   @impl true
   def handle_notification({:handshake_init_data, _component_id, fingerprint}, _from, _ctx, state) do
-    {:ok, %{state | dtls_fingerprint: hex_dump(fingerprint)}}
+    {:ok, %{state | dtls_fingerprint: {:sha256, hex_dump(fingerprint)}}}
   end
 
   @impl true
@@ -156,7 +157,7 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
   @impl true
   def handle_other({:signal, {:sdp_answer, sdp}}, _ctx, state) do
     {:ok, sdp} = sdp |> ExSDP.parse()
-    remote_credentials = SDPUtils.get_remote_credentials(sdp)
+    remote_credentials = get_remote_credentials(sdp)
     {{:ok, forward: {:ice, {:set_remote_credentials, remote_credentials}}}, state}
   end
 
@@ -166,13 +167,22 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
   end
 
   defp notify_offer(ice_ufrag, ice_pwd, dtls_fingerprint) do
-    offer = SDPUtils.create_offer(ice_ufrag, ice_pwd, dtls_fingerprint)
-    [notify: {:signal, {:sdp_offer, offer}}]
+    ssrcs = %{audio: [110, 120, 130], video: [210, 220, 230]}
+    opts = %SDP.Opts{peers: 3, ssrcs: ssrcs}
+    offer = SDP.create_offer(ice_ufrag, ice_pwd, dtls_fingerprint, opts)
+    [notify: {:signal, {:sdp_offer, to_string(offer)}}]
   end
 
   defp notify_candidates(candidates) do
     Enum.flat_map(candidates, fn cand ->
       [notify: {:signal, {:candidate, cand, 0, "audio0"}}]
     end)
+  end
+
+  defp get_remote_credentials(sdp) do
+    media = List.first(sdp.media)
+    {_key, ice_ufrag} = Media.get_attribute(media, :ice_ufrag)
+    {_key, ice_pwd} = Media.get_attribute(media, :ice_pwd)
+    ice_ufrag <> " " <> ice_pwd
   end
 end

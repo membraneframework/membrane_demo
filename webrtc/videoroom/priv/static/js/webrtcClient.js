@@ -32,7 +32,12 @@ function onCandidateMessage(data) {
 }
 
 function onOffer(data) {
-    startRTCConnection();
+    if (rtcConnection == null) {
+        startRTCConnection();
+    }
+//    else {
+//        rtcConnection.restartIce();
+//    }
     rtcConnection.setRemoteDescription(data)
     rtcConnection.createAnswer(
         getHandleDescription("answer"),

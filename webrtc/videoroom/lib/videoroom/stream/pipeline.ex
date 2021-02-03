@@ -10,7 +10,7 @@ defmodule VideoRoom.Stream.Pipeline do
   @impl true
   def handle_init(_opts) do
     play(self())
-    {:ok, %{}}
+    {:ok, %{:peers => -1}}
   end
 
   @impl true
@@ -19,21 +19,30 @@ defmodule VideoRoom.Stream.Pipeline do
       Membrane.Logger.warn("Peer already connected, ignoring")
       {:ok, state}
     else
-      Membrane.Logger.info("New peer #{inspect(ws_pid)}")
+      state = %{state | peers: state.peers + 1}
+      Membrane.Logger.info("New peer #{inspect(ws_pid)}, peers: #{inspect(state.peers)}")
       endpoint = {:endpoint, ws_pid}
-      children = %{endpoint => VideoRoom.Stream.WebRTCEndpoint}
+      children = %{endpoint => %VideoRoom.Stream.WebRTCEndpoint{initial_peers: state.peers}}
 
-      links =
-        Enum.flat_map(Map.keys(ctx.children), fn
-          {:tee, _id, encoding} = tee ->
-            [link(tee) |> via_in(:input, options: [encoding: encoding]) |> to(endpoint)]
+      [links, ice_restarts] =
+        Enum.reduce(Map.keys(ctx.children), [[], []], fn
+          {:tee, _id, encoding} = tee, [links, ice_restarts] ->
+            links =
+              links ++
+                [link(tee) |> via_in(:input, options: [encoding: encoding]) |> to(endpoint)]
 
-          _child ->
-            []
+            [links, ice_restarts]
+
+          {:endpoint, _ws_pid} = endpoint, [links, ice_restarts] ->
+            ice_restarts = ice_restarts ++ [forward: {endpoint, {:restart_ice, state.peers}}]
+            [links, ice_restarts]
+
+          _child, acc ->
+            acc
         end)
 
       spec = %ParentSpec{children: children, links: links}
-      {{:ok, spec: spec}, state}
+      {{:ok, [spec: spec] ++ ice_restarts}, %{state | peers: state.peers}}
     end
   end
 

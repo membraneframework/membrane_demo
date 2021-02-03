@@ -2,6 +2,12 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
   use Membrane.Bin
   require Membrane.Logger
 
+  def_options initial_peers: [
+                type: :integer,
+                default: 0,
+                description: "Number of peers whose streams will be sent using this endpoint"
+              ]
+
   def_input_pad :input,
     demand_unit: :buffers,
     caps: :any,
@@ -14,7 +20,7 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
   alias ExSDP.Media
 
   @impl true
-  def handle_init(_opts) do
+  def handle_init(opts) do
     children = %{
       ice: %Membrane.ICE.Bin{
         stun_servers: ["64.233.161.127:19302"],
@@ -56,7 +62,11 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
       candidates: [],
       offer_sent: false,
       dtls_fingerprint: nil,
-      ssrcs: %{OPUS: [110, 120, 130], H264: [210, 220, 230]}
+      ssrcs: %{
+        OPUS: [110, 120, 130, 140, 150, 160, 170, 180],
+        H264: [210, 220, 230, 240, 250, 260, 270, 280]
+      },
+      peers: opts.initial_peers
     }
 
     {{:ok, spec: spec}, state}
@@ -131,11 +141,13 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
   def handle_notification({:local_credentials, credentials}, _from, _ctx, state) do
     [ice_ufrag, ice_pwd] = String.split(credentials, " ")
 
+    peers = if state.peers < 1, do: 1, else: state.peers
+
     actions =
-      notify_offer(ice_ufrag, ice_pwd, state.dtls_fingerprint) ++
+      notify_offer(ice_ufrag, ice_pwd, state.dtls_fingerprint, peers) ++
         notify_candidates(state.candidates)
 
-    {{:ok, actions}, %{state | candidates: [], offer_sent: true}}
+    {{:ok, actions}, %{state | offer_sent: true}}
   end
 
   @impl true
@@ -146,6 +158,7 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
 
   @impl true
   def handle_notification({:new_candidate_full, cand}, _from, _ctx, %{offer_sent: true} = state) do
+    state = Map.update!(state, :candidates, &[cand | &1])
     {{:ok, notify_candidates([cand])}, state}
   end
 
@@ -166,16 +179,27 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
     {{:ok, forward: {:ice, {:set_remote_candidate, "a=" <> candidate, 1}}}, state}
   end
 
-  defp notify_offer(ice_ufrag, ice_pwd, dtls_fingerprint) do
-    ssrcs = %{audio: [110, 120, 130], video: [210, 220, 230]}
-    opts = %SDP.Opts{peers: 3, ssrcs: ssrcs}
+  @impl true
+  def handle_other({:restart_ice, peers}, _ctx, state) do
+    peers = if peers < 1, do: 1, else: peers
+    Membrane.Logger.info("#{inspect(self())}: restart ICE, peers: #{inspect(peers)}")
+    {{:ok, forward: {:ice, :restart_stream}}, %{state | peers: peers, offer_sent: false}}
+  end
+
+  defp notify_offer(ice_ufrag, ice_pwd, dtls_fingerprint, peers) do
+    ssrcs = %{
+      audio: [110, 120, 130, 140, 150, 160, 170, 180],
+      video: [210, 220, 230, 240, 250, 260, 270, 280]
+    }
+
+    opts = %SDP.Opts{peers: peers, ssrcs: ssrcs}
     offer = SDP.create_offer(ice_ufrag, ice_pwd, dtls_fingerprint, opts)
     [notify: {:signal, {:sdp_offer, to_string(offer)}}]
   end
 
   defp notify_candidates(candidates) do
     Enum.flat_map(candidates, fn cand ->
-      [notify: {:signal, {:candidate, cand, 0, "audio0"}}]
+      [notify: {:signal, {:candidate, cand, 0, "0"}}]
     end)
   end
 

@@ -1,6 +1,8 @@
 defmodule VideoRoom.Stream.WebRTCEndpoint do
   use Membrane.Bin
   require Membrane.Logger
+  alias ExSDP.Attribute.RTPMapping
+
 
   def_input_pad :input,
     demand_unit: :buffers,
@@ -168,7 +170,13 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
 
   defp notify_offer(ice_ufrag, ice_pwd, dtls_fingerprint) do
     ssrcs = %{audio: [110, 120, 130], video: [210, 220, 230]}
-    opts = %SDP.Opts{peers: 3, ssrcs: ssrcs}
+
+    opts = %SDP.Opts{
+      peers: 3,
+      ssrcs: ssrcs,
+      video_codecs: [{:VP9, %RTPMapping{payload_type: 98, encoding: "VP9", clock_rate: 90_000}}]
+    }
+
     offer = SDP.create_offer(ice_ufrag, ice_pwd, dtls_fingerprint, opts)
     [notify: {:signal, {:sdp_offer, to_string(offer)}}]
   end

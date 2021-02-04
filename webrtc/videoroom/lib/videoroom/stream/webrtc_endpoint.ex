@@ -3,7 +3,6 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
   require Membrane.Logger
   alias ExSDP.Attribute.RTPMapping
 
-
   def_input_pad :input,
     demand_unit: :buffers,
     caps: :any,
@@ -58,7 +57,7 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
       candidates: [],
       offer_sent: false,
       dtls_fingerprint: nil,
-      ssrcs: %{OPUS: [110, 120, 130], H264: [210, 220, 230]}
+      ssrcs: %{OPUS: [110, 120, 130], VP9: [210, 220, 230]}
     }
 
     {{:ok, spec: spec}, state}
@@ -91,6 +90,17 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
           }
 
         :OPUS ->
+          %ParentSpec{
+            links: [
+              link_bin_input(pad)
+              |> via_in(Pad.ref(:input, ssrc))
+              |> to(:rtp)
+              |> via_out(Pad.ref(:rtp_output, ssrc), options: [encoding: encoding])
+              |> to(:ice_funnel)
+            ]
+          }
+
+        :VP9 ->
           %ParentSpec{
             links: [
               link_bin_input(pad)
@@ -183,7 +193,7 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
 
   defp notify_candidates(candidates) do
     Enum.flat_map(candidates, fn cand ->
-      [notify: {:signal, {:candidate, cand, 0, "audio0"}}]
+      [notify: {:signal, {:candidate, cand, 0, "0"}}]
     end)
   end
 

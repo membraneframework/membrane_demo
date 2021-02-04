@@ -39,13 +39,15 @@ defmodule VideoRoom.MixProject do
       {:membrane_dtls_plugin, "~> 0.2.0"},
       # {:membrane_rtp_plugin, "~> 0.5.0"},
       {:membrane_rtp_plugin,
-       github: "membraneframework/membrane_rtp_plugin", branch: "inband-rtcp"},
+       github: "membraneframework/membrane_rtp_plugin", branch: "inband-rtcp", override: true},
       {:ex_libsrtp, "~> 0.1.0"},
       {:membrane_rtp_opus_plugin, "~> 0.2.0"},
       {:membrane_opus_plugin, "~> 0.2.0"},
       {:membrane_element_tee, "~> 0.4.1"},
       {:membrane_element_fake, "~> 0.4.0"},
       {:plug_cowboy, "~> 2.0"},
+      {:membrane_rtp_vp9_plugin,
+       github: "membraneframework/membrane_rtp_vp9_plugin", branch: "payloader"},
       {:membrane_webrtc_plugin,
        github: "membraneframework/membrane_webrtc_plugin", branch: "develop"}
     ]

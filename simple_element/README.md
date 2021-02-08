@@ -5,6 +5,22 @@ The pipeline is taken from the `simple_pipeline` demo.
 
 ## Prerequisites
 
+1. Make sure you have following libraries installed on your OS:
+   * clang-format, 
+   * portaudio19-dev, 
+   * ffmpeg, 
+   * libavutil-dev, 
+   * libswresample-dev, 
+   * libmad0-dev
+   
+    One-liner for Ubuntu
+    ```bash
+    apt install clang-format portaudio19-dev ffmpeg libavutil-dev libswresample-dev libmad0-dev
+    ```
+    One-liner for MacOS
+    ```bash
+    brew install clang-format portaudio ffmpeg libmad
+    ```
 1. Make sure you have Elixir installed on your machine. See: https://elixir-lang.org/install.html
 1. Fetch the required dependencies by running `mix deps.get`
 

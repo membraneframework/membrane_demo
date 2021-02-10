@@ -66,12 +66,11 @@ defmodule RecordingDemo.Recording.Pipeline do
           location: "#{:code.priv_dir(:recording_demo)}/static/output/#{state.output_name}"
         },
         time_limiter: %TimeLimiter{time_limit: 10 |> Membrane.Time.seconds()},
-        ivf_writter:
-           %IVF{width: 400, height: 300, scale: 1, rate: 30}
+        ivf_writter: %IVF.Serializer{width: 400, height: 300, scale: 1, rate: 30}
       },
       links: [
         link(:rtp)
-        |> via_out(Pad.ref(:output, ssrc), options: [encoding: :VP9, clock_rate: 90_000])
+        |> via_out(Pad.ref(:output, ssrc), options: [encoding: :VP8, clock_rate: 90_000])
         |> to(:time_limiter)
         |> to(:ivf_writter)
         |> to(:video_file_sink)
@@ -88,7 +87,7 @@ defmodule RecordingDemo.Recording.Pipeline do
 
   @impl true
   def handle_notification({:handshake_init_data, _component_id, fingerprint}, :ice, _ctx, state) do
-    new_state = Map.put(state, :fingerprint, hex_dump(fingerprint))
+    new_state = Map.put(state, :fingerprint, {:sha256, hex_dump(fingerprint)})
     {:ok, new_state}
   end
 

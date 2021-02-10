@@ -26,20 +26,23 @@ defmodule Recording.MixProject do
       {:membrane_h264_ffmpeg_plugin, "~> 0.6.0"},
       {:membrane_rtp_h264_plugin, "~> 0.4.0"},
       {:membrane_dtls_plugin, "~> 0.1.0"},
-      {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin"},
-      {:membrane_rtp_vp9_plugin, github: "membraneframework/membrane_rtp_vp9_plugin", branch: "depayloader"},
+      {:membrane_rtp_plugin, "~> 0.5.0"},
+      {:ex_libsrtp, "~> 0.1.0"},
+      {:membrane_rtp_vp8_plugin,
+       github: "membraneframework/membrane_rtp_vp8_plugin", branch: "depayloader"},
       {:membrane_element_ivf,
-       github: "membraneframework/membrane-element-ivf",
-       branch: :"generalized-ivf-element"},
+       github: "membraneframework/membrane-element-ivf", branch: "moved-from-vp9-plugin"},
       {:membrane_rtp_opus_plugin, "~> 0.2.0"},
       {:membrane_opus_plugin, "~> 0.2.0"},
       {:membrane_webrtc_server, "~> 0.1.0"},
-      {:ex_sdp, "~> 0.2.0"},
       {:websockex, "~> 0.4.2"},
       {:poison, "~> 3.1"},
       {:jason, "~> 1.1"},
       {:plug, "~> 1.7"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:ex_sdp, github: "membraneframework/ex_sdp", branch: "webrtc-plugin"},
+      {:membrane_webrtc_plugin,
+       github: "membraneframework/membrane_webrtc_plugin", branch: "develop"}
     ]
   end
 end

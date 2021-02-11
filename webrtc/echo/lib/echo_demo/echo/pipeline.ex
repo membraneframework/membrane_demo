@@ -90,12 +90,12 @@ defmodule EchoDemo.Echo.Pipeline do
 
       links: [
         link(:rtp)
-        |> via_out(Pad.ref(:output, ssrc), options: [encoding: :VP9, clock_rate: 90_000])
+        |> via_out(Pad.ref(:output, ssrc), options: [encoding: :VP8, clock_rate: 90_000])
         |> to(:realtimer_video)
         |> via_in(Pad.ref(:input, @video_ssrc))
         |> to(:rtp)
         |> via_out(Pad.ref(:rtp_output, @video_ssrc),
-          options: [payload_type: 98, encoding: :VP9, clock_rate: 90_000]
+          options: [payload_type: 98, encoding: :VP8, clock_rate: 90_000]
         )
         |> to(:funnel)
       ]
@@ -106,8 +106,8 @@ defmodule EchoDemo.Echo.Pipeline do
 
   @impl true
   def handle_notification({:handshake_init_data, _component_id, fingerprint}, _from, _ctx, state) do
-    state = Map.put(state, :fingerprint, hex_dump(fingerprint))
-    {:ok, state}
+    new_state = Map.put(state, :fingerprint, {:sha256, hex_dump(fingerprint)})
+    {:ok, new_state}
   end
 
   @impl true
@@ -164,6 +164,7 @@ defmodule EchoDemo.Echo.Pipeline do
 
   defp send_offer(state) do
     offer = SDPUtils.create_offer(state[:ice_ufrag], state[:ice_pwd], state[:fingerprint])
+    IO.inspect(offer)
     WS.send_offer(state[:ws_pid], offer)
   end
 

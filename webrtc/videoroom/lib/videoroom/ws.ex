@@ -7,11 +7,10 @@ defmodule VideoRoom.WS do
     do_signal(pid, :offer, %{type: :offer, sdp: sdp})
   end
 
-  def signal(pid, {:candidate, candidate, sdp_mline_index, sdp_mid}) do
+  def signal(pid, {:candidate, candidate, sdp_mline_index, _sdp_mid}) do
     do_signal(pid, :candidate, %{
       "candidate" => candidate,
-      "sdpMLineIndex" => sdp_mline_index,
-      "sdpMid" => sdp_mid
+      "sdpMLineIndex" => sdp_mline_index
     })
   end
 

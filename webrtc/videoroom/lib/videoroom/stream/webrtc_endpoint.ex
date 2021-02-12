@@ -1,12 +1,11 @@
 defmodule VideoRoom.Stream.WebRTCEndpoint do
   use Membrane.Bin
+
+  alias Membrane.WebRTC.Track
+
   require Membrane.Logger
 
-  def_options initial_peers: [
-                type: :integer,
-                default: 0,
-                description: "Number of peers whose streams will be sent using this endpoint"
-              ]
+  def_options inbound_tracks: [], outbound_tracks: []
 
   def_input_pad :input,
     demand_unit: :buffers,
@@ -28,14 +27,9 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
         handshake_module: Membrane.DTLS.Handshake,
         handshake_opts: [client_mode: false, dtls_srtp: true]
       },
-      rtp: %Membrane.RTP.SessionBin{
-        secure?: true
-      },
+      rtp: %Membrane.RTP.SessionBin{secure?: true},
       ice_funnel: Membrane.Funnel
     }
-
-    ice_output_pad = Pad.ref(:output, 1)
-    ice_input_pad = Pad.ref(:input, 1)
 
     rtp_input_ref = make_ref()
 
@@ -44,12 +38,12 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
       |> via_out(Pad.ref(:rtcp_output, rtp_input_ref))
       |> to(:ice_funnel),
       link(:ice)
-      |> via_out(ice_output_pad)
+      |> via_out(Pad.ref(:output, 1))
       |> via_in(Pad.ref(:rtp_input, rtp_input_ref))
       |> to(:rtp),
       link(:ice_funnel)
       |> via_out(:output)
-      |> via_in(ice_input_pad)
+      |> via_in(Pad.ref(:input, 1))
       |> to(:ice)
     ]
 
@@ -58,16 +52,16 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
       links: links
     }
 
-    state = %{
-      candidates: [],
-      offer_sent: false,
-      dtls_fingerprint: nil,
-      ssrcs: %{
-        OPUS: [110, 120, 130, 140, 150, 160, 170, 180],
-        H264: [210, 220, 230, 240, 250, 260, 270, 280]
-      },
-      peers: opts.initial_peers
-    }
+    state =
+      %{
+        inbound_tracks: %{},
+        outbound_tracks: %{},
+        candidates: [],
+        offer_sent: false,
+        dtls_fingerprint: nil
+      }
+      |> add_tracks(:inbound_tracks, opts.inbound_tracks)
+      |> add_tracks(:outbound_tracks, opts.outbound_tracks)
 
     {{:ok, spec: spec}, state}
   end
@@ -79,9 +73,9 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
   end
 
   @impl true
-  def handle_pad_added(Pad.ref(:input, _ref) = pad, ctx, state) do
+  def handle_pad_added(Pad.ref(:input, track_id) = pad, ctx, state) do
     %{encoding: encoding} = ctx.options
-    {ssrc, state} = get_and_update_in(state, [:ssrcs, encoding], fn [h | t] -> {h, t} end)
+    %Track{ssrc: ssrc} = Map.fetch!(state.outbound_tracks, track_id)
 
     spec =
       case encoding do
@@ -114,7 +108,9 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
   end
 
   @impl true
-  def handle_pad_added(Pad.ref(:output, {encoding, ssrc}) = pad, _ctx, state) do
+  def handle_pad_added(Pad.ref(:output, track_id) = pad, _ctx, state) do
+    %Track{ssrc: ssrc, encoding: encoding} = Map.fetch!(state.inbound_tracks, track_id)
+
     spec = %ParentSpec{
       links: [
         link(:rtp)
@@ -129,7 +125,11 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
   @impl true
   def handle_notification({:new_rtp_stream, ssrc, pt}, _from, _ctx, state) do
     %{encoding_name: encoding} = Membrane.RTP.PayloadFormat.get_payload_type_mapping(pt)
-    {{:ok, notify: {:new_stream, encoding, {encoding, ssrc}}}, state}
+    type = if encoding == :OPUS, do: :audio, else: :video
+    track = state.inbound_tracks |> Map.values() |> Enum.find(&(&1.type == type))
+    track = %Track{track | ssrc: ssrc, encoding: encoding}
+    state = put_in(state, [:inbound_tracks, track.id], track)
+    {{:ok, notify: {:new_track, track.id, encoding}}, state}
   end
 
   @impl true
@@ -141,10 +141,19 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
   def handle_notification({:local_credentials, credentials}, _from, _ctx, state) do
     [ice_ufrag, ice_pwd] = String.split(credentials, " ")
 
-    peers = if state.peers < 1, do: 1, else: state.peers
+    offer =
+      SDP.create_offer(
+        inbound_tracks: Map.values(state.inbound_tracks),
+        outbound_tracks: Map.values(state.outbound_tracks),
+        ice_ufrag: ice_ufrag,
+        ice_pwd: ice_pwd,
+        fingerprint: state.dtls_fingerprint
+      )
+
+    IO.puts(offer)
 
     actions =
-      notify_offer(ice_ufrag, ice_pwd, state.dtls_fingerprint, peers) ++
+      [notify: {:signal, {:sdp_offer, to_string(offer)}}] ++
         notify_candidates(state.candidates)
 
     {{:ok, actions}, %{state | offer_sent: true}}
@@ -180,21 +189,26 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
   end
 
   @impl true
-  def handle_other({:restart_ice, peers}, _ctx, state) do
-    peers = if peers < 1, do: 1, else: peers
-    Membrane.Logger.info("#{inspect(self())}: restart ICE, peers: #{inspect(peers)}")
-    {{:ok, forward: {:ice, :restart_stream}}, %{state | peers: peers, offer_sent: false}}
+  def handle_other({:add_tracks, tracks}, _ctx, state) do
+    state = %{state | offer_sent: false} |> add_tracks(:outbound_tracks, tracks)
+    {{:ok, forward: {:ice, :restart_stream}}, state}
   end
 
-  defp notify_offer(ice_ufrag, ice_pwd, dtls_fingerprint, peers) do
-    ssrcs = %{
-      audio: [110, 120, 130, 140, 150, 160, 170, 180],
-      video: [210, 220, 230, 240, 250, 260, 270, 280]
-    }
+  defp add_tracks(state, direction, tracks) do
+    tracks =
+      case direction do
+        :outbound_tracks ->
+          Track.add_ssrc(
+            tracks,
+            Map.values(state.inbound_tracks) ++ Map.values(state.outbound_tracks)
+          )
 
-    opts = %SDP.Opts{peers: peers, ssrcs: ssrcs}
-    offer = SDP.create_offer(ice_ufrag, ice_pwd, dtls_fingerprint, opts)
-    [notify: {:signal, {:sdp_offer, to_string(offer)}}]
+        :inbound_tracks ->
+          tracks
+      end
+
+    tracks = Map.new(tracks, &{&1.id, &1})
+    Map.update!(state, direction, &Map.merge(&1, tracks))
   end
 
   defp notify_candidates(candidates) do

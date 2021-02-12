@@ -1,6 +1,8 @@
 defmodule VideoRoom.Stream.Pipeline do
   use Membrane.Pipeline
 
+  alias Membrane.WebRTC.Track
+
   require Membrane.Logger
 
   def start_link() do
@@ -10,7 +12,7 @@ defmodule VideoRoom.Stream.Pipeline do
   @impl true
   def handle_init(_opts) do
     play(self())
-    {:ok, %{:peers => -1}}
+    {:ok, %{tracks: []}}
   end
 
   @impl true
@@ -19,22 +21,33 @@ defmodule VideoRoom.Stream.Pipeline do
       Membrane.Logger.warn("Peer already connected, ignoring")
       {:ok, state}
     else
-      state = %{state | peers: state.peers + 1}
-      Membrane.Logger.info("New peer #{inspect(ws_pid)}, peers: #{inspect(state.peers)}")
+      stream_id = Track.stream_id()
+      tracks = [Track.new(:audio, stream_id), Track.new(:video, stream_id)]
+      Membrane.Logger.info("New peer #{inspect(ws_pid)}")
       endpoint = {:endpoint, ws_pid}
-      children = %{endpoint => %VideoRoom.Stream.WebRTCEndpoint{initial_peers: state.peers}}
+
+      children = %{
+        endpoint => %VideoRoom.Stream.WebRTCEndpoint{
+          outbound_tracks: state.tracks,
+          inbound_tracks: tracks
+        }
+      }
 
       [links, ice_restarts] =
         Enum.reduce(Map.keys(ctx.children), [[], []], fn
-          {:tee, _id, encoding} = tee, [links, ice_restarts] ->
+          {:tee, id, encoding} = tee, [links, ice_restarts] ->
             links =
               links ++
-                [link(tee) |> via_in(:input, options: [encoding: encoding]) |> to(endpoint)]
+                [
+                  link(tee)
+                  |> via_in(Pad.ref(:input, id), options: [encoding: encoding])
+                  |> to(endpoint)
+                ]
 
             [links, ice_restarts]
 
           {:endpoint, _ws_pid} = endpoint, [links, ice_restarts] ->
-            ice_restarts = ice_restarts ++ [forward: {endpoint, {:restart_ice, state.peers}}]
+            ice_restarts = ice_restarts ++ [forward: {endpoint, {:add_tracks, tracks}}]
             [links, ice_restarts]
 
           _child, acc ->
@@ -42,7 +55,7 @@ defmodule VideoRoom.Stream.Pipeline do
         end)
 
       spec = %ParentSpec{children: children, links: links}
-      {{:ok, [spec: spec] ++ ice_restarts}, %{state | peers: state.peers}}
+      {{:ok, [spec: spec] ++ ice_restarts}, %{state | tracks: tracks ++ state.tracks}}
     end
   end
 
@@ -52,20 +65,24 @@ defmodule VideoRoom.Stream.Pipeline do
   end
 
   @impl true
-  def handle_notification({:new_stream, encoding, output_id}, endpoint, ctx, state) do
+  def handle_notification({:new_track, track_id, encoding}, endpoint, ctx, state) do
     Membrane.Logger.info("New incoming RTP #{encoding} stream")
-    tee = {:tee, output_id, encoding}
-    fake = {:fake, output_id}
+    tee = {:tee, track_id, encoding}
+    fake = {:fake, track_id}
     children = %{tee => Membrane.Element.Tee.Parallel, fake => Membrane.Element.Fake.Sink.Buffers}
 
     links =
-      [link(endpoint) |> via_out(Pad.ref(:output, output_id)) |> to(tee), link(tee) |> to(fake)] ++
+      [link(endpoint) |> via_out(Pad.ref(:output, track_id)) |> to(tee), link(tee) |> to(fake)] ++
         Enum.flat_map(Map.keys(ctx.children), fn
           ^endpoint ->
             []
 
           {:endpoint, _id} = other_endpoint ->
-            [link(tee) |> via_in(:input, options: [encoding: encoding]) |> to(other_endpoint)]
+            [
+              link(tee)
+              |> via_in(Pad.ref(:input, track_id), options: [encoding: encoding])
+              |> to(other_endpoint)
+            ]
 
           _child ->
             []

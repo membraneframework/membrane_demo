@@ -65,7 +65,6 @@ function startRTCConnection() {
 
 function getHandleTrack() {
     return (event) => {
-        console.log(event)
         onRemoteVideo(event.streams[0].id, event.streams[0]);
     };
 }

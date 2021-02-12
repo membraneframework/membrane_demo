@@ -12,8 +12,8 @@ defmodule EchoDemo.Echo.SDPUtils do
 
   def create_offer(ice_ufrag, ice_pwd, dtls_fingerprint) do
     ssrcs = %{
-      audio: [110],
-      video: [210]
+      audio: [4_112_531_724],
+      video: [3_766_692_804]
     }
 
     opts = %SDP.Opts{

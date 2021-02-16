@@ -57,7 +57,7 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
       candidates: [],
       offer_sent: false,
       dtls_fingerprint: nil,
-      ssrcs: %{OPUS: [110, 120, 130], VP9: [210, 220, 230]}
+      ssrcs: %{OPUS: [110, 120, 130], VP8: [210, 220, 230]}
     }
 
     {{:ok, spec: spec}, state}
@@ -100,7 +100,7 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
             ]
           }
 
-        :VP9 ->
+        :VP8 ->
           %ParentSpec{
             links: [
               link_bin_input(pad)
@@ -184,7 +184,7 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
     opts = %SDP.Opts{
       peers: 3,
       ssrcs: ssrcs,
-      video_codecs: [{:VP9, %RTPMapping{payload_type: 98, encoding: "VP9", clock_rate: 90_000}}]
+      video_codecs: [{:VP8, %RTPMapping{payload_type: 98, encoding: "VP8", clock_rate: 90_000}}]
     }
 
     offer = SDP.create_offer(ice_ufrag, ice_pwd, dtls_fingerprint, opts)

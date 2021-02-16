@@ -46,8 +46,8 @@ defmodule VideoRoom.MixProject do
       {:membrane_element_tee, "~> 0.4.1"},
       {:membrane_element_fake, "~> 0.4.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:membrane_rtp_vp9_plugin,
-       github: "membraneframework/membrane_rtp_vp9_plugin", branch: "payloader"},
+      {:membrane_rtp_vp8_plugin,
+       github: "membraneframework/membrane_rtp_vp8_plugin", branch: "payloader"},
       {:membrane_webrtc_plugin,
        github: "membraneframework/membrane_webrtc_plugin", branch: "develop"}
     ]

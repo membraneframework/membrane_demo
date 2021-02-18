@@ -1,21 +1,34 @@
-var webSocket;
-var localStream;
 var rtcConnection;
 var rtcConfig;
-var onRemoteVideo;
+var onRemoteStream;
+var onRemoveStream;
+var onWSError;
+var streams = [];
 
-function startStreaming(webSocketUrl, localVideoFunction, remoteVideoFunction) {
+function setupConnection(webSocketUrl, onLocalStream, _onRemoteStream, _onRemoveStream, _onWSError) {
     rtcConfig = config;
-    onRemoteVideo = remoteVideoFunction;
+    onRemoteStream = _onRemoteStream;
+    onRemoveStream = _onRemoveStream;
+    onWSError = _onWSError;
     navigator.getUserMedia(
         {audio: true, video: {width: 1280, height: 720}},
-        (stream) => {localVideoFunction(stream); openConnection(webSocketUrl);}, 
-        (e) => {alert(e)});
+        (stream) => {onLocalStream(stream); openConnection(webSocketUrl);}, 
+        (e) => {alert(e)}
+    );    
 }
 
 function openConnection(webSocketUrl) {
     socket = new WebSocket(webSocketUrl);
     socket.onmessage = socketMessage;
+    socket.onopen = () => {
+        setInterval(() => socket.send("keep_alive"), 30_000);
+        start();
+    };
+    socket.onclose = event => {
+        console.error(event);
+        stop();
+        onWSError();
+    };
 }
 
 function onError(data) {
@@ -32,7 +45,9 @@ function onCandidateMessage(data) {
 }
 
 function onOffer(data) {
-    startRTCConnection();
+    if (rtcConnection == null) {
+        startRTCConnection();
+    }
     rtcConnection.setRemoteDescription(data)
     rtcConnection.createAnswer(
         getHandleDescription("answer"),
@@ -60,8 +75,10 @@ function startRTCConnection() {
 
 function getHandleTrack() {
     return (event) => {
-        console.log(event)
-        onRemoteVideo(event.streams[0].id, event.streams[0]);
+        stream = event.streams[0];
+        stream.onremovetrack = (event) => {onRemoveStream(event.target.id)};
+        streams.push(stream);
+        onRemoteStream(stream);
     };
 }
 
@@ -88,4 +105,8 @@ function start() {
 
 function stop() {
     socket.send(JSON.stringify({event: "stop"}));
+    rtcConnection.close();
+    rtcConnection = null;
+    streams.forEach(stream => onRemoveStream(stream.id));
+    streams = [];
 }

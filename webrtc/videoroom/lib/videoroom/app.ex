@@ -2,8 +2,6 @@ defmodule VideoRoom.App do
   @moduledoc false
   use Application
 
-  alias VideoRoom.Router
-
   @impl true
   def start(_type, _args) do
     config = Application.get_all_env(:membrane_videoroom_demo) |> Map.new()
@@ -13,7 +11,7 @@ defmodule VideoRoom.App do
         scheme: :https,
         # FIXME: Routers leak - they're spawned on each "/" request and are not terminated
         # can be seen in observer
-        plug: Router,
+        plug: VideoRoom.Router,
         options: [
           dispatch: dispatch(),
           port: config.port,
@@ -24,7 +22,7 @@ defmodule VideoRoom.App do
           certfile: config.certfile
         ]
       ),
-      %{id: VideoRoom.Pipeline, start: {VideoRoom.Stream.Pipeline, :start_link, []}}
+      %{id: VideoRoom.Pipeline, start: {VideoRoom.Pipeline, :start_link, []}}
     ]
 
     opts = [strategy: :one_for_one, name: __MODULE__]
@@ -36,7 +34,7 @@ defmodule VideoRoom.App do
       {:_,
        [
          {"/ws", VideoRoom.WS, []},
-         {:_, Plug.Cowboy.Handler, {Router, []}}
+         {:_, Plug.Cowboy.Handler, {VideoRoom.Router, []}}
        ]}
     ]
   end

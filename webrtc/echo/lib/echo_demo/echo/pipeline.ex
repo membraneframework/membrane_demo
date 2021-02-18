@@ -6,6 +6,7 @@ defmodule EchoDemo.Echo.Pipeline do
 
   alias EchoDemo.Echo.SDPUtils
   alias EchoDemo.Echo.WS
+  alias Membrane.RTP.VP8
 
   @audio_ssrc 4_112_531_724
   @video_ssrc 3_766_692_804
@@ -20,7 +21,8 @@ defmodule EchoDemo.Echo.Pipeline do
         handshake_opts: [client_mode: false, dtls_srtp: true]
       },
       rtp: %Membrane.RTP.SessionBin{
-        secure?: true
+        secure?: true,
+        custom_payloaders: %{:VP8 => %VP8.Payloader{fragmentation_method: :advanced}}
       },
       funnel: Membrane.Funnel
     }
@@ -164,7 +166,6 @@ defmodule EchoDemo.Echo.Pipeline do
 
   defp send_offer(state) do
     offer = SDPUtils.create_offer(state[:ice_ufrag], state[:ice_pwd], state[:fingerprint])
-    IO.inspect(offer)
     WS.send_offer(state[:ws_pid], offer)
   end
 

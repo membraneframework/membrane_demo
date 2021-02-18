@@ -1,8 +1,6 @@
 defmodule VideoRoom.WS do
   @behaviour :cowboy_websocket
 
-  alias VideoRoom.Stream.Pipeline
-
   # Server API
   @impl true
   def init(req, state) do
@@ -32,7 +30,7 @@ defmodule VideoRoom.WS do
         _event -> nil
       end
 
-    if msg, do: send(Pipeline, msg)
+    if msg, do: send(VideoRoom.Pipeline, msg)
     {:ok, state}
   end
 

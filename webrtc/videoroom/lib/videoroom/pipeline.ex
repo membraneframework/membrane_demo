@@ -1,7 +1,7 @@
-defmodule VideoRoom.Stream.Pipeline do
+defmodule VideoRoom.Pipeline do
   use Membrane.Pipeline
 
-  alias Membrane.WebRTC.Track
+  alias Membrane.WebRTC.{EndpointBin, Track}
 
   require Membrane.Logger
 
@@ -28,7 +28,7 @@ defmodule VideoRoom.Stream.Pipeline do
       endpoint = {:endpoint, peer_pid}
 
       children = %{
-        endpoint => %VideoRoom.Stream.WebRTCEndpoint{
+        endpoint => %EndpointBin{
           outbound_tracks: Map.values(state.tracks),
           inbound_tracks: tracks
         }

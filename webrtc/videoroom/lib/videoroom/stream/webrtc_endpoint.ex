@@ -194,6 +194,15 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
     {{:ok, forward: {:ice, :restart_stream}}, state}
   end
 
+  @impl true
+  def handle_other({:remove_tracks, tracks_ids}, _ctx, state) do
+    state =
+      %{state | offer_sent: false}
+      |> Map.update!(:outbound_tracks, &Map.drop(&1, tracks_ids))
+
+    {{:ok, forward: {:ice, :restart_stream}}, state}
+  end
+
   defp add_tracks(state, direction, tracks) do
     tracks =
       case direction do
@@ -213,7 +222,7 @@ defmodule VideoRoom.Stream.WebRTCEndpoint do
 
   defp notify_candidates(candidates) do
     Enum.flat_map(candidates, fn cand ->
-      [notify: {:signal, {:candidate, cand, 0, "0"}}]
+      [notify: {:signal, {:candidate, cand, 0}}]
     end)
   end
 

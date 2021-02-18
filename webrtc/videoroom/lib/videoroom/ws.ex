@@ -3,21 +3,6 @@ defmodule VideoRoom.WS do
 
   alias VideoRoom.Stream.Pipeline
 
-  def signal(pid, {:sdp_offer, sdp}) do
-    do_signal(pid, :offer, %{type: :offer, sdp: sdp})
-  end
-
-  def signal(pid, {:candidate, candidate, sdp_mline_index, _sdp_mid}) do
-    do_signal(pid, :candidate, %{
-      "candidate" => candidate,
-      "sdpMLineIndex" => sdp_mline_index
-    })
-  end
-
-  defp do_signal(pid, event, data) do
-    send(pid, {:text, Poison.encode!(%{event: event, data: data})})
-  end
-
   # Server API
   @impl true
   def init(req, state) do
@@ -30,18 +15,20 @@ defmodule VideoRoom.WS do
   end
 
   @impl true
-  def websocket_handle({:text, msg}, state) do
-    msg = Poison.decode!(msg)
-    websocket_handle({:json, msg}, state)
+  def websocket_handle({:text, "keep_alive"}, state) do
+    {:ok, state}
   end
 
   @impl true
-  def websocket_handle({:json, msg}, state) do
+  def websocket_handle({:text, msg}, state) do
+    msg = Poison.decode!(msg)
+
     msg =
       case msg["event"] do
         "start" -> {:new_peer, self()}
         "answer" -> {:signal, self(), {:sdp_answer, msg["data"]["sdp"]}}
         "candidate" -> {:signal, self(), {:candidate, msg["data"]["candidate"]}}
+        "stop" -> {:remove_peer, self()}
         _event -> nil
       end
 
@@ -50,8 +37,24 @@ defmodule VideoRoom.WS do
   end
 
   @impl true
-  def websocket_info({:text, _msg} = frame, state) do
-    {:reply, frame, state}
+  def websocket_info({:signal, msg}, state) do
+    msg =
+      case msg do
+        {:candidate, candidate, sdp_mline_index} ->
+          %{
+            event: :candidate,
+            data: %{
+              "candidate" => candidate,
+              "sdpMLineIndex" => sdp_mline_index
+            }
+          }
+
+        {:sdp_offer, sdp} ->
+          %{event: :offer, data: %{type: :offer, sdp: sdp}}
+      end
+      |> Poison.encode!()
+
+    {:reply, {:text, msg}, state}
   end
 
   @impl true

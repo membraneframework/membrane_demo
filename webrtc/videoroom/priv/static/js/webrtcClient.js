@@ -10,11 +10,9 @@ function setupConnection(webSocketUrl, onLocalStream, _onRemoteStream, _onRemove
     onRemoteStream = _onRemoteStream;
     onRemoveStream = _onRemoveStream;
     onWSError = _onWSError;
-    navigator.getUserMedia(
-        {audio: true, video: {width: 1280, height: 720}},
-        (stream) => {onLocalStream(stream); openConnection(webSocketUrl);}, 
-        (e) => {alert(e)}
-    );    
+    navigator.mediaDevices.getUserMedia({audio: true, video: {width: 1280, height: 720}})
+        .then(stream => {onLocalStream(stream); openConnection(webSocketUrl);})
+        .catch(console.error);
 }
 
 function openConnection(webSocketUrl) {
@@ -47,6 +45,8 @@ function onCandidateMessage(data) {
 function onOffer(data) {
     if (rtcConnection == null) {
         startRTCConnection();
+    } else {
+        rtcConnection.restartIce();
     }
     rtcConnection.setRemoteDescription(data)
     rtcConnection.createAnswer(

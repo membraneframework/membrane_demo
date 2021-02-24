@@ -12,7 +12,7 @@ defmodule VideoRoom.Pipeline do
   @impl true
   def handle_init(_opts) do
     play(self())
-    {:ok, %{tracks: %{}, endpoints_tracks: %{}}}
+    {:ok, %{tracks: %{}, endpoints_tacks_ids: %{}}}
   end
 
   @impl true
@@ -21,10 +21,10 @@ defmodule VideoRoom.Pipeline do
       Membrane.Logger.warn("Peer already connected, ignoring")
       {:ok, state}
     else
+      Membrane.Logger.info("New peer #{inspect(peer_pid)}")
       Process.monitor(peer_pid)
       stream_id = Track.stream_id()
       tracks = [Track.new(:audio, stream_id), Track.new(:video, stream_id)]
-      Membrane.Logger.info("New peer #{inspect(peer_pid)}")
       endpoint = {:endpoint, peer_pid}
 
       children = %{
@@ -62,7 +62,7 @@ defmodule VideoRoom.Pipeline do
 
       state =
         %{state | tracks: tracks |> Map.new(&{&1.id, &1}) |> Map.merge(state.tracks)}
-        |> put_in([:endpoints_tracks, peer_pid], Enum.map(tracks, & &1.id))
+        |> put_in([:endpoints_tacks_ids, peer_pid], Enum.map(tracks, & &1.id))
 
       {{:ok, [spec: spec] ++ tracks_msgs}, state}
     end
@@ -129,7 +129,7 @@ defmodule VideoRoom.Pipeline do
     if endpoint == nil or endpoint.terminating? do
       {:absent, [], state}
     else
-      {tracks_ids, state} = pop_in(state, [:endpoints_tracks, peer_pid])
+      {tracks_ids, state} = pop_in(state, [:endpoints_tacks_ids, peer_pid])
 
       {tracks, state} =
         Enum.map_reduce(tracks_ids, state, fn track_id, state ->

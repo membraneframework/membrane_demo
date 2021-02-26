@@ -27,3 +27,5 @@ erl_crash.dump
 videoroom-*.tar
 
 .elixir_ls
+
+node_modules

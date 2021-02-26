@@ -6,6 +6,31 @@ config :membrane_videoroom_demo,
   keyfile: "priv/certs/key.pem",
   certfile: "priv/certs/certificate.pem"
 
+config :membrane_videoroom_demo, VideoRoomWeb.Endpoint,
+  url: [host: "localhost"],
+  pubsub_server: VideoRoom.PubSub,
+  https: [
+    port: 8443,
+    cipher_suite: :strong,
+    otp_app: :membrane_videoroom_demo,
+    keyfile: "priv/certs/key.pem",
+    certfile: "priv/certs/certificate.pem"
+  ],
+  watchers: [
+    node: [
+      "node_modules/webpack/bin/webpack.js",
+      "--mode",
+      "development",
+      "--watch-stdin",
+      cd: Path.expand("../assets", __DIR__)
+    ]
+  ],
+  live_reload: [
+    patterns: [
+      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$"
+    ]
+  ]
+
 config :logger,
   level: :info,
   compile_time_purge_matching: [

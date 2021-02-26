@@ -59,7 +59,6 @@ export class Room {
   onLocalStream(stream) {
     this.localStream = stream;
     addVideoElement("local", stream);
-    document.getElementById("local").muted = true;
   }
   
   startRTCConnection() {
@@ -115,10 +114,9 @@ export class Room {
   }
       
   onIceCandidate() {
-      const {channel} = this;
-      return function (event) {
+      return (event) => {
           if(event.candidate != null) {
-              channel.push("candidate", {data: event.candidate})
+              this.channel.push("candidate", {data: event.candidate})
           }
       }
   }
@@ -133,11 +131,9 @@ export class Room {
   }
 
   onDescription(event) {
-    const {channel, rtcConnection} = this;
-    
-    return function(description) {
-        rtcConnection.setLocalDescription(description);
-        channel.push(event, {data: description});
+    return (description) => {
+        this.rtcConnection.setLocalDescription(description);
+        this.channel.push(event, {data: description});
     };
   }
 }
@@ -146,19 +142,15 @@ function addVideoElement(id, stream) {
   let video = document.getElementById(id);
 
   if(!video) {
-      const template = document.querySelector("template");
-      // TODO: check if this is correct
-      // video = document.importNode(template.content, true);
-      // video.querySelector("video").id = id;
-      // // child.querySelector("label").innerText = id;
-    
-      video = document.createElement('video');
-      video.id = id;
-      document.getElementById("videochat").appendChild(video);
+    video = document.createElement('video');
+    video.id = id;
+    document.getElementById("videochat").appendChild(video);
   }
   video.srcObject = stream;
   video.autoplay = true;
   video.playsinline = true;
+  // for development purpose mute the audio on video object
+  video.muted = true;
 }
 
 function removeVideoElement(id) {

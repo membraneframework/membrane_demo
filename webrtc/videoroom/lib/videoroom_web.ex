@@ -13,8 +13,6 @@ defmodule VideoRoomWeb do
         pattern: "**/*",
         namespace: VideoRoomWeb
 
-      # Import convenience functions from controllers
-      # import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
       import VideoRoomWeb.Router.Helpers
 
       use Phoenix.HTML

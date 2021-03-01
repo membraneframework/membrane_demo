@@ -3,13 +3,10 @@ defmodule VideoRoomWeb.RoomChannel do
 
   require Logger
 
-  # @prefix "[RoomChannel]"
-
   intercept(["signal"])
 
   @impl true
   def join("room:" <> room_id, _message, socket) do
-    # Logger.info("#{@prefix} New user joined room channel")
     {:ok, assign(socket, :room_id, room_id)}
   end
 

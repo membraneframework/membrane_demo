@@ -7,6 +7,5 @@
     </template>
     <div id="control">
         <%# <button id="toggleStream" onclick="toggleStream()">Stop</button> %>
-        <button id="toggleStream" onclick="console.log('dupa')">Stop</button>
     </div>
 </div>

@@ -1,4 +1,4 @@
-<div class="Room">
+<div id="room" class="Room" data-room-id="<%= @room_id %>">
     <h2>Membrane WebRTC video room demo</h2>
     <h3>Room: <%= @room_id %></h3>
     <div id="videochat" class="VideoChat"> </div>
@@ -8,8 +8,5 @@
     <div id="control" class="Control">
         <%# <button id="toggleStream" onclick="toggleStream()">Stop</button> %>
     </div>
-    <script>
-        window.room_id = "<%= @room_id %>";
-    </script>
-    <script src="<%= static_path(@conn, "/js/videoroom.js") %>"></script>
+    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
 </div>

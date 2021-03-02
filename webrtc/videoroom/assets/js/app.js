@@ -5,11 +5,13 @@ import "phoenix_html"
 import {Room} from "./room";
 import { Socket } from "phoenix"
 
-var room;
-var socket = new Socket("/socket");
+let room;
+const socket = new Socket("/socket");
 socket.connect();
 
-
-export function joinRoom(roomId) {
-  room = new Room(socket, roomId);
+const roomEl = document.getElementById("room");
+if (roomEl) {
+  room = new Room(socket, roomEl.dataset.roomId);
+} else {
+  console.error("room element is missing, cannot join video room");
 }

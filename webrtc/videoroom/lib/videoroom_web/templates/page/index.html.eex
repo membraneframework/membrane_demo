@@ -1,11 +1,20 @@
 <div>
-    <h2>Membrane WebRTC video room demo</h2>
-    <div id="videochat">
+    <h2>Create or join existing room</h2>
+    <div>
+        <form class="RoomForm" id="form">
+          <label for="name" class="nameLabel">Room name</label>
+          <input id="name" class="nameInput" type="text" required>
+          <button type="submit" class="submitButton">Enter room</button>
+        </form>
     </div>
-    <template id="template">
-        <video playsinline autoplay></video>
-    </template>
-    <div id="control">
-        <%# <button id="toggleStream" onclick="toggleStream()">Stop</button> %>
-    </div>
+
+    <script>
+        function onRoomName(event) {
+            event.preventDefault();
+            const nameInput = document.getElementById("name");
+            window.location.href = "/room/" + nameInput.value;
+        }
+
+        document.getElementById("form").addEventListener("submit", onRoomName);
+    </script>
 </div>

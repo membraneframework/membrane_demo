@@ -5,9 +5,11 @@ import "phoenix_html"
 import {Room} from "./room";
 import { Socket } from "phoenix"
 
-const socket = new Socket("/socket");
+var room;
+var socket = new Socket("/socket");
 socket.connect();
 
-const room = new Room(socket, "lobby");
 
-
+export function joinRoom(roomId) {
+  room = new Room(socket, roomId);
+}

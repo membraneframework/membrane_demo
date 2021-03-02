@@ -30,6 +30,7 @@ defmodule VideoRoom.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.5"},
       {:phoenix_html, "~> 2.14"},
+      {:phoenix_live_reload, "~> 1.2"},
       {:poison, "~> 3.1"},
       {:jason, "~> 1.2"}
     ]

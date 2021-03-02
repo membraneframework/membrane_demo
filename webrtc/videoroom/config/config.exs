@@ -6,6 +6,8 @@ config :membrane_videoroom_demo,
   keyfile: "priv/certs/key.pem",
   certfile: "priv/certs/certificate.pem"
 
+config :phoenix, :json_library, Jason
+
 config :membrane_videoroom_demo, VideoRoomWeb.Endpoint,
   url: [host: "localhost"],
   pubsub_server: VideoRoom.PubSub,
@@ -25,14 +27,18 @@ config :membrane_videoroom_demo, VideoRoomWeb.Endpoint,
       cd: Path.expand("../assets", __DIR__)
     ]
   ],
+  code_reloader: true,
   live_reload: [
-    patterns: [
-      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$"
+    dirs: [
+      "priv/static",
+      "lib/videoroom_web/controllers",
+      "lib/videoroom_web/views",
+      "lib/videoroom_web/templates"
     ]
   ]
 
 config :logger,
-  level: :info,
+  level: :debug,
   compile_time_purge_matching: [
     [level_lower_than: :info],
     # Silence irrelevant warnings caused by resending handshake events

@@ -1,20 +1,76 @@
 body {
-    margin:40px auto;
-    max-width:900px;
-    line-height:1.6;
-    font-size:18px;
-    color:rgb(211, 211, 211);
+    margin: 40px auto;
+    max-width: 900px;
+    line-height: 1.6;
+    font-size: 18px;
+    color: rgb(211, 211, 211);
     font-family: arial;
     background-color: black;
   }
   
   h1, h2, h3 {
-    line-height:1.2
-  }
-  
-  video {
-    max-width: 100%;
-    width: 400px; 
+    line-height: 1.2;
   }
   
   
+  .VideoChat {
+    display: grid;
+    grid-gap: 10px;
+    grid-template-columns: 1fr 1fr;
+
+    video {
+      max-width: 100%;
+      border-radius: 5px;
+    }
+  }
+  
+  .Room {
+    padding: 20px;
+  }
+  
+  .RoomForm {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    max-width: 500px;
+    
+    .nameLabel {
+      font-weight: 600;
+    }
+
+    .nameInput {
+      width: 100%;
+      padding: 12px 20px;
+      margin: 8px 0;
+      display: inline-block;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    
+    .submitButton {
+      position: relative;
+      display: block;
+      height: 36px;
+      width: 100%;
+      border-radius: 9px;
+      background-color: #505050;
+      border: solid 1px transparent;
+      color: #fff;
+      outline: none;
+      font-size: 18px;
+      font-weight: 300;
+      cursor: pointer;
+      transition: all .1s ease-in-out;
+      &:hover {
+        background-color: transparent;
+        border-color: #fff;
+        transition: all .1s ease-in-out;
+      }
+    }
+  }
+  
+ .Control {
+   text-align: center;
+   margin: 20px;
+ } 

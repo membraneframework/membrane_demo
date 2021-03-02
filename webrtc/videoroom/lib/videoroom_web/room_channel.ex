@@ -8,7 +8,6 @@ defmodule VideoRoomWeb.RoomChannel do
     result =
       with nil <- VideoRoom.Pipeline.lookup(room_id),
            {:ok, pid} <- VideoRoom.Pipeline.start(room_id) do
-        Logger.info("Started a new pipeline")
         {:ok, pid}
       else
         pipeline when is_pid(pipeline) ->

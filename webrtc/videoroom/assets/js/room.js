@@ -91,6 +91,7 @@ export class Room {
   
   stop() {
     this.channel.push("stop", {});
+    this.channel.leave();
   }
   
   

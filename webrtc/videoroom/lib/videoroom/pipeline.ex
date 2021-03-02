@@ -31,6 +31,8 @@ defmodule VideoRoom.Pipeline do
   end
 
   defp do_start(func, room_id) when func in [:start, :start_link] do
+    Membrane.Logger.info("[VideoRoom.Pipeline] Starting a new pipeline for room: #{room_id}")
+
     apply(Membrane.Pipeline, func, [
       __MODULE__,
       [],

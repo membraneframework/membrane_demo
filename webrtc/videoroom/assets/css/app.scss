@@ -12,6 +12,12 @@ body {
     line-height: 1.2;
   }
   
+  .Index {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px;
+  }
   
   .VideoChat {
     display: grid;
@@ -33,6 +39,7 @@ body {
     justify-content: center;
     flex-direction: column;
     max-width: 500px;
+    width: 100%;
     
     .nameLabel {
       font-weight: 600;

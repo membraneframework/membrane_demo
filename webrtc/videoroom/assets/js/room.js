@@ -79,6 +79,10 @@ export class Room {
       
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onCandidate);
+    this.channel.on("error", (data) => {
+      displayConnectionError(data.error);
+      this.stop();
+    });
   }
   
   start() {
@@ -87,6 +91,7 @@ export class Room {
   
   stop() {
     this.channel.push("stop", {});
+    this.channel.leave();
   }
   
   
@@ -160,6 +165,6 @@ function removeVideoElement(id) {
   }
 }
 
-function displayConnectionError() {
-  document.getElementById("control").innerText = "Cannot connect to server, refresh the page and try again"
+function displayConnectionError(message =  "Cannot connect to server, refresh the page and try again") {
+  document.getElementById("control").innerText = message;
 }

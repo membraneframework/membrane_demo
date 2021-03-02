@@ -4,7 +4,7 @@ defmodule VideoRoomWeb.UserSocket do
   channel("room:*", VideoRoomWeb.RoomChannel)
 
   @impl true
-  def connect(params, socket, _connect_info) do
+  def connect(_params, socket, _connect_info) do
     {:ok, socket}
   end
 

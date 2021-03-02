@@ -10,15 +10,13 @@
 
     <title>Membrane WebRTC video room demo</title>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   </head>
 
   <body>
       <main role="main">
         <%= @inner_content %>
       </main>
-
-    </div> <!-- /container -->
-    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
-    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    </div>
   </body>
 </html>

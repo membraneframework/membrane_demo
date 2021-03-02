@@ -7,7 +7,7 @@ defmodule VideoRoom.Application do
     children = [
       VideoRoomWeb.Endpoint,
       {Phoenix.PubSub, name: VideoRoom.PubSub},
-      %{id: VideoRoom.Pipeline, start: {VideoRoom.Pipeline, :start_link, []}}
+      {Registry, keys: :unique, name: VideoRoom.Pipeline.registry()}
     ]
 
     opts = [strategy: :one_for_one, name: __MODULE__]

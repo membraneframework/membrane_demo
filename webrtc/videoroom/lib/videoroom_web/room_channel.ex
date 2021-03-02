@@ -3,17 +3,39 @@ defmodule VideoRoomWeb.RoomChannel do
 
   require Logger
 
-  intercept(["signal"])
-
   @impl true
   def join("room:" <> room_id, _message, socket) do
-    {:ok, assign(socket, :room_id, room_id)}
+    result =
+      with nil <- VideoRoom.Pipeline.lookup(room_id),
+           {:ok, pid} <- VideoRoom.Pipeline.start(room_id) do
+        {:ok, pid}
+      else
+        pipeline when is_pid(pipeline) ->
+          {:ok, pipeline}
+
+        {:error, reason} = error ->
+          Logger.error("""
+          Failed to start pipeline
+          Room: #{inspect(room_id)}
+          Reason: #{inspect(reason)}
+          """)
+
+          error
+      end
+
+    case result do
+      {:ok, pipeline} ->
+        Process.monitor(pipeline)
+        {:ok, assign(socket, %{room_id: room_id, pipeline: pipeline})}
+
+      {:error, _reason} ->
+        {:error, %{reason: "failed to start room"}}
+    end
   end
 
   @impl true
   def handle_in("start", _msg, socket) do
     socket
-    |> socket_room()
     |> send_to_pipeline({:new_peer, self()})
 
     {:noreply, socket}
@@ -21,7 +43,6 @@ defmodule VideoRoomWeb.RoomChannel do
 
   def handle_in("answer", %{"data" => %{"sdp" => sdp}}, socket) do
     socket
-    |> socket_room()
     |> send_to_pipeline({:signal, self(), {:sdp_answer, sdp}})
 
     {:noreply, socket}
@@ -29,7 +50,6 @@ defmodule VideoRoomWeb.RoomChannel do
 
   def handle_in("candidate", %{"data" => %{"candidate" => candidate}}, socket) do
     socket
-    |> socket_room()
     |> send_to_pipeline({:signal, self(), {:candidate, candidate}})
 
     {:noreply, socket}
@@ -37,7 +57,6 @@ defmodule VideoRoomWeb.RoomChannel do
 
   def handle_in("stop", _msg, socket) do
     socket
-    |> socket_room()
     |> send_to_pipeline({:remove_peer, self()})
 
     {:noreply, socket}
@@ -52,17 +71,17 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  @impl true
   def handle_info({:signal, {:sdp_offer, sdp}}, socket) do
     push(socket, "offer", %{data: %{"type" => "offer", "sdp" => sdp}})
     {:noreply, socket}
   end
 
-  defp send_to_pipeline(_room_id, message) do
-    # TODO: add pipeline registry mapping room_id to pipeline
-    # for multiple videorooms
-    send(VideoRoom.Pipeline, message)
+  def handle_info({:DOWN, _ref, :process, _monitor, _reason}, socket) do
+    push(socket, "error", %{error: "Room stopped working, consider restarting your connection"})
+    {:noreply, socket}
   end
 
-  defp socket_room(socket), do: socket.assigns.room_id
+  defp send_to_pipeline(socket, message) do
+    socket.assigns.pipeline |> send(message)
+  end
 end

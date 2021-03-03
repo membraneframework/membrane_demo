@@ -5,30 +5,22 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def join("room:" <> room_id, _message, socket) do
-    result =
-      with nil <- VideoRoom.Pipeline.lookup(room_id),
-           {:ok, pid} <- VideoRoom.Pipeline.start(room_id) do
-        {:ok, pid}
-      else
-        pipeline when is_pid(pipeline) ->
-          {:ok, pipeline}
-
-        {:error, reason} = error ->
-          Logger.error("""
-          Failed to start pipeline
-          Room: #{inspect(room_id)}
-          Reason: #{inspect(reason)}
-          """)
-
-          error
-      end
-
-    case result do
+    case VideoRoom.Pipeline.lookup(room_id) do
+      nil -> VideoRoom.Pipeline.start(room_id)
+      pid -> {:ok, pid}
+    end
+    |> case do
       {:ok, pipeline} ->
         Process.monitor(pipeline)
         {:ok, assign(socket, %{room_id: room_id, pipeline: pipeline})}
 
-      {:error, _reason} ->
+      {:error, reason} ->
+        Logger.error("""
+        Failed to start pipeline
+        Room: #{inspect(room_id)}
+        Reason: #{inspect(reason)}
+        """)
+
         {:error, %{reason: "failed to start room"}}
     end
   end

@@ -1,12 +1,9 @@
 <div id="room" class="Room" data-room-id="<%= @room_id %>">
-    <h2>Membrane WebRTC video room demo</h2>
+    <a href="/">
+        <h2>Membrane WebRTC video room demo</h2>
+    </a>
     <h3>Room: <%= @room_id %></h3>
     <div id="videochat" class="VideoChat"> </div>
-    <template id="template">
-        <video playsinline autoplay></video>
-    </template>
-    <div id="control" class="Control">
-        <%# <button id="toggleStream" onclick="toggleStream()">Stop</button> %>
-    </div>
+    <div id="control" class="Control" />
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
 </div>

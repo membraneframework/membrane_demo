@@ -7,9 +7,11 @@ defmodule VideoRoom.Pipeline do
 
   @pipeline_registry VideoRoom.PipelineRegistry
 
-  # one-shot interval to check if room has any peers, triggered when pipeline starts
-  # after that pipeline should monitor its peers and stop when there is no one left
-  @check_if_empty_interval 5000
+  # pipeline has to be started before any peer connects with it
+  # therefore there is a possibility that pipeline won't be ever closed
+  # (a peer started it but failed to join) so set a timeout at pipeline's start to check
+  # if anyone joined the room and close it if no one did
+  @empty_room_timeout 5000
 
   @spec registry() :: atom()
   def registry(), do: @pipeline_registry
@@ -44,7 +46,7 @@ defmodule VideoRoom.Pipeline do
   def handle_init(_opts) do
     play(self())
 
-    Process.send_after(self(), :check_if_empty, @check_if_empty_interval)
+    Process.send_after(self(), :check_if_empty, @empty_room_timeout)
     {:ok, %{tracks: %{}, endpoints_tracks_ids: %{}}}
   end
 
@@ -195,7 +197,7 @@ defmodule VideoRoom.Pipeline do
   end
 
   defp stop_if_empty(state) do
-    if state |> Map.get(:endpoints_tracks_ids) |> map_size() == 0 do
+    if state.endpoints_tracks_ids == %{} do
       Membrane.Pipeline.stop_and_terminate(self())
     end
   end

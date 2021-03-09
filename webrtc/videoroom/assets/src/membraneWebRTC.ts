@@ -24,13 +24,18 @@ interface CandidateData {
 
 interface RoomCallbacks {
   onConnectionError?: (message: string) => void;
-  onAddStream?: (stream: MediaStream, mute: boolean) => void;
-  onRemoveStream?: (stream: MediaStream) => void;
+  onAddTrack?: (
+    stream: MediaStream,
+    track: MediaStreamTrack,
+    mute: boolean
+  ) => void;
+  onRemoveTrack?: (stream: MediaStream, track: MediaStreamTrack) => void;
 }
 
-export class Room {
+export class MembraneWebRTC {
   private readonly socket: Socket;
   private channel?: Channel;
+  private roomId: string;
 
   private localStream?: MediaStream;
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
@@ -41,6 +46,7 @@ export class Room {
   constructor(socket: Socket, roomId: string, callbacks?: RoomCallbacks) {
     this.socket = socket;
     this.callbacks = callbacks;
+    this.roomId = roomId;
 
     const handleError = () => {
       this.callbacks?.onConnectionError?.(DEFAULT_ERROR_MESSAGE);
@@ -50,54 +56,61 @@ export class Room {
     socket.onError(handleError);
     socket.onClose(handleError);
 
-    this.setup(roomId);
+    this.setup();
   }
 
-  private setup = async (roomId: string) => {
+  private setup = async () => {
     try {
-      this.localStream = await navigator.mediaDevices.getUserMedia(CONSTRAINTS);
+      const localStream = await navigator.mediaDevices.getUserMedia(
+        CONSTRAINTS
+      );
 
-      this.callbacks?.onAddStream?.(this.localStream, true);
+      localStream
+        .getTracks()
+        .forEach((track) =>
+          this.callbacks?.onAddTrack?.(localStream, track, true)
+        );
 
-      this.prepareChannel(roomId);
+      this.localStream = localStream;
     } catch (error) {
       console.error(error);
     }
   };
 
-  private prepareChannel = (roomId: string) => {
-    this.channel = this.socket.channel(`room:${roomId}`, {});
+  public start = () => {
+    this.channel = this.socket.channel(`room:${this.roomId}`, {});
 
     this.channel.on("offer", this.onOffer);
-    this.channel.on("candidate", this.onCandidate);
-    this.channel.on("error", (data) => {
+    this.channel.on("candidate", this.onRemoteCandidate);
+    this.channel.on("error", (data: any) => {
       this.callbacks?.onConnectionError?.(data.error);
       this.stop();
     });
 
     this.channel
       .join()
-      .receive("ok", (_) => this.start())
-      .receive("error", (_) =>
+      .receive("ok", (_: any) => this.channel?.push("start", {}))
+      .receive("error", (_: any) =>
         this.callbacks?.onConnectionError?.(
           "Unable to connect with backend service"
         )
       );
   };
 
-  private start = () => {
-    this.channel?.push("start", {});
-  };
-
-  private stop = () => {
-    this.channel?.push("stop", {});
-    this.channel?.leave();
+  public stop = () => {
+    if (!this.channel) {
+      throw new Error("Cannot stop MembraneWebRTC, channel is undefined");
+    }
+    this.channel.push("stop", {});
+    this.channel.leave();
+    this.remoteStreams = new Set<MediaStream>();
+    this.connection = undefined;
   };
 
   private onOffer = async (offer: OfferData) => {
     if (!this.connection) {
       this.connection = new RTCPeerConnection(RTC_CONFIG);
-      this.connection.onicecandidate = this.onIceCandidate();
+      this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
 
       this.localStream
@@ -118,16 +131,21 @@ export class Room {
     }
   };
 
-  private onCandidate = (candidate: CandidateData) => {
+  private onRemoteCandidate = (candidate: CandidateData) => {
     try {
       const iceCandidate = new RTCIceCandidate(candidate.data);
-      this.connection?.addIceCandidate(iceCandidate);
+      if (!this.connection) {
+        throw new Error(
+          "Received new remote candidate but RTCConnection is undefined"
+        );
+      }
+      this.connection.addIceCandidate(iceCandidate);
     } catch (error) {
       console.error(error);
     }
   };
 
-  private onIceCandidate = () => {
+  private onLocalCandidate = () => {
     return (event: RTCPeerConnectionIceEvent) => {
       if (event.candidate) {
         this.channel?.push("candidate", { data: event.candidate });
@@ -142,15 +160,15 @@ export class Room {
       stream.onremovetrack = (event) => {
         if (stream.getTracks().length === 0) {
           stream.onremovetrack = null;
-          this.callbacks?.onRemoveStream?.(stream);
           this.remoteStreams.delete(stream);
         }
+        this.callbacks?.onRemoveTrack?.(stream, event.track);
       };
 
       if (!this.remoteStreams.has(stream)) {
-        this.callbacks?.onAddStream?.(stream, false);
         this.remoteStreams.add(stream);
       }
+      this.callbacks?.onAddTrack?.(stream, event.track, false);
     };
   };
 }

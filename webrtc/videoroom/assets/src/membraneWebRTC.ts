@@ -34,8 +34,8 @@ interface RoomCallbacks {
 
 export class MembraneWebRTC {
   private readonly socket: Socket;
-  private channel?: Channel;
-  private roomId: string;
+  private _channel?: Channel;
+  private channelId: string;
 
   private localStream?: MediaStream;
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
@@ -43,10 +43,21 @@ export class MembraneWebRTC {
 
   private callbacks?: RoomCallbacks;
 
-  constructor(socket: Socket, roomId: string, callbacks?: RoomCallbacks) {
+  private get channel(): Channel {
+    if (!this._channel) {
+      throw new Error("Phoenix channel is not initialized");
+    }
+    return this._channel;
+  }
+
+  private set channel(ch: Channel) {
+    this._channel = ch;
+  }
+
+  constructor(socket: Socket, channelId: string, callbacks?: RoomCallbacks) {
     this.socket = socket;
     this.callbacks = callbacks;
-    this.roomId = roomId;
+    this.channelId = channelId;
 
     const handleError = () => {
       this.callbacks?.onConnectionError?.(DEFAULT_ERROR_MESSAGE);
@@ -55,11 +66,9 @@ export class MembraneWebRTC {
 
     socket.onError(handleError);
     socket.onClose(handleError);
-
-    this.setup();
   }
 
-  private setup = async () => {
+  public start = async () => {
     try {
       const localStream = await navigator.mediaDevices.getUserMedia(
         CONSTRAINTS
@@ -72,13 +81,15 @@ export class MembraneWebRTC {
         );
 
       this.localStream = localStream;
+
+      this.setup();
     } catch (error) {
       console.error(error);
     }
   };
 
-  public start = () => {
-    this.channel = this.socket.channel(`room:${this.roomId}`, {});
+  private setup = () => {
+    this.channel = this.socket.channel(`room:${this.channelId}`, {});
 
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onRemoteCandidate);
@@ -89,7 +100,7 @@ export class MembraneWebRTC {
 
     this.channel
       .join()
-      .receive("ok", (_: any) => this.channel?.push("start", {}))
+      .receive("ok", (_: any) => this.channel.push("start", {}))
       .receive("error", (_: any) =>
         this.callbacks?.onConnectionError?.(
           "Unable to connect with backend service"
@@ -98,9 +109,6 @@ export class MembraneWebRTC {
   };
 
   public stop = () => {
-    if (!this.channel) {
-      throw new Error("Cannot stop MembraneWebRTC, channel is undefined");
-    }
     this.channel.push("stop", {});
     this.channel.leave();
     this.remoteStreams = new Set<MediaStream>();
@@ -125,7 +133,7 @@ export class MembraneWebRTC {
       const answer = await this.connection.createAnswer();
       await this.connection.setLocalDescription(answer);
 
-      this.channel?.push("answer", { data: answer });
+      this.channel.push("answer", { data: answer });
     } catch (error) {
       console.error(error);
     }
@@ -148,7 +156,7 @@ export class MembraneWebRTC {
   private onLocalCandidate = () => {
     return (event: RTCPeerConnectionIceEvent) => {
       if (event.candidate) {
-        this.channel?.push("candidate", { data: event.candidate });
+        this.channel.push("candidate", { data: event.candidate });
       }
     };
   };

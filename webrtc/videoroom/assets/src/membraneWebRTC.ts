@@ -6,11 +6,6 @@ const RTC_CONFIG: RTCConfiguration = {
   // ]
 };
 
-const CONSTRAINTS = {
-  audio: true,
-  video: { width: 1280, height: 720 },
-};
-
 const DEFAULT_ERROR_MESSAGE =
   "Cannot connect to the server, try again by refreshing the page";
 
@@ -25,11 +20,11 @@ interface CandidateData {
 interface RoomCallbacks {
   onConnectionError?: (message: string) => void;
   onAddTrack?: (
-    stream: MediaStream,
     track: MediaStreamTrack,
+    stream: MediaStream,
     mute: boolean
   ) => void;
-  onRemoveTrack?: (stream: MediaStream, track: MediaStreamTrack) => void;
+  onRemoveTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
 }
 
 export class MembraneWebRTC {
@@ -37,7 +32,7 @@ export class MembraneWebRTC {
   private _channel?: Channel;
   private channelId: string;
 
-  private localStream?: MediaStream;
+  private localStream: MediaStream;
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
   private connection?: RTCPeerConnection;
 
@@ -54,10 +49,16 @@ export class MembraneWebRTC {
     this._channel = ch;
   }
 
-  constructor(socket: Socket, channelId: string, callbacks?: RoomCallbacks) {
+  constructor(
+    socket: Socket,
+    localStream: MediaStream,
+    channelId: string,
+    callbacks?: RoomCallbacks
+  ) {
     this.socket = socket;
     this.callbacks = callbacks;
     this.channelId = channelId;
+    this.localStream = localStream;
 
     const handleError = () => {
       this.callbacks?.onConnectionError?.(DEFAULT_ERROR_MESSAGE);
@@ -68,27 +69,7 @@ export class MembraneWebRTC {
     socket.onClose(handleError);
   }
 
-  public start = async () => {
-    try {
-      const localStream = await navigator.mediaDevices.getUserMedia(
-        CONSTRAINTS
-      );
-
-      localStream
-        .getTracks()
-        .forEach((track) =>
-          this.callbacks?.onAddTrack?.(localStream, track, true)
-        );
-
-      this.localStream = localStream;
-
-      this.setup();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  private setup = () => {
+  public start = () => {
     this.channel = this.socket.channel(`room:${this.channelId}`, {});
 
     this.channel.on("offer", this.onOffer);
@@ -112,6 +93,10 @@ export class MembraneWebRTC {
     this.channel.push("stop", {});
     this.channel.leave();
     this.remoteStreams = new Set<MediaStream>();
+    if (this.connection) {
+      this.connection.onicecandidate = null;
+      this.connection.ontrack = null;
+    }
     this.connection = undefined;
   };
 
@@ -170,13 +155,13 @@ export class MembraneWebRTC {
           stream.onremovetrack = null;
           this.remoteStreams.delete(stream);
         }
-        this.callbacks?.onRemoveTrack?.(stream, event.track);
+        this.callbacks?.onRemoveTrack?.(event.track, stream);
       };
 
       if (!this.remoteStreams.has(stream)) {
         this.remoteStreams.add(stream);
       }
-      this.callbacks?.onAddTrack?.(stream, event.track, false);
+      this.callbacks?.onAddTrack?.(event.track, stream, false);
     };
   };
 }

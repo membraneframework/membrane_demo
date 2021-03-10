@@ -13,7 +13,7 @@ defmodule VideoRoom.MixProject do
 
   def application do
     [
-      mod: {VideoRoom.App, []},
+      mod: {VideoRoom.Application, []},
       extra_applications: [:logger]
     ]
   end
@@ -28,7 +28,11 @@ defmodule VideoRoom.MixProject do
       {:membrane_element_tee, "~> 0.4.1"},
       {:membrane_element_fake, "~> 0.4.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:poison, "~> 3.1"}
+      {:phoenix, "~> 1.5"},
+      {:phoenix_html, "~> 2.14"},
+      {:phoenix_live_reload, "~> 1.2"},
+      {:poison, "~> 3.1"},
+      {:jason, "~> 1.2"}
     ]
   end
 end

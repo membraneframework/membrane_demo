@@ -5,14 +5,49 @@ defmodule VideoRoom.Pipeline do
 
   require Membrane.Logger
 
-  def start_link() do
-    Membrane.Pipeline.start_link(__MODULE__, [], name: __MODULE__)
+  @pipeline_registry VideoRoom.PipelineRegistry
+
+  # pipeline has to be started before any peer connects with it
+  # therefore there is a possibility that pipeline won't be ever closed
+  # (a peer started it but failed to join) so set a timeout at pipeline's start to check
+  # if anyone joined the room and close it if no one did
+  @empty_room_timeout 5000
+
+  @spec registry() :: atom()
+  def registry(), do: @pipeline_registry
+
+  @spec lookup(String.t()) :: GenServer.server() | nil
+  def lookup(room_id) do
+    case Registry.lookup(@pipeline_registry, room_id) do
+      [{pid, _value}] -> pid
+      [] -> nil
+    end
+  end
+
+  def start_link(room_id) do
+    do_start(:start_link, room_id)
+  end
+
+  def start(room_id) do
+    do_start(:start, room_id)
+  end
+
+  defp do_start(func, room_id) when func in [:start, :start_link] do
+    Membrane.Logger.info("[VideoRoom.Pipeline] Starting a new pipeline for room: #{room_id}")
+
+    apply(Membrane.Pipeline, func, [
+      __MODULE__,
+      [],
+      [name: {:via, Registry, {@pipeline_registry, room_id}}]
+    ])
   end
 
   @impl true
   def handle_init(_opts) do
     play(self())
-    {:ok, %{tracks: %{}, endpoints_tacks_ids: %{}}}
+
+    Process.send_after(self(), :check_if_empty, @empty_room_timeout)
+    {:ok, %{tracks: %{}, endpoints_tracks_ids: %{}}}
   end
 
   @impl true
@@ -62,7 +97,7 @@ defmodule VideoRoom.Pipeline do
 
       state =
         %{state | tracks: tracks |> Map.new(&{&1.id, &1}) |> Map.merge(state.tracks)}
-        |> put_in([:endpoints_tacks_ids, peer_pid], Enum.map(tracks, & &1.id))
+        |> put_in([:endpoints_tracks_ids, peer_pid], Enum.map(tracks, & &1.id))
 
       {{:ok, [spec: spec] ++ tracks_msgs}, state}
     end
@@ -73,7 +108,6 @@ defmodule VideoRoom.Pipeline do
     {{:ok, forward: {{:endpoint, peer_pid}, {:signal, msg}}}, state}
   end
 
-  @impl true
   def handle_other({:remove_peer, peer_pid}, ctx, state) do
     case maybe_remove_peer(peer_pid, ctx, state) do
       {:absent, [], state} ->
@@ -85,10 +119,17 @@ defmodule VideoRoom.Pipeline do
     end
   end
 
-  @impl true
   def handle_other({:DOWN, _ref, :process, pid, _reason}, ctx, state) do
     {_status, actions, state} = maybe_remove_peer(pid, ctx, state)
+
+    stop_if_empty(state)
+
     {{:ok, actions}, state}
+  end
+
+  def handle_other(:check_if_empty, _ctx, state) do
+    stop_if_empty(state)
+    {:ok, state}
   end
 
   @impl true
@@ -117,7 +158,6 @@ defmodule VideoRoom.Pipeline do
     {{:ok, spec: spec}, state}
   end
 
-  @impl true
   def handle_notification({:signal, message}, {:endpoint, peer_pid}, _ctx, state) do
     send(peer_pid, {:signal, message})
     {:ok, state}
@@ -129,7 +169,7 @@ defmodule VideoRoom.Pipeline do
     if endpoint == nil or endpoint.terminating? do
       {:absent, [], state}
     else
-      {tracks_ids, state} = pop_in(state, [:endpoints_tacks_ids, peer_pid])
+      {tracks_ids, state} = pop_in(state, [:endpoints_tracks_ids, peer_pid])
 
       {tracks, state} =
         Enum.map_reduce(tracks_ids, state, fn track_id, state ->
@@ -153,6 +193,12 @@ defmodule VideoRoom.Pipeline do
         end)
 
       {:present, [remove_child: children] ++ tracks_msgs, state}
+    end
+  end
+
+  defp stop_if_empty(state) do
+    if state.endpoints_tracks_ids == %{} do
+      Membrane.Pipeline.stop_and_terminate(self())
     end
   end
 

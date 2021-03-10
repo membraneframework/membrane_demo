@@ -1,9 +1,9 @@
-defmodule VideoRoom.Router do
+defmodule Membrane.Demo.WebRTCToHLS.Router do
   use Plug.Router
 
   plug(Plug.Static,
     at: "/",
-    from: :membrane_videoroom_demo
+    from: :membrane_webrtc_to_hls_demo
   )
 
   plug(:match)

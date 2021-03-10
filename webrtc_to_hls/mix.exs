@@ -1,9 +1,9 @@
-defmodule VideoRoom.MixProject do
+defmodule Membrane.Demo.WebRTCToHLS.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :membrane_videoroom_demo,
+      app: :membrane_webrtc_to_hls_demo,
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
@@ -13,7 +13,7 @@ defmodule VideoRoom.MixProject do
 
   def application do
     [
-      mod: {VideoRoom.App, []},
+      mod: {Membrane.Demo.WebRTCToHLS.Application, []},
       extra_applications: [:logger]
     ]
   end
@@ -30,10 +30,16 @@ defmodule VideoRoom.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:poison, "~> 3.1"},
       {:membrane_file_plugin, "~> 0.5.0"},
-      {:membrane_h264_ffmpeg_plugin, [env: :prod, git: "https://github.com/membraneframework/membrane_h264_ffmpeg_plugin.git", branch: "wait-for-keyframe"]},
+      {:membrane_h264_ffmpeg_plugin,
+       [
+         env: :prod,
+         git: "https://github.com/membraneframework/membrane_h264_ffmpeg_plugin.git",
+         branch: "wait-for-keyframe"
+       ]},
       {:membrane_http_adaptive_stream_plugin, "~> 0.1.0"},
       {:membrane_mp4_plugin, "~> 0.3.0"},
       {:membrane_opus_plugin, "~> 0.2.1"},
+      {:membrane_aac_plugin, "~> 0.5.1"},
       {:membrane_aac_fdk_plugin, "~> 0.4.0"}
     ]
   end

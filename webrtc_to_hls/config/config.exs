@@ -1,6 +1,6 @@
 import Config
 
-config :membrane_videoroom_demo,
+config :membrane_webrtc_to_hls_demo,
   ip: {0, 0, 0, 0},
   port: 8443,
   keyfile: "priv/certs/key.pem",

@@ -1,38 +1,44 @@
-defmodule Membrane.Demo.WebRTCToHLS.Pipeline do
+defmodule WebRTCToHLS.Pipeline do
   use Membrane.Pipeline
 
   alias Membrane.WebRTC.{EndpointBin, Track}
 
+  import WebRTCToHLS.Utils
+
   require Membrane.Logger
 
-  @pipeline_registry Membrane.Demo.WebRTCToHLS.PipelineRegistry
+  @pipeline_registry WebRTCToHLS.PipelineRegistry
 
+  @spec registry() :: atom()
   def registry(), do: @pipeline_registry
 
-  def lookup(owner_pid) do
-    case Registry.lookup(@pipeline_registry, owner_pid) do
+  @spec lookup(pid()) :: GenServer.server() | nil
+  def lookup(owner) do
+    case Registry.lookup(@pipeline_registry, owner) do
       [{pid, _value}] -> pid
       [] -> nil
     end
   end
 
-  def start_link(owner_pid) do
-    do_start(:start_link, owner_pid)
+  @spec start_link(pid) :: GenServer.on_start()
+  def start_link(owner) do
+    do_start(:start_link, owner)
   end
 
-  def start(owner_pid) do
-    do_start(:start, owner_pid)
+  @spec start(pid) :: GenServer.on_start()
+  def start(owner) do
+    do_start(:start, owner)
   end
 
-  defp do_start(func, owner_pid) when func in [:start, :start_link] do
+  defp do_start(func, owner) when func in [:start, :start_link] do
     Membrane.Logger.info(
-      "[WebRTCToHLS.Pipeline] Starting pipeline for owner #{inspect(owner_pid)}"
+      "[WebRTCToHLS.Pipeline] Starting a new pipeline for owner process: #{inspect(owner)}"
     )
 
     apply(Membrane.Pipeline, func, [
       __MODULE__,
-      [owner_pid],
-      [name: {:via, Registry, {@pipeline_registry, owner_pid}}]
+      [owner],
+      [name: {:via, Registry, {@pipeline_registry, owner}}]
     ])
   end
 
@@ -49,7 +55,12 @@ defmodule Membrane.Demo.WebRTCToHLS.Pipeline do
     stream_id = Track.stream_id()
     tracks = [Track.new(:audio, stream_id), Track.new(:video, stream_id)]
 
-    directory = owner_directory(owner)
+    directory =
+      owner
+      |> pid_to_path_prefix()
+      |> hls_path()
+
+    # remove directory if it already exists
     File.rm_rf(directory)
     File.mkdir!(directory)
 
@@ -90,7 +101,12 @@ defmodule Membrane.Demo.WebRTCToHLS.Pipeline do
   end
 
   @impl true
-  def handle_notification({:new_track, track_id, encoding}, _endpoint, _ctx, state) do
+  def handle_notification(
+        {:new_track, track_id, encoding},
+        _endpoint,
+        _ctx,
+        %{owner: owner} = state
+      ) do
     %{children: hls_children, links: hls_links} =
       case encoding do
         :H264 ->
@@ -138,6 +154,8 @@ defmodule Membrane.Demo.WebRTCToHLS.Pipeline do
           }
       end
 
+    send(owner, {:hls_path, owner |> pid_to_path_prefix()})
+
     spec = %ParentSpec{children: hls_children, links: hls_links}
     {{:ok, spec: spec}, state}
   end
@@ -147,7 +165,11 @@ defmodule Membrane.Demo.WebRTCToHLS.Pipeline do
   end
 
   def handle_notification({:cleanup, _}, :hls, _ctx, %{owner: owner} = state) do
-    directory = owner_directory(owner)
+    directory =
+      owner
+      |> pid_to_path_prefix()
+      |> hls_path()
+
     File.rm_rf!(directory)
     {:ok, state}
   end
@@ -159,13 +181,5 @@ defmodule Membrane.Demo.WebRTCToHLS.Pipeline do
 
   def handle_notification({:track_playable, _ref}, _el, _ctx, state) do
     {:ok, state}
-  end
-
-  defp pid_to_hash(pid) do
-    :crypto.hash(:md5, :erlang.pid_to_list(pid)) |> Base.encode16(case: :lower)
-  end
-
-  defp owner_directory(owner_pid) do
-    "output/#{pid_to_hash(owner_pid)}"
   end
 end

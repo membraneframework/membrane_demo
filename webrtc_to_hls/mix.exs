@@ -1,4 +1,4 @@
-defmodule Membrane.Demo.WebRTCToHLS.MixProject do
+defmodule WebRTCToHLS.MixProject do
   use Mix.Project
 
   def project do
@@ -13,8 +13,8 @@ defmodule Membrane.Demo.WebRTCToHLS.MixProject do
 
   def application do
     [
-      mod: {Membrane.Demo.WebRTCToHLS.Application, []},
-      extra_applications: [:logger]
+      mod: {WebRTCToHLS.Application, []},
+      extra_applications: [:logger, :crypto]
     ]
   end
 
@@ -28,7 +28,11 @@ defmodule Membrane.Demo.WebRTCToHLS.MixProject do
       {:membrane_element_tee, "~> 0.4.1"},
       {:membrane_element_fake, "~> 0.4.0"},
       {:plug_cowboy, "~> 2.0"},
+      {:phoenix, "~> 1.5"},
+      {:phoenix_html, "~> 2.14"},
+      {:phoenix_live_reload, "~> 1.2"},
       {:poison, "~> 3.1"},
+      {:jason, "~> 1.2"},
       {:membrane_file_plugin, "~> 0.5.0"},
       {:membrane_h264_ffmpeg_plugin,
        [

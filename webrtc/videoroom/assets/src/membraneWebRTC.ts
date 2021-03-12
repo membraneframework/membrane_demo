@@ -1,9 +1,11 @@
 import { Channel, Socket } from "phoenix";
 
 const RTC_CONFIG: RTCConfiguration = {
-  // iceServers: [
-  //     YOUR TURN AND STUN SERVERS
-  // ]
+  iceServers: [
+    {
+      urls: "stun:stun.l.google.com:19302",
+    },
+  ],
 };
 
 const DEFAULT_ERROR_MESSAGE =
@@ -17,7 +19,7 @@ interface CandidateData {
   data: RTCIceCandidateInit;
 }
 
-interface RoomCallbacks {
+interface Callbacks {
   onConnectionError?: (message: string) => void;
   onAddTrack?: (
     track: MediaStreamTrack,
@@ -36,7 +38,7 @@ export class MembraneWebRTC {
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
   private connection?: RTCPeerConnection;
 
-  private callbacks?: RoomCallbacks;
+  private callbacks?: Callbacks;
 
   private get channel(): Channel {
     if (!this._channel) {
@@ -53,7 +55,7 @@ export class MembraneWebRTC {
     socket: Socket,
     localStream: MediaStream,
     channelId: string,
-    callbacks?: RoomCallbacks
+    callbacks?: Callbacks
   ) {
     this.socket = socket;
     this.callbacks = callbacks;

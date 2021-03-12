@@ -56,7 +56,7 @@ defmodule WebRTCToHLS.Pipeline do
     tracks = [Track.new(:audio, stream_id), Track.new(:video, stream_id)]
 
     directory =
-      owner
+      self()
       |> pid_to_path_prefix()
       |> hls_path()
 
@@ -76,6 +76,7 @@ defmodule WebRTCToHLS.Pipeline do
       hls: %Membrane.HTTPAdaptiveStream.Sink{
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
         target_window_duration: 10 |> Membrane.Time.seconds(),
+        persist?: true,
         storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: directory}
       }
     }
@@ -154,7 +155,7 @@ defmodule WebRTCToHLS.Pipeline do
           }
       end
 
-    send(owner, {:hls_path, owner |> pid_to_path_prefix()})
+    send(owner, {:hls_path, self() |> pid_to_path_prefix()})
 
     spec = %ParentSpec{children: hls_children, links: hls_links}
     {{:ok, spec: spec}, state}
@@ -164,9 +165,9 @@ defmodule WebRTCToHLS.Pipeline do
     {:ok, state}
   end
 
-  def handle_notification({:cleanup, _}, :hls, _ctx, %{owner: owner} = state) do
+  def handle_notification({:cleanup, _}, :hls, _ctx, state) do
     directory =
-      owner
+      self()
       |> pid_to_path_prefix()
       |> hls_path()
 

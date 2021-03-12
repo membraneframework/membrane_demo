@@ -32,9 +32,27 @@ h3 {
   }
 }
 
-.Player {
+.PlayerLink {
   display: flex;
   justify-content: center;
+  flex-direction: column;
+
+  a {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  span {
+    text-align: center;
+  }
+}
+
+.Player {
+  width: 80%;
+
+  video {
+    outline: none;
+  }
 }
 
 .Room {

@@ -1,7 +1,5 @@
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<!-- Or if you want a more recent alpha version -->
-<!-- <script src="https://cdn.jsdelivr.net/npm/hls.js@alpha"></script> -->
-<video id="player"></video>
+<video id="player" controls autoplay class="Player"></video>
 <script>
   var video = document.getElementById('player');
 

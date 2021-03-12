@@ -1,4 +1,4 @@
-# Membrane WebRTC video room demo
+# Membrane WebRTC To HLS demo
 
 ## Dependencies
 
@@ -12,16 +12,19 @@ brew install srtp libnice clang-format ffmpeg opus
 
 Firstly, generate certificate, as described in the [signaling server readme](https://github.com/membraneframework/membrane_demo/tree/master/webrtc/simple#https). 
 
-In order to run, type:
-
+Install all dependencies:
 ```
 mix deps.get
-mix run --no-halt
+npm ci --prefix=assets
 ```
 
-Then, go to <https://localhost:8443/>.
+In order to run, type:
+```
+mix phx.server
+```
 
-IP, port and friends can be set in `config/config.exs`.
+
+Then, go to <https://localhost:8443/>.
 
 ## Copyright and License
 

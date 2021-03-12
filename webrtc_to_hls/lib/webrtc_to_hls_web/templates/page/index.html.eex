@@ -3,7 +3,7 @@
         <h2>Membrane WebRTC to HLS demo</h2>
         <div id="videochat" class="VideoChat"> </div>
         <div id="control" class="Control"></div>
-        <div id="player" class="Player"></div>
+        <div id="player-link" class="PlayerLink"></div>
         <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
     </div>
 </div>

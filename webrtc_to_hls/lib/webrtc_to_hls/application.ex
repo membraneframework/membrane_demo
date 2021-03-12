@@ -7,7 +7,8 @@ defmodule WebRTCToHLS.Application do
     children = [
       WebRTCToHLSWeb.Endpoint,
       {Phoenix.PubSub, name: WebRTCToHLS.PubSub},
-      {Registry, keys: :unique, name: WebRTCToHLS.Pipeline.registry()}
+      {Registry, keys: :unique, name: WebRTCToHLS.Pipeline.registry()},
+      WebRTCToHLS.StorageCleanup
     ]
 
     opts = [strategy: :one_for_one, name: __MODULE__]

@@ -16,7 +16,7 @@ defmodule WebRTCToHLS.Utils do
     [hls_mount_path(), prefix, filename] |> Path.join()
   end
 
-  defp hls_mount_path(), do: Application.fetch_env!(:membrane_webrtc_to_hls_demo, :hls_mount_path)
+  def hls_mount_path(), do: Application.fetch_env!(:membrane_webrtc_to_hls_demo, :hls_mount_path)
 
   defp pid_to_hash(pid) do
     :crypto.hash(:md5, :erlang.pid_to_list(pid)) |> Base.encode16(case: :lower)

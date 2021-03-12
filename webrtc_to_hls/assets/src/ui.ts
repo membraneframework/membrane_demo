@@ -37,12 +37,17 @@ export function setErrorMessage(
 }
 
 export function setPlayerUrl(prefix: string) {
-  const player = document.getElementById("player");
+  const player = document.getElementById("player-link");
   if (player && player.childNodes.length === 0) {
+    player.innerHTML = "";
     const a = document.createElement("a");
     a.href = window.location.origin + `/player/${prefix}`;
     a.target = "_blank";
-    a.innerText = "See your HLS stream here";
+    a.innerText = "Click here to see your HLS stream";
     player.appendChild(a);
+
+    const span = document.createElement("span");
+    span.innerText = `Or paste this URL to your HLS player: ${window.location.origin}/video/${prefix}/index.m3u8`;
+    player.appendChild(span);
   }
 }

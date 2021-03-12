@@ -3,7 +3,7 @@ import { Channel, Socket } from "phoenix";
 const RTC_CONFIG: RTCConfiguration = {
   iceServers: [
     {
-      urls: "stun.l.google.com:19302",
+      urls: "stun:stun.l.google.com:19302",
     },
   ],
 };

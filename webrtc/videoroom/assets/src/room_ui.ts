@@ -1,3 +1,7 @@
+export function getRoomId(): String {
+  return document.getElementById("room")!.dataset.roomId!;
+}
+
 export function addVideoElement(
   _: MediaStreamTrack,
   stream: MediaStream,
@@ -8,7 +12,7 @@ export function addVideoElement(
   if (!video) {
     video = document.createElement("video");
     video.id = stream.id;
-    document.getElementById("videochat")?.appendChild(video);
+    document.getElementById("videochat")!.appendChild(video);
   }
   video.srcObject = stream;
   video.autoplay = true;
@@ -21,17 +25,14 @@ export function removeVideoElement(_: MediaStreamTrack, stream: MediaStream) {
     return;
   }
 
-  const video = <HTMLVideoElement>document.getElementById(stream.id);
-  if (video) {
-    video.remove();
-  }
+  document.getElementById(stream.id)?.remove();
 }
 
 export function setErrorMessage(
   message: string = "Cannot connect to server, refresh the page and try again"
 ) {
-  const control = document.getElementById("control");
-  if (control) {
-    control.innerHTML = message;
+  const errorContainer = document.getElementById("videochat-error");
+  if (errorContainer) {
+    errorContainer.innerHTML = message;
   }
 }

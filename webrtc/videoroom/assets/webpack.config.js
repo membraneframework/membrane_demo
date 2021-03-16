@@ -17,7 +17,7 @@ module.exports = (env, options) => {
       ],
     },
     entry: {
-      app: "./src/app.ts",
+      room: "./src/room.ts",
     },
     output: {
       filename: "[name].js",

@@ -1,13 +1,5 @@
 import { Channel, Socket } from "phoenix";
 
-const RTC_CONFIG: RTCConfiguration = {
-  iceServers: [
-    {
-      urls: "stun:stun.l.google.com:19302",
-    },
-  ],
-};
-
 const DEFAULT_ERROR_MESSAGE =
   "Cannot connect to the server, try again by refreshing the page";
 
@@ -20,13 +12,12 @@ interface CandidateData {
 }
 
 interface Callbacks {
-  onConnectionError?: (message: string) => void;
   onAddTrack?: (
     track: MediaStreamTrack,
-    stream: MediaStream,
-    mute: boolean
+    stream: MediaStream
   ) => void;
   onRemoveTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
+  onConnectionError?: (message: string) => void;
 }
 
 export class MembraneWebRTC {
@@ -34,11 +25,18 @@ export class MembraneWebRTC {
   private _channel?: Channel;
   private channelId: string;
 
-  private localStream: MediaStream;
+  private localTracks: Set<MediaStreamTrack> = new Set<MediaStreamTrack>();
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
   private connection?: RTCPeerConnection;
+  private readonly rtc_config: RTCConfiguration = {
+    iceServers: [
+      {
+        urls: "stun:stun.l.google.com:19302",
+      },
+    ],
+  };
 
-  private callbacks?: Callbacks;
+  private readonly callbacks: Callbacks;
 
   private get channel(): Channel {
     if (!this._channel) {
@@ -51,19 +49,14 @@ export class MembraneWebRTC {
     this._channel = ch;
   }
 
-  constructor(
-    socket: Socket,
-    localStream: MediaStream,
-    channelId: string,
-    callbacks?: Callbacks
-  ) {
+  constructor(socket: Socket, channelId: string, callbacks?: Callbacks, config?: RTCConfiguration) {
     this.socket = socket;
-    this.callbacks = callbacks;
+    this.callbacks = callbacks || {};
     this.channelId = channelId;
-    this.localStream = localStream;
+    this.rtc_config = config || this.rtc_config;
 
     const handleError = () => {
-      this.callbacks?.onConnectionError?.(DEFAULT_ERROR_MESSAGE);
+      this.callbacks.onConnectionError?.(DEFAULT_ERROR_MESSAGE);
       this.stop();
     };
 
@@ -71,13 +64,19 @@ export class MembraneWebRTC {
     socket.onClose(handleError);
   }
 
-  public start = () => {
-    this.channel = this.socket.channel(`room:${this.channelId}`, {});
+  public addTrack = (track: MediaStreamTrack, stream: MediaStream) => {
+    if(this.connection) {
+      throw new Error("Adding tracks when connection is established is not yet supported");
+    }
+    this.localTracks.add(track);
+  }
 
+  public start = () => {
+    this.channel = this.socket.channel(this.channelId, {});
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onRemoteCandidate);
     this.channel.on("error", (data: any) => {
-      this.callbacks?.onConnectionError?.(data.error);
+      this.callbacks.onConnectionError?.(data.error);
       this.stop();
     });
 
@@ -85,7 +84,7 @@ export class MembraneWebRTC {
       .join()
       .receive("ok", (_: any) => this.channel.push("start", {}))
       .receive("error", (_: any) =>
-        this.callbacks?.onConnectionError?.(
+        this.callbacks.onConnectionError?.(
           "Unable to connect with backend service"
         )
       );
@@ -104,13 +103,10 @@ export class MembraneWebRTC {
 
   private onOffer = async (offer: OfferData) => {
     if (!this.connection) {
-      this.connection = new RTCPeerConnection(RTC_CONFIG);
+      this.connection = new RTCPeerConnection(this.rtc_config);
       this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
-
-      this.localStream
-        ?.getTracks()
-        .forEach((track) => this.connection?.addTrack(track));
+      this.localTracks.forEach(track => this.connection!.addTrack(track));
     } else {
       this.connection.createOffer({ iceRestart: true });
     }
@@ -157,13 +153,13 @@ export class MembraneWebRTC {
           stream.onremovetrack = null;
           this.remoteStreams.delete(stream);
         }
-        this.callbacks?.onRemoveTrack?.(event.track, stream);
+        this.callbacks.onRemoveTrack?.(event.track, stream);
       };
 
       if (!this.remoteStreams.has(stream)) {
         this.remoteStreams.add(stream);
       }
-      this.callbacks?.onAddTrack?.(event.track, stream, false);
+      this.callbacks.onAddTrack?.(event.track, stream);
     };
   };
 }

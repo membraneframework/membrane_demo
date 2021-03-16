@@ -4,6 +4,6 @@
     </a>
     <h3>Room: <%= @room_id %></h3>
     <div id="videochat" class="VideoChat"> </div>
-    <div id="control" class="Control" />
-    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+    <div id="videochat-error" class="VideoChatError"> </div>
+    <script src="<%= static_path(@conn, "/js/room.js") %>"></script>
 </div>

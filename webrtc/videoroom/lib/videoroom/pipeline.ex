@@ -65,7 +65,8 @@ defmodule VideoRoom.Pipeline do
       children = %{
         endpoint => %EndpointBin{
           outbound_tracks: Map.values(state.tracks),
-          inbound_tracks: tracks
+          inbound_tracks: tracks,
+          stun_servers: Application.fetch_env!(:membrane_videoroom_demo, :stun_servers)
         }
       }
 

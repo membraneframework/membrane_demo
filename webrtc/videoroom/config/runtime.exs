@@ -1,5 +1,8 @@
 import Config
 
+config :membrane_videoroom_demo,
+  stun_servers: System.get_env("STUN_SERVERS", "64.233.163.127:19302") |> String.split(",")
+
 protocol = if System.get_env("USE_TLS") == "true", do: :https, else: :http
 
 default_args = [

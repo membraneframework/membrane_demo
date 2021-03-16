@@ -9,5 +9,3 @@ if config_env() == :prod do
       certfile: System.fetch_env!("CERT_FILE_PATH")
     ]
 end
-
-config :membrane_webrtc_to_hls_demo, hls_mount_path: "output"

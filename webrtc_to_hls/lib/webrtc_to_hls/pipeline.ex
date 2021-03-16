@@ -32,7 +32,7 @@ defmodule WebRTCToHLS.Pipeline do
 
   defp do_start(func, owner) when func in [:start, :start_link] do
     Membrane.Logger.info(
-      "[WebRTCToHLS.Pipeline] Starting a new pipeline for owner process: #{inspect(owner)}"
+      "[#{inspect(__MODULE__)}] Starting a new pipeline for owner process: #{inspect(owner)}"
     )
 
     apply(Membrane.Pipeline, func, [
@@ -57,15 +57,17 @@ defmodule WebRTCToHLS.Pipeline do
 
     directory =
       self()
-      |> pid_to_path_prefix()
-      |> hls_path()
+      |> pid_hash()
+      |> hls_output_path()
 
     # remove directory if it already exists
     File.rm_rf(directory)
     File.mkdir!(directory)
 
     Membrane.Logger.info(
-      "[WebRTCToHLS.Pipeline] Created output directory '#{directory}' for owner #{inspect(owner)}"
+      "[#{inspect(__MODULE__)}] Created output directory '#{directory}' for owner #{
+        inspect(owner)
+      }"
     )
 
     children = %{
@@ -155,7 +157,7 @@ defmodule WebRTCToHLS.Pipeline do
           }
       end
 
-    send(owner, {:hls_path, self() |> pid_to_path_prefix()})
+    send(owner, {:hls_path, self() |> pid_hash()})
 
     spec = %ParentSpec{children: hls_children, links: hls_links}
     {{:ok, spec: spec}, state}
@@ -168,8 +170,8 @@ defmodule WebRTCToHLS.Pipeline do
   def handle_notification({:cleanup, _}, :hls, _ctx, state) do
     directory =
       self()
-      |> pid_to_path_prefix()
-      |> hls_path()
+      |> pid_hash()
+      |> hls_output_path()
 
     File.rm_rf!(directory)
     {:ok, state}

@@ -69,7 +69,6 @@ export class MembraneWebRTC {
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onRemoteCandidate);
     this.channel.on("hls_path", ({ path }: { path: string }) => {
-      console.log("Got a path here");
       this.callbacks?.onHlsPath(path);
     });
 

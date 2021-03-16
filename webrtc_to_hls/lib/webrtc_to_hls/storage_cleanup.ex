@@ -28,18 +28,18 @@ defmodule WebRTCToHLS.StorageCleanup do
     all_paths = list_storage_directories() |> MapSet.new()
 
     MapSet.difference(all_paths, active_paths)
-    |> Enum.map(&Utils.hls_path(&1))
+    |> Enum.map(&Utils.hls_output_path(&1))
     |> Enum.each(&File.rm_rf!(&1))
   end
 
   defp list_running_pipelines_storage_paths() do
     Registry.select(Pipeline.registry(), [{{:_, :"$2", :_}, [], [:"$2"]}])
     |> Enum.map(fn pid ->
-      pid |> Utils.pid_to_path_prefix()
+      pid |> Utils.pid_hash()
     end)
   end
 
   defp list_storage_directories() do
-    Utils.hls_mount_path() |> File.ls() |> elem(1)
+    Utils.hls_output_mount_path() |> File.ls() |> elem(1)
   end
 end

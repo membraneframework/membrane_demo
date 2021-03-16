@@ -23,9 +23,8 @@ defmodule VideoRoom.MixProject do
       # {:membrane_core, "~> 0.6.1"},
       {:membrane_core,
        github: "membraneframework/membrane_core", branch: "develop", override: true},
-      # TODO: change to 'endpoint' branch once this branch is merged
       {:membrane_webrtc_plugin,
-       github: "membraneframework/membrane_webrtc_plugin", branch: "stun-servers-option"},
+       github: "membraneframework/membrane_webrtc_plugin", branch: "endpoint"},
       {:membrane_element_tee, "~> 0.4.1"},
       {:membrane_element_fake, "~> 0.4.0"},
       {:plug_cowboy, "~> 2.0"},

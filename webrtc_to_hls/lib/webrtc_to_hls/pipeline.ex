@@ -62,7 +62,7 @@ defmodule WebRTCToHLS.Pipeline do
 
     # remove directory if it already exists
     File.rm_rf(directory)
-    File.mkdir!(directory)
+    File.mkdir_p!(directory)
 
     Membrane.Logger.info(
       "[#{inspect(__MODULE__)}] Created output directory '#{directory}' for owner #{
@@ -78,6 +78,7 @@ defmodule WebRTCToHLS.Pipeline do
       hls: %Membrane.HTTPAdaptiveStream.Sink{
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
         target_window_duration: 10 |> Membrane.Time.seconds(),
+        target_segment_duration: 10 |> Membrane.Time.seconds(),
         persist?: true,
         storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: directory}
       }

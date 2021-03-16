@@ -40,6 +40,9 @@ defmodule WebRTCToHLS.StorageCleanup do
   end
 
   defp list_storage_directories() do
-    Utils.hls_output_mount_path() |> File.ls() |> elem(1)
+    case Utils.hls_output_mount_path() |> File.ls() do
+      {:ok, dirs} -> dirs
+      {:error, :enoent} -> []
+    end
   end
 end

@@ -2,9 +2,10 @@ import "../css/app.scss";
 
 import {
   addVideoElement,
+  removePlayerLinks,
   removeVideoElement,
   setErrorMessage,
-  setPlayerUrl,
+  setPlayerLinks,
 } from "./ui";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
@@ -33,9 +34,11 @@ const setup = async () => {
       new MembraneWebRTC(socket, localStream, {
         onAddTrack: addVideoElement,
         onRemoveTrack: removeVideoElement,
-        onConnectionError: setErrorMessage,
-        // FIXME: should be a link that redirects to hls player
-        onHlsPath: setPlayerUrl,
+        onConnectionError: (message: string) => {
+          setErrorMessage(message);
+          removePlayerLinks();
+        },
+        onHlsPath: setPlayerLinks,
       }).start();
     } catch (error) {
       console.error(error);

@@ -36,18 +36,25 @@ export function setErrorMessage(
   }
 }
 
-export function setPlayerUrl(prefix: string) {
-  const player = document.getElementById("player-link");
-  if (player && player.childNodes.length === 0) {
-    player.innerHTML = "";
-    const a = document.createElement("a");
-    a.href = window.location.origin + `/player/${prefix}`;
-    a.target = "_blank";
-    a.innerText = "Click here to see your HLS stream";
-    player.appendChild(a);
+export function setPlayerLinks(prefix: string) {
+  const player = document.getElementById("player-link")!;
+  player.innerHTML = "";
 
-    const span = document.createElement("span");
-    span.innerText = `Or paste this URL to your HLS player: ${window.location.origin}/video/${prefix}/index.m3u8`;
-    player.appendChild(span);
-  }
+  const playerUrl = `${window.location.origin}/player/${prefix}`;
+  const streamUrl = `${window.location.origin}/video/${prefix}/index.m3u8`;
+
+  const a = document.createElement("a");
+  a.href = playerUrl;
+  a.target = "_blank";
+  a.innerText = "Click here to see your HLS stream";
+  player.appendChild(a);
+
+  const span = document.createElement("span");
+  span.innerText = `Or paste this URL to your HLS player: ${streamUrl}`;
+  player.appendChild(span);
+}
+
+export function removePlayerLinks() {
+  const player = document.getElementById("player-link")!;
+  player.innerHTML = "";
 }

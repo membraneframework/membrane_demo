@@ -1,5 +1,12 @@
 # Membrane WebRTC video room demo
 
+This project demonstrates an example of running multiple video rooms
+using WebRTC. 
+
+It consists of a basic phoenix app which communicates with membrane pipeline (pipeline per room)
+to exchange WebRTC candidates/answers. Pipeline then takes a role of the SFU, receiving and forwarding
+WebRTC traffic. 
+
 ## Dependencies
 
 In order to run phoenix application you will need to have `node` installed.

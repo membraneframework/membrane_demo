@@ -37,17 +37,17 @@ defmodule VideoRoom.Pipeline do
 
     apply(Membrane.Pipeline, func, [
       __MODULE__,
-      [],
+      [room_id],
       [name: {:via, Registry, {@pipeline_registry, room_id}}]
     ])
   end
 
   @impl true
-  def handle_init(_opts) do
+  def handle_init([room_id]) do
     play(self())
 
     Process.send_after(self(), :check_if_empty, @empty_room_timeout)
-    {:ok, %{tracks: %{}, endpoints_tracks_ids: %{}}}
+    {:ok, %{room_id: room_id, tracks: %{}, endpoints_tracks_ids: %{}}}
   end
 
   @impl true
@@ -65,7 +65,8 @@ defmodule VideoRoom.Pipeline do
       children = %{
         endpoint => %EndpointBin{
           outbound_tracks: Map.values(state.tracks),
-          inbound_tracks: tracks
+          inbound_tracks: tracks,
+          stun_servers: Application.fetch_env!(:membrane_videoroom_demo, :stun_servers)
         }
       }
 
@@ -198,6 +199,7 @@ defmodule VideoRoom.Pipeline do
 
   defp stop_if_empty(state) do
     if state.endpoints_tracks_ids == %{} do
+      Membrane.Logger.info("Room '#{state.room_id}' is empty, stopping pipeline")
       Membrane.Pipeline.stop_and_terminate(self())
     end
   end

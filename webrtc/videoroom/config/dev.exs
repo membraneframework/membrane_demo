@@ -1,12 +1,6 @@
 import Config
 
 config :membrane_videoroom_demo, VideoRoomWeb.Endpoint,
-  url: [host: "localhost"],
-  https: [
-    port: 8443,
-    keyfile: "priv/certs/key.pem",
-    certfile: "priv/certs/certificate.pem"
-  ],
   watchers: [
     node: [
       "node_modules/webpack/bin/webpack.js",

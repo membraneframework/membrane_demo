@@ -2,12 +2,7 @@ import Config
 
 config :phoenix, :json_library, Jason
 
-config :membrane_videoroom_demo, VideoRoomWeb.Endpoint,
-  pubsub_server: VideoRoom.PubSub,
-  https: [
-    otp_app: :membrane_videoroom_demo,
-    cipher_suite: :strong
-  ]
+config :membrane_videoroom_demo, VideoRoomWeb.Endpoint, pubsub_server: VideoRoom.PubSub
 
 config :logger,
   compile_time_purge_matching: [

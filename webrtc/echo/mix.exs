@@ -20,7 +20,8 @@ defmodule Echo.MixProject do
 
   defp deps do
     [
-      {:membrane_core, "~> 0.6.1", override: true},
+      {:membrane_core,
+       github: "membraneframework/membrane_core", branch: "no-async-processing", override: true},
       {:membrane_file_plugin, "~> 0.5.0"},
       {:membrane_hackney_plugin, "~> 0.4.0"},
       {:websockex, "~> 0.4.2"},

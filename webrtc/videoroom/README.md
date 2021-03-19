@@ -29,11 +29,12 @@ PORT={port used to run phoenix server, defaults to "8443" for https and "8080" f
 USE_TLS={"true" or "false", if set to "true" then https will be used and certificate paths will be required}
 KEY_FILE_PATH={path to certificate key file, used when "USE_TLS" is set to true}
 CERT_FILE_PATH={path to certificate file, used when "USE_TLS" is set to true}
+
+STUN_SERVERS={list of stun servers separated by ",", defaults to a single server "stun1.l.google.com:19302"}
+TURN_SERVERS={list of turn servers separated by ",", defaults to ""}
 ```
 
 Default path for certificate files for non-production environment is `priv/certs/`.
-
-STUN/TURN servers can be set in `config/ice.exs`.
 
 If you want to run TLS locally you can generate certificates
 as described in the [signaling server readme](https://github.com/membraneframework/membrane_demo/tree/master/webrtc/simple#https). 

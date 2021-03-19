@@ -1,5 +1,11 @@
 import Config
 
+# stun_servers: "addr:port"
+# turn_servers: "addr:port:username:password:proto"
+config :membrane_videoroom_demo,
+  stun_servers: System.get_env("STUN_SERVERS", "64.233.163.127:19302"),
+  turn_servers: System.get_env("TURN_SERVERS", "")
+
 protocol = if System.get_env("USE_TLS") == "true", do: :https, else: :http
 default_port = if protocol == :https, do: "8443", else: "8080"
 

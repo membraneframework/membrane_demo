@@ -66,7 +66,8 @@ defmodule VideoRoom.Pipeline do
         endpoint => %EndpointBin{
           outbound_tracks: Map.values(state.tracks),
           inbound_tracks: tracks,
-          stun_servers: Application.fetch_env!(:membrane_videoroom_demo, :stun_servers)
+          stun_servers: Application.get_env(:membrane_videoroom_demo, :stun_servers, []),
+          turn_servers: Application.get_env(:membrane_videoroom_demo, :turn_servers, [])
         }
       }
 

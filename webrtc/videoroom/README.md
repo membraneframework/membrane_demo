@@ -30,7 +30,8 @@ USE_TLS={"true" or "false", if set to "true" then https will be used and certifi
 KEY_FILE_PATH={path to certificate key file, used when "USE_TLS" is set to true}
 CERT_FILE_PATH={path to certificate file, used when "USE_TLS" is set to true}
 
-STUN_SERVERS={list of stun servers separated by ",", defaults to a single server "64.233.163.127:19302"}
+STUN_SERVERS={list of stun servers separated by ",", defaults to a single server "stun1.l.google.com:19302"}
+TURN_SERVERS={list of turn servers separated by ",", defaults to ""}
 ```
 
 Default path for certificate files for non-production environment is `priv/certs/`.

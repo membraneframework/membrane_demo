@@ -20,8 +20,7 @@ defmodule Echo.MixProject do
 
   defp deps do
     [
-      {:membrane_core,
-       github: "membraneframework/membrane_core", branch: "no-async-processing", override: true},
+      {:membrane_core, github: "membraneframework/membrane_core", branch: :remote_stream, override: true},
       {:membrane_file_plugin, "~> 0.5.0"},
       {:membrane_hackney_plugin, "~> 0.4.0"},
       {:membrane_timescaledb_reporter, github: "membraneframework/membrane_timescaledb_reporter"},

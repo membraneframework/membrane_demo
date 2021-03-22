@@ -254,13 +254,13 @@ defmodule VideoRoom.Pipeline do
           """)
       end
     end)
+  end
 
-    defp parse_addr(addr) do
-      case :inet.parse_address(String.to_charlist(addr)) do
-        {:ok, ip} -> ip
-        # FQDN?
-        {:error, :einval} -> addr
-      end
+  defp parse_addr(addr) do
+    case :inet.parse_address(String.to_charlist(addr)) do
+      {:ok, ip} -> ip
+      # FQDN?
+      {:error, :einval} -> addr
     end
   end
 end

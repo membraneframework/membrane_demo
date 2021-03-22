@@ -24,6 +24,7 @@ defmodule Echo.MixProject do
        github: "membraneframework/membrane_core", branch: "no-async-processing", override: true},
       {:membrane_file_plugin, "~> 0.5.0"},
       {:membrane_hackney_plugin, "~> 0.4.0"},
+      {:membrane_timescaledb_reporter, github: "membraneframework/membrane_timescaledb_reporter"},
       {:websockex, "~> 0.4.2"},
       {:poison, "~> 3.1"},
       {:membrane_realtimer_plugin, "~> 0.1.1"},

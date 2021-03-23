@@ -166,6 +166,11 @@ defmodule VideoRoom.Pipeline do
     {{:ok, spec: spec}, state}
   end
 
+  def handle_notification({:vad, _val} = msg, from, _ctx, state) do
+    Membrane.Logger.info("#{inspect(msg)}, from: #{inspect(from)}")
+    {:ok, state}
+  end
+
   def handle_notification({:signal, message}, {:endpoint, peer_pid}, _ctx, state) do
     send(peer_pid, {:signal, message})
     {:ok, state}

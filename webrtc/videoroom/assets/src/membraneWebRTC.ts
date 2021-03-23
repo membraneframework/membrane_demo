@@ -29,6 +29,8 @@ interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
+  onReplaceStream?: (oldStreamId: String, newStream: MediaStream) => void;
+  onDisplayStream?: (stream: MediaStream) => void;
 }
 
 interface MembraneWebRTCConfig {
@@ -43,9 +45,12 @@ export class MembraneWebRTC {
   private channelId: string;
   private socketRefs: string[] = [];
 
+  private maxDisplayNum: number = 1;
   private localTracks: Set<MediaStreamTrack> = new Set<MediaStreamTrack>();
   private localStream?: MediaStream;
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
+  private screensharingStream?: MediaStream;
+  private midToStream: Map<String, MediaStream> = new Map();
   private connection?: RTCPeerConnection;
   private readonly rtcConfig: RTCConfiguration = {
     iceServers: [
@@ -104,6 +109,18 @@ export class MembraneWebRTC {
 
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onRemoteCandidate);
+    this.channel.on("replaceTrack", (data: any) => {
+      const oldTrackId = data.data.oldTrackId;
+      const newTrackId = data.data.newTrackId;
+      const newStream = this.midToStream.get(newTrackId)!;
+      const oldStreamId = this.midToStream.get(oldTrackId)?.id!;
+      this.callbacks.onReplaceStream?.(oldStreamId, newStream);
+    });
+    this.channel.on("displayTrack", (data: any) => {
+      const trackId = data.data.trackId;
+      const stream = this.midToStream.get(trackId)!;
+      this.callbacks.onDisplayStream?.(stream);
+    });
 
     this.channel.on("error", (data: any) => {
       this.callbacks.onConnectionError?.(data.error);
@@ -111,7 +128,9 @@ export class MembraneWebRTC {
     });
 
     await phoenix_channel_push_result(this.channel.join());
-    await phoenix_channel_push_result(this.channel.push("start", {}));
+    await phoenix_channel_push_result(this.channel.push("start", {})).then(
+      (response) => (this.maxDisplayNum = response.maxDisplayNum)
+    );
   };
 
   public stop = () => {
@@ -175,16 +194,22 @@ export class MembraneWebRTC {
   private onTrack = () => {
     return (event: RTCTrackEvent) => {
       const [stream] = event.streams;
-      this.remoteStreams.add(stream);
+      const mid = event.transceiver.mid!;
+      const isScreenSharing = mid.includes("SCREEN") || false;
 
-      const isScreenSharing =
-        event.transceiver.mid?.includes("SCREEN") || false;
+      isScreenSharing
+        ? (this.screensharingStream = stream)
+        : this.remoteStreams.add(stream);
+      this.midToStream.set(mid, stream);
 
       stream.onremovetrack = (event) => {
         const hasTracks = stream.getTracks().length > 0;
 
         if (!hasTracks) {
-          this.remoteStreams.delete(stream);
+          isScreenSharing
+            ? (this.screensharingStream = undefined)
+            : this.remoteStreams.delete(stream);
+          this.midToStream.delete(mid);
           stream.onremovetrack = null;
         }
 
@@ -200,6 +225,11 @@ export class MembraneWebRTC {
         stream: stream,
         isScreenSharing,
       });
+
+      if (this.remoteStreams.size <= this.maxDisplayNum && !isScreenSharing) {
+        // screensharing is displayed by default
+        this.callbacks.onDisplayStream?.(stream);
+      }
     };
   };
 }

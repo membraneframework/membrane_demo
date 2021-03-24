@@ -78,6 +78,7 @@ export class MembraneWebRTC {
         "Adding tracks when connection is established is not yet supported"
       );
     }
+    console.log("local track", track);
     this.localTracks.add(track);
   };
 
@@ -119,6 +120,8 @@ export class MembraneWebRTC {
         SCREENSHARING_CONSTRAINTS
       );
       this.localScreensharingStream!.getTracks().forEach((t) => {
+        this.connection?.addTrack(t);
+        this.connection?.createOffer({ iceRestart: true });
         t.onended = (_) => {
           this.callbacks.onScreensharingEnd?.();
           this.localScreensharingStream = undefined;
@@ -148,6 +151,8 @@ export class MembraneWebRTC {
       await this.connection.setRemoteDescription(offer.data);
       const answer = await this.connection.createAnswer();
       await this.connection.setLocalDescription(answer);
+      
+      console.log(answer);
 
       this.channel.push("answer", { data: answer });
     } catch (error) {
@@ -179,6 +184,7 @@ export class MembraneWebRTC {
 
   private onTrack = () => {
     return (event: RTCTrackEvent) => {
+      console.log("new track", event.track, "with mid", event.transceiver.mid);
       const [stream] = event.streams;
 
       stream.onremovetrack = (event) => {

@@ -59,7 +59,7 @@ defmodule VideoRoom.Pipeline do
       Membrane.Logger.info("New peer #{inspect(peer_pid)}")
       Process.monitor(peer_pid)
       stream_id = Track.stream_id()
-      tracks = [Track.new(:audio, stream_id), Track.new(:video, stream_id)]
+      tracks = [Track.new(:audio, stream_id), Track.new(:video, stream_id), Track.new(:video, stream_id, id: "SCREEN:" <> Base.encode16(:crypto.strong_rand_bytes(8)))] |> IO.inspect
       endpoint = {:endpoint, peer_pid}
 
       children = %{
@@ -135,7 +135,7 @@ defmodule VideoRoom.Pipeline do
 
   @impl true
   def handle_notification({:new_track, track_id, encoding}, endpoint, ctx, state) do
-    Membrane.Logger.info("New incoming #{encoding} track")
+    Membrane.Logger.info("New incoming #{encoding} track id #{track_id}, track #{inspect state.tracks[track_id]}")
     tee = {:tee, track_id}
     fake = {:fake, track_id}
     children = %{tee => Membrane.Element.Tee.Parallel, fake => Membrane.Element.Fake.Sink.Buffers}

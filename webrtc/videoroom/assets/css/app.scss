@@ -14,6 +14,21 @@ h3 {
   line-height: 1.2;
 }
 
+@mixin dark-button {
+  position: relative;
+  display: block;
+  height: 36px;
+  width: 100%;
+  border-radius: 9px;
+  background-color: #505050;
+  border: solid 1px transparent;
+  color: #fff;
+  outline: none;
+  font-size: 18px;
+  font-weight: 300;
+  cursor: pointer;
+}
+
 .Index {
   display: flex;
   flex-direction: column;
@@ -73,18 +88,7 @@ h3 {
   }
 
   .submitButton {
-    position: relative;
-    display: block;
-    height: 36px;
-    width: 100%;
-    border-radius: 9px;
-    background-color: #505050;
-    border: solid 1px transparent;
-    color: #fff;
-    outline: none;
-    font-size: 18px;
-    font-weight: 300;
-    cursor: pointer;
+    @include dark-button;
     transition: all 0.1s ease-in-out;
     &:hover {
       background-color: transparent;
@@ -97,4 +101,21 @@ h3 {
 .VideoChatError {
   text-align: center;
   margin: 20px;
+}
+
+.Screensharing {
+  video {
+    max-width: 100%;
+    border-radius: 5px;
+  }
+}
+
+.StartScreensharing {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  button {
+    @include dark-button;
+    width: inherit;
+  }
 }

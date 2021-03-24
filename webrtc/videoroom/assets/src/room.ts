@@ -1,14 +1,18 @@
 import "../css/app.scss";
 
-import { getRoomId, addVideoElement, removeVideoElement, setErrorMessage } from "./room_ui";
+import {
+  addVideoElement,
+  getRoomId,
+  removeScreensharing,
+  removeVideoElement,
+  setErrorMessage,
+  setScreensharing,
+  setupScreensharingControls,
+} from "./room_ui";
 
+import { MEDIA_CONSTRAINTS } from "./consts";
 import { MembraneWebRTC } from "./membraneWebRTC";
 import { Socket } from "phoenix";
-
-const MEDIA_CONSTRAINTS = {
-  audio: true,
-  video: { width: 1280, height: 720 },
-};
 
 const setup = async () => {
   try {
@@ -19,17 +23,19 @@ const setup = async () => {
       onAddTrack: addVideoElement,
       onRemoveTrack: removeVideoElement,
       onConnectionError: setErrorMessage,
+      onScreensharingStart: setScreensharing,
+      onScreensharingEnd: removeScreensharing,
     });
 
     const localStream = await navigator.mediaDevices.getUserMedia(
       MEDIA_CONSTRAINTS
     );
-    localStream
-      .getTracks()
-      .forEach(track => {
-        webrtc.addTrack(track, localStream);
-        addVideoElement(track, localStream, true);
-      });
+    localStream.getTracks().forEach((track) => {
+      webrtc.addTrack(track, localStream);
+      addVideoElement(track, localStream, true);
+    });
+
+    setupScreensharingControls(webrtc);
 
     webrtc.start();
   } catch (error) {

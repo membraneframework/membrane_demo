@@ -1,5 +1,7 @@
 import { Channel, Socket } from "phoenix";
 
+import { SCREENSHARING_CONSTRAINTS } from "./consts";
+
 const DEFAULT_ERROR_MESSAGE =
   "Cannot connect to the server, try again by refreshing the page";
 
@@ -12,11 +14,10 @@ interface CandidateData {
 }
 
 interface Callbacks {
-  onAddTrack?: (
-    track: MediaStreamTrack,
-    stream: MediaStream
-  ) => void;
+  onAddTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
   onRemoveTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
+  onScreensharingStart?: (stream: MediaStream) => void;
+  onScreensharingEnd?: () => void;
   onConnectionError?: (message: string) => void;
 }
 
@@ -27,6 +28,8 @@ export class MembraneWebRTC {
 
   private localTracks: Set<MediaStreamTrack> = new Set<MediaStreamTrack>();
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
+  private localScreensharingStream?: MediaStream;
+  private remoteScreensharingStream?: MediaStream;
   private connection?: RTCPeerConnection;
   private readonly rtc_config: RTCConfiguration = {
     iceServers: [
@@ -49,7 +52,12 @@ export class MembraneWebRTC {
     this._channel = ch;
   }
 
-  constructor(socket: Socket, channelId: string, callbacks?: Callbacks, config?: RTCConfiguration) {
+  constructor(
+    socket: Socket,
+    channelId: string,
+    callbacks?: Callbacks,
+    config?: RTCConfiguration
+  ) {
     this.socket = socket;
     this.callbacks = callbacks || {};
     this.channelId = channelId;
@@ -65,11 +73,13 @@ export class MembraneWebRTC {
   }
 
   public addTrack = (track: MediaStreamTrack, stream: MediaStream) => {
-    if(this.connection) {
-      throw new Error("Adding tracks when connection is established is not yet supported");
+    if (this.connection) {
+      throw new Error(
+        "Adding tracks when connection is established is not yet supported"
+      );
     }
     this.localTracks.add(track);
-  }
+  };
 
   public start = () => {
     this.channel = this.socket.channel(this.channelId, {});
@@ -101,12 +111,35 @@ export class MembraneWebRTC {
     this.connection = undefined;
   };
 
+  public startScreensharing = async () => {
+    try {
+      // typescript is missing `getDisplayMedia` typings
+      // @ts-ignore
+      this.localScreensharingStream = await navigator.mediaDevices.getDisplayMedia(
+        SCREENSHARING_CONSTRAINTS
+      );
+      this.localScreensharingStream!.getTracks().forEach((t) => {
+        t.onended = (_) => {
+          this.callbacks.onScreensharingEnd?.();
+          this.localScreensharingStream = undefined;
+        };
+      });
+      this.callbacks.onScreensharingStart?.(this.localScreensharingStream!);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  public stopScreensharing = async () => {
+    this.localScreensharingStream = undefined;
+  };
+
   private onOffer = async (offer: OfferData) => {
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtc_config);
       this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
-      this.localTracks.forEach(track => this.connection!.addTrack(track));
+      this.localTracks.forEach((track) => this.connection!.addTrack(track));
     } else {
       this.connection.createOffer({ iceRestart: true });
     }

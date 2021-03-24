@@ -1,3 +1,5 @@
+import { MembraneWebRTC } from "./membraneWebRTC";
+
 export function getRoomId(): String {
   return document.getElementById("room")!.dataset.roomId!;
 }
@@ -26,6 +28,41 @@ export function removeVideoElement(_: MediaStreamTrack, stream: MediaStream) {
   }
 
   document.getElementById(stream.id)?.remove();
+}
+
+export function setScreensharing(stream: MediaStream) {
+  const startButton = document.getElementById(
+    "start-screensharing"
+  )! as HTMLButtonElement;
+  startButton.style.display = "none";
+  const screensharing = document.getElementById(
+    "screensharing"
+  )! as HTMLDivElement;
+
+  const video = document.createElement("video");
+  video.id = stream.id;
+  video.srcObject = stream;
+  video.autoplay = true;
+  video.playsInline = true;
+  screensharing.append(video);
+}
+
+export function removeScreensharing() {
+  const screensharing = document.getElementById(
+    "screensharing"
+  )! as HTMLDivElement;
+  screensharing.innerHTML = "";
+  const startButton = document.getElementById(
+    "start-screensharing"
+  )! as HTMLButtonElement;
+  startButton.style.display = "block";
+}
+
+export function setupScreensharingControls(webrtc: MembraneWebRTC) {
+  const startScreensharing = document.getElementById(
+    "start-screensharing"
+  )! as HTMLButtonElement;
+  startScreensharing.onclick = () => webrtc.startScreensharing();
 }
 
 export function setErrorMessage(

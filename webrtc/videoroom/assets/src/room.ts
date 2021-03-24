@@ -1,6 +1,6 @@
 import "../css/app.scss";
 
-import { getRoomId, addVideoElement, removeVideoElement, setErrorMessage } from "./room_ui";
+import { addVideoElement, getRoomId, removeVideoElement, setErrorMessage, setupMediaControls } from "./room_ui";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
 import { Socket } from "phoenix";
@@ -30,6 +30,8 @@ const setup = async () => {
         webrtc.addTrack(track, localStream);
         addVideoElement(track, localStream, true);
       });
+      
+    setupMediaControls(false, false, () => console.log("toggling audio"), () => console.log("toggling video"));
 
     webrtc.start();
   } catch (error) {

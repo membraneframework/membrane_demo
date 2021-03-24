@@ -98,3 +98,26 @@ h3 {
   text-align: center;
   margin: 20px;
 }
+
+.MediaControls {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.ControlIcon {
+  background-color: black;
+  cursor: pointer;
+  margin-right: 20px;
+
+  svg {
+    height: 30px;
+    width: 30px;
+  }
+  
+  &:hover {
+    svg {
+      stroke: gray;
+    }
+  }
+}

@@ -101,6 +101,20 @@ export class MembraneWebRTC {
     this.connection = undefined;
   };
 
+  public muteMicrophone = async () => {
+    this.localTracks.forEach((track) => {
+      if (track.kind == "audio") {
+        track.enabled = !track.enabled;
+      }
+    });
+    var buttonText = document.getElementById("mute-microphone")?.innerText
+    if (buttonText == "Mute microphone") {
+      document.getElementById("mute-microphone")!.innerText = "Unmute microphone";
+    } else if (buttonText == "Unmute microphone") {
+      document.getElementById("mute-microphone")!.innerText = "Mute microphone";
+    }
+  }
+
   private onOffer = async (offer: OfferData) => {
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtc_config);

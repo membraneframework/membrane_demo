@@ -1,3 +1,5 @@
+import { MembraneWebRTC } from "./membraneWebRTC";
+
 export function getRoomId(): String {
   return document.getElementById("room")!.dataset.roomId!;
 }
@@ -35,4 +37,9 @@ export function setErrorMessage(
   if (errorContainer) {
     errorContainer.innerHTML = message;
   }
+}
+
+export function setupMuteMicrophoneControls(webrtc: MembraneWebRTC) {
+  const muteMicrophoneButton = document.getElementById("mute-microphone")! as HTMLButtonElement;
+  muteMicrophoneButton.onclick = () => webrtc.muteMicrophone();
 }

@@ -1,6 +1,6 @@
 import "../css/app.scss";
 
-import { getRoomId, addVideoElement, removeVideoElement, setErrorMessage } from "./room_ui";
+import { getRoomId, addVideoElement, removeVideoElement, setErrorMessage, setupMuteMicrophoneControls } from "./room_ui";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
 import { Socket } from "phoenix";
@@ -31,6 +31,9 @@ const setup = async () => {
         addVideoElement(track, localStream, true);
       });
 
+
+    setupMuteMicrophoneControls(webrtc);
+    
     webrtc.start();
   } catch (error) {
     console.error(error);

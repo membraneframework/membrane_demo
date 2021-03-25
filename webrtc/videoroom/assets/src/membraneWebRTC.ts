@@ -25,7 +25,7 @@ export class MembraneWebRTC {
   private _channel?: Channel;
   private channelId: string;
 
-  private localTracks: Set<MediaStreamTrack> = new Set<MediaStreamTrack>();
+  private localTracks: Set<[MediaStreamTrack, MediaStream]> = new Set<[MediaStreamTrack, MediaStream]>();
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
   private connection?: RTCPeerConnection;
   private readonly rtc_config: RTCConfiguration = {
@@ -68,7 +68,7 @@ export class MembraneWebRTC {
     if(this.connection) {
       throw new Error("Adding tracks when connection is established is not yet supported");
     }
-    this.localTracks.add(track);
+    this.localTracks.add([track, stream]);
   }
 
   public start = () => {
@@ -102,7 +102,7 @@ export class MembraneWebRTC {
   };
 
   public muteMicrophone = async () => {
-    this.localTracks.forEach((track) => {
+    this.localTracks.forEach(([track, stream]) => {
       if (track.kind == "audio") {
         track.enabled = !track.enabled;
       }
@@ -120,7 +120,7 @@ export class MembraneWebRTC {
       this.connection = new RTCPeerConnection(this.rtc_config);
       this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
-      this.localTracks.forEach(track => this.connection!.addTrack(track));
+      this.localTracks.forEach(([track, stream]) => this.connection!.addTrack(track, stream));
     } else {
       this.connection.createOffer({ iceRestart: true });
     }

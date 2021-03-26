@@ -65,7 +65,7 @@ export class MembraneWebRTC {
   }
 
   public addTrack = (track: MediaStreamTrack, stream: MediaStream) => {
-    if(this.connection) {
+    if (this.connection) {
       throw new Error("Adding tracks when connection is established is not yet supported");
     }
     this.localTracks.add([track, stream]);
@@ -105,6 +105,7 @@ export class MembraneWebRTC {
     this.localTracks.forEach(([track, stream]) => {
       if (track.kind == "audio") {
         track.enabled = !track.enabled;
+        this.channel.push("mute-microphone", { data: !track.enabled, mid: this.getSendTrackMid(track) })
       }
     });
     var buttonText = document.getElementById("mute-microphone")?.innerText
@@ -113,6 +114,10 @@ export class MembraneWebRTC {
     } else if (buttonText == "Unmute microphone") {
       document.getElementById("mute-microphone")!.innerText = "Mute microphone";
     }
+  }
+
+  private getSendTrackMid(track: MediaStreamTrack) {
+    return this.connection?.getTransceivers().find(tranceiver => tranceiver.sender.track == track)?.mid;
   }
 
   private onOffer = async (offer: OfferData) => {

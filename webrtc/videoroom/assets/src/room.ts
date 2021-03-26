@@ -31,9 +31,7 @@ const setup = async () => {
         addVideoElement(track, localStream, true);
       });
 
-
     setupMuteMicrophoneControls(webrtc);
-    
     webrtc.start();
   } catch (error) {
     console.error(error);

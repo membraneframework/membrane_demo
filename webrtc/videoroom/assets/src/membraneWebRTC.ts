@@ -27,6 +27,7 @@ export class MembraneWebRTC {
   private channelId: string;
 
   private localTracks: Set<MediaStreamTrack> = new Set<MediaStreamTrack>();
+  private localStream?: MediaStream;
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
   private localScreensharingStream?: MediaStream;
   private remoteScreensharingStream?: MediaStream;
@@ -80,6 +81,7 @@ export class MembraneWebRTC {
     }
     console.log("local track", track);
     this.localTracks.add(track);
+    this.localStream = stream;
   };
 
   public start = () => {
@@ -114,45 +116,56 @@ export class MembraneWebRTC {
 
   public startScreensharing = async () => {
     try {
+
       // typescript is missing `getDisplayMedia` typings
       // @ts-ignore
       this.localScreensharingStream = await navigator.mediaDevices.getDisplayMedia(
         SCREENSHARING_CONSTRAINTS
       );
       this.localScreensharingStream!.getTracks().forEach((t) => {
-        this.connection?.addTrack(t);
-        this.connection?.createOffer({ iceRestart: true });
+        this.connection?.addTrack(t, this.localScreensharingStream!);
+
         t.onended = (_) => {
           this.callbacks.onScreensharingEnd?.();
           this.localScreensharingStream = undefined;
         };
       });
       this.callbacks.onScreensharingStart?.(this.localScreensharingStream!);
+
+      // this should trigger new offer from backend, make sure that we can do the screensharing and it will be the only one active
+      this.channel.push("start_screensharing", {});
     } catch (error) {
       console.error(error);
     }
   };
+  
+  // public startScreensharing = async () => {
+  //   this.channel.push("start_screensharing", {});
+  // }
 
   public stopScreensharing = async () => {
     this.localScreensharingStream = undefined;
   };
 
   private onOffer = async (offer: OfferData) => {
+    console.log("Got new offer");
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtc_config);
       this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
-      this.localTracks.forEach((track) => this.connection!.addTrack(track));
+      this.localTracks.forEach((track) => this.connection!.addTrack(track, this.localStream!));
     } else {
       this.connection.createOffer({ iceRestart: true });
     }
+    
+    console.log(this.connection.getSenders());
 
     try {
       await this.connection.setRemoteDescription(offer.data);
       const answer = await this.connection.createAnswer();
       await this.connection.setLocalDescription(answer);
       
-      console.log(answer);
+      console.log("Answer", answer);
 
       this.channel.push("answer", { data: answer });
     } catch (error) {
@@ -184,8 +197,15 @@ export class MembraneWebRTC {
 
   private onTrack = () => {
     return (event: RTCTrackEvent) => {
-      console.log("new track", event.track, "with mid", event.transceiver.mid);
+      console.log(event.track, event.streams[0], event.transceiver.mid);
       const [stream] = event.streams;
+      
+      if (event.transceiver.mid?.includes("SCREEN")) {
+        const screenStream = new MediaStream();
+        screenStream.addTrack(event.track);
+        this.callbacks.onScreensharingEnd?.();
+        this.callbacks.onScreensharingStart?.(screenStream);
+      }
 
       stream.onremovetrack = (event) => {
         if (stream.getTracks().length === 0) {

@@ -59,7 +59,7 @@ defmodule VideoRoom.Pipeline do
       Membrane.Logger.info("New peer #{inspect(peer_pid)}")
       Process.monitor(peer_pid)
       stream_id = Track.stream_id()
-      tracks = [Track.new(:audio, stream_id), Track.new(:video, stream_id), Track.new(:video, stream_id, id: "SCREEN:" <> Base.encode16(:crypto.strong_rand_bytes(8)))] |> IO.inspect
+      tracks = [Track.new(:audio, stream_id), Track.new(:video, stream_id)]
       endpoint = {:endpoint, peer_pid}
 
       stun_servers =
@@ -95,7 +95,7 @@ defmodule VideoRoom.Pipeline do
       tracks_msgs =
         flat_map_children(ctx, fn
           {:endpoint, _peer_pid} = endpoint ->
-            [forward: {endpoint, {:add_tracks, tracks}}]
+            [forward: {endpoint, {:add_tracks, :outbound, tracks}}]
 
           _child ->
             []
@@ -114,6 +114,11 @@ defmodule VideoRoom.Pipeline do
   @impl true
   def handle_other({:signal, peer_pid, msg}, _ctx, state) do
     {{:ok, forward: {{:endpoint, peer_pid}, {:signal, msg}}}, state}
+  end
+
+  def handle_other({:add_screensharing, peer_pid}, _ctx, state) do
+    track = Track.new(:video, Track.stream_id(), id: "SCREEN:" <> Base.encode16(:crypto.strong_rand_bytes(8)))
+    {{:ok, forward: {{:endpoint, peer_pid}, {:add_tracks, :inbound, [track]}}}, state}
   end
 
   def handle_other({:remove_peer, peer_pid}, ctx, state) do
@@ -142,7 +147,7 @@ defmodule VideoRoom.Pipeline do
 
   @impl true
   def handle_notification({:new_track, track_id, encoding}, endpoint, ctx, state) do
-    Membrane.Logger.info("New incoming #{encoding} track id #{track_id}, track #{inspect state.tracks[track_id]}")
+    Membrane.Logger.info("New incoming #{encoding} track id #{track_id}")
     tee = {:tee, track_id}
     fake = {:fake, track_id}
     children = %{tee => Membrane.Element.Tee.Parallel, fake => Membrane.Element.Fake.Sink.Buffers}
@@ -194,7 +199,7 @@ defmodule VideoRoom.Pipeline do
       tracks_msgs =
         flat_map_children(ctx, fn
           {:endpoint, id} when id != peer_pid ->
-            [forward: {{:endpoint, id}, {:add_tracks, tracks}}]
+            [forward: {{:endpoint, id}, {:add_tracks, :outbound, tracks}}]
 
           _child ->
             []

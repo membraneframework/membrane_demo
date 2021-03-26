@@ -47,6 +47,13 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
+  def handle_in("start_screensharing", _, socket) do
+    socket
+    |> send_to_pipeline({:add_screensharing, self()})
+
+    {:noreply, socket}
+  end
+
   def handle_in("stop", _msg, socket) do
     socket
     |> send_to_pipeline({:remove_peer, self()})
@@ -68,8 +75,8 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:DOWN, _ref, :process, _monitor, _reason}, socket) do
-    push(socket, "error", %{error: "Room stopped working, consider restarting your connection"})
+  def handle_info({:DOWN, _ref, :process, _monitor, reason}, socket) do
+    push(socket, "error", %{error: "Room stopped working, consider restarting your connection, #{inspect reason}"})
     {:noreply, socket}
   end
 

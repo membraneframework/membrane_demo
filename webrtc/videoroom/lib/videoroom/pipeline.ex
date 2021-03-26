@@ -62,11 +62,18 @@ defmodule VideoRoom.Pipeline do
       tracks = [Track.new(:audio, stream_id), Track.new(:video, stream_id), Track.new(:video, stream_id, id: "SCREEN:" <> Base.encode16(:crypto.strong_rand_bytes(8)))] |> IO.inspect
       endpoint = {:endpoint, peer_pid}
 
+      stun_servers =
+        parse_stun_servers(Application.fetch_env!(:membrane_videoroom_demo, :stun_servers))
+
+      turn_servers =
+        parse_turn_servers(Application.fetch_env!(:membrane_videoroom_demo, :turn_servers))
+
       children = %{
         endpoint => %EndpointBin{
           outbound_tracks: Map.values(state.tracks),
           inbound_tracks: tracks,
-          stun_servers: Application.fetch_env!(:membrane_videoroom_demo, :stun_servers)
+          stun_servers: stun_servers,
+          turn_servers: turn_servers
         }
       }
 
@@ -206,5 +213,54 @@ defmodule VideoRoom.Pipeline do
 
   defp flat_map_children(ctx, fun) do
     ctx.children |> Map.keys() |> Enum.flat_map(fun)
+  end
+
+  defp parse_stun_servers(""), do: []
+
+  defp parse_stun_servers(servers) do
+    servers
+    |> String.split(",")
+    |> Enum.map(fn server ->
+      with [addr, port] <- String.split(server, ":"),
+           {port, ""} <- Integer.parse(port) do
+        %{server_addr: parse_addr(addr), server_port: port}
+      else
+        _ -> raise("Bad STUN server format. Expected addr:port, got: #{inspect(server)}")
+      end
+    end)
+  end
+
+  defp parse_turn_servers(""), do: []
+
+  defp parse_turn_servers(servers) do
+    servers
+    |> String.split(",")
+    |> Enum.map(fn server ->
+      with [addr, port, username, password, proto] when proto in ["udp", "tcp", "tls"] <-
+             String.split(server, ":"),
+           {port, ""} <- Integer.parse(port) do
+        %{
+          server_addr: parse_addr(addr),
+          server_port: port,
+          username: username,
+          password: password,
+          proto: String.to_atom(proto)
+        }
+      else
+        _ ->
+          raise("""
+          "Bad TURN server format. Expected addr:port:username:password:proto, got: \
+          #{inspect(server)}
+          """)
+      end
+    end)
+  end
+
+  defp parse_addr(addr) do
+    case :inet.parse_address(String.to_charlist(addr)) do
+      {:ok, ip} -> ip
+      # FQDN?
+      {:error, :einval} -> addr
+    end
   end
 end

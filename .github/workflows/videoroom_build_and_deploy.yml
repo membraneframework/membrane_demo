@@ -62,4 +62,4 @@ jobs:
           remote_host: ssh://root@swarm.membraneframework.org
           ssh_private_key: ${{ secrets.SSH_PRIV_KEY }}
           ssh_public_key: ${{ secrets.SSH_SERVER_PUBLIC_KEY}}
-          args: stack deploy --compose-file docker-compose-prod.yml videoroom
+          args: stack deploy --compose-file webrtc/videoroom/docker-compose-prod.yml videoroom

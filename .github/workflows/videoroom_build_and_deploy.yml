@@ -49,7 +49,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: webrtc/videoroom
-          file: ./Dockerfile
+          file: webrtc/videoroom/Dockerfile
           push: true
           tags: softwaremansion/videoroom:latest
 

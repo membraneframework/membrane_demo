@@ -4,13 +4,10 @@ services:
     image: softwaremansion/videoroom:latest
     restart: unless-stopped
     environment:
-      - HOST=/run/secrets/videoroom_host
-      - PORT=/run/secrets/videoroom_port
-      - VIRTUAL_HOST=/run/secrets/videoroom_host
-      - LETSENCRYPT_HOST=/run/secrets/videoroom_host
-    secrets:
-      - videoroom_host
-      - videoroom_port
+      HOST: "${HOST}"
+      PORT: "${PORT}"
+      VIRTUAL_HOST: "${HOST}"
+      LETSENCRYPT_HOST: "${HOST}"
 
   nginx-proxy:
     image: jwilder/nginx-proxy:0.8.0
@@ -35,15 +32,13 @@ services:
       - nginx-data:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - DEFAULT_EMAIL=admin+demo@membraneframework.org
+      DEFAULT_EMAIL: admin+demo@membraneframework.org
       
 volumes:
   nginx-certs:
   nginx-vhost:
   nginx-data:
 
-secrets:
-  videoroom_host:
-    external: true
-  videoroom_port:
-    external: true
+environment:
+  HOST: "demo.membraneframework.org"
+  PORT: "4000"

@@ -49,7 +49,14 @@ defmodule VideoRoomWeb.RoomChannel do
 
   def handle_in("start_screensharing", _, socket) do
     socket
-    |> send_to_pipeline({:add_screensharing, self()})
+    |> send_to_pipeline({:start_screensharing, self(), socket_ref(socket)})
+
+    {:noreply, socket}
+  end
+
+  def handle_in("stop_screensharing", _, socket) do
+    socket
+    |> send_to_pipeline({:stop_screensharing, self(), socket_ref(socket)})
 
     {:noreply, socket}
   end
@@ -75,8 +82,27 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
+  def handle_info({:start_screensharing, :already_active, ref}, socket) do
+    reply(ref, {:error, %{"reason" => "Someone is already sharing screen"}})
+    {:noreply, socket}
+  end
+
+  def handle_info({:start_screensharing, mid, ref}, socket) do
+    reply(ref, {:ok, %{}})
+    broadcast_from(socket, "screensharing", %{data: %{mid: mid, status: "start"}})
+    {:noreply, socket}
+  end
+
+  def handle_info({:stop_screensharing, mid, _ref}, socket) do
+    broadcast_from(socket, "screensharing", %{data: %{mid: mid, status: "stop"}})
+    {:noreply, socket}
+  end
+
   def handle_info({:DOWN, _ref, :process, _monitor, reason}, socket) do
-    push(socket, "error", %{error: "Room stopped working, consider restarting your connection, #{inspect reason}"})
+    push(socket, "error", %{
+      error: "Room stopped working, consider restarting your connection, #{inspect(reason)}"
+    })
+
     {:noreply, socket}
   end
 

@@ -38,6 +38,7 @@ export function setScreensharing(stream: MediaStream) {
   const screensharing = document.getElementById(
     "screensharing"
   )! as HTMLDivElement;
+  screensharing.innerHTML = "";
 
   const video = document.createElement("video");
   video.id = stream.id;

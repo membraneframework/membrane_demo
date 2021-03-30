@@ -42,7 +42,7 @@ h3 {
   grid-template-columns: 1fr 1fr;
 
   video {
-    max-width: 100%;
+    width: 100%;
     border-radius: 5px;
   }
 }
@@ -107,6 +107,7 @@ h3 {
   video {
     max-width: 100%;
     border-radius: 5px;
+    max-height: 50vh;
   }
 }
 

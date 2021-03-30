@@ -4,10 +4,10 @@ services:
     image: softwaremansion/videoroom:latest
     restart: unless-stopped
     environment:
-      HOST: "${HOST}"
-      PORT: "${PORT}"
-      VIRTUAL_HOST: "${HOST}"
-      LETSENCRYPT_HOST: "${HOST}"
+      HOST: "demo.membraneframework.org"
+      PORT: "4000"
+      VIRTUAL_HOST: "demo.membraneframework.org"
+      LETSENCRYPT_HOST: "demo.membraneframework.org"
 
   nginx-proxy:
     image: jwilder/nginx-proxy:0.8.0
@@ -38,7 +38,4 @@ volumes:
   nginx-certs:
   nginx-vhost:
   nginx-data:
-
-environment:
-  HOST: "demo.membraneframework.org"
-  PORT: "4000"
+  

@@ -4,10 +4,8 @@ services:
     image: membraneframework/demo_webrtc_videoroom:latest
     restart: unless-stopped
     environment:
-      HOST: "demo.membraneframework.org"
-      PORT: "4000"
-      VIRTUAL_HOST: "demo.membraneframework.org"
-      LETSENCRYPT_HOST: "demo.membraneframework.org"
+      VIRTUAL_HOST: "demo-webrtc-videoroom.membraneframework.org"
+      LETSENCRYPT_HOST: "demo-webrtc-videoroom.membraneframework.org"
 
   nginx-proxy:
     image: jwilder/nginx-proxy:0.8.0

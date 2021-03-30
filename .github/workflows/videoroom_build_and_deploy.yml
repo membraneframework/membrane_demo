@@ -1,11 +1,11 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Publish to Docker Hub on tag
+name: Videoroom Build and Deploy
 # Controls when the action will run. 
 on:
   push:
     branches: 
-      - "*"
+      - "actions"
     # tags:
     #   - "*.*.*"
 

@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   videoroom:
-    image: softwaremansion/videoroom:latest
+    image: membraneframework/demo_webrtc_videoroom:latest
     restart: unless-stopped
     environment:
       HOST: "demo.membraneframework.org"

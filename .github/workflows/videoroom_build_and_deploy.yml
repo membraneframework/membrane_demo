@@ -46,7 +46,7 @@ jobs:
 
 
       - name: Build and push tagged version
-        id: docker_build
+        id: docker_build_tag
         uses: docker/build-push-action@v2
         with:
           context: webrtc/videoroom
@@ -55,7 +55,7 @@ jobs:
           tags: membraneframework/demo_webrtc_videoroom:${{ github.ref }}
 
       - name: Build and push latest version 
-        id: docker_build
+        id: docker_build_latest
         uses: docker/build-push-action@v2
         with:
           context: webrtc/videoroom

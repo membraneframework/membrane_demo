@@ -10,6 +10,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Get tag
+        id: tag
+        uses: dawidd6/action-get-tag@v1
+
       - name: Cache Docker layers
         uses: actions/cache@v2
         with:
@@ -35,7 +39,7 @@ jobs:
           context: webrtc/videoroom
           file: webrtc/videoroom/Dockerfile
           push: true
-          tags: membraneframework/demo_webrtc_videoroom:${{ github.ref }}
+          tags: membraneframework/demo_webrtc_videoroom:${{ steps.tag.outputs.tag }}
 
       - name: Build and push latest version 
         id: docker_build_latest

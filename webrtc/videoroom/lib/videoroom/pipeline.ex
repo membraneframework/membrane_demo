@@ -141,6 +141,18 @@ defmodule VideoRoom.Pipeline do
     {:ok, %{state | active_screensharing: {peer, track}}}
   end
 
+  def handle_other({:connected, peer}, _ctx, state) do
+    case state.active_screensharing do
+      {_other_peer, track} ->
+        send(peer, {:screensharing, track.id})
+
+      _ ->
+        :ok
+    end
+
+    {:ok, state}
+  end
+
   def handle_other({:start_screensharing, peer, ref}, _ctx, state) do
     send(peer, {:start_screensharing, :already_active, ref})
     {:ok, state}

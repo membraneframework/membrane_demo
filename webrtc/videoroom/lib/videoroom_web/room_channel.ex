@@ -47,6 +47,19 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
+  # we need one-shot message from peer that he is connected
+  # so we can send him current screensharing `mid` information
+  #
+  # as peer can get connected several times (after each renegotiation)
+  # react just on the first one
+  def handle_in("connected", _, socket) do
+    if is_nil(socket.assigns[:connected]) do
+      socket |> send_to_pipeline({:connected, self()})
+    end
+
+    {:noreply, assign(socket, :connected, true)}
+  end
+
   def handle_in("start_screensharing", _, socket) do
     socket
     |> send_to_pipeline({:start_screensharing, self(), socket_ref(socket)})
@@ -95,6 +108,11 @@ defmodule VideoRoomWeb.RoomChannel do
 
   def handle_info({:stop_screensharing, mid, _ref}, socket) do
     broadcast_from(socket, "screensharing", %{data: %{mid: mid, status: "stop"}})
+    {:noreply, socket}
+  end
+
+  def handle_info({:screensharing, mid}, socket) do
+    push(socket, "screensharing", %{data: %{mid: mid, status: "start"}})
     {:noreply, socket}
   end
 

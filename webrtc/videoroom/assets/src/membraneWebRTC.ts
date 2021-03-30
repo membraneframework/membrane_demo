@@ -151,15 +151,22 @@ export class MembraneWebRTC {
   };
 
   private replaceFakeStreamWithScreenSharing = () => {
+    const [fakeTrack] = this.fakeStream.getTracks();
     const screenSender = this.connection!.getSenders().find((sender) => {
-      return sender?.track?.id === this.fakeStream.getTracks()[0].id;
+      return sender?.track?.id === fakeTrack.id;
     });
 
-    screenSender?.replaceTrack(this.localScreensharingStream?.getTracks()[0]!);
+    if (!screenSender) {
+      console.error("Could not find sender track for", fakeTrack);
+      this.channel.push("stop_screensharing", {});
+      return;
+    }
+
+    screenSender.replaceTrack(this.localScreensharingStream?.getTracks()[0]!);
 
     this.localScreensharingStream!.getTracks().forEach((t) => {
       t.onended = (_) => {
-        screenSender?.replaceTrack(this.fakeStream.getTracks()[0]);
+        screenSender.replaceTrack(fakeTrack);
         this.callbacks.onScreensharingEnd?.();
         this.channel.push("stop_screensharing", {});
         this.localScreensharingStream = undefined;
@@ -170,7 +177,6 @@ export class MembraneWebRTC {
   };
 
   private onOffer = async (offer: OfferData) => {
-    console.log("Got new offer", offer);
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtc_config);
       this.connection.onicecandidate = this.onLocalCandidate();
@@ -178,6 +184,18 @@ export class MembraneWebRTC {
       this.localTracks.forEach((track) =>
         this.connection!.addTrack(track, this.localStream!)
       );
+
+      this.connection.oniceconnectionstatechange = (event) => {
+        console.log(
+          "Ice connection state:",
+          (event.target as RTCPeerConnection).iceConnectionState
+        );
+        if (
+          (event.target as RTCPeerConnection).iceConnectionState === "connected"
+        ) {
+          this.channel.push("connected", {});
+        }
+      };
       this.fakeStream
         .getTracks()
         .forEach((track) => this.connection!.addTrack(track, this.fakeStream));
@@ -257,10 +275,7 @@ export class MembraneWebRTC {
   };
 
   private handleScreensharing = (screensharing: ScreensharingData) => {
-    if (
-      screensharing.data.status === "stop" &&
-      this.remoteScreensharingStream
-    ) {
+    if (screensharing.data.status === "stop") {
       this.callbacks?.onScreensharingEnd?.();
       this.remoteScreensharingStream = undefined;
       return;

@@ -1,27 +1,13 @@
-# This is a basic workflow to help you get started with Actions
-
-name: Videoroom Build and Deploy
-# Controls when the action will run. 
+name: WebRTC Videoroom Build and Deploy
 on:
   push:
-    branches: 
-      - "actions"
-    # tags:
-    #   - "*.*.*"
+    tags: 
+      - "*.*.*"
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  build_and_deploy:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
       - name: Cache Docker layers
@@ -32,18 +18,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx
 
-      # Runs a single command using the runners shell
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      # Runs a set of commands using the runners shell
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
-
 
       - name: Build and push tagged version
         id: docker_build_tag
@@ -62,14 +45,15 @@ jobs:
           file: webrtc/videoroom/Dockerfile
           push: true
           tags: membraneframework/demo_webrtc_videoroom:latest
-
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
       
       - name: Deploy to Swarm
+        id: deploy
         uses: sagebind/docker-swarm-deploy-action@v2
         with:
-          remote_host: ssh://root@swarm.membraneframework.org
+          remote_host: ${{ secrets.DEMO_SWARM_MANAGER }}
           ssh_private_key: ${{ secrets.SSH_PRIV_KEY }}
           ssh_public_key: ${{ secrets.SSH_SERVER_PUBLIC_KEY}}
           args: stack deploy --compose-file webrtc/videoroom/docker-compose.yml videoroom
+
+
+          

@@ -35,7 +35,7 @@ services:
       - nginx-data:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - DEFAULT_EMAIL=admin+demo@membraneframework.
+      - DEFAULT_EMAIL=admin+demo@membraneframework.org
       
 volumes:
   nginx-certs:

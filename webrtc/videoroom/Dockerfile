@@ -57,7 +57,8 @@ RUN \
     libnice \
     ffmpeg \
     opus \
-    clang 
+    clang \ 
+    curl
 
 WORKDIR /app
 

@@ -24,7 +24,6 @@ brew install srtp libnice clang-format ffmpeg opus
 Available runtime environmental variables:
 ```
 HOST={host passed to the endpoint config, defaults to "localhost" on non-production environments}
-PORT={port used to run phoenix server, defaults to "8443" for https and "8080" for http}
 
 USE_TLS={"true" or "false", if set to "true" then https will be used and certificate paths will be required}
 KEY_FILE_PATH={path to certificate key file, used when "USE_TLS" is set to true}
@@ -51,7 +50,7 @@ In order to run, type:
 mix phx.server 
 ```
 
-Then, go to <http://localhost:8000/>.
+Then, go to <http://localhost:4000/>.
 
 ## Copyright and License
 

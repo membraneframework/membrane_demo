@@ -57,7 +57,8 @@ RUN \
     libnice \
     ffmpeg \
     opus \
-    clang 
+    clang \ 
+    curl
 
 WORKDIR /app
 
@@ -70,5 +71,7 @@ COPY --from=build --chown=nobody:nobody /app/_build/prod/rel/membrane_videoroom_
 ENV HOME=/app
 
 EXPOSE 4000
+
+HEALTHCHECK CMD curl --fail http://localhost:4000 || exit 1  
 
 CMD ["bin/membrane_videoroom_demo", "start"]

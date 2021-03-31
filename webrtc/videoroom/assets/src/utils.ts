@@ -2,6 +2,10 @@ declare global {
   interface HTMLCanvasElement {
     captureStream: (frames: number) => MediaStream;
   }
+
+  interface MediaDevices {
+    getDisplayMedia: (constraints: MediaStreamConstraints) => MediaStream;
+  }
 }
 
 export default function createFakeStream(): MediaStream {

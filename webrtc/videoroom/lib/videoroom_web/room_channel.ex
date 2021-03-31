@@ -51,7 +51,7 @@ defmodule VideoRoomWeb.RoomChannel do
   # so we can send him current screensharing `mid` information
   #
   # as peer can get connected several times (after each renegotiation)
-  # react just on the first one
+  # respond just to the first one
   def handle_in("connected", _, socket) do
     if is_nil(socket.assigns[:connected]) do
       socket |> send_to_pipeline({:connected, self()})

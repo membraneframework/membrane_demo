@@ -125,8 +125,6 @@ export class MembraneWebRTC {
 
   public startScreensharing = async () => {
     try {
-      // typescript is missing `getDisplayMedia` typings
-      // @ts-ignore
       this.localScreensharingStream = await navigator.mediaDevices.getDisplayMedia(
         SCREENSHARING_CONSTRAINTS
       );

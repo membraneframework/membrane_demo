@@ -141,18 +141,6 @@ defmodule VideoRoom.Pipeline do
     {:ok, %{state | active_screensharing: {peer, track}}}
   end
 
-  def handle_other({:connected, peer}, _ctx, state) do
-    case state.active_screensharing do
-      {_other_peer, track} ->
-        send(peer, {:screensharing, track.id})
-
-      _ ->
-        :ok
-    end
-
-    {:ok, state}
-  end
-
   def handle_other({:start_screensharing, peer, ref}, _ctx, state) do
     send(peer, {:start_screensharing, :already_active, ref})
     {:ok, state}
@@ -166,6 +154,18 @@ defmodule VideoRoom.Pipeline do
     send(peer, {:stop_screensharing, track.id, ref})
 
     {:ok, %{state | active_screensharing: nil}}
+  end
+
+  def handle_other({:connected, peer}, _ctx, state) do
+    case state.active_screensharing do
+      {_other_peer, track} ->
+        send(peer, {:screensharing, track.id})
+
+      _ ->
+        :ok
+    end
+
+    {:ok, state}
   end
 
   def handle_other({:remove_peer, peer_pid}, ctx, state) do
@@ -194,7 +194,7 @@ defmodule VideoRoom.Pipeline do
 
   @impl true
   def handle_notification({:new_track, track_id, encoding}, endpoint, ctx, state) do
-    Membrane.Logger.info("New incoming #{encoding} track id #{track_id}")
+    Membrane.Logger.info("New incoming #{encoding} track: #{track_id}")
     tee = {:tee, track_id}
     fake = {:fake, track_id}
     children = %{tee => Membrane.Element.Tee.Parallel, fake => Membrane.Element.Fake.Sink.Buffers}

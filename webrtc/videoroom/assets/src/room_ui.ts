@@ -1,5 +1,17 @@
 import { MembraneWebRTC } from "./membraneWebRTC";
 
+interface State {
+  isLocalScreensharingActive: boolean;
+  isRemoteScreensharingActive: boolean;
+  screensharingController?: MembraneWebRTC;
+}
+
+const state: State = {
+  isLocalScreensharingActive: false,
+  isRemoteScreensharingActive: false,
+  screensharingController: undefined,
+};
+
 export function getRoomId(): String {
   return document.getElementById("room")!.dataset.roomId!;
 }
@@ -9,7 +21,7 @@ export function addVideoElement(
   stream: MediaStream,
   mute: boolean = false
 ) {
-  let video = <HTMLVideoElement>document.getElementById(stream.id);
+  let video = document.getElementById(stream.id) as HTMLVideoElement;
 
   if (!video) {
     video = document.createElement("video");
@@ -30,11 +42,24 @@ export function removeVideoElement(_: MediaStreamTrack, stream: MediaStream) {
   document.getElementById(stream.id)?.remove();
 }
 
-export function setScreensharing(stream: MediaStream) {
-  const startButton = document.getElementById(
-    "start-screensharing"
-  )! as HTMLButtonElement;
-  startButton.style.display = "none";
+export function setScreensharing(stream: MediaStream, isLocal: boolean) {
+  if (state.isLocalScreensharingActive || state.isRemoteScreensharingActive) {
+    console.error(
+      "Cannot set screensharing as either local or remote screensharing is active"
+    );
+    return;
+  }
+
+  if (isLocal) {
+    state.isLocalScreensharingActive = true;
+  } else {
+    state.isRemoteScreensharingActive = true;
+  }
+
+  updateScreensharingToggleButton(isLocal, isLocal ? "stop" : "start");
+
+  // get screensharing element and clear its content if it has
+  // any leftovers
   const screensharing = document.getElementById(
     "screensharing"
   )! as HTMLDivElement;
@@ -53,17 +78,17 @@ export function removeScreensharing() {
     "screensharing"
   )! as HTMLDivElement;
   screensharing.innerHTML = "";
-  const startButton = document.getElementById(
-    "start-screensharing"
-  )! as HTMLButtonElement;
-  startButton.style.display = "block";
+
+  state.isLocalScreensharingActive = false;
+  state.isRemoteScreensharingActive = false;
+
+  updateScreensharingToggleButton(true, "start");
 }
 
 export function setupScreensharingControls(webrtc: MembraneWebRTC) {
-  const startScreensharing = document.getElementById(
-    "start-screensharing"
-  )! as HTMLButtonElement;
-  startScreensharing.onclick = () => webrtc.startScreensharing();
+  state.screensharingController = webrtc;
+
+  updateScreensharingToggleButton(true, "start");
 }
 
 export function setErrorMessage(
@@ -73,4 +98,25 @@ export function setErrorMessage(
   if (errorContainer) {
     errorContainer.innerHTML = message;
   }
+}
+
+function updateScreensharingToggleButton(
+  visible: boolean,
+  label: "start" | "stop"
+) {
+  const toggleButton = document.getElementById(
+    "toggle-screensharing"
+  )! as HTMLButtonElement;
+
+  if (label === "start") {
+    toggleButton.onclick = () =>
+      state.screensharingController?.startScreensharing();
+  } else {
+    toggleButton.onclick = () =>
+      state.screensharingController?.stopScreensharing();
+  }
+
+  toggleButton.innerText =
+    label === "start" ? "Start screensharing" : "Stop screensharing";
+  toggleButton.style.display = visible ? "block" : "none";
 }

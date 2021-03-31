@@ -21,7 +21,7 @@ interface ScreensharingData {
 interface Callbacks {
   onAddTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
   onRemoveTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
-  onScreensharingStart?: (stream: MediaStream) => void;
+  onScreensharingStart?: (stream: MediaStream, isLocal: boolean) => void;
   onScreensharingEnd?: () => void;
   onConnectionError?: (message: string) => void;
 }
@@ -137,7 +137,7 @@ export class MembraneWebRTC {
           this.replaceFakeStreamWithScreenSharing();
         })
         .receive("error", (data) => {
-          console.log("error while trying to start screensharing", data);
+          console.error("error while trying to start screensharing", data);
           this.localScreensharingStream?.getTracks().forEach((t) => t.stop());
           this.localScreensharingStream = undefined;
         });
@@ -147,7 +147,11 @@ export class MembraneWebRTC {
   };
 
   public stopScreensharing = async () => {
-    this.localScreensharingStream = undefined;
+    this.localScreensharingStream?.getTracks().forEach((t) => {
+      t.stop();
+      // on why we dispatch 'ended' manually see: https://stackoverflow.com/questions/55953038/why-is-the-ended-event-not-firing-for-this-mediastreamtrack
+      t.dispatchEvent(new Event("ended"));
+    });
   };
 
   private replaceFakeStreamWithScreenSharing = () => {
@@ -173,7 +177,7 @@ export class MembraneWebRTC {
       };
     });
 
-    this.callbacks.onScreensharingStart?.(this.localScreensharingStream!);
+    this.callbacks.onScreensharingStart?.(this.localScreensharingStream!, true);
   };
 
   private onOffer = async (offer: OfferData) => {
@@ -293,7 +297,10 @@ export class MembraneWebRTC {
     });
 
     if (this.remoteScreensharingStream) {
-      this.callbacks?.onScreensharingStart?.(this.remoteScreensharingStream);
+      this.callbacks?.onScreensharingStart?.(
+        this.remoteScreensharingStream,
+        false
+      );
     }
   };
 }

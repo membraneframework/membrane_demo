@@ -118,5 +118,8 @@ h3 {
   button {
     @include dark-button;
     width: inherit;
+    &:hover {
+      background-color: #292929;
+    }
   }
 }

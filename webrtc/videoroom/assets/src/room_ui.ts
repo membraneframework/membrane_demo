@@ -1,3 +1,15 @@
+interface State {
+  localStream?: MediaStream;
+}
+
+const state: State = {
+  localStream: undefined,
+};
+
+export function setLocalStream(stream: MediaStream) {
+  state.localStream = stream;
+}
+
 export function getRoomId(): String {
   return document.getElementById("room")!.dataset.roomId!;
 }
@@ -40,7 +52,7 @@ export function setErrorMessage(
 export function toggleControl(control: "mic" | "video") {
   const mute = document.getElementById(`${control}-on`)! as HTMLDivElement;
   const unmute = document.getElementById(`${control}-off`)! as HTMLDivElement;
-  
+
   if (mute.style.display === "none") {
     mute.style.display = "block";
     unmute.style.display = "none";
@@ -50,16 +62,30 @@ export function toggleControl(control: "mic" | "video") {
   }
 }
 
-export function setupMediaControls(muteAudio: boolean, muteVideo: boolean, onAudioToggle: () => void, onVideoToggle: () => void) {
+export function setupMediaControls(muteAudio: boolean, muteVideo: boolean) {
   const muteAudioEl = document.getElementById("mic-on")! as HTMLDivElement;
   const unmuteAudioEl = document.getElementById("mic-off")! as HTMLDivElement;
-  muteAudioEl.onclick = () => toggleControl("mic");
-  unmuteAudioEl.onclick = () => toggleControl("mic");
+
+  const toggleAudio = () => {
+    state.localStream
+      ?.getAudioTracks()
+      .forEach((t) => (t.enabled = !t.enabled));
+    toggleControl("mic");
+  };
+  const toggleVideo = () => {
+    state.localStream
+      ?.getVideoTracks()
+      .forEach((t) => (t.enabled = !t.enabled));
+    toggleControl("video");
+  };
+
+  muteAudioEl.onclick = toggleAudio;
+  unmuteAudioEl.onclick = toggleAudio;
 
   const muteVideoEl = document.getElementById("video-on")! as HTMLDivElement;
   const unmuteVideoEl = document.getElementById("video-off")! as HTMLDivElement;
-  muteVideoEl.onclick = () => toggleControl("video");
-  unmuteVideoEl.onclick = () => toggleControl("video");
+  muteVideoEl.onclick = toggleVideo;
+  unmuteVideoEl.onclick = toggleVideo;
 
   if (muteAudio) {
     muteAudioEl.style.display = "none";

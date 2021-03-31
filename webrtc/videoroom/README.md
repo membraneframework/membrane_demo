@@ -23,7 +23,7 @@ brew install srtp libnice clang-format ffmpeg opus
 
 Available runtime environmental variables:
 ```
-HOST={host passed to the endpoint config, defaults to "localhost" on non-production environments}
+VIRTUAL_HOST={host passed to the endpoint config, defaults to "localhost" on non-production environments}
 
 USE_TLS={"true" or "false", if set to "true" then https will be used and certificate paths will be required}
 KEY_FILE_PATH={path to certificate key file, used when "USE_TLS" is set to true}

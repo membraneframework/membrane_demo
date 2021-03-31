@@ -23,14 +23,14 @@ brew install srtp libnice clang-format ffmpeg opus
 
 Available runtime environmental variables:
 ```
-HOST={host passed to the endpoint config, defaults to "localhost" on non-production environments}
-PORT={port used to run phoenix server, defaults to "8443" for https and "8080" for http}
+VIRTUAL_HOST={host passed to the endpoint config, defaults to "localhost" on non-production environments}
 
 USE_TLS={"true" or "false", if set to "true" then https will be used and certificate paths will be required}
 KEY_FILE_PATH={path to certificate key file, used when "USE_TLS" is set to true}
 CERT_FILE_PATH={path to certificate file, used when "USE_TLS" is set to true}
 
-STUN_SERVERS={list of stun servers separated by ",", defaults to a single server "64.233.163.127:19302"}
+STUN_SERVERS={list of stun servers separated by ",", defaults to a single server "stun1.l.google.com:19302"}
+TURN_SERVERS={list of turn servers separated by ",", defaults to ""}
 ```
 
 Default path for certificate files for non-production environment is `priv/certs/`.
@@ -50,7 +50,7 @@ In order to run, type:
 mix phx.server 
 ```
 
-Then, go to <http://localhost:8000/>.
+Then, go to <http://localhost:4000/>.
 
 ## Copyright and License
 

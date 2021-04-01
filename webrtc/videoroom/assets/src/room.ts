@@ -5,8 +5,8 @@ import {
   getRoomId,
   removeVideoElement,
   setErrorMessage,
-  setLocalStream,
   setupMediaControls,
+  setupRoomUI,
 } from "./room_ui";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
@@ -36,7 +36,13 @@ const setup = async () => {
       addVideoElement(track, localStream, true);
     });
 
-    setLocalStream(localStream);
+    setupRoomUI({
+      onToggleAudio: () =>
+        localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled)),
+      onToggleVideo: () =>
+        localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled)),
+    });
+
     setupMediaControls(false, false);
 
     webrtc.start();

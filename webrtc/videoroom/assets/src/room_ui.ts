@@ -1,13 +1,15 @@
 interface State {
-  localStream?: MediaStream;
+  onToggleAudio?: () => void;
+  onToggleVideo?: () => void;
 }
 
-const state: State = {
-  localStream: undefined,
+let state: State = {
+  onToggleAudio: undefined,
+  onToggleVideo: undefined,
 };
 
-export function setLocalStream(stream: MediaStream) {
-  state.localStream = stream;
+export function setupRoomUI(setupState: State) {
+  state = { ...setupState };
 }
 
 export function getRoomId(): String {
@@ -73,15 +75,11 @@ export function setupMediaControls(muteAudio: boolean, muteVideo: boolean) {
   const unmuteAudioEl = document.getElementById("mic-off")! as HTMLDivElement;
 
   const toggleAudio = () => {
-    state.localStream
-      ?.getAudioTracks()
-      .forEach((t) => (t.enabled = !t.enabled));
+    state.onToggleAudio?.();
     toggleControl("mic");
   };
   const toggleVideo = () => {
-    state.localStream
-      ?.getVideoTracks()
-      .forEach((t) => (t.enabled = !t.enabled));
+    state.onToggleVideo?.();
     toggleControl("video");
   };
 

@@ -24,7 +24,10 @@ export function addVideoElement(
   if (!video) {
     video = document.createElement("video");
     video.id = stream.id;
-    document.getElementById("videochat")!.appendChild(video);
+    const grid = document.getElementById("videos-grid")!;
+    grid.appendChild(video);
+
+    grid.className = `grid-${Math.min(2, grid.childNodes.length)}`;
   }
   video.srcObject = stream;
   video.autoplay = true;
@@ -38,6 +41,9 @@ export function removeVideoElement(_: MediaStreamTrack, stream: MediaStream) {
   }
 
   document.getElementById(stream.id)?.remove();
+
+  const grid = document.getElementById("videos-grid")!;
+  grid.className = `grid-${Math.min(2, grid.childNodes.length)}`;
 }
 
 export function setErrorMessage(

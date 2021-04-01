@@ -5,7 +5,6 @@ import {
   getRoomId,
   removeVideoElement,
   setErrorMessage,
-  setupMediaControls,
   setupRoomUI,
 } from "./room_ui";
 
@@ -41,9 +40,9 @@ const setup = async () => {
         localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled)),
       onToggleVideo: () =>
         localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled)),
+      muteAudio: false,
+      muteVideo: false,
     });
-
-    setupMediaControls(false, false);
 
     webrtc.start();
   } catch (error) {

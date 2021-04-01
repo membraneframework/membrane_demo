@@ -8,8 +8,19 @@ let state: State = {
   onToggleVideo: undefined,
 };
 
-export function setupRoomUI(setupState: State) {
-  state = { ...setupState };
+interface SetupOptions extends State {
+  state?: State;
+  muteAudio?: boolean;
+  muteVideo?: boolean;
+}
+
+export function setupRoomUI({
+  muteAudio = false,
+  muteVideo = false,
+  ...rest
+}: SetupOptions) {
+  state = rest;
+  setupMediaControls(muteAudio, muteVideo);
 }
 
 export function getRoomId(): String {
@@ -70,7 +81,7 @@ export function toggleControl(control: "mic" | "video") {
   }
 }
 
-export function setupMediaControls(muteAudio: boolean, muteVideo: boolean) {
+function setupMediaControls(muteAudio: boolean, muteVideo: boolean) {
   const muteAudioEl = document.getElementById("mic-on")! as HTMLDivElement;
   const unmuteAudioEl = document.getElementById("mic-off")! as HTMLDivElement;
 

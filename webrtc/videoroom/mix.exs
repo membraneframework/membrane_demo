@@ -32,7 +32,8 @@ defmodule VideoRoom.MixProject do
       {:phoenix_html, "~> 2.14"},
       {:phoenix_live_reload, "~> 1.2"},
       {:poison, "~> 3.1"},
-      {:jason, "~> 1.2"}
+      {:jason, "~> 1.2"},
+      {:phoenix_inline_svg, "~> 1.4"}
     ]
   end
 end

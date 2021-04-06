@@ -12,10 +12,7 @@ interface CandidateData {
 }
 
 interface Callbacks {
-  onAddTrack?: (
-    track: MediaStreamTrack,
-    stream: MediaStream
-  ) => void;
+  onAddTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
   onRemoveTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
   onConnectionError?: (message: string) => void;
 }
@@ -49,7 +46,12 @@ export class MembraneWebRTC {
     this._channel = ch;
   }
 
-  constructor(socket: Socket, channelId: string, callbacks?: Callbacks, config?: RTCConfiguration) {
+  constructor(
+    socket: Socket,
+    channelId: string,
+    callbacks?: Callbacks,
+    config?: RTCConfiguration
+  ) {
     this.socket = socket;
     this.callbacks = callbacks || {};
     this.channelId = channelId;
@@ -65,11 +67,13 @@ export class MembraneWebRTC {
   }
 
   public addTrack = (track: MediaStreamTrack, stream: MediaStream) => {
-    if(this.connection) {
-      throw new Error("Adding tracks when connection is established is not yet supported");
+    if (this.connection) {
+      throw new Error(
+        "Adding tracks when connection is established is not yet supported"
+      );
     }
     this.localTracks.add(track);
-  }
+  };
 
   public start = () => {
     this.channel = this.socket.channel(this.channelId, {});
@@ -106,7 +110,7 @@ export class MembraneWebRTC {
       this.connection = new RTCPeerConnection(this.rtc_config);
       this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
-      this.localTracks.forEach(track => this.connection!.addTrack(track));
+      this.localTracks.forEach((track) => this.connection!.addTrack(track));
     } else {
       this.connection.createOffer({ iceRestart: true });
     }

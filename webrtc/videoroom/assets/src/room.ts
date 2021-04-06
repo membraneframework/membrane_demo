@@ -1,6 +1,12 @@
 import "../css/app.scss";
 
-import { getRoomId, addVideoElement, removeVideoElement, setErrorMessage } from "./room_ui";
+import {
+  addVideoElement,
+  getRoomId,
+  removeVideoElement,
+  setErrorMessage,
+  setupRoomUI,
+} from "./room_ui";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
 import { Socket } from "phoenix";
@@ -24,12 +30,19 @@ const setup = async () => {
     const localStream = await navigator.mediaDevices.getUserMedia(
       MEDIA_CONSTRAINTS
     );
-    localStream
-      .getTracks()
-      .forEach(track => {
-        webrtc.addTrack(track, localStream);
-        addVideoElement(track, localStream, true);
-      });
+    localStream.getTracks().forEach((track) => {
+      webrtc.addTrack(track, localStream);
+      addVideoElement(track, localStream, true);
+    });
+
+    setupRoomUI({
+      onToggleAudio: () =>
+        localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled)),
+      onToggleVideo: () =>
+        localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled)),
+      muteAudio: false,
+      muteVideo: false,
+    });
 
     webrtc.start();
   } catch (error) {

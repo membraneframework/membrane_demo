@@ -1,3 +1,28 @@
+interface State {
+  onToggleAudio?: () => void;
+  onToggleVideo?: () => void;
+}
+
+let state: State = {
+  onToggleAudio: undefined,
+  onToggleVideo: undefined,
+};
+
+interface SetupOptions extends State {
+  state?: State;
+  muteAudio?: boolean;
+  muteVideo?: boolean;
+}
+
+export function setupRoomUI({
+  muteAudio = false,
+  muteVideo = false,
+  ...rest
+}: SetupOptions) {
+  state = rest;
+  setupMediaControls(muteAudio, muteVideo);
+}
+
 export function getRoomId(): String {
   return document.getElementById("room")!.dataset.roomId!;
 }
@@ -12,7 +37,10 @@ export function addVideoElement(
   if (!video) {
     video = document.createElement("video");
     video.id = stream.id;
-    document.getElementById("videochat")!.appendChild(video);
+    const grid = document.getElementById("videos-grid")!;
+    grid.appendChild(video);
+
+    grid.className = `grid-${Math.min(2, grid.childNodes.length)}`;
   }
   video.srcObject = stream;
   video.autoplay = true;
@@ -26,6 +54,9 @@ export function removeVideoElement(_: MediaStreamTrack, stream: MediaStream) {
   }
 
   document.getElementById(stream.id)?.remove();
+
+  const grid = document.getElementById("videos-grid")!;
+  grid.className = `grid-${Math.min(2, grid.childNodes.length)}`;
 }
 
 export function setErrorMessage(
@@ -34,5 +65,56 @@ export function setErrorMessage(
   const errorContainer = document.getElementById("videochat-error");
   if (errorContainer) {
     errorContainer.innerHTML = message;
+  }
+}
+
+export function toggleControl(control: "mic" | "video") {
+  const mute = document.getElementById(`${control}-on`)! as HTMLDivElement;
+  const unmute = document.getElementById(`${control}-off`)! as HTMLDivElement;
+
+  if (mute.style.display === "none") {
+    mute.style.display = "block";
+    unmute.style.display = "none";
+  } else {
+    mute.style.display = "none";
+    unmute.style.display = "block";
+  }
+}
+
+function setupMediaControls(muteAudio: boolean, muteVideo: boolean) {
+  const muteAudioEl = document.getElementById("mic-on")! as HTMLDivElement;
+  const unmuteAudioEl = document.getElementById("mic-off")! as HTMLDivElement;
+
+  const toggleAudio = () => {
+    state.onToggleAudio?.();
+    toggleControl("mic");
+  };
+  const toggleVideo = () => {
+    state.onToggleVideo?.();
+    toggleControl("video");
+  };
+
+  muteAudioEl.onclick = toggleAudio;
+  unmuteAudioEl.onclick = toggleAudio;
+
+  const muteVideoEl = document.getElementById("video-on")! as HTMLDivElement;
+  const unmuteVideoEl = document.getElementById("video-off")! as HTMLDivElement;
+  muteVideoEl.onclick = toggleVideo;
+  unmuteVideoEl.onclick = toggleVideo;
+
+  if (muteAudio) {
+    muteAudioEl.style.display = "none";
+    unmuteAudioEl.style.display = "block";
+  } else {
+    muteAudioEl.style.display = "block";
+    unmuteAudioEl.style.display = "none";
+  }
+
+  if (muteVideo) {
+    muteVideoEl.style.display = "none";
+    unmuteVideoEl.style.display = "block";
+  } else {
+    muteVideoEl.style.display = "block";
+    unmuteVideoEl.style.display = "none";
   }
 }

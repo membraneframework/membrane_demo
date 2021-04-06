@@ -9,5 +9,4 @@ defmodule VideoRoomWeb.PageController do
     conn
     |> send_resp(200, "")
   end
-
 end

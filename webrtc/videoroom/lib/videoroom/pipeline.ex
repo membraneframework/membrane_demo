@@ -126,15 +126,11 @@ defmodule VideoRoom.Pipeline do
   end
 
   def handle_other({:start_screensharing, peer, ref}, _ctx, %{active_screensharing: nil} = state) do
-    {_, track} =
-      state.tracks
-      |> Enum.find(fn
-        {"SCREEN:" <> _ = id, _track} ->
-          id in state.endpoints_tracks_ids[peer]
+    track_id =
+      state.endpoints_tracks_ids[peer]
+      |> Enum.find(&match?("SCREEN:" <> _, &1))
 
-        _ ->
-          false
-      end)
+    track = state.tracks[track_id]
 
     send(peer, {:start_screensharing, track.id, ref})
 
@@ -157,13 +153,16 @@ defmodule VideoRoom.Pipeline do
   end
 
   def handle_other({:connected, peer}, _ctx, state) do
-    case state.active_screensharing do
-      {_other_peer, track} ->
-        send(peer, {:screensharing, track.id})
+    payload =
+      case state.active_screensharing do
+        {_other_peer, track} ->
+          %{active_screensharing: track.id}
 
-      _ ->
-        :ok
-    end
+        _ ->
+          %{}
+      end
+
+    send(peer, {:connected, payload})
 
     {:ok, state}
   end

@@ -1,10 +1,30 @@
 import { Channel, Socket } from "phoenix";
 
 import { SCREENSHARING_CONSTRAINTS } from "./consts";
-import createFakeStream from "./utils";
 
 const DEFAULT_ERROR_MESSAGE =
   "Cannot connect to the server, try again by refreshing the page";
+
+declare global {
+  interface HTMLCanvasElement {
+    captureStream: (frames: number) => MediaStream;
+  }
+
+  interface MediaDevices {
+    getDisplayMedia: (constraints: MediaStreamConstraints) => MediaStream;
+  }
+}
+
+export default function createFakeStream(): MediaStream {
+  const canvas = document.createElement("canvas") as HTMLCanvasElement;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.fillStyle = "rgba(0,0,0,0)";
+    ctx.fillRect(0, 0, 1, 1);
+  }
+  // return fake stream with framerate 0 so it won't send any media
+  return canvas.captureStream(0);
+}
 
 interface OfferData {
   data: RTCSessionDescriptionInit;

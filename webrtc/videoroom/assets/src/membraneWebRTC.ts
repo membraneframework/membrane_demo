@@ -1,7 +1,5 @@
 import { Channel, Socket } from "phoenix";
 
-import { SCREENSHARING_CONSTRAINTS } from "./consts";
-
 const DEFAULT_ERROR_MESSAGE =
   "Cannot connect to the server, try again by refreshing the page";
 
@@ -15,7 +13,7 @@ declare global {
   }
 }
 
-export default function createFakeStream(): MediaStream {
+function createFakeStream(): MediaStream {
   const canvas = document.createElement("canvas") as HTMLCanvasElement;
   const ctx = canvas.getContext("2d");
   if (ctx) {
@@ -143,15 +141,13 @@ export class MembraneWebRTC {
     this.connection = undefined;
   };
 
-  public startScreensharing = async () => {
+  public startScreensharing = async (streamCb: () => Promise<MediaStream>) => {
     try {
-      this.localScreensharingStream = await navigator.mediaDevices.getDisplayMedia(
-        SCREENSHARING_CONSTRAINTS
-      );
+      this.localScreensharingStream = await streamCb();
 
       this.channel
         .push("start_screensharing", {})
-        .receive("ok", (response) => {
+        .receive("ok", async (_) => {
           this.replaceFakeStreamWithScreenSharing();
         })
         .receive("error", (data) => {
@@ -166,10 +162,16 @@ export class MembraneWebRTC {
 
   public stopScreensharing = async () => {
     this.localScreensharingStream?.getTracks().forEach((t) => {
+      const screenSender = this.connection!.getSenders().find((sender) => {
+        return sender?.track?.id === t.id;
+      });
+      screenSender?.replaceTrack(this.fakeStream?.getTracks()[0]);
+
       t.stop();
       // on why we dispatch 'ended' manually see: https://stackoverflow.com/questions/55953038/why-is-the-ended-event-not-firing-for-this-mediastreamtrack
       t.dispatchEvent(new Event("ended"));
     });
+    this.localScreensharingStream = undefined;
   };
 
   private replaceFakeStreamWithScreenSharing = () => {

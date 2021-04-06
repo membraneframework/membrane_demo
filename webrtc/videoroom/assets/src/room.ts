@@ -1,5 +1,6 @@
 import "../css/app.scss";
 
+import { MEDIA_CONSTRAINTS, SCREENSHARING_CONSTRAINTS } from "./consts";
 import {
   addVideoElement,
   getRoomId,
@@ -7,10 +8,9 @@ import {
   removeVideoElement,
   setErrorMessage,
   setScreensharing,
-  setupScreensharingControls,
+  setupRoomUI,
 } from "./room_ui";
 
-import { MEDIA_CONSTRAINTS } from "./consts";
 import { MembraneWebRTC } from "./membraneWebRTC";
 import { Socket } from "phoenix";
 
@@ -35,7 +35,21 @@ const setup = async () => {
       addVideoElement(track, localStream, true);
     });
 
-    setupScreensharingControls(webrtc);
+    const onLocalScreensharingStart = async () => {
+      const getLocalScreensharing = async () => {
+        return navigator.mediaDevices.getDisplayMedia(
+          SCREENSHARING_CONSTRAINTS
+        );
+      };
+
+      webrtc.startScreensharing(getLocalScreensharing);
+    };
+
+    const onLocalScreensharingStop = async () => {
+      webrtc.stopScreensharing();
+    };
+
+    setupRoomUI({ onLocalScreensharingStart, onLocalScreensharingStop });
 
     webrtc.start();
   } catch (error) {

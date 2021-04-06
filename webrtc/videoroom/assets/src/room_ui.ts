@@ -3,13 +3,14 @@ import { MembraneWebRTC } from "./membraneWebRTC";
 interface State {
   isLocalScreensharingActive: boolean;
   isRemoteScreensharingActive: boolean;
-  screensharingController?: MembraneWebRTC;
+  onLocalScreensharingStart?: () => void;
+  onLocalScreensharingStop?: () => void;
 }
 
-const state: State = {
+let state: State = {
   isLocalScreensharingActive: false,
   isRemoteScreensharingActive: false,
-  screensharingController: undefined,
+  onLocalScreensharingStart: undefined,
 };
 
 export function getRoomId(): String {
@@ -85,9 +86,17 @@ export function removeScreensharing() {
   updateScreensharingToggleButton(true, "start");
 }
 
-export function setupScreensharingControls(webrtc: MembraneWebRTC) {
-  state.screensharingController = webrtc;
+interface Setup {
+  onLocalScreensharingStart?: () => void;
+  onLocalScreensharingStop?: () => void;
+}
 
+export function setupRoomUI(setup: Setup) {
+  state = {
+    ...setup,
+    isLocalScreensharingActive: false,
+    isRemoteScreensharingActive: false,
+  };
   updateScreensharingToggleButton(true, "start");
 }
 
@@ -109,11 +118,9 @@ function updateScreensharingToggleButton(
   )! as HTMLButtonElement;
 
   if (label === "start") {
-    toggleButton.onclick = () =>
-      state.screensharingController?.startScreensharing();
+    toggleButton.onclick = () => state.onLocalScreensharingStart?.();
   } else {
-    toggleButton.onclick = () =>
-      state.screensharingController?.stopScreensharing();
+    toggleButton.onclick = () => state.onLocalScreensharingStop?.();
   }
 
   toggleButton.innerText =

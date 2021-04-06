@@ -3,10 +3,17 @@ defmodule VideoRoomWeb.RoomChannel do
 
   require Logger
 
-  intercept(["screensharing"])
-
   @impl true
-  def join("room:" <> room_id, _message, socket) do
+  def join("room:" <> room_id, _msg, socket) do
+    {room_id, is_screensharing} =
+      case room_id do
+        "screensharing:" <> id ->
+          {id, true}
+
+        ^room_id ->
+          {room_id, false}
+      end
+
     case VideoRoom.Pipeline.lookup(room_id) do
       nil -> VideoRoom.Pipeline.start(room_id)
       pid -> {:ok, pid}
@@ -14,7 +21,13 @@ defmodule VideoRoomWeb.RoomChannel do
     |> case do
       {:ok, pipeline} ->
         Process.monitor(pipeline)
-        {:ok, assign(socket, %{room_id: room_id, pipeline: pipeline, connected: false})}
+
+        {:ok,
+         assign(socket, %{
+           room_id: room_id,
+           pipeline: pipeline,
+           is_screensharing: is_screensharing
+         })}
 
       {:error, reason} ->
         Logger.error("""
@@ -29,8 +42,10 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_in("start", _msg, socket) do
+    type = if socket.assigns.is_screensharing, do: :screensharing, else: :participant
+
     socket
-    |> send_to_pipeline({:new_peer, self()})
+    |> send_to_pipeline({:new_peer, self(), type, socket_ref(socket)})
 
     {:noreply, socket}
   end
@@ -49,53 +64,9 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  # we need one-shot message from peer that he is connected
-  # so we can send him current screensharing `mid` information
-  #
-  # as peer can get connected several times (after each renegotiation)
-  # respond just to the first one
-  def handle_in("connected", _, socket) do
-    if not socket.assigns.connected do
-      socket |> send_to_pipeline({:connected, self()})
-    end
-
-    {:noreply, socket}
-  end
-
-  def handle_in("start_screensharing", _, socket) do
-    socket
-    |> send_to_pipeline({:start_screensharing, self(), socket_ref(socket)})
-
-    {:noreply, socket}
-  end
-
-  def handle_in("stop_screensharing", _, socket) do
-    socket
-    |> send_to_pipeline({:stop_screensharing, self(), socket_ref(socket)})
-
-    {:noreply, socket}
-  end
-
   def handle_in("stop", _msg, socket) do
     socket
     |> send_to_pipeline({:remove_peer, self()})
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_out("screensharing", %{mid: mid, status: status}, socket)
-      when socket.assigns.connected do
-    push_screensharing(mid, status, socket)
-    {:noreply, socket}
-  end
-
-  def handle_out("screensharing", msg, socket) do
-    """
-    #{inspect(__MODULE__)} Received screensharing event on a socket
-    that has not yet acknowledged connected status, ignoring: #{inspect(msg)}"
-    """
-    |> Logger.warn()
 
     {:noreply, socket}
   end
@@ -114,28 +85,17 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:start_screensharing, :already_active, ref}, socket) do
-    reply(ref, {:error, %{"reason" => "Someone is already sharing screen"}})
-    {:noreply, socket}
-  end
+  @impl true
+  def handle_info({:new_peer, response, ref}, socket) do
+    case response do
+      :ok ->
+        reply(ref, {:ok, %{}})
 
-  def handle_info({:start_screensharing, mid, ref}, socket) do
-    reply(ref, {:ok, %{}})
-    broadcast_from(socket, "screensharing", %{mid: mid, status: "start"})
-    {:noreply, socket}
-  end
-
-  def handle_info({:stop_screensharing, mid, _ref}, socket) do
-    broadcast_from(socket, "screensharing", %{mid: mid, status: "stop"})
-    {:noreply, socket}
-  end
-
-  def handle_info({:connected, payload}, socket) do
-    if Map.has_key?(payload, :active_screensharing) do
-      push_screensharing(payload.active_screensharing, "start", socket)
+      {:error, _reason} = error ->
+        reply(ref, error)
     end
 
-    {:noreply, assign(socket, :connected, true)}
+    {:noreply, socket}
   end
 
   def handle_info({:DOWN, _ref, :process, _monitor, reason}, socket) do
@@ -144,10 +104,6 @@ defmodule VideoRoomWeb.RoomChannel do
     })
 
     {:noreply, socket}
-  end
-
-  def push_screensharing(mid, status, socket) do
-    push(socket, "screensharing", %{data: %{mid: mid, status: status}})
   end
 
   defp send_to_pipeline(socket, message) do

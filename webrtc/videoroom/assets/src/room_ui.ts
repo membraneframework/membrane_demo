@@ -1,17 +1,35 @@
 import { MembraneWebRTC } from "./membraneWebRTC";
 
 interface State {
-  isLocalScreensharingActive: boolean;
-  isRemoteScreensharingActive: boolean;
+  isScreenSharingActive: boolean;
+  isLocalScreenSharingActive: boolean;
   onLocalScreensharingStart?: () => void;
   onLocalScreensharingStop?: () => void;
 }
 
 let state: State = {
-  isLocalScreensharingActive: false,
-  isRemoteScreensharingActive: false,
+  isScreenSharingActive: false,
+  isLocalScreenSharingActive: false,
   onLocalScreensharingStart: undefined,
 };
+
+interface Setup {
+  onLocalScreensharingStart?: () => void;
+  onLocalScreensharingStop?: () => void;
+}
+
+export function setupRoomUI(setup: Setup) {
+  state = {
+    ...setup,
+    isScreenSharingActive: false,
+    isLocalScreenSharingActive: false,
+  };
+  updateScreensharingToggleButton(true, "start");
+}
+
+export function setLocalScreenSharingStatus(active: boolean) {
+  state.isLocalScreenSharingActive = active;
+}
 
 export function getRoomId(): String {
   return document.getElementById("room")!.dataset.roomId!;
@@ -43,19 +61,16 @@ export function removeVideoElement(_: MediaStreamTrack, stream: MediaStream) {
   document.getElementById(stream.id)?.remove();
 }
 
-export function setScreensharing(stream: MediaStream, isLocal: boolean) {
-  if (state.isLocalScreensharingActive || state.isRemoteScreensharingActive) {
+export function setScreensharing(stream: MediaStream) {
+  if (state.isScreenSharingActive) {
     console.error(
       "Cannot set screensharing as either local or remote screensharing is active"
     );
     return;
   }
+  state.isScreenSharingActive = true;
 
-  if (isLocal) {
-    state.isLocalScreensharingActive = true;
-  } else {
-    state.isRemoteScreensharingActive = true;
-  }
+  const isLocal = state.isLocalScreenSharingActive;
 
   updateScreensharingToggleButton(isLocal, isLocal ? "stop" : "start");
 
@@ -80,23 +95,8 @@ export function removeScreensharing() {
   )! as HTMLDivElement;
   screensharing.innerHTML = "";
 
-  state.isLocalScreensharingActive = false;
-  state.isRemoteScreensharingActive = false;
+  state.isScreenSharingActive = false;
 
-  updateScreensharingToggleButton(true, "start");
-}
-
-interface Setup {
-  onLocalScreensharingStart?: () => void;
-  onLocalScreensharingStop?: () => void;
-}
-
-export function setupRoomUI(setup: Setup) {
-  state = {
-    ...setup,
-    isLocalScreensharingActive: false,
-    isRemoteScreensharingActive: false,
-  };
   updateScreensharingToggleButton(true, "start");
 }
 

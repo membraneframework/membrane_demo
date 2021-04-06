@@ -7,12 +7,59 @@ import {
   removeScreensharing,
   removeVideoElement,
   setErrorMessage,
+  setLocalScreenSharingStatus,
   setScreensharing,
   setupRoomUI,
 } from "./room_ui";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
 import { Socket } from "phoenix";
+
+let screensharing: MembraneWebRTC | undefined;
+
+const cleanLocalScreensharing = () => {
+  screensharing?.stop();
+  screensharing = undefined;
+  setLocalScreenSharingStatus(false);
+};
+
+const startLocalScreensharing = async (socket: Socket) => {
+  if (screensharing) return;
+
+  try {
+    const screenStream = await navigator.mediaDevices.getDisplayMedia(
+      SCREENSHARING_CONSTRAINTS
+    );
+
+    screensharing = new MembraneWebRTC(
+      socket,
+      `room:screensharing:${getRoomId()}`,
+      {
+        onConnectionError: (message) => {
+          console.error(message);
+          cleanLocalScreensharing();
+        },
+      }
+    );
+
+    screenStream.getTracks().forEach((t) => {
+      screensharing?.addTrack(t, screenStream);
+      t.onended = () => {
+        cleanLocalScreensharing();
+      };
+    });
+
+    await screensharing.start();
+    setLocalScreenSharingStatus(true);
+  } catch (error) {
+    console.log("Error while starting screensharing", error);
+    cleanLocalScreensharing();
+  }
+};
+
+const stopLocalScreensharing = () => {
+  cleanLocalScreensharing();
+};
 
 const setup = async () => {
   try {
@@ -35,21 +82,10 @@ const setup = async () => {
       addVideoElement(track, localStream, true);
     });
 
-    const onLocalScreensharingStart = async () => {
-      const getLocalScreensharing = async () => {
-        return navigator.mediaDevices.getDisplayMedia(
-          SCREENSHARING_CONSTRAINTS
-        );
-      };
-
-      webrtc.startScreensharing(getLocalScreensharing);
-    };
-
-    const onLocalScreensharingStop = async () => {
-      webrtc.stopScreensharing();
-    };
-
-    setupRoomUI({ onLocalScreensharingStart, onLocalScreensharingStop });
+    setupRoomUI({
+      onLocalScreensharingStart: () => startLocalScreensharing(socket),
+      onLocalScreensharingStop: stopLocalScreensharing,
+    });
 
     webrtc.start();
   } catch (error) {

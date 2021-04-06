@@ -51,23 +51,28 @@ defmodule VideoRoom.Pipeline do
   end
 
   @impl true
-  def handle_other({:new_peer, peer_pid}, ctx, state) do
+  def handle_other(
+        {:new_peer, peer_pid, :screensharing, ref},
+        _ctx,
+        %{active_screensharing: screensharing} = state
+      )
+      when is_pid(screensharing) do
+    send(peer_pid, {:new_peer, {:error, "Screensharing is already active"}, ref})
+    {:ok, state}
+  end
+
+  @impl true
+  def handle_other({:new_peer, peer_pid, peer_type, ref}, ctx, state) do
+    send(peer_pid, {:new_peer, :ok, ref})
+
     if Map.has_key?(ctx.children, {:endpoint, peer_pid}) do
       Membrane.Logger.warn("Peer already connected, ignoring")
       {:ok, state}
     else
-      Membrane.Logger.info("New peer #{inspect(peer_pid)}")
+      Membrane.Logger.info("New peer #{inspect(peer_pid)} of type #{inspect(peer_type)}")
       Process.monitor(peer_pid)
-      stream_id = Track.stream_id()
-      # firefox allows `mid` value max length to be 16 bytes
-      screensharing_id =
-        "SCREEN:#{Base.encode16(:crypto.strong_rand_bytes(8))}" |> String.slice(0, 16)
 
-      tracks = [
-        Track.new(:audio, stream_id),
-        Track.new(:video, stream_id),
-        Track.new(:video, Track.stream_id(), id: screensharing_id)
-      ]
+      tracks = new_tracks(peer_type)
 
       endpoint = {:endpoint, peer_pid}
 
@@ -79,27 +84,15 @@ defmodule VideoRoom.Pipeline do
 
       children = %{
         endpoint => %EndpointBin{
-          outbound_tracks: Map.values(state.tracks),
+          # screensharing type should not receive any streams
+          outbound_tracks: if(peer_type == :participant, do: Map.values(state.tracks), else: []),
           inbound_tracks: tracks,
           stun_servers: stun_servers,
           turn_servers: turn_servers
         }
       }
 
-      links =
-        flat_map_children(ctx, fn
-          {:tee, track_id} = tee ->
-            [
-              link(tee)
-              |> via_in(Pad.ref(:input, track_id),
-                options: [encoding: state.tracks[track_id].encoding]
-              )
-              |> to(endpoint)
-            ]
-
-          _child ->
-            []
-        end)
+      links = new_peer_links(peer_type, endpoint, ctx, state)
 
       tracks_msgs =
         flat_map_children(ctx, fn
@@ -113,7 +106,12 @@ defmodule VideoRoom.Pipeline do
       spec = %ParentSpec{children: children, links: links}
 
       state =
-        %{state | tracks: tracks |> Map.new(&{&1.id, &1}) |> Map.merge(state.tracks)}
+        %{
+          state
+          | active_screensharing:
+              if(peer_type == :screensharing, do: peer_pid, else: state.active_screensharing),
+            tracks: tracks |> Map.new(&{&1.id, &1}) |> Map.merge(state.tracks)
+        }
         |> put_in([:endpoints_tracks_ids, peer_pid], Enum.map(tracks, & &1.id))
 
       {{:ok, [spec: spec] ++ tracks_msgs}, state}
@@ -123,48 +121,6 @@ defmodule VideoRoom.Pipeline do
   @impl true
   def handle_other({:signal, peer_pid, msg}, _ctx, state) do
     {{:ok, forward: {{:endpoint, peer_pid}, {:signal, msg}}}, state}
-  end
-
-  def handle_other({:start_screensharing, peer, ref}, _ctx, %{active_screensharing: nil} = state) do
-    track_id =
-      state.endpoints_tracks_ids[peer]
-      |> Enum.find(&match?("SCREEN:" <> _, &1))
-
-    track = state.tracks[track_id]
-
-    send(peer, {:start_screensharing, track.id, ref})
-
-    {:ok, %{state | active_screensharing: {peer, track}}}
-  end
-
-  def handle_other({:start_screensharing, peer, ref}, _ctx, state) do
-    send(peer, {:start_screensharing, :already_active, ref})
-    {:ok, state}
-  end
-
-  def handle_other(
-        {:stop_screensharing, peer, ref},
-        _ctx,
-        %{active_screensharing: {peer, track}} = state
-      ) do
-    send(peer, {:stop_screensharing, track.id, ref})
-
-    {:ok, %{state | active_screensharing: nil}}
-  end
-
-  def handle_other({:connected, peer}, _ctx, state) do
-    payload =
-      case state.active_screensharing do
-        {_other_peer, track} ->
-          %{active_screensharing: track.id}
-
-        _ ->
-          %{}
-      end
-
-    send(peer, {:connected, payload})
-
-    {:ok, state}
   end
 
   def handle_other({:remove_peer, peer_pid}, ctx, state) do
@@ -251,14 +207,11 @@ defmodule VideoRoom.Pipeline do
             []
         end)
 
-      # cleanup screensharing if peer has one and did not stop it
       state =
-        case state.active_screensharing do
-          {^peer_pid, _track} ->
-            %{state | active_screensharing: nil}
-
-          _ ->
-            state
+        if state.active_screensharing == peer_pid do
+          %{state | active_screensharing: nil}
+        else
+          state
         end
 
       {:present, [remove_child: children] ++ tracks_msgs, state}
@@ -274,6 +227,38 @@ defmodule VideoRoom.Pipeline do
 
   defp flat_map_children(ctx, fun) do
     ctx.children |> Map.keys() |> Enum.flat_map(fun)
+  end
+
+  defp new_tracks(:participant) do
+    stream_id = Track.stream_id()
+    [Track.new(:audio, stream_id), Track.new(:video, stream_id)]
+  end
+
+  defp new_tracks(:screensharing) do
+    screensharing_id =
+      "SCREEN:#{Base.encode16(:crypto.strong_rand_bytes(8))}" |> String.slice(0, 16)
+
+    [Track.new(:video, Track.stream_id(), id: screensharing_id)]
+  end
+
+  defp new_peer_links(:participant, endpoint, ctx, state) do
+    flat_map_children(ctx, fn
+      {:tee, track_id} = tee ->
+        [
+          link(tee)
+          |> via_in(Pad.ref(:input, track_id),
+            options: [encoding: state.tracks[track_id].encoding]
+          )
+          |> to(endpoint)
+        ]
+
+      _child ->
+        []
+    end)
+  end
+
+  defp new_peer_links(:screensharing, _, _, _) do
+    []
   end
 
   defp parse_stun_servers(""), do: []

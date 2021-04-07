@@ -83,8 +83,18 @@ const setup = async () => {
     });
 
     setupRoomUI({
-      onLocalScreensharingStart: () => startLocalScreensharing(socket),
-      onLocalScreensharingStop: stopLocalScreensharing,
+      state: {
+        onLocalScreensharingStart: () => startLocalScreensharing(socket),
+        onLocalScreensharingStop: stopLocalScreensharing,
+        onToggleAudio: () =>
+          localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled)),
+        onToggleVideo: () =>
+          localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled)),
+        isLocalScreenSharingActive: false,
+        isScreenSharingActive: false,
+      },
+      muteAudio: false,
+      muteVideo: false,
     });
 
     webrtc.start();

@@ -2,12 +2,29 @@
     <a href="/">
         <h2>Membrane WebRTC video room demo</h2>
     </a>
-    <h3>Room: <%= @room_id %></h3>
-    <div id="screensharing" class="Screensharing"></div>
-    <div id="videochat" class="VideoChat"> </div>
-    <div id="videochat-error" class="VideoChatError"> </div>
+    <h3 class="roomName">Room: <%= @room_id %></h3>
+    <div id="videochat-error" class="VideoChatError" style="display: none;"> </div>
+    <div id="videochat" class="VideoChat">
+        <div id="screensharing" class="Screensharing"></div>
+        <div id="videos-grid" class="grid-1"></div>
+    </div>
+
+    <script src="<%= static_path(@conn, "/js/room.js") %>"></script>
+</div>
+<div id="media-controls", class="MediaControls">
+    <div id="video-on" class="ControlIcon" style="display: none;">
+        <%= PhoenixInlineSvg.Helpers.svg_image(@conn, "video-on") %>
+    </div>
+    <div id="video-off" class="ControlIcon" style="display: none;">
+        <%= PhoenixInlineSvg.Helpers.svg_image(@conn, "video-off") %>
+    </div>
+    <div id="mic-on" class="ControlIcon" style="display: none;">
+        <%= PhoenixInlineSvg.Helpers.svg_image(@conn, "mic-on") %>
+    </div>
+    <div id="mic-off" class="ControlIcon" style="display: none;">
+        <%= PhoenixInlineSvg.Helpers.svg_image(@conn, "mic-off") %>
+    </div>
     <div class="StartScreensharing">
         <button style="display: none;" id="toggle-screensharing"></button>
     </div>
-    <script src="<%= static_path(@conn, "/js/room.js") %>"></script>
 </div>

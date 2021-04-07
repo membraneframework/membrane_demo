@@ -1,30 +1,37 @@
-import { MembraneWebRTC } from "./membraneWebRTC";
-
 interface State {
   isScreenSharingActive: boolean;
   isLocalScreenSharingActive: boolean;
   onLocalScreensharingStart?: () => void;
   onLocalScreensharingStop?: () => void;
+  onToggleAudio?: () => void;
+  onToggleVideo?: () => void;
 }
-
 let state: State = {
   isScreenSharingActive: false,
   isLocalScreenSharingActive: false,
   onLocalScreensharingStart: undefined,
+  onLocalScreensharingStop: undefined,
+  onToggleAudio: undefined,
+  onToggleVideo: undefined,
 };
 
-interface Setup {
-  onLocalScreensharingStart?: () => void;
-  onLocalScreensharingStop?: () => void;
+interface SetupOptions {
+  state?: State;
+  muteAudio?: boolean;
+  muteVideo?: boolean;
 }
 
-export function setupRoomUI(setup: Setup) {
+export function setupRoomUI({
+  muteAudio = false,
+  muteVideo = false,
+  state: newState,
+}: SetupOptions) {
   state = {
-    ...setup,
-    isScreenSharingActive: false,
-    isLocalScreenSharingActive: false,
+    ...state,
+    ...newState,
   };
   updateScreensharingToggleButton(true, "start");
+  setupMediaControls(muteAudio, muteVideo);
 }
 
 export function setLocalScreenSharingStatus(active: boolean) {
@@ -45,7 +52,10 @@ export function addVideoElement(
   if (!video) {
     video = document.createElement("video");
     video.id = stream.id;
-    document.getElementById("videochat")!.appendChild(video);
+    const grid = document.getElementById("videos-grid")!;
+    grid.appendChild(video);
+
+    grid.className = `grid-${Math.min(2, grid.childNodes.length)}`;
   }
   video.srcObject = stream;
   video.autoplay = true;
@@ -59,6 +69,9 @@ export function removeVideoElement(_: MediaStreamTrack, stream: MediaStream) {
   }
 
   document.getElementById(stream.id)?.remove();
+
+  const grid = document.getElementById("videos-grid")!;
+  grid.className = `grid-${Math.min(2, grid.childNodes.length)}`;
 }
 
 export function setScreensharing(stream: MediaStream) {
@@ -87,6 +100,10 @@ export function setScreensharing(stream: MediaStream) {
   video.autoplay = true;
   video.playsInline = true;
   screensharing.append(video);
+
+  document
+    .getElementById("videochat")!
+    .classList.add("VideoChat-screensharing");
 }
 
 export function removeScreensharing() {
@@ -98,6 +115,9 @@ export function removeScreensharing() {
   state.isScreenSharingActive = false;
 
   updateScreensharingToggleButton(true, "start");
+  document
+    .getElementById("videochat")!
+    .classList.remove("VideoChat-screensharing");
 }
 
 export function setErrorMessage(
@@ -106,6 +126,7 @@ export function setErrorMessage(
   const errorContainer = document.getElementById("videochat-error");
   if (errorContainer) {
     errorContainer.innerHTML = message;
+    errorContainer.style.display = "block";
   }
 }
 
@@ -126,4 +147,55 @@ function updateScreensharingToggleButton(
   toggleButton.innerText =
     label === "start" ? "Start screensharing" : "Stop screensharing";
   toggleButton.style.display = visible ? "block" : "none";
+}
+
+export function toggleControl(control: "mic" | "video") {
+  const mute = document.getElementById(`${control}-on`)! as HTMLDivElement;
+  const unmute = document.getElementById(`${control}-off`)! as HTMLDivElement;
+
+  if (mute.style.display === "none") {
+    mute.style.display = "block";
+    unmute.style.display = "none";
+  } else {
+    mute.style.display = "none";
+    unmute.style.display = "block";
+  }
+}
+
+function setupMediaControls(muteAudio: boolean, muteVideo: boolean) {
+  const muteAudioEl = document.getElementById("mic-on")! as HTMLDivElement;
+  const unmuteAudioEl = document.getElementById("mic-off")! as HTMLDivElement;
+
+  const toggleAudio = () => {
+    state.onToggleAudio?.();
+    toggleControl("mic");
+  };
+  const toggleVideo = () => {
+    state.onToggleVideo?.();
+    toggleControl("video");
+  };
+
+  muteAudioEl.onclick = toggleAudio;
+  unmuteAudioEl.onclick = toggleAudio;
+
+  const muteVideoEl = document.getElementById("video-on")! as HTMLDivElement;
+  const unmuteVideoEl = document.getElementById("video-off")! as HTMLDivElement;
+  muteVideoEl.onclick = toggleVideo;
+  unmuteVideoEl.onclick = toggleVideo;
+
+  if (muteAudio) {
+    muteAudioEl.style.display = "none";
+    unmuteAudioEl.style.display = "block";
+  } else {
+    muteAudioEl.style.display = "block";
+    unmuteAudioEl.style.display = "none";
+  }
+
+  if (muteVideo) {
+    muteVideoEl.style.display = "none";
+    unmuteVideoEl.style.display = "block";
+  } else {
+    muteVideoEl.style.display = "block";
+    unmuteVideoEl.style.display = "none";
+  }
 }

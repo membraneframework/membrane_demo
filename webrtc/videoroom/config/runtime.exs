@@ -7,7 +7,6 @@ config :membrane_videoroom_demo,
   turn_servers: System.get_env("TURN_SERVERS", "")
 
 protocol = if System.get_env("USE_TLS") == "true", do: :https, else: :http
-default_port = if protocol == :https, do: "8443", else: "8080"
 
 get_env = fn env, default ->
   if config_env() == :prod do
@@ -17,8 +16,8 @@ get_env = fn env, default ->
   end
 end
 
-host = get_env.("HOST", "localhost")
-port = get_env.("PORT", default_port) |> String.to_integer()
+host = get_env.("VIRTUAL_HOST", "localhost")
+port = 4000
 
 args =
   if protocol == :https do

@@ -39,10 +39,13 @@ const startLocalScreensharing = async (socket: Socket) => {
       SCREENSHARING_CONSTRAINTS
     );
 
-    screensharing = new MembraneWebRTC(socket, getRoomId(), "screensharing", {
-      onConnectionError: (message) => {
-        console.error(message);
-        cleanLocalScreensharing();
+    screensharing = new MembraneWebRTC(socket, getRoomId(), {
+      type: "screensharing",
+      callbacks: {
+        onConnectionError: (message) => {
+          console.error(message);
+          cleanLocalScreensharing();
+        },
       },
     });
 
@@ -70,12 +73,24 @@ const setup = async () => {
     const socket = new Socket("/socket");
     socket.connect();
 
-    const webrtc = new MembraneWebRTC(socket, getRoomId(), "participant", {
-      onAddTrack: addVideoElement,
-      onRemoveTrack: removeVideoElement,
-      onConnectionError: setErrorMessage,
-      onScreensharingStart: setScreensharing,
-      onScreensharingEnd: removeScreensharing,
+    const webrtc = new MembraneWebRTC(socket, getRoomId(), {
+      callbacks: {
+        onAddTrack: ({ track, stream, isScreenSharing }) => {
+          if (isScreenSharing) {
+            setScreensharing(stream);
+          } else {
+            addVideoElement(track, stream, false);
+          }
+        },
+        onRemoveTrack: ({ track, stream, isScreenSharing }) => {
+          if (isScreenSharing) {
+            removeScreensharing();
+          } else {
+            removeVideoElement(track, stream);
+          }
+        },
+        onConnectionError: setErrorMessage,
+      },
     });
 
     const localStream = await navigator.mediaDevices.getUserMedia(

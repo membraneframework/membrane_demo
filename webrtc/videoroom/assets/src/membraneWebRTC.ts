@@ -19,12 +19,22 @@ interface CandidateData {
   data: RTCIceCandidateInit;
 }
 
+interface TrackContext {
+  track: MediaStreamTrack;
+  stream: MediaStream;
+  isScreenSharing: boolean;
+}
+
 interface Callbacks {
-  onAddTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
-  onRemoveTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
-  onScreensharingStart?: (stream: MediaStream) => void;
-  onScreensharingEnd?: () => void;
+  onAddTrack?: (ctx: TrackContext) => void;
+  onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
+}
+
+interface MembraneWebRTCConfig {
+  callbacks?: Callbacks;
+  rtcConfig?: RTCConfiguration;
+  type?: "participant" | "screensharing";
 }
 
 export class MembraneWebRTC {
@@ -37,7 +47,7 @@ export class MembraneWebRTC {
   private localStream?: MediaStream;
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
   private connection?: RTCPeerConnection;
-  private readonly rtc_config: RTCConfiguration = {
+  private readonly rtcConfig: RTCConfiguration = {
     iceServers: [
       {
         urls: "stun:stun.l.google.com:19302",
@@ -58,13 +68,9 @@ export class MembraneWebRTC {
     this._channel = ch;
   }
 
-  constructor(
-    socket: Socket,
-    roomId: string,
-    type: "participant" | "screensharing",
-    callbacks?: Callbacks,
-    config?: RTCConfiguration
-  ) {
+  constructor(socket: Socket, roomId: string, config: MembraneWebRTCConfig) {
+    const { type = "participant", callbacks, rtcConfig } = config;
+
     this.socket = socket;
     this.channelId =
       type === "participant"
@@ -72,7 +78,7 @@ export class MembraneWebRTC {
         : `room:screensharing:${roomId}`;
 
     this.callbacks = callbacks || {};
-    this.rtc_config = config || this.rtc_config;
+    this.rtcConfig = rtcConfig || this.rtcConfig;
 
     const handleError = () => {
       this.callbacks.onConnectionError?.(DEFAULT_ERROR_MESSAGE);
@@ -123,7 +129,7 @@ export class MembraneWebRTC {
 
   private onOffer = async (offer: OfferData) => {
     if (!this.connection) {
-      this.connection = new RTCPeerConnection(this.rtc_config);
+      this.connection = new RTCPeerConnection(this.rtcConfig);
       this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
       this.localTracks.forEach((track) =>
@@ -182,18 +188,18 @@ export class MembraneWebRTC {
           stream.onremovetrack = null;
         }
 
-        if (isScreenSharing) {
-          this.callbacks?.onScreensharingEnd?.();
-        } else {
-          this.callbacks.onRemoveTrack?.(event.track, stream);
-        }
+        this.callbacks.onRemoveTrack?.({
+          track: event.track,
+          stream,
+          isScreenSharing,
+        });
       };
 
-      if (isScreenSharing) {
-        this.callbacks.onScreensharingStart?.(stream);
-      } else {
-        this.callbacks.onAddTrack?.(event.track, stream);
-      }
+      this.callbacks.onAddTrack?.({
+        track: event.track,
+        stream: stream,
+        isScreenSharing,
+      });
     };
   };
 }

@@ -180,6 +180,11 @@ defmodule VideoRoom.Pipeline do
     {:ok, state}
   end
 
+  def handle_notification({:vad, _val} = msg, from, _ctx, state) do
+    Membrane.Logger.debug("#{inspect(msg)}, from: #{inspect(from)}")
+    {:ok, state}
+  end
+
   defp maybe_remove_peer(peer_pid, ctx, state) do
     endpoint = ctx.children[{:endpoint, peer_pid}]
 

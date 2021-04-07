@@ -1,7 +1,15 @@
-import { Channel, Socket } from "phoenix";
+import { Channel, Push, Socket } from "phoenix";
 
 const DEFAULT_ERROR_MESSAGE =
   "Cannot connect to the server, try again by refreshing the page";
+
+const phoenix_channel_push_result = async (push: Push): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    push
+      .receive("ok", (response: any) => resolve(response))
+      .receive("error", (response: any) => reject(response));
+  });
+};
 
 interface OfferData {
   data: RTCSessionDescriptionInit;
@@ -11,21 +19,35 @@ interface CandidateData {
   data: RTCIceCandidateInit;
 }
 
+interface TrackContext {
+  track: MediaStreamTrack;
+  stream: MediaStream;
+  isScreenSharing: boolean;
+}
+
 interface Callbacks {
-  onAddTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
-  onRemoveTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
+  onAddTrack?: (ctx: TrackContext) => void;
+  onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
+}
+
+interface MembraneWebRTCConfig {
+  callbacks?: Callbacks;
+  rtcConfig?: RTCConfiguration;
+  type?: "participant" | "screensharing";
 }
 
 export class MembraneWebRTC {
   private readonly socket: Socket;
   private _channel?: Channel;
   private channelId: string;
+  private socketRefs: string[] = [];
 
   private localTracks: Set<MediaStreamTrack> = new Set<MediaStreamTrack>();
+  private localStream?: MediaStream;
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
   private connection?: RTCPeerConnection;
-  private readonly rtc_config: RTCConfiguration = {
+  private readonly rtcConfig: RTCConfiguration = {
     iceServers: [
       {
         urls: "stun:stun.l.google.com:19302",
@@ -46,24 +68,25 @@ export class MembraneWebRTC {
     this._channel = ch;
   }
 
-  constructor(
-    socket: Socket,
-    channelId: string,
-    callbacks?: Callbacks,
-    config?: RTCConfiguration
-  ) {
+  constructor(socket: Socket, roomId: string, config: MembraneWebRTCConfig) {
+    const { type = "participant", callbacks, rtcConfig } = config;
+
     this.socket = socket;
+    this.channelId =
+      type === "participant"
+        ? `room:${roomId}`
+        : `room:screensharing:${roomId}`;
+
     this.callbacks = callbacks || {};
-    this.channelId = channelId;
-    this.rtc_config = config || this.rtc_config;
+    this.rtcConfig = rtcConfig || this.rtcConfig;
 
     const handleError = () => {
       this.callbacks.onConnectionError?.(DEFAULT_ERROR_MESSAGE);
       this.stop();
     };
 
-    socket.onError(handleError);
-    socket.onClose(handleError);
+    this.socketRefs.push(socket.onError(handleError));
+    this.socketRefs.push(socket.onClose(handleError));
   }
 
   public addTrack = (track: MediaStreamTrack, stream: MediaStream) => {
@@ -73,25 +96,22 @@ export class MembraneWebRTC {
       );
     }
     this.localTracks.add(track);
+    this.localStream = stream;
   };
 
-  public start = () => {
+  public start = async () => {
     this.channel = this.socket.channel(this.channelId, {});
+
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onRemoteCandidate);
+
     this.channel.on("error", (data: any) => {
       this.callbacks.onConnectionError?.(data.error);
       this.stop();
     });
 
-    this.channel
-      .join()
-      .receive("ok", (_: any) => this.channel.push("start", {}))
-      .receive("error", (_: any) =>
-        this.callbacks.onConnectionError?.(
-          "Unable to connect with backend service"
-        )
-      );
+    await phoenix_channel_push_result(this.channel.join());
+    await phoenix_channel_push_result(this.channel.push("start", {}));
   };
 
   public stop = () => {
@@ -102,15 +122,19 @@ export class MembraneWebRTC {
       this.connection.onicecandidate = null;
       this.connection.ontrack = null;
     }
+    this.localTracks.forEach((t) => t.stop());
     this.connection = undefined;
+    this.socket.off(this.socketRefs);
   };
 
   private onOffer = async (offer: OfferData) => {
     if (!this.connection) {
-      this.connection = new RTCPeerConnection(this.rtc_config);
+      this.connection = new RTCPeerConnection(this.rtcConfig);
       this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
-      this.localTracks.forEach((track) => this.connection!.addTrack(track));
+      this.localTracks.forEach((track) =>
+        this.connection!.addTrack(track, this.localStream!)
+      );
     } else {
       this.connection.createOffer({ iceRestart: true });
     }
@@ -151,19 +175,31 @@ export class MembraneWebRTC {
   private onTrack = () => {
     return (event: RTCTrackEvent) => {
       const [stream] = event.streams;
+      this.remoteStreams.add(stream);
+
+      const isScreenSharing =
+        event.transceiver.mid?.includes("SCREEN") || false;
 
       stream.onremovetrack = (event) => {
-        if (stream.getTracks().length === 0) {
-          stream.onremovetrack = null;
+        const hasTracks = stream.getTracks().length > 0;
+
+        if (!hasTracks) {
           this.remoteStreams.delete(stream);
+          stream.onremovetrack = null;
         }
-        this.callbacks.onRemoveTrack?.(event.track, stream);
+
+        this.callbacks.onRemoveTrack?.({
+          track: event.track,
+          stream,
+          isScreenSharing,
+        });
       };
 
-      if (!this.remoteStreams.has(stream)) {
-        this.remoteStreams.add(stream);
-      }
-      this.callbacks.onAddTrack?.(event.track, stream);
+      this.callbacks.onAddTrack?.({
+        track: event.track,
+        stream: stream,
+        isScreenSharing,
+      });
     };
   };
 }

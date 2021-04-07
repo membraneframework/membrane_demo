@@ -4,7 +4,16 @@ defmodule VideoRoomWeb.RoomChannel do
   require Logger
 
   @impl true
-  def join("room:" <> room_id, _message, socket) do
+  def join("room:" <> room_id, _msg, socket) do
+    {room_id, peer_type} =
+      case room_id do
+        "screensharing:" <> id ->
+          {id, :screensharing}
+
+        ^room_id ->
+          {room_id, :participant}
+      end
+
     case VideoRoom.Pipeline.lookup(room_id) do
       nil -> VideoRoom.Pipeline.start(room_id)
       pid -> {:ok, pid}
@@ -12,7 +21,13 @@ defmodule VideoRoomWeb.RoomChannel do
     |> case do
       {:ok, pipeline} ->
         Process.monitor(pipeline)
-        {:ok, assign(socket, %{room_id: room_id, pipeline: pipeline})}
+
+        {:ok,
+         assign(socket, %{
+           room_id: room_id,
+           pipeline: pipeline,
+           peer_type: peer_type
+         })}
 
       {:error, reason} ->
         Logger.error("""
@@ -27,8 +42,10 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_in("start", _msg, socket) do
+    type = socket.assigns.peer_type
+
     socket
-    |> send_to_pipeline({:new_peer, self()})
+    |> send_to_pipeline({:new_peer, self(), type, socket_ref(socket)})
 
     {:noreply, socket}
   end
@@ -68,8 +85,24 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:DOWN, _ref, :process, _monitor, _reason}, socket) do
-    push(socket, "error", %{error: "Room stopped working, consider restarting your connection"})
+  @impl true
+  def handle_info({:new_peer, response, ref}, socket) do
+    case response do
+      :ok ->
+        reply(ref, {:ok, %{}})
+
+      {:error, _reason} = error ->
+        reply(ref, error)
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_info({:DOWN, _ref, :process, _monitor, reason}, socket) do
+    push(socket, "error", %{
+      error: "Room stopped working, consider restarting your connection, #{inspect(reason)}"
+    })
+
     {:noreply, socket}
   end
 

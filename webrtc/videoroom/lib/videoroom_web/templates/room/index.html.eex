@@ -3,9 +3,12 @@
         <h2>Membrane WebRTC video room demo</h2>
     </a>
     <h3 class="roomName">Room: <%= @room_id %></h3>
+    <div id="videochat-error" class="VideoChatError" style="display: none;"> </div>
     <div id="videochat" class="VideoChat">
-        <div id="videochat-error" class="VideoChatError"> </div>
-        <div id="videos-grid" class="grid-1"></div>
+        <div id="screensharing" class="Screensharing" style="display: none;"></div>
+        <div class="VideoGridContainer">
+            <div id="videos-grid" class="grid-1"></div>
+        </div>
     </div>
 
     <script src="<%= static_path(@conn, "/js/room.js") %>"></script>
@@ -22,5 +25,8 @@
     </div>
     <div id="mic-off" class="ControlIcon" style="display: none;">
         <%= PhoenixInlineSvg.Helpers.svg_image(@conn, "mic-off") %>
+    </div>
+    <div class="StartScreensharing">
+        <button style="display: none;" id="toggle-screensharing"></button>
     </div>
 </div>

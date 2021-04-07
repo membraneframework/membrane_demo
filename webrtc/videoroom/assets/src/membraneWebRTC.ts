@@ -3,18 +3,6 @@ import { Channel, Push, Socket } from "phoenix";
 const DEFAULT_ERROR_MESSAGE =
   "Cannot connect to the server, try again by refreshing the page";
 
-declare global {
-  interface HTMLCanvasElement {
-    captureStream: (frames: number) => MediaStream;
-  }
-
-  interface MediaDevices {
-    getDisplayMedia: (
-      constraints: MediaStreamConstraints
-    ) => Promise<MediaStream>;
-  }
-}
-
 const phoenix_channel_push_result = async (push: Push): Promise<any> => {
   return new Promise((resolve, reject) => {
     push
@@ -34,7 +22,7 @@ interface CandidateData {
 interface Callbacks {
   onAddTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
   onRemoveTrack?: (track: MediaStreamTrack, stream: MediaStream) => void;
-  onScreensharingStart?: (stream: MediaStream, isLocal: boolean) => void;
+  onScreensharingStart?: (stream: MediaStream) => void;
   onScreensharingEnd?: () => void;
   onConnectionError?: (message: string) => void;
 }
@@ -72,12 +60,16 @@ export class MembraneWebRTC {
 
   constructor(
     socket: Socket,
-    channelId: string,
+    roomId: string,
+    type: "participant" | "screensharing",
     callbacks?: Callbacks,
     config?: RTCConfiguration
   ) {
     this.socket = socket;
-    this.channelId = channelId;
+    this.channelId =
+      type === "participant"
+        ? `room:${roomId}`
+        : `room:screensharing:${roomId}`;
 
     this.callbacks = callbacks || {};
     this.rtc_config = config || this.rtc_config;
@@ -198,7 +190,7 @@ export class MembraneWebRTC {
       };
 
       if (isScreenSharing) {
-        this.callbacks.onScreensharingStart?.(stream, false);
+        this.callbacks.onScreensharingStart?.(stream);
       } else {
         this.callbacks.onAddTrack?.(event.track, stream);
       }

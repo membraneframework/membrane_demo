@@ -5,13 +5,13 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def join("room:" <> room_id, _msg, socket) do
-    {room_id, is_screensharing} =
+    {room_id, peer_type} =
       case room_id do
         "screensharing:" <> id ->
-          {id, true}
+          {id, :screensharing}
 
         ^room_id ->
-          {room_id, false}
+          {room_id, :participant}
       end
 
     case VideoRoom.Pipeline.lookup(room_id) do
@@ -26,7 +26,7 @@ defmodule VideoRoomWeb.RoomChannel do
          assign(socket, %{
            room_id: room_id,
            pipeline: pipeline,
-           is_screensharing: is_screensharing
+           peer_type: peer_type
          })}
 
       {:error, reason} ->
@@ -42,7 +42,7 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_in("start", _msg, socket) do
-    type = if socket.assigns.is_screensharing, do: :screensharing, else: :participant
+    type = socket.assigns.peer_type
 
     socket
     |> send_to_pipeline({:new_peer, self(), type, socket_ref(socket)})

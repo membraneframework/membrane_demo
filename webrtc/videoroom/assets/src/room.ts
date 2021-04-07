@@ -15,6 +15,14 @@ import {
 import { MembraneWebRTC } from "./membraneWebRTC";
 import { Socket } from "phoenix";
 
+declare global {
+  interface MediaDevices {
+    getDisplayMedia: (
+      constraints: MediaStreamConstraints
+    ) => Promise<MediaStream>;
+  }
+}
+
 let screensharing: MembraneWebRTC | undefined;
 
 const cleanLocalScreensharing = () => {
@@ -31,16 +39,12 @@ const startLocalScreensharing = async (socket: Socket) => {
       SCREENSHARING_CONSTRAINTS
     );
 
-    screensharing = new MembraneWebRTC(
-      socket,
-      `room:screensharing:${getRoomId()}`,
-      {
-        onConnectionError: (message) => {
-          console.error(message);
-          cleanLocalScreensharing();
-        },
-      }
-    );
+    screensharing = new MembraneWebRTC(socket, getRoomId(), "screensharing", {
+      onConnectionError: (message) => {
+        console.error(message);
+        cleanLocalScreensharing();
+      },
+    });
 
     screenStream.getTracks().forEach((t) => {
       screensharing?.addTrack(t, screenStream);
@@ -66,7 +70,7 @@ const setup = async () => {
     const socket = new Socket("/socket");
     socket.connect();
 
-    const webrtc = new MembraneWebRTC(socket, `room:${getRoomId()}`, {
+    const webrtc = new MembraneWebRTC(socket, getRoomId(), "participant", {
       onAddTrack: addVideoElement,
       onRemoveTrack: removeVideoElement,
       onConnectionError: setErrorMessage,

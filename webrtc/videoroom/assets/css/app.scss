@@ -63,6 +63,11 @@ $media-controls-height: 80px;
     border-color: #383838;
     border-style: solid;
     border-width: 1px;
+    object-fit: fill;
+  }
+
+  #videos-grid {
+    margin: 0.5 * $space;
   }
 
   .grid-1 {

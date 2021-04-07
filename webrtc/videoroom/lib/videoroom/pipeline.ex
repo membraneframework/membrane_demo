@@ -96,7 +96,8 @@ defmodule VideoRoom.Pipeline do
 
       tracks_msgs =
         flat_map_children(ctx, fn
-          {:endpoint, _peer_pid} = endpoint ->
+          {:endpoint, other_peer_pid} = endpoint
+          when other_peer_pid != state.active_screensharing ->
             [forward: {endpoint, {:add_tracks, tracks}}]
 
           _child ->
@@ -157,7 +158,8 @@ defmodule VideoRoom.Pipeline do
     links =
       [link(endpoint) |> via_out(Pad.ref(:output, track_id)) |> to(tee) |> to(fake)] ++
         flat_map_children(ctx, fn
-          {:endpoint, _id} = other_endpoint when endpoint != other_endpoint ->
+          {:endpoint, peer_pid} = other_endpoint
+          when endpoint != other_endpoint and peer_pid != state.active_screensharing ->
             [
               link(tee)
               |> via_in(Pad.ref(:input, track_id), options: [encoding: encoding])
@@ -257,7 +259,7 @@ defmodule VideoRoom.Pipeline do
     end)
   end
 
-  defp new_peer_links(:screensharing, _, _, _) do
+  defp new_peer_links(:screensharing, _endpoint, _ctx, _state) do
     []
   end
 

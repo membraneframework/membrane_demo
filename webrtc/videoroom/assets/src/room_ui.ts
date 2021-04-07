@@ -38,7 +38,7 @@ export function setLocalScreenSharingStatus(active: boolean) {
   state.isLocalScreenSharingActive = active;
 }
 
-export function getRoomId(): String {
+export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 

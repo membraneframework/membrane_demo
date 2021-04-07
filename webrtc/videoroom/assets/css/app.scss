@@ -22,6 +22,8 @@ h3 {
   line-height: 1.2;
 }
 
+$max-screensharing-height: "100vh - 90px - 80px - 20px";
+
 @mixin dark-button {
   position: relative;
   display: block;
@@ -95,19 +97,9 @@ $media-controls-height: 80px;
 }
 
 .VideoChat-screensharing {
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: 4fr 2fr;
   align-items: flex-start;
-
-  .Screensharing {
-    flex: 2;
-  }
-
-  .grid-1,
-  .grid-2 {
-    width: 100%;
-    grid-template-columns: 1fr;
-    flex: 3;
-  }
 
   .grid-1 {
     video {
@@ -115,11 +107,20 @@ $media-controls-height: 80px;
     }
   }
 
+  .grid-1,
+  .grid-2 {
+    width: 100%;
+    grid-template-columns: 1fr;
+    max-height: calc(#{$max-screensharing-height});
+    grid-auto-rows: minmax(min-content, max-content);
+  }
+
   .VideoGridContainer {
     height: 100%;
   }
 
-  @media only screen and (min-width: 1200px) {
+  @media only screen and (min-width: 1600px) {
+    grid-template-columns: 3fr 2fr;
     .grid-2 {
       grid-template-columns: 1fr 1fr;
     }
@@ -233,8 +234,7 @@ $media-controls-height: 80px;
   video {
     border-radius: 5px;
     border: none;
-    max-height: calc(100vh - 200px);
-    width: auto;
+    max-height: calc(#{$max-screensharing-height});
   }
 }
 

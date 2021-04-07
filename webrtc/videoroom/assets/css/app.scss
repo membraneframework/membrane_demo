@@ -70,6 +70,12 @@ $media-controls-height: 80px;
     margin: 0.5 * $space;
   }
 
+  .VideoGridContainer {
+    display: flex;
+    justify-content: center;
+    overflow-y: auto;
+  }
+
   .grid-1 {
     display: grid;
     justify-content: center;
@@ -77,6 +83,7 @@ $media-controls-height: 80px;
     width: 100%;
     video {
       max-height: calc(100vh - #{$media-controls-height} - 150px);
+      width: auto;
     }
   }
 
@@ -90,13 +97,36 @@ $media-controls-height: 80px;
 
 .VideoChat-screensharing {
   flex-direction: row;
+  align-items: flex-start;
 
   .Screensharing {
     flex: 2;
   }
+
   .grid-1,
   .grid-2 {
-    flex: 1;
+    width: 100%;
+    grid-template-columns: 1fr;
+    flex: 3;
+  }
+
+  .grid-1 {
+    video {
+      width: 100%;
+    }
+  }
+
+  .VideoGridContainer {
+    height: 100%;
+  }
+
+  @media only screen and (min-width: 1200px) {
+    .grid-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+    .VideoGridContainer {
+      height: inherit;
+    }
   }
 }
 
@@ -200,6 +230,7 @@ $media-controls-height: 80px;
   justify-content: center;
   align-items: center;
   margin-right: $space;
+  flex: 5;
   video {
     border-radius: 5px;
     border: none;

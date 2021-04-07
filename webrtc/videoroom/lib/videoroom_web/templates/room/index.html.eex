@@ -5,8 +5,10 @@
     <h3 class="roomName">Room: <%= @room_id %></h3>
     <div id="videochat-error" class="VideoChatError" style="display: none;"> </div>
     <div id="videochat" class="VideoChat">
-        <div id="screensharing" class="Screensharing"></div>
-        <div id="videos-grid" class="grid-1"></div>
+        <div id="screensharing" class="Screensharing" style="display: none;"></div>
+        <div class="VideoGridContainer">
+            <div id="videos-grid" class="grid-1"></div>
+        </div>
     </div>
 
     <script src="<%= static_path(@conn, "/js/room.js") %>"></script>

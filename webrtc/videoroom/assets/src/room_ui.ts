@@ -93,6 +93,7 @@ export function setScreensharing(stream: MediaStream) {
     "screensharing"
   )! as HTMLDivElement;
   screensharing.innerHTML = "";
+  screensharing.style.display = "flex";
 
   const video = document.createElement("video");
   video.id = stream.id;
@@ -111,6 +112,7 @@ export function removeScreensharing() {
     "screensharing"
   )! as HTMLDivElement;
   screensharing.innerHTML = "";
+  screensharing.style.display = "none";
 
   state.isScreenSharingActive = false;
 

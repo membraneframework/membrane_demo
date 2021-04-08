@@ -88,7 +88,13 @@ defmodule VideoRoom.Pipeline do
           outbound_tracks: if(peer_type == :participant, do: Map.values(state.tracks), else: []),
           inbound_tracks: tracks,
           stun_servers: stun_servers,
-          turn_servers: turn_servers
+          turn_servers: turn_servers,
+          handshake_opts: [
+            client_mode: false,
+            dtls_srtp: true,
+            pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
+            cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
+          ]
         }
       }
 

@@ -1,4 +1,4 @@
-name: WebRTC Videoroom Build and Deploy
+name: WebRTC Videoroom - Tag Build and Deploy
 on:
   push:
     tags: 

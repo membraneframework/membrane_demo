@@ -1,4 +1,4 @@
-name: WebRTC Videoroom Build on Main
+name: WebRTC Videoroom - Master Build
 on:
   push:
     branches: 

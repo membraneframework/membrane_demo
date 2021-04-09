@@ -52,6 +52,36 @@ mix phx.server
 
 Then, go to <http://localhost:4000/>.
 
+### Run with docker
+
+Videoroom demo provides a `Dockerfile` that you can use to build run videoroom application yourself without any additional setup and dependencies.
+
+#### To run:
+
+First copy `.env.example` with necessary environmental variables:
+
+```bash
+cp .env.example .env
+```
+
+**IMPORTANT**
+If you intend to use TLS remember that setting paths in `.env` file is not enough.
+Those paths will be used inside docker container therefore besides setting env variables you will need to mount those paths
+to docker container yourself. 
+
+Then you can run videoroom with membrane's latest image:
+```bash
+docker run -p 4000:4000 --env-file .env membraneframework/demo_webrtc_videoroom:latest
+```
+
+Or build and run docker image from source:
+```bash
+docker build  -t membrane_videoroom .
+docker run -p 4000:4000 --env-file .env membrane_videoroom 
+```
+
+Application is once again available at <http://localhost:4000/>.
+
 ## Copyright and License
 
 Copyright 2020, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)

@@ -50,7 +50,6 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  @impl true
   def handle_in("answer", %{"data" => %{"sdp" => sdp}}, socket) do
     socket
     |> send_to_pipeline({:signal, self(), {:sdp_answer, sdp}})
@@ -58,7 +57,6 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  @impl true
   def handle_in("candidate", %{"data" => %{"candidate" => candidate}}, socket) do
     socket
     |> send_to_pipeline({:signal, self(), {:candidate, candidate}})
@@ -66,23 +64,10 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  @impl true
   def handle_in("stop", _msg, socket) do
     socket
     |> send_to_pipeline({:remove_peer, self()})
 
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_in("mute-microphone", msg, socket) do
-    Logger.info("Got mute-microphone: #{inspect(msg)}")
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_in(other, msg, socket) do
-    Logger.warn("Got unexpected messgae #{inspect(other)}: #{inspect(msg)}")
     {:noreply, socket}
   end
 

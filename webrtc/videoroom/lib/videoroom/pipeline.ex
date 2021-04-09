@@ -48,13 +48,14 @@ defmodule VideoRoom.Pipeline do
     play(self())
 
     Process.send_after(self(), :check_if_empty, @empty_room_timeout)
+
     {:ok,
-      %{
-        room_id: room_id,
-        endpoints: %{},
-        track_manager: TrackManager.new(max_display_num: 1),
-        active_screensharing: nil
-      }}
+     %{
+       room_id: room_id,
+       endpoints: %{},
+       track_manager: TrackManager.new(max_display_num: 1),
+       active_screensharing: nil
+     }}
   end
 
   @impl true
@@ -92,7 +93,8 @@ defmodule VideoRoom.Pipeline do
       children = %{
         endpoint_bin => %EndpointBin{
           # screensharing type should not receive any streams
-          outbound_tracks: if(peer_type == :participant, do: get_all_tracks(state.endpoints), else: []),
+          outbound_tracks:
+            if(peer_type == :participant, do: get_all_tracks(state.endpoints), else: []),
           inbound_tracks: tracks,
           stun_servers: stun_servers,
           turn_servers: turn_servers,
@@ -119,7 +121,12 @@ defmodule VideoRoom.Pipeline do
 
       spec = %ParentSpec{children: children, links: links}
 
-      state = %{state | active_screensharing: if(peer_type == :screensharing, do: peer_pid, else: state.active_screensharing)}
+      state = %{
+        state
+        | active_screensharing:
+            if(peer_type == :screensharing, do: peer_pid, else: state.active_screensharing)
+      }
+
       state = put_in(state.endpoints[peer_pid], endpoint)
       {{:ok, [spec: spec] ++ tracks_msgs}, state}
     end
@@ -155,21 +162,10 @@ defmodule VideoRoom.Pipeline do
   end
 
   @impl true
-  def handle_notification({:new_track, track_id, encoding}, endpoint, ctx, state) do
-    Membrane.Logger.info("New incoming #{encoding} track")
-    {:endpoint, endpoint_id} = endpoint
-
-    {track_enabled, state} =
-      if encoding != :OPUS do
-        case TrackManager.add_track(state.track_manager, endpoint_id) do
-          {:ok, track_manager} -> {false, %{state | track_manager: track_manager}}
-          {{:send_track, _id}, track_manager} -> {true, %{state | track_manager: track_manager}}
-        end
-      else
-        # voice is always active
-        {true, state}
-      end
-
+  def handle_notification({:new_track, track_id, encoding}, endpoint_bin, ctx, state) do
+    Membrane.Logger.info("New incoming #{encoding} track #{track_id}")
+    {:endpoint, endpoint_id} = endpoint_bin
+    {track_enabled, state} = enable_track?(encoding, track_id, endpoint_id, state)
     tee = {:tee, {endpoint_id, track_id}}
     fake = {:fake, {endpoint_id, track_id}}
 
@@ -180,14 +176,14 @@ defmodule VideoRoom.Pipeline do
 
     links =
       [
-        link(endpoint)
+        link(endpoint_bin)
         |> via_out(Pad.ref(:output, track_id), options: [track_enabled: track_enabled])
         |> to(tee)
         |> to(fake)
       ] ++
         flat_map_children(ctx, fn
           {:endpoint, peer_pid} = other_endpoint
-          when endpoint != other_endpoint and peer_pid != state.active_screensharing ->
+          when endpoint_bin != other_endpoint and peer_pid != state.active_screensharing ->
             [
               link(tee)
               |> via_in(Pad.ref(:input, track_id), options: [encoding: encoding])
@@ -211,7 +207,6 @@ defmodule VideoRoom.Pipeline do
         state
       ) do
     Membrane.Logger.info("#{inspect(msg)}, from: #{inspect(from)}")
-    val = if val, do: :speech, else: :silence
 
     {actions, state} =
       case TrackManager.update_track(state.track_manager, endpoint_id, val) do
@@ -243,16 +238,14 @@ defmodule VideoRoom.Pipeline do
     if endpoint == nil or endpoint.terminating? do
       {:absent, [], state}
     else
-      {tracks_ids, state} = pop_in(state, [:endpoints, peer_pid])
+      {endpoint, state} = pop_in(state, [:endpoints, peer_pid])
 
-      {tracks, state} =
-        Enum.map_reduce(tracks_ids, state, fn track_id, state ->
-          Bunch.Access.get_updated_in(state, [:tracks, track_id], &%Track{&1 | enabled?: false})
-        end)
+      tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
 
       children =
-        tracks_ids
-        |> Enum.flat_map(&[tee: &1, fake: &1])
+        Endpoint.get_tracks(endpoint)
+        |> Enum.map(fn track -> track.id end)
+        |> Enum.flat_map(&[tee: {peer_pid, &1}, fake: {peer_pid, &1}])
         |> Enum.filter(&Map.has_key?(ctx.children, &1))
 
       children = [endpoint: peer_pid] ++ children
@@ -304,10 +297,11 @@ defmodule VideoRoom.Pipeline do
     flat_map_children(ctx, fn
       {:tee, {endpoint_id, track_id}} = tee ->
         encoding = Endpoint.get_track_by_id(state.endpoints[endpoint_id], track_id).encoding
+
         [
           link(tee)
           |> via_in(Pad.ref(:input, track_id),
-            options: [encoding: state.tracks[track_id].encoding]
+            options: [encoding: encoding]
           )
           |> to(endpoint_bin)
         ]
@@ -383,5 +377,17 @@ defmodule VideoRoom.Pipeline do
     Enum.map(Endpoint.get_video_tracks(endpoint), fn %Track{id: id} ->
       {:forward, {endpoint_bin, {:enable_track, id}}}
     end)
+  end
+
+  defp enable_track?(encoding, track_id, endpoint_id, state) do
+    cond do
+      String.starts_with?(track_id, "SCREEN:") -> {true, state}
+      encoding != :OPUS ->
+        case TrackManager.add_track(state.track_manager, endpoint_id) do
+          {:ok, track_manager} -> {false, %{state | track_manager: track_manager}}
+          {{:send_track, _id}, track_manager} -> {true, %{state | track_manager: track_manager}}
+        end
+      true -> {true, state}
+    end
   end
 end

@@ -81,7 +81,7 @@ defmodule VideoRoom.Pipeline do
       Process.monitor(peer_pid)
 
       tracks = new_tracks(peer_type)
-      endpoint = Endpoint.new(tracks)
+      endpoint = Endpoint.new(peer_pid, peer_type, tracks)
       endpoint_bin = {:endpoint, peer_pid}
 
       stun_servers =
@@ -165,7 +165,7 @@ defmodule VideoRoom.Pipeline do
   def handle_notification({:new_track, track_id, encoding}, endpoint_bin, ctx, state) do
     Membrane.Logger.info("New incoming #{encoding} track #{track_id}")
     {:endpoint, endpoint_id} = endpoint_bin
-    {track_enabled, state} = enable_track?(encoding, track_id, endpoint_id, state)
+    state = add_to_track_manager(encoding, track_id, endpoint_id, state)
     tee = {:tee, {endpoint_id, track_id}}
     fake = {:fake, {endpoint_id, track_id}}
 
@@ -177,16 +177,23 @@ defmodule VideoRoom.Pipeline do
     links =
       [
         link(endpoint_bin)
-        |> via_out(Pad.ref(:output, track_id), options: [track_enabled: track_enabled])
+        |> via_out(Pad.ref(:output, track_id))
         |> to(tee)
         |> to(fake)
       ] ++
         flat_map_children(ctx, fn
           {:endpoint, peer_pid} = other_endpoint
           when endpoint_bin != other_endpoint and peer_pid != state.active_screensharing ->
+            track_enabled =
+              if String.starts_with?(track_id, "SCREEN:"),
+                do: true,
+                else: TrackManager.display?(state.track_manager, endpoint_id)
+
             [
               link(tee)
-              |> via_in(Pad.ref(:input, track_id), options: [encoding: encoding])
+              |> via_in(Pad.ref(:input, track_id),
+                options: [encoding: encoding, track_enabled: track_enabled]
+              )
               |> to(other_endpoint)
             ]
 
@@ -215,8 +222,8 @@ defmodule VideoRoom.Pipeline do
 
         {{:replace_track, old_id, new_id}, track_manager} ->
           actions =
-            get_disable_track_actions(state.endpoints[old_id], {:endpoint, old_id}) ++
-              get_enable_track_actions(state.endpoints[new_id], {:endpoint, new_id})
+            get_disable_track_actions(state.endpoints[old_id], Map.values(state.endpoints)) ++
+              get_enable_track_actions(state.endpoints[new_id], Map.values(state.endpoints))
 
           {actions, %{state | track_manager: track_manager}}
 
@@ -298,10 +305,17 @@ defmodule VideoRoom.Pipeline do
       {:tee, {endpoint_id, track_id}} = tee ->
         encoding = Endpoint.get_track_by_id(state.endpoints[endpoint_id], track_id).encoding
 
+        track_enabled =
+          if encoding != :OPUS,
+            do: TrackManager.display?(state.track_manager, endpoint_id),
+            else: true
+
+        IO.inspect(track_enabled)
+
         [
           link(tee)
           |> via_in(Pad.ref(:input, track_id),
-            options: [encoding: encoding]
+            options: [encoding: encoding, track_enabled: track_enabled]
           )
           |> to(endpoint_bin)
         ]
@@ -367,27 +381,47 @@ defmodule VideoRoom.Pipeline do
   defp get_all_tracks(endpoints),
     do: Enum.flat_map(endpoints, fn {_id, endpoint} -> Endpoint.get_tracks(endpoint) end)
 
-  defp get_disable_track_actions(endpoint, endpoint_bin) do
-    Enum.map(Endpoint.get_video_tracks(endpoint), fn %Track{id: id} ->
-      {:forward, {endpoint_bin, {:disable_track, id}}}
+  defp get_disable_track_actions(endpoint, endpoints) do
+    track_ids = Endpoint.get_video_tracks(endpoint) |> Enum.map(fn %Track{id: id} -> id end)
+
+    Enum.flat_map(endpoints, fn
+      %Endpoint{id: id, type: :participant} when id != endpoint.id ->
+        Enum.map(track_ids, fn track_id ->
+          {:forward, {{:endpoint, id}, {:disable_track, track_id}}}
+        end)
+
+      _endpoint ->
+        []
     end)
   end
 
-  defp get_enable_track_actions(endpoint, endpoint_bin) do
-    Enum.map(Endpoint.get_video_tracks(endpoint), fn %Track{id: id} ->
-      {:forward, {endpoint_bin, {:enable_track, id}}}
+  defp get_enable_track_actions(endpoint, endpoints) do
+    track_ids = Endpoint.get_video_tracks(endpoint) |> Enum.map(fn %Track{id: id} -> id end)
+
+    Enum.flat_map(endpoints, fn
+      %Endpoint{id: id, type: :participant} when id != endpoint.id ->
+        Enum.map(track_ids, fn track_id ->
+          {:forward, {{:endpoint, id}, {:enable_track, track_id}}}
+        end)
+
+      _endpoint ->
+        []
     end)
   end
 
-  defp enable_track?(encoding, track_id, endpoint_id, state) do
+  defp add_to_track_manager(encoding, track_id, endpoint_id, state) do
     cond do
-      String.starts_with?(track_id, "SCREEN:") -> {true, state}
+      String.starts_with?(track_id, "SCREEN:") ->
+        state
+
       encoding != :OPUS ->
         case TrackManager.add_track(state.track_manager, endpoint_id) do
-          {:ok, track_manager} -> {false, %{state | track_manager: track_manager}}
-          {{:send_track, _id}, track_manager} -> {true, %{state | track_manager: track_manager}}
+          {:ok, track_manager} -> %{state | track_manager: track_manager}
+          {{:send_track, _id}, track_manager} -> %{state | track_manager: track_manager}
         end
-      true -> {true, state}
+
+      true ->
+        state
     end
   end
 end

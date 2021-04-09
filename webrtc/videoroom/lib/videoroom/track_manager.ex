@@ -87,6 +87,12 @@ defmodule VideoRoom.TrackManager do
     end
   end
 
+  def display?(state, track_id), do: Map.has_key?(state.displayed, track_id)
+
+  # def get_first_to_display() do
+  #   MapSet.to_list(state.queued) |> List.first() || MapSet.to_list(state.rest) |> List.first()
+  # end
+
   defp find_inactive_track(state) do
     # finds track that is inactive but displayed
     Enum.find(state.displayed, {nil, nil}, fn {_track_id, activity} ->

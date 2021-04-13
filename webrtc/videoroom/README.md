@@ -54,7 +54,7 @@ Then, go to <http://localhost:4000/>.
 
 ### Run with docker
 
-Videoroom demo provides a `Dockerfile` that you can use to build run videoroom application yourself without any additional setup and dependencies.
+Videoroom demo provides a `Dockerfile` that you can use to run videoroom application yourself without any additional setup and dependencies.
 
 #### To run:
 
@@ -67,7 +67,7 @@ cp .env.example .env
 **IMPORTANT**
 If you intend to use TLS remember that setting paths in `.env` file is not enough.
 Those paths will be used inside docker container therefore besides setting env variables you will need to mount those paths
-to docker container yourself. 
+to docker container on your own.
 
 Then you can run videoroom with membrane's latest image:
 ```bash

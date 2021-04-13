@@ -7,19 +7,7 @@ It consists of a basic phoenix app which communicates with membrane pipeline (pi
 to exchange WebRTC candidates/answers. Pipeline then takes a role of the SFU, receiving and forwarding
 WebRTC traffic. 
 
-## Dependencies
-
-In order to run phoenix application you will need to have `node` installed.
-Demo has been tested with `node` version `v14.15.0`.
-
-### Mac OS X
-
-```
-brew install srtp libnice clang-format ffmpeg opus
-```
-
-
-## Usage
+## Environmental variables
 
 Available runtime environmental variables:
 ```
@@ -32,6 +20,21 @@ CERT_FILE_PATH={path to certificate file, used when "USE_TLS" is set to true}
 STUN_SERVERS={list of stun servers separated by ",", defaults to a single server "stun1.l.google.com:19302"}
 TURN_SERVERS={list of turn servers separated by ",", defaults to ""}
 ```
+
+## Run manually
+
+### Dependencies
+
+In order to run phoenix application manually you will need to have `node` installed.
+Demo has been tested with `node` version `v14.15.0`. You will also need some system dependencies.
+
+#### Mac OS X
+
+```
+brew install srtp libnice clang-format ffmpeg opus
+```
+
+### Running application
 
 Default path for certificate files for non-production environment is `priv/certs/`.
 
@@ -50,7 +53,33 @@ In order to run, type:
 mix phx.server 
 ```
 
-Then, go to <http://localhost:4000/>.
+Then go to <http://localhost:4000/>.
+
+## Run with docker
+
+Videoroom demo provides a `Dockerfile` that you can use to run videoroom application yourself without any additional setup and dependencies.
+
+### To run:
+
+Default environmental variables are available in `.env` file, you can adjust it to your needs.
+
+**IMPORTANT**
+If you intend to use TLS remember that setting paths in `.env` file is not enough.
+Those paths will be used inside docker container therefore besides setting env variables you will need to mount those paths
+to docker container on your own.
+
+Then you can run videoroom with membrane's latest image:
+```bash
+docker run -p 4000:4000 --env-file .env membraneframework/demo_webrtc_videoroom:latest
+```
+
+Or build and run docker image from source:
+```bash
+docker build  -t membrane_videoroom .
+docker run -p 4000:4000 --env-file .env membrane_videoroom 
+```
+
+Then go to <http://localhost:4000/>.
 
 ## Copyright and License
 

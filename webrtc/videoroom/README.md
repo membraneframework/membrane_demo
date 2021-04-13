@@ -33,6 +33,8 @@ STUN_SERVERS={list of stun servers separated by ",", defaults to a single server
 TURN_SERVERS={list of turn servers separated by ",", defaults to ""}
 ```
 
+### Run manually
+
 Default path for certificate files for non-production environment is `priv/certs/`.
 
 If you want to run TLS locally you can generate certificates
@@ -50,19 +52,15 @@ In order to run, type:
 mix phx.server 
 ```
 
-Then, go to <http://localhost:4000/>.
+Then go to <http://localhost:4000/>.
 
 ### Run with docker
 
-Videoroom demo provides a `Dockerfile` that you can use to build run videoroom application yourself without any additional setup and dependencies.
+Videoroom demo provides a `Dockerfile` that you can use to build and run videoroom application yourself without any additional setup and dependencies.
 
 #### To run:
 
-First copy `.env.example` with necessary environmental variables:
-
-```bash
-cp .env.example .env
-```
+Default environmental variables are available in `.env` file, you can adjust it to your needs.
 
 **IMPORTANT**
 If you intend to use TLS remember that setting paths in `.env` file is not enough.
@@ -80,7 +78,7 @@ docker build  -t membrane_videoroom .
 docker run -p 4000:4000 --env-file .env membrane_videoroom 
 ```
 
-Application is once again available at <http://localhost:4000/>.
+Then go to <http://localhost:4000/>.
 
 ## Copyright and License
 

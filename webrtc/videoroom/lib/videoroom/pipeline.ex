@@ -2,7 +2,7 @@ defmodule VideoRoom.Pipeline do
   use Membrane.Pipeline
 
   alias Membrane.WebRTC.{EndpointBin, Track, Endpoint}
-  alias VideoRoom.TrackManager
+  alias VideoRoom.DisplayManager
 
   require Membrane.Logger
 
@@ -53,7 +53,7 @@ defmodule VideoRoom.Pipeline do
      %{
        room_id: room_id,
        endpoints: %{},
-       track_manager: TrackManager.new(max_display_num: 1),
+       display_manager: DisplayManager.new(max_display_num: 1),
        active_screensharing: nil
      }}
   end
@@ -165,7 +165,7 @@ defmodule VideoRoom.Pipeline do
   def handle_notification({:new_track, track_id, encoding}, endpoint_bin, ctx, state) do
     Membrane.Logger.info("New incoming #{encoding} track #{track_id}")
     {:endpoint, endpoint_id} = endpoint_bin
-    state = add_to_track_manager(encoding, track_id, endpoint_id, state)
+    state = add_to_display_manager(encoding, track_id, endpoint_id, state)
     tee = {:tee, {endpoint_id, track_id}}
     fake = {:fake, {endpoint_id, track_id}}
 
@@ -187,7 +187,7 @@ defmodule VideoRoom.Pipeline do
             track_enabled =
               if String.starts_with?(track_id, "SCREEN:"),
                 do: true,
-                else: TrackManager.display?(state.track_manager, endpoint_id)
+                else: DisplayManager.display?(state.display_manager, endpoint_id)
 
             [
               link(tee)
@@ -216,18 +216,18 @@ defmodule VideoRoom.Pipeline do
     Membrane.Logger.info("#{inspect(msg)}, from: #{inspect(from)}")
 
     {actions, state} =
-      case TrackManager.update_track(state.track_manager, endpoint_id, val) do
-        {:ok, track_manager} ->
-          {[], %{state | track_manager: track_manager}}
+      case DisplayManager.update(state.display_manager, endpoint_id, val) do
+        {:ok, display_manager} ->
+          {[], %{state | display_manager: display_manager}}
 
-        {{:replace_track, old_id, new_id}, track_manager} ->
+        {{:replace, old_id, new_id}, display_manager} ->
           actions =
             get_disable_track_actions(state.endpoints[old_id], Map.values(state.endpoints)) ++
               get_enable_track_actions(state.endpoints[new_id], Map.values(state.endpoints))
 
-          {actions, %{state | track_manager: track_manager}}
+          {actions, %{state | display_manager: display_manager}}
 
-        {:error, :no_such_track_id} ->
+        {:error, :no_such_endpoint_id} ->
           {[], state}
       end
 
@@ -307,10 +307,8 @@ defmodule VideoRoom.Pipeline do
 
         track_enabled =
           if encoding != :OPUS,
-            do: TrackManager.display?(state.track_manager, endpoint_id),
+            do: DisplayManager.display?(state.display_manager, endpoint_id),
             else: true
-
-        IO.inspect(track_enabled)
 
         [
           link(tee)
@@ -409,15 +407,15 @@ defmodule VideoRoom.Pipeline do
     end)
   end
 
-  defp add_to_track_manager(encoding, track_id, endpoint_id, state) do
+  defp add_to_display_manager(encoding, track_id, endpoint_id, state) do
     cond do
       String.starts_with?(track_id, "SCREEN:") ->
         state
 
       encoding != :OPUS ->
-        case TrackManager.add_track(state.track_manager, endpoint_id) do
-          {:ok, track_manager} -> %{state | track_manager: track_manager}
-          {{:send_track, _id}, track_manager} -> %{state | track_manager: track_manager}
+        case DisplayManager.add(state.display_manager, endpoint_id) do
+          {:ok, display_manager} -> %{state | display_manager: display_manager}
+          {{:send, _id}, display_manager} -> %{state | display_manager: display_manager}
         end
 
       true ->

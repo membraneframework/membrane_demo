@@ -23,16 +23,11 @@ defmodule VideoRoom.DisplayManager do
     }
   end
 
-  @spec add(t(), endpoint_id :: endpoint_id_t()) ::
-          {:ok | {:send, endpoint_id :: endpoint_id_t()}, t()}
+  @spec add(t(), endpoint_id :: endpoint_id_t()) :: t()
   def add(state, endpoint_id) do
-    if length(Map.keys(state.displayed)) < state.max_display_num do
-      state = put_in(state.displayed[endpoint_id], :silence)
-      {{:send, endpoint_id}, state}
-    else
-      state = %{state | rest: MapSet.put(state.rest, endpoint_id)}
-      {:ok, state}
-    end
+    if length(Map.keys(state.displayed)) < state.max_display_num,
+      do: put_in(state.displayed[endpoint_id], :silence),
+      else: %{state | rest: MapSet.put(state.rest, endpoint_id)}
   end
 
   @spec update(t(), endpoint_id :: endpoint_id_t(), activity :: :speech | :silence) ::

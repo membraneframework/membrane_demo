@@ -173,8 +173,9 @@ defmodule VideoRoom.Pipeline do
     Membrane.Logger.info("New incoming #{encoding} track #{track_id}")
     {:endpoint, endpoint_id} = endpoint_bin
 
-    display_managers =
-      add_to_display_managers(encoding, track_id, endpoint_id, state.display_managers)
+    endpoint = state.endpoints[endpoint_id]
+    track = Endpoint.get_track_by_id(endpoint, track_id)
+    display_managers = add_to_display_managers(track, endpoint, state.display_managers)
 
     state = %{state | display_managers: display_managers}
     tee = {:tee, {endpoint_id, track_id}}
@@ -322,9 +323,7 @@ defmodule VideoRoom.Pipeline do
   end
 
   defp new_tracks(:screensharing) do
-    screensharing_id =
-      "SCREEN:#{Base.encode16(:crypto.strong_rand_bytes(8))}" |> String.slice(0, 16)
-
+    screensharing_id = "SCREEN:#{Track.stream_id()}" |> String.slice(0, 16)
     [Track.new(:video, Track.stream_id(), id: screensharing_id)]
   end
 
@@ -333,17 +332,17 @@ defmodule VideoRoom.Pipeline do
 
     flat_map_children(ctx, fn
       {:tee, {endpoint_id, track_id}} = tee ->
-        encoding = Endpoint.get_track_by_id(state.endpoints[endpoint_id], track_id).encoding
+        track = Endpoint.get_track_by_id(state.endpoints[endpoint_id], track_id)
 
         track_enabled =
-          if encoding != :OPUS,
+          if track.type == :video,
             do: DisplayManager.display?(display_manager, endpoint_id),
             else: true
 
         [
           link(tee)
           |> via_in(Pad.ref(:input, track_id),
-            options: [encoding: encoding, track_enabled: track_enabled]
+            options: [encoding: track.encoding, track_enabled: track_enabled]
           )
           |> to(endpoint_bin)
         ]
@@ -409,23 +408,16 @@ defmodule VideoRoom.Pipeline do
   defp get_all_tracks(endpoints),
     do: Enum.flat_map(endpoints, fn {_id, endpoint} -> Endpoint.get_tracks(endpoint) end)
 
-  defp add_to_display_managers(encoding, track_id, new_endpoint_id, display_managers) do
+  defp add_to_display_managers(_track, %Endpoint{type: :screensharing}, display_managers),
+    do: display_managers
+
+  defp add_to_display_managers(%Track{type: :audio}, _endpoint, display_managers),
+    do: display_managers
+
+  defp add_to_display_managers(_track, %Endpoint{id: id}, display_managers) do
     Map.new(display_managers, fn
-      {endpoint_id, display_manager} when endpoint_id != new_endpoint_id ->
-        display_manager =
-          cond do
-            String.starts_with?(track_id, "SCREEN:") ->
-              display_manager
-
-            encoding != :OPUS ->
-              {_ret, display_manager} = DisplayManager.add(display_manager, new_endpoint_id)
-              display_manager
-
-            true ->
-              display_manager
-          end
-
-        {endpoint_id, display_manager}
+      {endpoint_id, display_manager} when endpoint_id != id ->
+        {endpoint_id, DisplayManager.add(display_manager, id)}
 
       {endpoint_id, display_manager} ->
         {endpoint_id, display_manager}
@@ -435,8 +427,7 @@ defmodule VideoRoom.Pipeline do
   defp setup_display_manager(display_manager, endpoints) do
     Enum.reduce(endpoints, display_manager, fn
       {id, %Endpoint{type: :participant}}, display_manager ->
-        {_ret, display_manager} = DisplayManager.add(display_manager, id)
-        display_manager
+        DisplayManager.add(display_manager, id)
 
       _, display_manager ->
         display_manager

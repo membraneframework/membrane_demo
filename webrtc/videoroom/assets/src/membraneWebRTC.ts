@@ -43,6 +43,7 @@ export class MembraneWebRTC {
   private channelId: string;
   private socketRefs: string[] = [];
 
+  private max_display_num: number = 1;
   private localTracks: Set<MediaStreamTrack> = new Set<MediaStreamTrack>();
   private localStream?: MediaStream;
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
@@ -104,6 +105,7 @@ export class MembraneWebRTC {
 
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onRemoteCandidate);
+    this.channel.on("replace_track", (data: any) => console.log(data));
 
     this.channel.on("error", (data: any) => {
       this.callbacks.onConnectionError?.(data.error);
@@ -111,7 +113,7 @@ export class MembraneWebRTC {
     });
 
     await phoenix_channel_push_result(this.channel.join());
-    await phoenix_channel_push_result(this.channel.push("start", {}));
+    await phoenix_channel_push_result(this.channel.push("start", {})).then(response => this.max_display_num = response.max_display_num);
   };
 
   public stop = () => {
@@ -194,12 +196,16 @@ export class MembraneWebRTC {
           isScreenSharing,
         });
       };
-
-      this.callbacks.onAddTrack?.({
-        track: event.track,
-        stream: stream,
-        isScreenSharing,
-      });
+      
+      const grid = document.getElementById("videos-grid")!;
+      // -1 for local stream
+      if (grid.getElementsByTagName("video").length - 1< this.max_display_num) {
+        this.callbacks.onAddTrack?.({
+          track: event.track,
+          stream: stream,
+          isScreenSharing,
+        });
+      }
     };
   };
 }

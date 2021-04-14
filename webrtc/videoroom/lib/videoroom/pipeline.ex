@@ -53,7 +53,7 @@ defmodule VideoRoom.Pipeline do
      %{
        room_id: room_id,
        endpoints: %{},
-       display_manager: DisplayManager.new(max_display_num: 1),
+       display_manager: DisplayManager.new(max_display_num: 3),
        active_screensharing: nil
      }}
   end
@@ -71,7 +71,10 @@ defmodule VideoRoom.Pipeline do
 
   @impl true
   def handle_other({:new_peer, peer_pid, peer_type, ref}, ctx, state) do
-    send(peer_pid, {:new_peer, :ok, ref})
+    send(
+      peer_pid,
+      {:new_peer, {:ok, DisplayManager.get_max_display_num(state.display_manager)}, ref}
+    )
 
     if Map.has_key?(ctx.children, {:endpoint, peer_pid}) do
       Membrane.Logger.warn("Peer already connected, ignoring")
@@ -225,12 +228,25 @@ defmodule VideoRoom.Pipeline do
             get_disable_track_actions(state.endpoints[old_id], Map.values(state.endpoints)) ++
               get_enable_track_actions(state.endpoints[new_id], Map.values(state.endpoints))
 
+          old_track_id =
+            Endpoint.get_video_tracks(state.endpoints[old_id])
+            |> List.first()
+            |> (fn %Track{id: id} -> id end).()
+
+          new_track_id =
+            Endpoint.get_video_tracks(state.endpoints[new_id])
+            |> List.first()
+            |> (fn %Track{id: id} -> id end).()
+
+          send(endpoint_id, {:signal, {:replace_track, old_track_id, new_track_id}})
           {actions, %{state | display_manager: display_manager}}
 
         {:error, :no_such_endpoint_id} ->
           {[], state}
       end
 
+    IO.inspect(state.display_manager)
+    IO.inspect(actions)
     {{:ok, actions}, state}
   end
 

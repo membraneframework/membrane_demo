@@ -98,6 +98,8 @@ defmodule VideoRoom.DisplayManager do
 
   def display?(state, endpoint_id), do: Map.has_key?(state.displayed, endpoint_id)
 
+  def get_max_display_num(state), do: state.max_display_num
+
   defp find_inactive(state) do
     # finds endpoint which audio track is inactive but video track is displayed
     Enum.find(state.displayed, {nil, nil}, fn {_endpoint_id, activity} ->

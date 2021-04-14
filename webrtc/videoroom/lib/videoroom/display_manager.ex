@@ -3,21 +3,23 @@ defmodule VideoRoom.DisplayManager do
 
   @type endpoint_id_t :: any()
   @opaque t :: %__MODULE__{
+            owner: endpoint_id_t(),
             displayed: %{},
             queued: MapSet.t(),
             rest: MapSet.t(),
             max_display_num: non_neg_integer()
           }
 
-  @enforce_keys [:displayed, :queued, :rest, :max_display_num]
+  @enforce_keys [:owner, :displayed, :queued, :rest, :max_display_num]
   defstruct @enforce_keys
 
-  def new(opts) do
+  def new(owner, max_display_num) do
     %__MODULE__{
+      owner: owner,
       displayed: %{},
       queued: MapSet.new(),
       rest: MapSet.new(),
-      max_display_num: opts[:max_display_num]
+      max_display_num: max_display_num
     }
   end
 

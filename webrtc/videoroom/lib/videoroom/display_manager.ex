@@ -93,6 +93,49 @@ defmodule VideoRoom.DisplayManager do
     end
   end
 
+  @spec remove(t(), endpoint_id :: endpoint_id_t()) ::
+          {:ok
+           | {:stop, endpoint_id :: endpoint_id_t()}
+           | {:replace, old_endpoint_id :: endpoint_id_t(), new_endpoint_id :: endpoint_id_t()},
+           t()}
+  def remove(state, endpoint_id) do
+    cond do
+      Map.has_key?(state.displayed, endpoint_id) ->
+        if MapSet.size(state.queued) == 0 do
+          rest_endpoint_id = MapSet.to_list(state.rest) |> List.first()
+
+          if rest_endpoint_id == nil do
+            # there is no alternative to display
+            state = %{state | displayed: Map.delete(state.displayed, endpoint_id)}
+            {:ok, state}
+          else
+            state = %{state | displayed: Map.delete(state.displayed, endpoint_id)}
+            state = %{state | rest: MapSet.delete(state.rest, rest_endpoint_id)}
+            state = %{state | displayed: Map.put(state.displayed, rest_endpoint_id, :silence)}
+            {{:replace, endpoint_id, rest_endpoint_id}, state}
+          end
+        else
+          queued_endpoint_id = MapSet.to_list(state.queued) |> List.first()
+          state = %{state | displayed: Map.delete(state.displayed, endpoint_id)}
+          state = %{state | queued: MapSet.delete(state.queued, queued_endpoint_id)}
+          state = %{state | displayed: Map.put(state.displayed, queued_endpoint_id, :speech)}
+          {{:replace, endpoint_id, queued_endpoint_id}, state}
+        end
+
+      MapSet.member?(state.queued, endpoint_id) ->
+        state = %{state | queued: MapSet.delete(state.queued, endpoint_id)}
+        {:ok, state}
+
+      MapSet.member?(state.rest, endpoint_id) ->
+        state = %{state | rest: MapSet.delete(state.rest, endpoint_id)}
+        {:ok, state}
+
+      true ->
+        Membrane.Logger.warn("No such endpoint id #{inspect(endpoint_id)}")
+        {:error, :no_such_endpoint_id}
+    end
+  end
+
   def display?(state, endpoint_id), do: Map.has_key?(state.displayed, endpoint_id)
 
   def get_max_display_num(state), do: state.max_display_num

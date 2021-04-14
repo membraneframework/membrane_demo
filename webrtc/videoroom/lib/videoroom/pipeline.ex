@@ -283,7 +283,12 @@ defmodule VideoRoom.Pipeline do
       {:absent, [], state}
     else
       {endpoint, state} = pop_in(state, [:endpoints, peer_pid])
+      {_display_manager, state} = pop_in(state, [:display_managers, peer_pid])
 
+      {actions, display_managers} =
+        cleanup_display_managers(state.display_managers, peer_pid, state.endpoints)
+
+      state = %{state | display_managers: display_managers}
       tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
 
       children =
@@ -310,7 +315,7 @@ defmodule VideoRoom.Pipeline do
           state
         end
 
-      {:present, [remove_child: children] ++ tracks_msgs, state}
+      {:present, [remove_child: children] ++ tracks_msgs ++ actions, state}
     end
   end
 
@@ -442,6 +447,33 @@ defmodule VideoRoom.Pipeline do
 
       _, display_manager ->
         display_manager
+    end)
+  end
+
+  defp cleanup_display_managers(display_managers, endpoint_id, endpoints) do
+    Enum.reduce(display_managers, {[], display_managers}, fn
+      {id, display_manager}, {actions, display_managers} = _acc ->
+        {actions, display_managers} =
+          case DisplayManager.remove(display_manager, endpoint_id) do
+            {:ok, display_manager} ->
+              {actions, Map.put(display_managers, id, display_manager)}
+
+            {{:replace, _old_id, new_id}, display_manager} ->
+              new_track_id =
+                Endpoint.get_video_tracks(endpoints[new_id])
+                |> List.first()
+                |> (fn %Track{id: id} -> id end).()
+
+              actions = actions ++ [{:forward, {{:endpoint, id}, {:enable_track, new_track_id}}}]
+
+              # send(endpoint_id, {:signal, {:replace_track, old_track_id, new_track_id}})
+              {actions, Map.put(display_managers, id, display_manager)}
+
+            {:error, :no_such_endpoint_id} ->
+              {actions, display_managers}
+          end
+
+        {actions, display_managers}
     end)
   end
 end

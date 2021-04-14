@@ -113,7 +113,9 @@ export class MembraneWebRTC {
     });
 
     await phoenix_channel_push_result(this.channel.join());
-    await phoenix_channel_push_result(this.channel.push("start", {})).then(response => this.max_display_num = response.max_display_num);
+    await phoenix_channel_push_result(this.channel.push("start", {})).then(
+      (response) => (this.max_display_num = response.max_display_num)
+    );
   };
 
   public stop = () => {
@@ -196,10 +198,13 @@ export class MembraneWebRTC {
           isScreenSharing,
         });
       };
-      
+
       const grid = document.getElementById("videos-grid")!;
       // -1 for local stream
-      if (grid.getElementsByTagName("video").length - 1< this.max_display_num) {
+      if (
+        grid.getElementsByTagName("video").length - 1 <
+        this.max_display_num
+      ) {
         this.callbacks.onAddTrack?.({
           track: event.track,
           stream: stream,

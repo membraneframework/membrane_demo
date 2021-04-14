@@ -86,10 +86,15 @@ defmodule VideoRoom.Pipeline do
       endpoint = Endpoint.new(peer_pid, peer_type, tracks)
       endpoint_bin = {:endpoint, peer_pid}
 
-      display_manager =
-        setup_display_manager(DisplayManager.new(peer_pid, @max_display_num), state.endpoints)
-
-      state = put_in(state.display_managers[peer_pid], display_manager)
+      state =
+        if peer_type == :participant do
+          # don't create DisplayManager for screensharing
+          display_manager = DisplayManager.new(peer_pid, @max_display_num)
+          display_manager = setup_display_manager(display_manager, state.endpoints)
+          put_in(state.display_managers[peer_pid], display_manager)
+        else
+          state
+        end
 
       stun_servers =
         parse_stun_servers(Application.fetch_env!(:membrane_videoroom_demo, :stun_servers))
@@ -229,7 +234,7 @@ defmodule VideoRoom.Pipeline do
 
     {actions, display_managers} =
       Enum.reduce(state.display_managers, {[], state.display_managers}, fn
-        {id, display_manager}, {actions, display_managers} = _acc ->
+        {id, display_manager}, {actions, display_managers} = _acc when id != endpoint_id ->
           case DisplayManager.update(display_manager, endpoint_id, val) do
             {:ok, display_manager} ->
               {actions, Map.put(display_managers, id, display_manager)}
@@ -258,6 +263,9 @@ defmodule VideoRoom.Pipeline do
             {:error, :no_such_endpoint_id} ->
               {actions, display_managers}
           end
+
+        {_id, _display_manager}, {actions, display_manager} ->
+          {actions, display_manager}
       end)
 
     {{:ok, actions}, %{state | display_managers: display_managers}}

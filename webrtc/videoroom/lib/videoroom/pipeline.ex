@@ -332,12 +332,15 @@ defmodule VideoRoom.Pipeline do
 
     flat_map_children(ctx, fn
       {:tee, {endpoint_id, track_id}} = tee ->
-        track = Endpoint.get_track_by_id(state.endpoints[endpoint_id], track_id)
+        endpoint = state.endpoints[endpoint_id]
+        track = Endpoint.get_track_by_id(endpoint, track_id)
 
         track_enabled =
-          if track.type == :video,
-            do: DisplayManager.display?(display_manager, endpoint_id),
-            else: true
+          cond do
+            endpoint.type == :screensharing -> true
+            track.type == :audio -> true
+            true -> DisplayManager.display?(display_manager, endpoint_id)
+          end
 
         [
           link(tee)

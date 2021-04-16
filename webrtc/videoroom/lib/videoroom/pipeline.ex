@@ -233,39 +233,40 @@ defmodule VideoRoom.Pipeline do
     Membrane.Logger.info("#{inspect(msg)}, from: #{inspect(from)}")
 
     {actions, display_managers} =
-      Enum.reduce(state.display_managers, {[], state.display_managers}, fn
-        {id, display_manager}, {actions, display_managers} = _acc when id != endpoint_id ->
+      state.display_managers
+      |> Map.delete(endpoint_id)
+      |> Enum.flat_map_reduce(state.display_managers, fn
+        {id, display_manager}, display_managers ->
           case DisplayManager.update(display_manager, endpoint_id, val) do
             {:ok, display_manager} ->
-              {actions, Map.put(display_managers, id, display_manager)}
+              {[], Map.put(display_managers, id, display_manager)}
 
             {{:replace, old_id, new_id}, display_manager} ->
               old_track_id =
                 Endpoint.get_video_tracks(state.endpoints[old_id])
                 |> List.first()
-                |> (fn %Track{id: id} -> id end).()
+                |> case do
+                  %Track{id: id} -> id
+                end
 
               new_track_id =
                 Endpoint.get_video_tracks(state.endpoints[new_id])
                 |> List.first()
-                |> (fn %Track{id: id} -> id end).()
+                |> case do
+                  %Track{id: id} -> id
+                end
 
-              actions =
-                actions ++
-                  [
-                    {:forward, {{:endpoint, id}, {:disable_track, old_track_id}}},
-                    {:forward, {{:endpoint, id}, {:enable_track, new_track_id}}}
-                  ]
+              actions = [
+                {:forward, {{:endpoint, id}, {:disable_track, old_track_id}}},
+                {:forward, {{:endpoint, id}, {:enable_track, new_track_id}}}
+              ]
 
               send(id, {:signal, {:replace_track, old_track_id, new_track_id}})
               {actions, Map.put(display_managers, id, display_manager)}
 
             {:error, :no_such_endpoint_id} ->
-              {actions, display_managers}
+              {[], display_managers}
           end
-
-        {_id, _display_manager}, {actions, display_manager} ->
-          {actions, display_manager}
       end)
 
     {{:ok, actions}, %{state | display_managers: display_managers}}
@@ -451,29 +452,26 @@ defmodule VideoRoom.Pipeline do
   end
 
   defp cleanup_display_managers(display_managers, endpoint_id, endpoints) do
-    Enum.reduce(display_managers, {[], display_managers}, fn
-      {id, display_manager}, {actions, display_managers} = _acc ->
-        {actions, display_managers} =
-          case DisplayManager.remove(display_manager, endpoint_id) do
-            {:ok, display_manager} ->
-              {actions, Map.put(display_managers, id, display_manager)}
+    Enum.flat_map_reduce(display_managers, display_managers, fn
+      {id, display_manager}, display_managers ->
+        case DisplayManager.remove(display_manager, endpoint_id) do
+          {:ok, display_manager} ->
+            {[], Map.put(display_managers, id, display_manager)}
 
-            {{:replace, _old_id, new_id}, display_manager} ->
-              new_track_id =
-                Endpoint.get_video_tracks(endpoints[new_id])
-                |> List.first()
-                |> (fn %Track{id: id} -> id end).()
+          {{:replace, _old_id, new_id}, display_manager} ->
+            new_track_id =
+              Endpoint.get_video_tracks(endpoints[new_id])
+              |> List.first()
+              |> (fn %Track{id: id} -> id end).()
 
-              actions = actions ++ [{:forward, {{:endpoint, id}, {:enable_track, new_track_id}}}]
+            actions = [{:forward, {{:endpoint, id}, {:enable_track, new_track_id}}}]
 
-              send(id, {:signal, {:display_track, new_track_id}})
-              {actions, Map.put(display_managers, id, display_manager)}
+            send(id, {:signal, {:display_track, new_track_id}})
+            {actions, Map.put(display_managers, id, display_manager)}
 
-            {:error, :no_such_endpoint_id} ->
-              {actions, display_managers}
-          end
-
-        {actions, display_managers}
+          {:error, :no_such_endpoint_id} ->
+            {[], display_managers}
+        end
     end)
   end
 end

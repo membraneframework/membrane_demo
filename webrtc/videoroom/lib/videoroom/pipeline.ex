@@ -46,6 +46,8 @@ defmodule VideoRoom.Pipeline do
   def handle_init([room_id]) do
     play(self())
 
+    Logger.metadata(room: room_id)
+
     Process.send_after(self(), :check_if_empty, @empty_room_timeout)
     {:ok, %{room_id: room_id, tracks: %{}, endpoints_tracks_ids: %{}, active_screensharing: nil}}
   end

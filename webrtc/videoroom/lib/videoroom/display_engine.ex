@@ -18,6 +18,7 @@ defmodule VideoRoom.DisplayEngine do
     }
   end
 
+  @spec add_new_endpoint(state :: t(), endpoint :: Endpoint.t()) :: t()
   def add_new_endpoint(state, %Endpoint{type: :screensharing}), do: state
 
   def add_new_endpoint(state, endpoint) do
@@ -27,12 +28,15 @@ defmodule VideoRoom.DisplayEngine do
     put_in(state.endpoints[endpoint.id], endpoint)
   end
 
+  @spec add_new_track(state :: t(), track_id :: Track.id(), endpoint :: Endpoint.t()) :: t()
   def add_new_track(state, track_id, endpoint) do
     track = Endpoint.get_track_by_id(endpoint, track_id)
     display_managers = add_to_display_managers(track, endpoint, state.display_managers)
     %{state | display_managers: display_managers}
   end
 
+  @spec vad_notification(state :: t(), vad :: boolean(), endpoint_id :: Endpoint.id()) ::
+          {actions :: [], state :: t()}
   def vad_notification(state, vad, endpoint_id) do
     {actions, display_managers} =
       state.display_managers
@@ -75,9 +79,13 @@ defmodule VideoRoom.DisplayEngine do
     {actions, state}
   end
 
+  @spec display?(state :: t(), endpoint_id1 :: Endpoint.id(), endpoint_id2 :: Endpoint.id()) ::
+          boolean()
   def display?(state, endpoint_id1, endpoint_id2),
     do: DisplayManager.display?(state.display_managers[endpoint_id1], endpoint_id2)
 
+  @spec remove_endpoint(state :: t(), endpoint_id :: Endpoint.id()) ::
+          {actions :: [], state :: t()}
   def remove_endpoint(state, endpoint_id) do
     {_display_manager, state} = pop_in(state.display_managers[endpoint_id])
 

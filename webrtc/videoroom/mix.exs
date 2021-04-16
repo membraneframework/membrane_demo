@@ -25,7 +25,6 @@ defmodule VideoRoom.MixProject do
        github: "membraneframework/membrane_core", branch: "develop", override: true},
       {:membrane_webrtc_plugin,
       github: "membraneframework/membrane_webrtc_plugin", branch: "track_filter"},
-      # {:membrane_webrtc_plugin, path: "/home/michal/Repos/membrane/membrane_webrtc_plugin"},
       {:membrane_element_tee, "~> 0.4.1"},
       {:membrane_element_fake, "~> 0.4.0"},
       {:plug_cowboy, "~> 2.0"},

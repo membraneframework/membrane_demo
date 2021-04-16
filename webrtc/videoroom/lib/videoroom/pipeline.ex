@@ -2,7 +2,7 @@ defmodule VideoRoom.Pipeline do
   use Membrane.Pipeline
 
   alias Membrane.WebRTC.{EndpointBin, Track, Endpoint}
-  alias VideoRoom.DisplayManager
+  alias VideoRoom.DisplayEngine
 
   require Membrane.Logger
 
@@ -55,7 +55,7 @@ defmodule VideoRoom.Pipeline do
      %{
        room_id: room_id,
        endpoints: %{},
-       display_managers: %{},
+       display_engine: DisplayEngine.new(@max_display_num),
        active_screensharing: nil
      }}
   end
@@ -86,15 +86,8 @@ defmodule VideoRoom.Pipeline do
       endpoint = Endpoint.new(peer_pid, peer_type, tracks)
       endpoint_bin = {:endpoint, peer_pid}
 
-      state =
-        if peer_type == :participant do
-          # don't create DisplayManager for screensharing
-          display_manager = DisplayManager.new(peer_pid, @max_display_num)
-          display_manager = setup_display_manager(display_manager, state.endpoints)
-          put_in(state.display_managers[peer_pid], display_manager)
-        else
-          state
-        end
+      display_engine = DisplayEngine.add_new_endpoint(state.display_engine, endpoint)
+      state = %{state | display_engine: display_engine}
 
       stun_servers =
         parse_stun_servers(Application.fetch_env!(:membrane_videoroom_demo, :stun_servers))
@@ -179,10 +172,9 @@ defmodule VideoRoom.Pipeline do
     {:endpoint, endpoint_id} = endpoint_bin
 
     endpoint = state.endpoints[endpoint_id]
-    track = Endpoint.get_track_by_id(endpoint, track_id)
-    display_managers = add_to_display_managers(track, endpoint, state.display_managers)
+    display_engine = DisplayEngine.add_new_track(state.display_engine, track_id, endpoint)
+    state = %{state | display_engine: display_engine}
 
-    state = %{state | display_managers: display_managers}
     tee = {:tee, {endpoint_id, track_id}}
     fake = {:fake, {endpoint_id, track_id}}
 
@@ -204,7 +196,7 @@ defmodule VideoRoom.Pipeline do
             track_enabled =
               if String.starts_with?(track_id, "SCREEN:"),
                 do: true,
-                else: DisplayManager.display?(state.display_managers[peer_pid], endpoint_id)
+                else: DisplayEngine.display?(state.display_engine, peer_pid, endpoint_id)
 
             [
               link(tee)
@@ -231,45 +223,9 @@ defmodule VideoRoom.Pipeline do
         state
       ) do
     Membrane.Logger.info("#{inspect(msg)}, from: #{inspect(from)}")
-
-    {actions, display_managers} =
-      state.display_managers
-      |> Map.delete(endpoint_id)
-      |> Enum.flat_map_reduce(state.display_managers, fn
-        {id, display_manager}, display_managers ->
-          case DisplayManager.update(display_manager, endpoint_id, val) do
-            {:ok, display_manager} ->
-              {[], Map.put(display_managers, id, display_manager)}
-
-            {{:replace, old_id, new_id}, display_manager} ->
-              old_track_id =
-                Endpoint.get_video_tracks(state.endpoints[old_id])
-                |> List.first()
-                |> case do
-                  %Track{id: id} -> id
-                end
-
-              new_track_id =
-                Endpoint.get_video_tracks(state.endpoints[new_id])
-                |> List.first()
-                |> case do
-                  %Track{id: id} -> id
-                end
-
-              actions = [
-                {:forward, {{:endpoint, id}, {:disable_track, old_track_id}}},
-                {:forward, {{:endpoint, id}, {:enable_track, new_track_id}}}
-              ]
-
-              send(id, {:signal, {:replace_track, old_track_id, new_track_id}})
-              {actions, Map.put(display_managers, id, display_manager)}
-
-            {:error, :no_such_endpoint_id} ->
-              {[], display_managers}
-          end
-      end)
-
-    {{:ok, actions}, %{state | display_managers: display_managers}}
+    display_engine = state.display_engine
+    {actions, display_engine} = DisplayEngine.vad_notification(display_engine, val, endpoint_id)
+    {{:ok, actions}, %{state | display_engine: display_engine}}
   end
 
   def handle_notification({:signal, message}, {:endpoint, peer_pid}, _ctx, state) do
@@ -284,12 +240,8 @@ defmodule VideoRoom.Pipeline do
       {:absent, [], state}
     else
       {endpoint, state} = pop_in(state, [:endpoints, peer_pid])
-      {_display_manager, state} = pop_in(state, [:display_managers, peer_pid])
-
-      {actions, display_managers} =
-        cleanup_display_managers(state.display_managers, peer_pid, state.endpoints)
-
-      state = %{state | display_managers: display_managers}
+      {actions, display_engine} = DisplayEngine.remove_endpoint(state.display_engine, peer_pid)
+      state = %{state | display_engine: display_engine}
       tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
 
       children =
@@ -341,9 +293,7 @@ defmodule VideoRoom.Pipeline do
     [Track.new(:video, Track.stream_id(), id: screensharing_id)]
   end
 
-  defp new_peer_links(:participant, {:endpoint, endpoint_id} = endpoint_bin, ctx, state) do
-    display_manager = state.display_managers[endpoint_id]
-
+  defp new_peer_links(:participant, {:endpoint, new_endpoint_id} = new_endpoint_bin, ctx, state) do
     flat_map_children(ctx, fn
       {:tee, {endpoint_id, track_id}} = tee ->
         endpoint = state.endpoints[endpoint_id]
@@ -353,7 +303,7 @@ defmodule VideoRoom.Pipeline do
           cond do
             endpoint.type == :screensharing -> true
             track.type == :audio -> true
-            true -> DisplayManager.display?(display_manager, endpoint_id)
+            true -> DisplayEngine.display?(state.display_engine, new_endpoint_id, endpoint_id)
           end
 
         [
@@ -361,7 +311,7 @@ defmodule VideoRoom.Pipeline do
           |> via_in(Pad.ref(:input, track_id),
             options: [encoding: track.encoding, track_enabled: track_enabled]
           )
-          |> to(endpoint_bin)
+          |> to(new_endpoint_bin)
         ]
 
       _child ->
@@ -424,54 +374,4 @@ defmodule VideoRoom.Pipeline do
 
   defp get_all_tracks(endpoints),
     do: Enum.flat_map(endpoints, fn {_id, endpoint} -> Endpoint.get_tracks(endpoint) end)
-
-  defp add_to_display_managers(_track, %Endpoint{type: :screensharing}, display_managers),
-    do: display_managers
-
-  defp add_to_display_managers(%Track{type: :audio}, _endpoint, display_managers),
-    do: display_managers
-
-  defp add_to_display_managers(_track, %Endpoint{id: id}, display_managers) do
-    Map.new(display_managers, fn
-      {endpoint_id, display_manager} when endpoint_id != id ->
-        {endpoint_id, DisplayManager.add(display_manager, id)}
-
-      {endpoint_id, display_manager} ->
-        {endpoint_id, display_manager}
-    end)
-  end
-
-  defp setup_display_manager(display_manager, endpoints) do
-    Enum.reduce(endpoints, display_manager, fn
-      {id, %Endpoint{type: :participant}}, display_manager ->
-        DisplayManager.add(display_manager, id)
-
-      _, display_manager ->
-        display_manager
-    end)
-  end
-
-  defp cleanup_display_managers(display_managers, endpoint_id, endpoints) do
-    Enum.flat_map_reduce(display_managers, display_managers, fn
-      {id, display_manager}, display_managers ->
-        case DisplayManager.remove(display_manager, endpoint_id) do
-          {:ok, display_manager} ->
-            {[], Map.put(display_managers, id, display_manager)}
-
-          {{:replace, _old_id, new_id}, display_manager} ->
-            new_track_id =
-              Endpoint.get_video_tracks(endpoints[new_id])
-              |> List.first()
-              |> (fn %Track{id: id} -> id end).()
-
-            actions = [{:forward, {{:endpoint, id}, {:enable_track, new_track_id}}}]
-
-            send(id, {:signal, {:display_track, new_track_id}})
-            {actions, Map.put(display_managers, id, display_manager)}
-
-          {:error, :no_such_endpoint_id} ->
-            {[], display_managers}
-        end
-    end)
-  end
 end

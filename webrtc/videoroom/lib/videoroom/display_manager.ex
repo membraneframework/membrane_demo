@@ -34,6 +34,8 @@ defmodule VideoRoom.DisplayManager do
           {:ok
            | {:replace, old_endpoint_id :: endpoint_id_t(), new_endpoint_id :: endpoint_id_t()},
            t()}
+          | {:error, :no_such_endpoint_id}
+
   def update(state, endpoint_id, :speech) do
     cond do
       Map.has_key?(state.displayed, endpoint_id) ->
@@ -98,6 +100,8 @@ defmodule VideoRoom.DisplayManager do
            | {:stop, endpoint_id :: endpoint_id_t()}
            | {:replace, old_endpoint_id :: endpoint_id_t(), new_endpoint_id :: endpoint_id_t()},
            t()}
+          | {:error, :no_such_endpoint_id}
+
   def remove(state, endpoint_id) do
     cond do
       Map.has_key?(state.displayed, endpoint_id) ->

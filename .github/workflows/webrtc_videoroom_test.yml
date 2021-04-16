@@ -29,6 +29,7 @@ jobs:
       working-directory: webrtc/videoroom 
     - name: Check compilation
       run: mix compile
+      working-directory: webrtc/videoroom
     - name: Check backend format
       run: mix format --check-formatted
       working-directory: webrtc/videoroom

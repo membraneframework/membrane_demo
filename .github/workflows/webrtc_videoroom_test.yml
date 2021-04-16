@@ -1,0 +1,45 @@
+
+name: WebRTC Videoroom - Master Build
+on:
+  push:
+    paths:
+    - 'webrtc/videoroom/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Elixir
+      uses: erlef/setup-beam@v1
+      with:
+        otp-version: '23'
+        elixir-version: '1.11.3'
+    - name: Restore dependencies cache
+      uses: actions/cache@v2
+      with:
+        path: deps
+        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: ${{ runner.os }}-mix-
+    - name: Install dependencies
+      run: mix deps.get
+      working-directory: webrtc/videoroom 
+    - name: Check compilation
+      run: mix compile
+    - name: Check backend format
+      run: mix format --check-formatted
+      working-directory: webrtc/videoroom
+    - name: Setup Node
+      uses: actions/setup-node@v1
+      with:
+        node-version: '14.15.0'
+    - name: Install dependencies
+      run: npm install   
+      working-directory: webrtc/videoroom/assets
+    - name: Check frontend format 
+      run: npm run format:check
+      working-directory: webrtc/videoroom/assets
+    

@@ -6,6 +6,7 @@ import {
   getRoomId,
   removeScreensharing,
   removeVideoElement,
+  replaceStream,
   setErrorMessage,
   setLocalScreenSharingStatus,
   setScreensharing,
@@ -79,7 +80,7 @@ const setup = async () => {
           if (isScreenSharing) {
             setScreensharing(stream);
           } else {
-            addVideoElement(track, stream, false);
+            addVideoElement(stream);
           }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {
@@ -89,6 +90,8 @@ const setup = async () => {
             removeVideoElement(track, stream);
           }
         },
+        onServerReplaceStream: replaceStream,
+        onServerDisplayStream: addVideoElement,
         onConnectionError: setErrorMessage,
       },
     });
@@ -98,7 +101,7 @@ const setup = async () => {
     );
     localStream.getTracks().forEach((track) => {
       webrtc.addTrack(track, localStream);
-      addVideoElement(track, localStream, true);
+      addVideoElement(localStream, true);
     });
 
     setupRoomUI({

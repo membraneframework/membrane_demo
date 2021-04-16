@@ -29,6 +29,8 @@ interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
+  onServerReplaceStream?: (oldStreamId: String, newStream: MediaStream) => void;
+  onServerDisplayStream?: (stream: MediaStream) => void;
 }
 
 interface MembraneWebRTCConfig {
@@ -43,10 +45,11 @@ export class MembraneWebRTC {
   private channelId: string;
   private socketRefs: string[] = [];
 
-  private max_display_num: number = 1;
+  private maxDisplayNum: number = 1;
   private localTracks: Set<MediaStreamTrack> = new Set<MediaStreamTrack>();
   private localStream?: MediaStream;
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
+  private midToStream: Map<String, MediaStream> = new Map();
   private connection?: RTCPeerConnection;
   private readonly rtcConfig: RTCConfiguration = {
     iceServers: [
@@ -105,7 +108,18 @@ export class MembraneWebRTC {
 
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onRemoteCandidate);
-    this.channel.on("replace_track", (data: any) => console.log(data));
+    this.channel.on("replaceTrack", (data: any) => {
+      const oldTrackId = data.data.oldTrackId;
+      const newTrackId = data.data.newTrackId;
+      const newStream = this.midToStream.get(newTrackId)!;
+      const oldStreamId = this.midToStream.get(oldTrackId)?.id!;
+      this.callbacks.onServerReplaceStream?.(oldStreamId, newStream);
+    });
+    this.channel.on("displayTrack", (data: any) => {
+      const trackId = data.data.trackId;
+      const stream = this.midToStream.get(trackId)!;
+      this.callbacks.onServerDisplayStream?.(stream);
+    });
 
     this.channel.on("error", (data: any) => {
       this.callbacks.onConnectionError?.(data.error);
@@ -114,7 +128,7 @@ export class MembraneWebRTC {
 
     await phoenix_channel_push_result(this.channel.join());
     await phoenix_channel_push_result(this.channel.push("start", {})).then(
-      (response) => (this.max_display_num = response.max_display_num)
+      (response) => (this.maxDisplayNum = response.maxDisplayNum)
     );
   };
 
@@ -179,16 +193,18 @@ export class MembraneWebRTC {
   private onTrack = () => {
     return (event: RTCTrackEvent) => {
       const [stream] = event.streams;
+      const mid = event.transceiver.mid;
       this.remoteStreams.add(stream);
+      this.midToStream.set(mid!, stream);
 
-      const isScreenSharing =
-        event.transceiver.mid?.includes("SCREEN") || false;
+      const isScreenSharing = mid?.includes("SCREEN") || false;
 
       stream.onremovetrack = (event) => {
         const hasTracks = stream.getTracks().length > 0;
 
         if (!hasTracks) {
           this.remoteStreams.delete(stream);
+          this.midToStream.delete(mid!);
           stream.onremovetrack = null;
         }
 
@@ -199,12 +215,7 @@ export class MembraneWebRTC {
         });
       };
 
-      const grid = document.getElementById("videos-grid")!;
-      // -1 for local stream
-      if (
-        grid.getElementsByTagName("video").length - 1 <
-        this.max_display_num
-      ) {
+      if (this.remoteStreams.size <= this.maxDisplayNum || isScreenSharing) {
         this.callbacks.onAddTrack?.({
           track: event.track,
           stream: stream,

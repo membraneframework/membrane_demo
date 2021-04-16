@@ -42,11 +42,8 @@ export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 
-export function addVideoElement(
-  _: MediaStreamTrack,
-  stream: MediaStream,
-  mute: boolean = false
-) {
+export function addVideoElement(stream: MediaStream, mute: boolean = false) {
+  console.log(stream);
   let video = document.getElementById(stream.id) as HTMLVideoElement;
 
   if (!video) {
@@ -131,6 +128,20 @@ export function setErrorMessage(
     errorContainer.style.display = "block";
   }
 }
+
+export function replaceStream(oldStreamId: String, newStream: MediaStream) {
+  const grid = document.getElementById("videos-grid");
+  var videoElements = grid?.getElementsByTagName("video")!;
+  for (var i = 0; i < videoElements.length; i++) {
+    var videoElement = videoElements.item(i);
+    if (videoElement?.id === oldStreamId) {
+      videoElement!.srcObject = newStream;
+      videoElement!.id = newStream.id;
+    }
+  }
+}
+
+export function showStream() {}
 
 function updateScreensharingToggleButton(
   visible: boolean,

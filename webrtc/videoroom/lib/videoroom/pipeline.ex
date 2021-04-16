@@ -73,7 +73,7 @@ defmodule VideoRoom.Pipeline do
 
   @impl true
   def handle_other({:new_peer, peer_pid, peer_type, ref}, ctx, state) do
-    send(peer_pid, {:new_peer, {:ok, 10}, ref})
+    send(peer_pid, {:new_peer, {:ok, @max_display_num}, ref})
 
     if Map.has_key?(ctx.children, {:endpoint, peer_pid}) do
       Membrane.Logger.warn("Peer already connected, ignoring")
@@ -257,7 +257,7 @@ defmodule VideoRoom.Pipeline do
                     {:forward, {{:endpoint, id}, {:enable_track, new_track_id}}}
                   ]
 
-              # send(endpoint_id, {:signal, {:replace_track, old_track_id, new_track_id}})
+              send(id, {:signal, {:replace_track, old_track_id, new_track_id}})
               {actions, Map.put(display_managers, id, display_manager)}
 
             {:error, :no_such_endpoint_id} ->
@@ -466,7 +466,7 @@ defmodule VideoRoom.Pipeline do
 
               actions = actions ++ [{:forward, {{:endpoint, id}, {:enable_track, new_track_id}}}]
 
-              # send(endpoint_id, {:signal, {:replace_track, old_track_id, new_track_id}})
+              send(id, {:signal, {:display_track, new_track_id}})
               {actions, Map.put(display_managers, id, display_manager)}
 
             {:error, :no_such_endpoint_id} ->

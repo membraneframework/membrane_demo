@@ -87,11 +87,11 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info({:signal, {:replace_track, old_track_id, new_track_id}}, socket) do
-    broadcast!(socket, "replace_track", %{
+    push(socket, "replaceTrack", %{
       data: %{
-        "type" => "replace_track",
-        "old_track_id" => old_track_id,
-        "new_track_id" => new_track_id
+        "type" => "replaceTrack",
+        "oldTrackId" => old_track_id,
+        "newTrackId" => new_track_id
       }
     })
 
@@ -99,10 +99,16 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   @impl true
+  def handle_info({:signal, {:display_track, track_id}}, socket) do
+    push(socket, "displayTrack", %{data: %{"type" => "displayTrack", "trackId" => track_id}})
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info({:new_peer, response, ref}, socket) do
     case response do
       {:ok, max_display_num} ->
-        reply(ref, {:ok, %{max_display_num: max_display_num}})
+        reply(ref, {:ok, %{maxDisplayNum: max_display_num}})
 
       {:error, _reason} = error ->
         reply(ref, error)

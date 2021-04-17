@@ -1,21 +1,22 @@
 defmodule VideoRoom.DisplayManager do
+  @moduledoc false
+  # Module that manages endpoint's tracks i.e. it indicates which tracks should be sent and which disabled in order not
+  # to exceed maximal number of video tracks to display.
   require Membrane.Logger
 
   @type endpoint_id_t :: any()
   @opaque t :: %__MODULE__{
-            owner: endpoint_id_t(),
             displayed: %{},
             queued: MapSet.t(),
             rest: MapSet.t(),
             max_display_num: non_neg_integer()
           }
 
-  @enforce_keys [:owner, :displayed, :queued, :rest, :max_display_num]
+  @enforce_keys [:displayed, :queued, :rest, :max_display_num]
   defstruct @enforce_keys
 
-  def new(owner, max_display_num) do
+  def new(max_display_num) do
     %__MODULE__{
-      owner: owner,
       displayed: %{},
       queued: MapSet.new(),
       rest: MapSet.new(),
@@ -23,6 +24,11 @@ defmodule VideoRoom.DisplayManager do
     }
   end
 
+  @doc """
+  Adds new endpoint.
+
+  If some endpoint is going to send video tracks of endpoint with id `endpoint_id` then this function should be called.
+  """
   @spec add(t(), endpoint_id :: endpoint_id_t()) :: t()
   def add(state, endpoint_id) do
     if map_size(state.displayed) < state.max_display_num,
@@ -30,12 +36,17 @@ defmodule VideoRoom.DisplayManager do
       else: %{state | rest: MapSet.put(state.rest, endpoint_id)}
   end
 
+  @doc """
+  Updates voice activity status of endpoint with id `endpoint_id`.
+
+  Returns `{:replace, old_endpoint_id, new_endpoint_id}` if video track of `new_endpoint_id` should be replaced by
+  video track with `old_endpoint_id`.
+  Otherwise it returns `:ok`.
+  """
   @spec update(t(), endpoint_id :: endpoint_id_t(), activity :: :speech | :silence) ::
           {:ok
            | {:replace, old_endpoint_id :: endpoint_id_t(), new_endpoint_id :: endpoint_id_t()},
            t()}
-          | {:error, :no_such_endpoint_id}
-
   def update(state, endpoint_id, :speech) do
     cond do
       Map.has_key?(state.displayed, endpoint_id) ->
@@ -61,8 +72,7 @@ defmodule VideoRoom.DisplayManager do
         end
 
       true ->
-        Membrane.Logger.warn("No such endpoint id #{inspect(endpoint_id)}")
-        {:error, :no_such_endpoint_id}
+        raise("No such endpoint id #{inspect(endpoint_id)}")
     end
   end
 
@@ -90,18 +100,21 @@ defmodule VideoRoom.DisplayManager do
         {:ok, state}
 
       true ->
-        Membrane.Logger.warn("No such endpoint id #{inspect(endpoint_id)}")
-        {:error, :no_such_endpoint_id}
+        raise("No such endpoint id #{inspect(endpoint_id)}")
     end
   end
 
+  @doc """
+  Removes endpoint with id `endpoint_id`.
+
+  Returns `{:replace, old_endpoint_id, new_endpoint_id}` if video track of `new_endpoint_id` should be sent instead of
+  video track of `old_endpoint_id`.
+  Otherwise it returns `:ok`.
+  """
   @spec remove(t(), endpoint_id :: endpoint_id_t()) ::
           {:ok
-           | {:stop, endpoint_id :: endpoint_id_t()}
            | {:replace, old_endpoint_id :: endpoint_id_t(), new_endpoint_id :: endpoint_id_t()},
            t()}
-          | {:error, :no_such_endpoint_id}
-
   def remove(state, endpoint_id) do
     cond do
       Map.has_key?(state.displayed, endpoint_id) ->
@@ -135,11 +148,15 @@ defmodule VideoRoom.DisplayManager do
         {:ok, state}
 
       true ->
-        Membrane.Logger.warn("No such endpoint id #{inspect(endpoint_id)}")
-        {:error, :no_such_endpoint_id}
+        raise("No such endpoint id #{inspect(endpoint_id)}")
     end
   end
 
+  @doc """
+  Returns information if video track of given endpoint should be displayed.
+
+  Returns `false` if there is not enough space for new video track.
+  """
   def display?(state, endpoint_id), do: Map.has_key?(state.displayed, endpoint_id)
 
   def get_max_display_num(state), do: state.max_display_num

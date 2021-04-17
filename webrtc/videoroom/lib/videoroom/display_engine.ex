@@ -1,4 +1,13 @@
 defmodule VideoRoom.DisplayEngine do
+  @moduledoc """
+  This module manages endpoints to always show only those video tiles that are currently "speaking".
+
+  It returns actions that enables or disables tracks according to their speech activity events.
+  It allows for displaying constant number of video tiles.
+  Tiles that are considered to "speaking" will replace tiles that are considered to "silence". If no one is currently
+  speaking or there is not enough speaking endpoints there will also be shown endpoints with silence status.
+  """
+
   alias VideoRoom.DisplayManager
   alias Membrane.WebRTC.{Track, Endpoint}
 
@@ -9,6 +18,11 @@ defmodule VideoRoom.DisplayEngine do
   @enforce_keys [:max_display_num, :endpoints, :display_managers]
   defstruct @enforce_keys
 
+  @doc """
+  Returns new DisplayEngine state that should be passed to subsequent functions.
+
+  `max_display_num` is a maximal number of streams that should be displayed on peer.
+  """
   @spec new(max_display_num :: non_neg_integer()) :: t()
   def new(max_display_num) do
     %__MODULE__{
@@ -18,16 +32,25 @@ defmodule VideoRoom.DisplayEngine do
     }
   end
 
+  @doc """
+  Adds a new endpoint to monitor.
+
+  If other endpoints are going to send video tracks of endpoint `endpoint` then this function should be called.
+  Should be paired with `remove_endpoint/2`.
+  """
   @spec add_new_endpoint(state :: t(), endpoint :: Endpoint.t()) :: t()
   def add_new_endpoint(state, %Endpoint{type: :screensharing}), do: state
 
   def add_new_endpoint(state, endpoint) do
-    display_manager = DisplayManager.new(endpoint.id, state.max_display_num)
+    display_manager = DisplayManager.new(state.max_display_num)
     display_manager = setup_display_manager(display_manager, state.endpoints)
     state = put_in(state.display_managers[endpoint.id], display_manager)
     put_in(state.endpoints[endpoint.id], endpoint)
   end
 
+  @doc """
+  Adds a new track that will be sent by other endpoints to the peer.
+  """
   @spec add_new_track(state :: t(), track_id :: Track.id(), endpoint :: Endpoint.t()) :: t()
   def add_new_track(state, track_id, endpoint) do
     track = Endpoint.get_track_by_id(endpoint, track_id)
@@ -35,6 +58,13 @@ defmodule VideoRoom.DisplayEngine do
     %{state | display_managers: display_managers}
   end
 
+  @doc """
+  Updates voice activity status.
+
+  This function should be called each time endpoint with id `endpoint_id` is changing its voice activity state.
+  It returns actions that will enable or disable proper tracks in proper endpoints according to a new status of
+  voice activity for `endpoint_id`.
+  """
   @spec vad_notification(state :: t(), vad :: boolean(), endpoint_id :: Endpoint.id()) ::
           {actions :: [], state :: t()}
   def vad_notification(state, vad, endpoint_id) do
@@ -69,9 +99,6 @@ defmodule VideoRoom.DisplayEngine do
 
               send(id, {:signal, {:replace_track, old_track_id, new_track_id}})
               {actions, Map.put(display_managers, id, display_manager)}
-
-            {:error, :no_such_endpoint_id} ->
-              {[], display_managers}
           end
       end)
 
@@ -79,11 +106,20 @@ defmodule VideoRoom.DisplayEngine do
     {actions, state}
   end
 
+  @doc """
+  Returns information if video track of endpoint with id `endpoint_id2` should be displayed on endpoint with id
+  `endpoint_id1` i.e. if `endpoint_id1` has free space for video track.
+  """
   @spec display?(state :: t(), endpoint_id1 :: Endpoint.id(), endpoint_id2 :: Endpoint.id()) ::
           boolean()
   def display?(state, endpoint_id1, endpoint_id2),
     do: DisplayManager.display?(state.display_managers[endpoint_id1], endpoint_id2)
 
+  @doc """
+  Removes endpoint with id `endpoint_id`.
+
+  Should be paired with `add_new_endpoint/2`.
+  """
   @spec remove_endpoint(state :: t(), endpoint_id :: Endpoint.id()) ::
           {actions :: [], state :: t()}
   def remove_endpoint(state, endpoint_id) do
@@ -138,9 +174,6 @@ defmodule VideoRoom.DisplayEngine do
 
             send(id, {:signal, {:display_track, new_track_id}})
             {actions, Map.put(display_managers, id, display_manager)}
-
-          {:error, :no_such_endpoint_id} ->
-            {[], display_managers}
         end
     end)
   end

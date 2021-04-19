@@ -240,7 +240,7 @@ defmodule VideoRoom.Pipeline do
       {:absent, [], state}
     else
       {endpoint, state} = pop_in(state, [:endpoints, peer_pid])
-      {actions, display_engine} = DisplayEngine.remove_endpoint(state.display_engine, peer_pid)
+      {actions, display_engine} = DisplayEngine.remove_endpoint(state.display_engine, endpoint)
       state = %{state | display_engine: display_engine}
       tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
 

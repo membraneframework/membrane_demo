@@ -120,10 +120,13 @@ defmodule VideoRoom.DisplayEngine do
 
   Should be paired with `add_new_endpoint/2`.
   """
-  @spec remove_endpoint(state :: t(), endpoint_id :: Endpoint.id()) ::
-          {actions :: [], state :: t()}
-  def remove_endpoint(state, endpoint_id) do
+  @spec remove_endpoint(state :: t(), endpoint :: Endpoint.t()) :: {actions :: [], state :: t()}
+  def remove_endpoint(state, %Endpoint{type: :screensharing}), do: {[], state}
+
+  def remove_endpoint(state, endpoint) do
+    endpoint_id = endpoint.id
     {_display_manager, state} = pop_in(state.display_managers[endpoint_id])
+    {_endpoint, state} = pop_in(state.endpoints[endpoint_id])
 
     {actions, display_managers} =
       cleanup_display_managers(state.display_managers, endpoint_id, state.endpoints)

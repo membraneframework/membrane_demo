@@ -47,7 +47,9 @@ defmodule VideoRoom.Pipeline do
     play(self())
 
     Process.send_after(self(), :check_if_empty, @empty_room_timeout)
-    {:ok, %{room_id: room_id, tracks: %{}, endpoints_tracks_ids: %{}, active_screensharing: nil}}
+
+    {{:ok, log_metadata: [room: room_id]},
+     %{room_id: room_id, tracks: %{}, endpoints_tracks_ids: %{}, active_screensharing: nil}}
   end
 
   @impl true
@@ -94,7 +96,10 @@ defmodule VideoRoom.Pipeline do
             dtls_srtp: true,
             pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
             cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
-          ]
+          ],
+          # TODO: change peer_pid to something that will easier identify peer when we introduce
+          # participants labelling
+          log_metadata: [peer: peer_pid]
         }
       }
 

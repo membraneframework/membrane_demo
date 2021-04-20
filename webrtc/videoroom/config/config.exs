@@ -11,6 +11,6 @@ config :logger,
     [module: Membrane.SRTP.Encryptor, function: "handle_event/4", level_lower_than: :error]
   ]
 
-config :logger, :console, metadata: [:room]
+config :logger, :console, metadata: [:room, :peer]
 
 import_config("#{config_env()}.exs")

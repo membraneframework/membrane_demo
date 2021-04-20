@@ -4,7 +4,8 @@ import Config
 # turn_servers: "addr:port:username:password:proto"
 config :membrane_videoroom_demo,
   stun_servers: System.get_env("STUN_SERVERS", "64.233.163.127:19302"),
-  turn_servers: System.get_env("TURN_SERVERS", "")
+  turn_servers: System.get_env("TURN_SERVERS", ""),
+  max_display_num: System.get_env("MAX_DISPLAY_NUM", "3")
 
 protocol = if System.get_env("USE_TLS") == "true", do: :https, else: :http
 

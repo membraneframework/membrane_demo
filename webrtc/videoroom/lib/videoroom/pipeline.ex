@@ -8,8 +8,6 @@ defmodule VideoRoom.Pipeline do
 
   @pipeline_registry VideoRoom.PipelineRegistry
 
-  @max_display_num 3
-
   # pipeline has to be started before any peer connects with it
   # therefore there is a possibility that pipeline won't be ever closed
   # (a peer started it but failed to join) so set a timeout at pipeline's start to check
@@ -51,11 +49,16 @@ defmodule VideoRoom.Pipeline do
 
     Process.send_after(self(), :check_if_empty, @empty_room_timeout)
 
+    max_display_num =
+      Application.fetch_env!(:membrane_videoroom_demo, :max_display_num)
+      |> parse_max_display_num()
+
     {:ok,
      %{
        room_id: room_id,
        endpoints: %{},
-       display_engine: DisplayEngine.new(@max_display_num),
+       display_engine: DisplayEngine.new(max_display_num),
+       max_display_num: max_display_num,
        active_screensharing: nil
      }}
   end
@@ -73,7 +76,7 @@ defmodule VideoRoom.Pipeline do
 
   @impl true
   def handle_other({:new_peer, peer_pid, peer_type, ref}, ctx, state) do
-    send(peer_pid, {:new_peer, {:ok, @max_display_num}, ref})
+    send(peer_pid, {:new_peer, {:ok, state.max_display_num}, ref})
 
     if Map.has_key?(ctx.children, {:endpoint, peer_pid}) do
       Membrane.Logger.warn("Peer already connected, ignoring")
@@ -315,6 +318,19 @@ defmodule VideoRoom.Pipeline do
 
   defp new_peer_links(:screensharing, _endpoint, _ctx, _state) do
     []
+  end
+
+  defp parse_max_display_num(max_display_num_raw) do
+    case Integer.parse(max_display_num_raw) do
+      {max_display_num, ""} when max_display_num > 0 ->
+        max_display_num
+
+      _ ->
+        raise("""
+        Expected MAX_DISPLAY_NUM to be string representing positive integer,
+        got: #{inspect(max_display_num_raw)}
+        """)
+    end
   end
 
   defp parse_stun_servers(""), do: []

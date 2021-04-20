@@ -90,8 +90,8 @@ const setup = async () => {
             removeVideoElement(track, stream);
           }
         },
-        onServerReplaceStream: replaceStream,
-        onServerDisplayStream: addVideoElement,
+        onReplaceStream: replaceStream,
+        onDisplayStream: addVideoElement,
         onConnectionError: setErrorMessage,
       },
     });

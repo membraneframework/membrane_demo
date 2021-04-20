@@ -25,7 +25,7 @@ export function setupRoomUI({
   muteAudio = false,
   muteVideo = false,
   state: newState,
-}: SetupOptions) {
+}: SetupOptions): void {
   state = {
     ...state,
     ...newState,
@@ -34,7 +34,7 @@ export function setupRoomUI({
   setupMediaControls(muteAudio, muteVideo);
 }
 
-export function setLocalScreenSharingStatus(active: boolean) {
+export function setLocalScreenSharingStatus(active: boolean): void {
   state.isLocalScreenSharingActive = active;
 }
 
@@ -42,8 +42,10 @@ export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 
-export function addVideoElement(stream: MediaStream, mute: boolean = false) {
-  console.log(stream);
+export function addVideoElement(
+  stream: MediaStream,
+  mute: boolean = false
+): void {
   let video = document.getElementById(stream.id) as HTMLVideoElement;
 
   if (!video) {
@@ -60,7 +62,10 @@ export function addVideoElement(stream: MediaStream, mute: boolean = false) {
   video.muted = mute;
 }
 
-export function removeVideoElement(_: MediaStreamTrack, stream: MediaStream) {
+export function removeVideoElement(
+  _: MediaStreamTrack,
+  stream: MediaStream
+): void {
   if (stream.getTracks().length > 0) {
     return;
   }
@@ -71,7 +76,7 @@ export function removeVideoElement(_: MediaStreamTrack, stream: MediaStream) {
   grid.className = `grid-${Math.min(2, grid.childNodes.length)}`;
 }
 
-export function setScreensharing(stream: MediaStream) {
+export function setScreensharing(stream: MediaStream): void {
   if (state.isScreenSharingActive) {
     console.error(
       "Cannot set screensharing as either local or remote screensharing is active"
@@ -104,7 +109,7 @@ export function setScreensharing(stream: MediaStream) {
     .classList.add("VideoChat-screensharing");
 }
 
-export function removeScreensharing() {
+export function removeScreensharing(): void {
   const screensharing = document.getElementById(
     "screensharing"
   )! as HTMLDivElement;
@@ -121,7 +126,7 @@ export function removeScreensharing() {
 
 export function setErrorMessage(
   message: string = "Cannot connect to server, refresh the page and try again"
-) {
+): void {
   const errorContainer = document.getElementById("videochat-error");
   if (errorContainer) {
     errorContainer.innerHTML = message;
@@ -129,19 +134,21 @@ export function setErrorMessage(
   }
 }
 
-export function replaceStream(oldStreamId: String, newStream: MediaStream) {
+export function replaceStream(
+  oldStreamId: String,
+  newStream: MediaStream
+): void {
   const grid = document.getElementById("videos-grid");
-  var videoElements = grid?.getElementsByTagName("video")!;
-  for (var i = 0; i < videoElements.length; i++) {
-    var videoElement = videoElements.item(i);
+  const videoElements = grid?.getElementsByTagName("video")!;
+  for (let i = 0; i < videoElements.length; i++) {
+    const videoElement = videoElements.item(i);
     if (videoElement?.id === oldStreamId) {
       videoElement!.srcObject = newStream;
       videoElement!.id = newStream.id;
+      break;
     }
   }
 }
-
-export function showStream() {}
 
 function updateScreensharingToggleButton(
   visible: boolean,

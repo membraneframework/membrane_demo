@@ -29,8 +29,8 @@ interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
-  onServerReplaceStream?: (oldStreamId: String, newStream: MediaStream) => void;
-  onServerDisplayStream?: (stream: MediaStream) => void;
+  onReplaceStream?: (oldStreamId: String, newStream: MediaStream) => void;
+  onDisplayStream?: (stream: MediaStream) => void;
 }
 
 interface MembraneWebRTCConfig {
@@ -113,12 +113,12 @@ export class MembraneWebRTC {
       const newTrackId = data.data.newTrackId;
       const newStream = this.midToStream.get(newTrackId)!;
       const oldStreamId = this.midToStream.get(oldTrackId)?.id!;
-      this.callbacks.onServerReplaceStream?.(oldStreamId, newStream);
+      this.callbacks.onReplaceStream?.(oldStreamId, newStream);
     });
     this.channel.on("displayTrack", (data: any) => {
       const trackId = data.data.trackId;
       const stream = this.midToStream.get(trackId)!;
-      this.callbacks.onServerDisplayStream?.(stream);
+      this.callbacks.onDisplayStream?.(stream);
     });
 
     this.channel.on("error", (data: any) => {

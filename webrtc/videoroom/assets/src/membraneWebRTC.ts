@@ -49,6 +49,7 @@ export class MembraneWebRTC {
   private localTracks: Set<MediaStreamTrack> = new Set<MediaStreamTrack>();
   private localStream?: MediaStream;
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
+  private screensharingStream?: MediaStream;
   private midToStream: Map<String, MediaStream> = new Map();
   private connection?: RTCPeerConnection;
   private readonly rtcConfig: RTCConfiguration = {
@@ -194,16 +195,20 @@ export class MembraneWebRTC {
     return (event: RTCTrackEvent) => {
       const [stream] = event.streams;
       const mid = event.transceiver.mid;
-      this.remoteStreams.add(stream);
-      this.midToStream.set(mid!, stream);
-
       const isScreenSharing = mid?.includes("SCREEN") || false;
+
+      isScreenSharing
+        ? (this.screensharingStream = stream)
+        : this.remoteStreams.add(stream);
+      this.midToStream.set(mid!, stream);
 
       stream.onremovetrack = (event) => {
         const hasTracks = stream.getTracks().length > 0;
 
         if (!hasTracks) {
-          this.remoteStreams.delete(stream);
+          isScreenSharing
+            ? (this.screensharingStream = undefined)
+            : this.remoteStreams.delete(stream);
           this.midToStream.delete(mid!);
           stream.onremovetrack = null;
         }

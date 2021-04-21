@@ -47,16 +47,6 @@ defmodule VideoRoom.ParticipantMapper do
   end
 
   @impl true
-  def handle_call({:participant_by_mid, mid}, _from, state) do
-    participant =
-      state
-      |> Map.values()
-      |> Enum.find(&(mid in &1.mids))
-
-    {:reply, {:ok, participant}, state}
-  end
-
-  @impl true
   def handle_call(:list_participants, _from, state) do
     {:reply, state |> Map.values(), state}
   end

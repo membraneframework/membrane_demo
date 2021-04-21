@@ -26,7 +26,7 @@ interface TrackContext {
 }
 
 interface Callbacks {
-  onAddTrack?: (ctx: TrackContext) => void;
+  onAddTrack?: (ctx: TrackContext, display: boolean) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
   onReplaceStream?: (oldStreamId: String, newStream: MediaStream) => void;
@@ -220,13 +220,16 @@ export class MembraneWebRTC {
         });
       };
 
-      if (this.remoteStreams.size <= this.maxDisplayNum || isScreenSharing) {
-        this.callbacks.onAddTrack?.({
+      let display =
+        this.remoteStreams.size <= this.maxDisplayNum || isScreenSharing;
+      this.callbacks.onAddTrack?.(
+        {
           track: event.track,
           stream: stream,
           isScreenSharing,
-        });
-      }
+        },
+        display
+      );
     };
   };
 }

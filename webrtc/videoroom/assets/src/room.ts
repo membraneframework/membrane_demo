@@ -2,8 +2,10 @@ import "../css/app.scss";
 
 import { MEDIA_CONSTRAINTS, SCREENSHARING_CONSTRAINTS } from "./consts";
 import {
+  addAudioElement,
   addVideoElement,
   getRoomId,
+  removeAudioElement,
   removeScreensharing,
   removeVideoElement,
   replaceStream,
@@ -76,11 +78,13 @@ const setup = async () => {
 
     const webrtc = new MembraneWebRTC(socket, getRoomId(), {
       callbacks: {
-        onAddTrack: ({ track, stream, isScreenSharing }) => {
+        onAddTrack: ({ track, stream, isScreenSharing }, display) => {
           if (isScreenSharing) {
             setScreensharing(stream);
-          } else {
+          } else if (display) {
             addVideoElement(stream);
+          } else {
+            addAudioElement(stream);
           }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {
@@ -88,6 +92,7 @@ const setup = async () => {
             removeScreensharing();
           } else {
             removeVideoElement(track, stream);
+            removeAudioElement(track, stream);
           }
         },
         onReplaceStream: replaceStream,

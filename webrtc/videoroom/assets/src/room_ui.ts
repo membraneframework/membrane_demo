@@ -62,6 +62,13 @@ export function addVideoElement(
   video.muted = mute;
 }
 
+export function addAudioElement(stream: MediaStream): void {
+  let audio = document.createElement("audio");
+  audio.id = stream.id;
+  audio.srcObject = stream;
+  audio.autoplay = true;
+}
+
 export function removeVideoElement(
   _: MediaStreamTrack,
   stream: MediaStream
@@ -74,6 +81,17 @@ export function removeVideoElement(
 
   const grid = document.getElementById("videos-grid")!;
   grid.className = `grid-${Math.min(2, grid.childNodes.length)}`;
+}
+
+export function removeAudioElement(
+  _: MediaStreamTrack,
+  stream: MediaStream
+): void {
+  if (stream.getTracks().length > 0) {
+    return;
+  }
+
+  document.getElementById(stream.id)?.remove();
 }
 
 export function setScreensharing(stream: MediaStream): void {

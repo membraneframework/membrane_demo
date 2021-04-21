@@ -49,9 +49,7 @@ defmodule VideoRoom.Pipeline do
 
     Process.send_after(self(), :check_if_empty, @empty_room_timeout)
 
-    max_display_num =
-      Application.fetch_env!(:membrane_videoroom_demo, :max_display_num)
-      |> parse_max_display_num()
+    max_display_num = Application.fetch_env!(:membrane_videoroom_demo, :max_display_num)
 
     {:ok,
      %{
@@ -92,11 +90,8 @@ defmodule VideoRoom.Pipeline do
       display_engine = DisplayEngine.add_new_endpoint(state.display_engine, endpoint)
       state = %{state | display_engine: display_engine}
 
-      stun_servers =
-        parse_stun_servers(Application.fetch_env!(:membrane_videoroom_demo, :stun_servers))
-
-      turn_servers =
-        parse_turn_servers(Application.fetch_env!(:membrane_videoroom_demo, :turn_servers))
+      stun_servers = Application.fetch_env!(:membrane_videoroom_demo, :stun_servers)
+      turn_servers = Application.fetch_env!(:membrane_videoroom_demo, :turn_servers)
 
       children = %{
         endpoint_bin => %EndpointBin{
@@ -311,68 +306,6 @@ defmodule VideoRoom.Pipeline do
 
   defp new_peer_links(:screensharing, _endpoint, _ctx, _state) do
     []
-  end
-
-  defp parse_max_display_num(max_display_num_raw) do
-    case Integer.parse(max_display_num_raw) do
-      {max_display_num, ""} when max_display_num > 0 ->
-        max_display_num
-
-      _ ->
-        raise("""
-        Expected MAX_DISPLAY_NUM to be string representing positive integer,
-        got: #{inspect(max_display_num_raw)}
-        """)
-    end
-  end
-
-  defp parse_stun_servers(""), do: []
-
-  defp parse_stun_servers(servers) do
-    servers
-    |> String.split(",")
-    |> Enum.map(fn server ->
-      with [addr, port] <- String.split(server, ":"),
-           {port, ""} <- Integer.parse(port) do
-        %{server_addr: parse_addr(addr), server_port: port}
-      else
-        _ -> raise("Bad STUN server format. Expected addr:port, got: #{inspect(server)}")
-      end
-    end)
-  end
-
-  defp parse_turn_servers(""), do: []
-
-  defp parse_turn_servers(servers) do
-    servers
-    |> String.split(",")
-    |> Enum.map(fn server ->
-      with [addr, port, username, password, proto] when proto in ["udp", "tcp", "tls"] <-
-             String.split(server, ":"),
-           {port, ""} <- Integer.parse(port) do
-        %{
-          server_addr: parse_addr(addr),
-          server_port: port,
-          username: username,
-          password: password,
-          proto: String.to_atom(proto)
-        }
-      else
-        _ ->
-          raise("""
-          "Bad TURN server format. Expected addr:port:username:password:proto, got: \
-          #{inspect(server)}
-          """)
-      end
-    end)
-  end
-
-  defp parse_addr(addr) do
-    case :inet.parse_address(String.to_charlist(addr)) do
-      {:ok, ip} -> ip
-      # FQDN?
-      {:error, :einval} -> addr
-    end
   end
 
   defp get_all_tracks(endpoints),

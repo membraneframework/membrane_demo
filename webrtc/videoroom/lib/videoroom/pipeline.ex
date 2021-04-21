@@ -178,6 +178,8 @@ defmodule VideoRoom.Pipeline do
     display_engine = DisplayEngine.add_new_track(state.display_engine, track_id, endpoint)
     state = %{state | display_engine: display_engine}
 
+    track = Endpoint.get_track_by_id(endpoint, track_id)
+
     tee = {:tee, {endpoint_id, track_id}}
     fake = {:fake, {endpoint_id, track_id}}
 
@@ -196,10 +198,7 @@ defmodule VideoRoom.Pipeline do
         flat_map_children(ctx, fn
           {:endpoint, peer_pid} = other_endpoint
           when endpoint_bin != other_endpoint and peer_pid != state.active_screensharing ->
-            track_enabled =
-              if String.starts_with?(track_id, "SCREEN:"),
-                do: true,
-                else: DisplayEngine.display?(state.display_engine, peer_pid, endpoint_id)
+            track_enabled = enable_track?(track, endpoint, peer_pid, state.display_engine)
 
             [
               link(tee)
@@ -295,13 +294,7 @@ defmodule VideoRoom.Pipeline do
       {:tee, {endpoint_id, track_id}} = tee ->
         endpoint = state.endpoints[endpoint_id]
         track = Endpoint.get_track_by_id(endpoint, track_id)
-
-        track_enabled =
-          cond do
-            endpoint.type == :screensharing -> true
-            track.type == :audio -> true
-            true -> DisplayEngine.display?(state.display_engine, new_endpoint_id, endpoint_id)
-          end
+        track_enabled = enable_track?(track, endpoint, new_endpoint_id, state.display_engine)
 
         [
           link(tee)
@@ -384,4 +377,13 @@ defmodule VideoRoom.Pipeline do
 
   defp get_all_tracks(endpoints),
     do: Enum.flat_map(endpoints, fn {_id, endpoint} -> Endpoint.get_tracks(endpoint) end)
+
+  defp enable_track?(track, endpoint, target_endpoint_id, display_engine) do
+    # checks if `track` from `endpoint` should be displayed on endpoint with id `target_endpoint_id`
+    cond do
+      endpoint.type == :screensharing -> true
+      track.type == :audio -> true
+      true -> DisplayEngine.display?(display_engine, target_endpoint_id, endpoint.id)
+    end
+  end
 end

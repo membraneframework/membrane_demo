@@ -5,7 +5,16 @@
     <h3 class="roomName">Room: <%= @room_id %></h3>
     <div id="videochat-error" class="VideoChatError" style="display: none;"> </div>
     <div id="videochat" class="VideoChat">
-        <div id="screensharing" class="Screensharing" style="display: none;"></div>
+        <div id="screensharing" class="Screensharing" style="display: none;">
+            <video></video>
+            <div class="VideoLabel">Placeholder</div>
+        </div>
+        <template id="video-feed-template">
+            <div class="VideoFeed">
+                <video></video>
+                <div class="VideoLabel">Placeholder</div>
+            <div>
+        </template>
         <div class="VideoGridContainer">
             <div id="videos-grid" class="grid-1"></div>
         </div>

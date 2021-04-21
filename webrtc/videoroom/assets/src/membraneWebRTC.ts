@@ -11,8 +11,14 @@ const phoenix_channel_push_result = async (push: Push): Promise<any> => {
   });
 };
 
+interface Participant {
+  displayName: string;
+  mids: string[];
+}
+
 interface OfferData {
   data: RTCSessionDescriptionInit;
+  participants: Participant[];
 }
 
 interface CandidateData {
@@ -22,6 +28,7 @@ interface CandidateData {
 interface TrackContext {
   track: MediaStreamTrack;
   stream: MediaStream;
+  label?: string;
   isScreenSharing: boolean;
 }
 
@@ -35,6 +42,7 @@ interface MembraneWebRTCConfig {
   callbacks?: Callbacks;
   rtcConfig?: RTCConfiguration;
   type?: "participant" | "screensharing";
+  displayName: string;
 }
 
 export class MembraneWebRTC {
@@ -42,11 +50,13 @@ export class MembraneWebRTC {
   private _channel?: Channel;
   private channelId: string;
   private socketRefs: string[] = [];
+  private displayName: string;
 
   private localTracks: Set<MediaStreamTrack> = new Set<MediaStreamTrack>();
   private localStream?: MediaStream;
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
   private connection?: RTCPeerConnection;
+  private participants: Participant[] = [];
   private readonly rtcConfig: RTCConfiguration = {
     iceServers: [
       {
@@ -69,9 +79,10 @@ export class MembraneWebRTC {
   }
 
   constructor(socket: Socket, roomId: string, config: MembraneWebRTCConfig) {
-    const { type = "participant", callbacks, rtcConfig } = config;
+    const { type = "participant", callbacks, rtcConfig, displayName } = config;
 
     this.socket = socket;
+    this.displayName = displayName;
     this.channelId =
       type === "participant"
         ? `room:${roomId}`
@@ -100,7 +111,9 @@ export class MembraneWebRTC {
   };
 
   public start = async () => {
-    this.channel = this.socket.channel(this.channelId, {});
+    this.channel = this.socket.channel(this.channelId, {
+      displayName: this.displayName,
+    });
 
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onRemoteCandidate);
@@ -128,6 +141,8 @@ export class MembraneWebRTC {
   };
 
   private onOffer = async (offer: OfferData) => {
+    this.participants = offer.participants;
+
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtcConfig);
       this.connection.onicecandidate = this.onLocalCandidate();
@@ -177,8 +192,9 @@ export class MembraneWebRTC {
       const [stream] = event.streams;
       this.remoteStreams.add(stream);
 
-      const isScreenSharing =
-        event.transceiver.mid?.includes("SCREEN") || false;
+      const mid = event.transceiver.mid!;
+
+      const isScreenSharing = mid.includes("SCREEN") || false;
 
       stream.onremovetrack = (event) => {
         const hasTracks = stream.getTracks().length > 0;
@@ -197,6 +213,9 @@ export class MembraneWebRTC {
 
       this.callbacks.onAddTrack?.({
         track: event.track,
+        label:
+          this.participants.find((p) => p.mids.includes(mid))?.displayName ||
+          "Not found",
         stream: stream,
         isScreenSharing,
       });

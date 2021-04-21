@@ -31,7 +31,7 @@ const cleanLocalScreensharing = () => {
   setLocalScreenSharingStatus(false);
 };
 
-const startLocalScreensharing = async (socket: Socket) => {
+const startLocalScreensharing = async (socket: Socket, user: string) => {
   if (screensharing) return;
 
   try {
@@ -40,6 +40,7 @@ const startLocalScreensharing = async (socket: Socket) => {
     );
 
     screensharing = new MembraneWebRTC(socket, getRoomId(), {
+      displayName: `${user} Screensharing`,
       type: "screensharing",
       callbacks: {
         onConnectionError: (message) => {
@@ -73,13 +74,21 @@ const setup = async () => {
     const socket = new Socket("/socket");
     socket.connect();
 
+    const displayName = `User #${Math.floor(Math.random() * 10000 + 1)}`;
+
     const webrtc = new MembraneWebRTC(socket, getRoomId(), {
+      displayName,
       callbacks: {
-        onAddTrack: ({ track, stream, isScreenSharing }) => {
+        onAddTrack: ({
+          track,
+          stream,
+          isScreenSharing,
+          label: displayName,
+        }) => {
           if (isScreenSharing) {
-            setScreensharing(stream);
+            setScreensharing(stream, displayName || "Unknown");
           } else {
-            addVideoElement(track, stream, false);
+            addVideoElement(track, stream, displayName || "Unknown", false);
           }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {
@@ -98,12 +107,13 @@ const setup = async () => {
     );
     localStream.getTracks().forEach((track) => {
       webrtc.addTrack(track, localStream);
-      addVideoElement(track, localStream, true);
+      addVideoElement(track, localStream, "Me", true);
     });
 
     setupRoomUI({
       state: {
-        onLocalScreensharingStart: () => startLocalScreensharing(socket),
+        onLocalScreensharingStart: () =>
+          startLocalScreensharing(socket, displayName),
         onLocalScreensharingStop: stopLocalScreensharing,
         onToggleAudio: () =>
           localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled)),

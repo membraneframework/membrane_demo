@@ -2,6 +2,7 @@ defmodule VideoRoom.Pipeline do
   use Membrane.Pipeline
 
   alias Membrane.WebRTC.{EndpointBin, Track}
+  alias VideoRoom.ParticipantMapper
 
   require Membrane.Logger
 
@@ -48,8 +49,16 @@ defmodule VideoRoom.Pipeline do
 
     Process.send_after(self(), :check_if_empty, @empty_room_timeout)
 
+    {:ok, mapper} = ParticipantMapper.start_link()
+
     {{:ok, log_metadata: [room: room_id]},
-     %{room_id: room_id, tracks: %{}, endpoints_tracks_ids: %{}, active_screensharing: nil}}
+     %{
+       room_id: room_id,
+       tracks: %{},
+       endpoints_tracks_ids: %{},
+       active_screensharing: nil,
+       participant_mapper: mapper
+     }}
   end
 
   @impl true
@@ -64,7 +73,7 @@ defmodule VideoRoom.Pipeline do
   end
 
   @impl true
-  def handle_other({:new_peer, peer_pid, peer_type, ref}, ctx, state) do
+  def handle_other({:new_peer, peer_pid, peer_type, display_name, ref}, ctx, state) do
     send(peer_pid, {:new_peer, :ok, ref})
 
     if Map.has_key?(ctx.children, {:endpoint, peer_pid}) do
@@ -75,6 +84,13 @@ defmodule VideoRoom.Pipeline do
       Process.monitor(peer_pid)
 
       tracks = new_tracks(peer_type)
+
+      ParticipantMapper.register_participant(
+        state.participant_mapper,
+        peer_pid,
+        display_name,
+        tracks
+      )
 
       endpoint = {:endpoint, peer_pid}
 
@@ -186,6 +202,18 @@ defmodule VideoRoom.Pipeline do
     {{:ok, spec: spec}, state}
   end
 
+  def handle_notification(
+        {:signal, {:sdp_offer, _} = message},
+        {:endpoint, peer_pid},
+        _ctx,
+        state
+      ) do
+    participants = ParticipantMapper.list_participants(state.participant_mapper)
+
+    send(peer_pid, {:signal, message, participants})
+    {:ok, state}
+  end
+
   def handle_notification({:signal, message}, {:endpoint, peer_pid}, _ctx, state) do
     send(peer_pid, {:signal, message})
     {:ok, state}
@@ -194,6 +222,13 @@ defmodule VideoRoom.Pipeline do
   def handle_notification({:vad, _val} = msg, from, _ctx, state) do
     Membrane.Logger.debug("#{inspect(msg)}, from: #{inspect(from)}")
     {:ok, state}
+  end
+
+  @impl true
+  def handle_shutdown(reason, %{participant_mapper: mapper}) do
+    if reason == :normal do
+      GenServer.stop(mapper)
+    end
   end
 
   defp maybe_remove_peer(peer_pid, ctx, state) do

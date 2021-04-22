@@ -78,11 +78,9 @@ const setup = async () => {
 
     const webrtc = new MembraneWebRTC(socket, getRoomId(), {
       callbacks: {
-        onAddTrack: ({ track, stream, isScreenSharing }, display) => {
+        onAddTrack: ({ track, stream, isScreenSharing }) => {
           if (isScreenSharing) {
             setScreensharing(stream);
-          } else if (display) {
-            addVideoElement(stream);
           } else {
             addAudioElement(stream);
           }

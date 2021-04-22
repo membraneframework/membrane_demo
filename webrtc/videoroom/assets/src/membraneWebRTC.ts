@@ -26,7 +26,7 @@ interface TrackContext {
 }
 
 interface Callbacks {
-  onAddTrack?: (ctx: TrackContext, display: boolean) => void;
+  onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
   onReplaceStream?: (oldStreamId: String, newStream: MediaStream) => void;
@@ -194,13 +194,13 @@ export class MembraneWebRTC {
   private onTrack = () => {
     return (event: RTCTrackEvent) => {
       const [stream] = event.streams;
-      const mid = event.transceiver.mid;
-      const isScreenSharing = mid?.includes("SCREEN") || false;
+      const mid = event.transceiver.mid!;
+      const isScreenSharing = mid.includes("SCREEN") || false;
 
       isScreenSharing
         ? (this.screensharingStream = stream)
         : this.remoteStreams.add(stream);
-      this.midToStream.set(mid!, stream);
+      this.midToStream.set(mid, stream);
 
       stream.onremovetrack = (event) => {
         const hasTracks = stream.getTracks().length > 0;
@@ -209,7 +209,7 @@ export class MembraneWebRTC {
           isScreenSharing
             ? (this.screensharingStream = undefined)
             : this.remoteStreams.delete(stream);
-          this.midToStream.delete(mid!);
+          this.midToStream.delete(mid);
           stream.onremovetrack = null;
         }
 
@@ -220,16 +220,18 @@ export class MembraneWebRTC {
         });
       };
 
-      let display =
-        this.remoteStreams.size <= this.maxDisplayNum || isScreenSharing;
       this.callbacks.onAddTrack?.(
         {
           track: event.track,
           stream: stream,
           isScreenSharing,
-        },
-        display
+        }
       );
+
+      if (this.remoteStreams.size <= this.maxDisplayNum && !isScreenSharing) {
+        // screensharing is displayed by default
+        this.callbacks.onDisplayStream?.(stream);
+      }
     };
   };
 }

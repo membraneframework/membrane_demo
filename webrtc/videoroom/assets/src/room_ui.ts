@@ -50,12 +50,13 @@ export function addVideoElement(
 
   if (!video) {
     video = document.createElement("video");
-    video.id = stream.id;
     const grid = document.getElementById("videos-grid")!;
     grid.appendChild(video);
 
     grid.className = `grid-${Math.min(2, grid.childNodes.length)}`;
   }
+
+  video.id = stream.id;
   video.srcObject = stream;
   video.autoplay = true;
   video.playsInline = true;
@@ -63,7 +64,12 @@ export function addVideoElement(
 }
 
 export function addAudioElement(stream: MediaStream): void {
-  let audio = document.createElement("audio");
+  let audio = document.getElementById(stream.id) as HTMLAudioElement;
+
+  if (!audio) {
+    audio = document.createElement("audio");
+  }
+
   audio.id = stream.id;
   audio.srcObject = stream;
   audio.autoplay = true;
@@ -156,16 +162,11 @@ export function replaceStream(
   oldStreamId: String,
   newStream: MediaStream
 ): void {
-  const grid = document.getElementById("videos-grid");
-  const videoElements = grid?.getElementsByTagName("video")!;
-  for (let i = 0; i < videoElements.length; i++) {
-    const videoElement = videoElements.item(i);
-    if (videoElement?.id === oldStreamId) {
-      videoElement!.srcObject = newStream;
-      videoElement!.id = newStream.id;
-      break;
-    }
-  }
+  const videoElement = document.getElementById(
+    oldStreamId.toString()
+  ) as HTMLVideoElement;
+  videoElement!.srcObject = newStream;
+  videoElement!.id = newStream.id;
 }
 
 function updateScreensharingToggleButton(

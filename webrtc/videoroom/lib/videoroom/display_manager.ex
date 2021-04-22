@@ -59,9 +59,7 @@ defmodule VideoRoom.DisplayManager do
       MapSet.member?(state.rest, endpoint_id) ->
         case find_inactive(state) do
           {nil, nil} ->
-            state = %{state | queued: MapSet.put(state.queued, endpoint_id)}
-            state = %{state | rest: MapSet.delete(state.rest, endpoint_id)}
-            {:ok, state}
+            {:ok, move(endpoint_id, :rest, :queued, state)}
 
           {inactive_endpoint_id, :silence} ->
             state = swap({inactive_endpoint_id, :displayed}, {endpoint_id, :rest}, :speech, state)
@@ -81,17 +79,13 @@ defmodule VideoRoom.DisplayManager do
           {:ok, state}
         else
           queued_endpoint_id = MapSet.to_list(state.queued) |> List.first()
-          state = %{state | displayed: Map.delete(state.displayed, endpoint_id)}
-          state = %{state | rest: MapSet.put(state.rest, endpoint_id)}
-          state = %{state | queued: MapSet.delete(state.queued, queued_endpoint_id)}
-          state = %{state | displayed: Map.put(state.displayed, queued_endpoint_id, :speech)}
+          move({endpoint_id, :displayed}, :rest, state)
+          move({queued_endpoint_id, :queued}, :displayed, :speech, state)
           {{:replace, endpoint_id, queued_endpoint_id}, state}
         end
 
       MapSet.member?(state.queued, endpoint_id) ->
-        state = %{state | queued: MapSet.delete(state.queued, endpoint_id)}
-        state = %{state | rest: MapSet.put(state.queued, endpoint_id)}
-        {:ok, state}
+        {:ok, move(endpoint_id, :queued, :rest, state)}
 
       MapSet.member?(state.rest, endpoint_id) ->
         {:ok, state}
@@ -124,15 +118,13 @@ defmodule VideoRoom.DisplayManager do
             {:ok, state}
           else
             state = %{state | displayed: Map.delete(state.displayed, endpoint_id)}
-            state = %{state | rest: MapSet.delete(state.rest, rest_endpoint_id)}
-            state = %{state | displayed: Map.put(state.displayed, rest_endpoint_id, :silence)}
+            state = move({rest_endpoint_id, :rest}, :displayed, :silence, state)
             {{:replace, endpoint_id, rest_endpoint_id}, state}
           end
         else
           queued_endpoint_id = MapSet.to_list(state.queued) |> List.first()
           state = %{state | displayed: Map.delete(state.displayed, endpoint_id)}
-          state = %{state | queued: MapSet.delete(state.queued, queued_endpoint_id)}
-          state = %{state | displayed: Map.put(state.displayed, queued_endpoint_id, :speech)}
+          state = move({queued_endpoint_id, :queued}, :displayed, :speech, state)
           {{:replace, endpoint_id, queued_endpoint_id}, state}
         end
 
@@ -166,10 +158,26 @@ defmodule VideoRoom.DisplayManager do
   end
 
   defp swap({key, map}, {elem, set}, val, state) do
-    # moves `key` from map `map` to set `set` and `elem` from set `set` to map `map` with value `val`
-    state = Map.put(state, map, Map.delete(Map.get(state, map), key))
-    state = Map.put(state, set, MapSet.put(Map.get(state, set), key))
+    # moves `key` from `map` to `set` and `elem` from `set` to `map` with value `val`
+    state = move({key, map}, set, state)
+    move({elem, set}, map, val, state)
+  end
+
+  defp move({elem, set}, map, val, state) do
+    # moves `elem` from `set` to `map` with value `val`
     state = Map.put(state, set, MapSet.delete(Map.get(state, set), elem))
     Map.put(state, map, Map.put(Map.get(state, map), elem, val))
+  end
+
+  defp move(elem, src_set, dst_set, state) do
+    # moves `elem` from `src_set` to `dst_set`
+    state = Map.put(state, src_set, MapSet.delete(Map.get(state, src_set), elem))
+    Map.put(state, dst_set, MapSet.put(Map.get(state, dst_set), elem))
+  end
+
+  defp move({key, map}, set, state) do
+    # moves `key` from `map` to `set`
+    state = Map.put(state, map, Map.delete(Map.get(state, map), key))
+    Map.put(state, set, MapSet.put(Map.get(state, set), key))
   end
 end

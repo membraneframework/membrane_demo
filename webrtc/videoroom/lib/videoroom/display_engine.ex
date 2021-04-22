@@ -78,19 +78,8 @@ defmodule VideoRoom.DisplayEngine do
               {[], Map.put(display_managers, id, display_manager)}
 
             {{:replace, old_id, new_id}, display_manager} ->
-              old_track_id =
-                Endpoint.get_video_tracks(state.endpoints[old_id])
-                |> List.first()
-                |> case do
-                  %Track{id: id} -> id
-                end
-
-              new_track_id =
-                Endpoint.get_video_tracks(state.endpoints[new_id])
-                |> List.first()
-                |> case do
-                  %Track{id: id} -> id
-                end
+              old_track_id = get_video_track_id(state.endpoints[old_id])
+              new_track_id = get_video_track_id(state.endpoints[new_id])
 
               actions = [
                 {:forward, {{:endpoint, id}, {:disable_track, old_track_id}}},
@@ -107,13 +96,17 @@ defmodule VideoRoom.DisplayEngine do
   end
 
   @doc """
-  Returns information if video track of endpoint with id `endpoint_id2` should be displayed on endpoint with id
-  `endpoint_id1` i.e. if `endpoint_id1` has free space for video track.
+  Returns information if video track of endpoint with id `source_endpoint_id` should be displayed on endpoint with id
+  `target_endpoint_id` i.e. if `target_endpoint_id` has free space for video track.
   """
-  @spec display?(state :: t(), endpoint_id1 :: Endpoint.id(), endpoint_id2 :: Endpoint.id()) ::
+  @spec display?(
+          state :: t(),
+          target_endpoint_id :: Endpoint.id(),
+          source_endpoint_id :: Endpoint.id()
+        ) ::
           boolean()
-  def display?(state, endpoint_id1, endpoint_id2),
-    do: DisplayManager.display?(state.display_managers[endpoint_id1], endpoint_id2)
+  def display?(state, target_endpoint_id, source_endpoint_id),
+    do: DisplayManager.display?(state.display_managers[target_endpoint_id], source_endpoint_id)
 
   @doc """
   Removes endpoint with id `endpoint_id`.
@@ -179,5 +172,13 @@ defmodule VideoRoom.DisplayEngine do
             {actions, Map.put(display_managers, id, display_manager)}
         end
     end)
+  end
+
+  defp get_video_track_id(endpoint) do
+    Endpoint.get_video_tracks(endpoint)
+    |> List.first()
+    |> case do
+      %Track{id: id} -> id
+    end
   end
 end

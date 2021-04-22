@@ -64,10 +64,7 @@ defmodule VideoRoom.DisplayManager do
             {:ok, state}
 
           {inactive_endpoint_id, :silence} ->
-            state = %{state | displayed: Map.delete(state.displayed, inactive_endpoint_id)}
-            state = %{state | rest: MapSet.put(state.rest, inactive_endpoint_id)}
-            state = %{state | rest: MapSet.delete(state.rest, endpoint_id)}
-            state = put_in(state.displayed[endpoint_id], :speech)
+            state = swap({inactive_endpoint_id, :displayed}, {endpoint_id, :rest}, :speech, state)
             {{:replace, inactive_endpoint_id, endpoint_id}, state}
         end
 
@@ -166,5 +163,13 @@ defmodule VideoRoom.DisplayManager do
     Enum.find(state.displayed, {nil, nil}, fn {_endpoint_id, activity} ->
       activity == :silence
     end)
+  end
+
+  defp swap({key, map}, {elem, set}, val, state) do
+    # moves `key` from map `map` to set `set` and `elem` from set `set` to map `map` with value `val`
+    state = Map.put(state, map, Map.delete(Map.get(state, map), key))
+    state = Map.put(state, set, MapSet.put(Map.get(state, set), key))
+    state = Map.put(state, set, MapSet.delete(Map.get(state, set), elem))
+    Map.put(state, map, Map.put(Map.get(state, map), elem, val))
   end
 end

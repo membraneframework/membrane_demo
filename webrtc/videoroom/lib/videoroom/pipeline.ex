@@ -208,8 +208,14 @@ defmodule VideoRoom.Pipeline do
         end)
 
     spec = %ParentSpec{children: children, links: links}
-    endpoint = Endpoint.update_track_encoding(state.endpoints[endpoint_id], track_id, encoding)
-    state = put_in(state.endpoints[endpoint_id], endpoint)
+
+    state =
+      update_in(
+        state,
+        [:endpoints, endpoint_id],
+        &Endpoint.update_track_encoding(&1, track_id, encoding)
+      )
+
     {{:ok, spec: spec}, state}
   end
 

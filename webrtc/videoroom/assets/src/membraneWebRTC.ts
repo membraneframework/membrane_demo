@@ -220,13 +220,11 @@ export class MembraneWebRTC {
         });
       };
 
-      this.callbacks.onAddTrack?.(
-        {
-          track: event.track,
-          stream: stream,
-          isScreenSharing,
-        }
-      );
+      this.callbacks.onAddTrack?.({
+        track: event.track,
+        stream: stream,
+        isScreenSharing,
+      });
 
       if (this.remoteStreams.size <= this.maxDisplayNum && !isScreenSharing) {
         // screensharing is displayed by default

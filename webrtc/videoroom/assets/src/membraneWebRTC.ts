@@ -215,7 +215,7 @@ export class MembraneWebRTC {
         track: event.track,
         label:
           this.participants.find((p) => p.mids.includes(mid))?.displayName ||
-          "Not found",
+          "",
         stream: stream,
         isScreenSharing,
       });

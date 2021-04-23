@@ -86,9 +86,9 @@ const setup = async () => {
           label: displayName,
         }) => {
           if (isScreenSharing) {
-            setScreensharing(stream, displayName || "Unknown");
+            setScreensharing(stream, displayName || "", "My screensharing");
           } else {
-            addVideoElement(track, stream, displayName || "Unknown", false);
+            addVideoElement(track, stream, displayName || "", false);
           }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {
@@ -121,6 +121,7 @@ const setup = async () => {
           localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled)),
         isLocalScreenSharingActive: false,
         isScreenSharingActive: false,
+        displayName,
       },
       muteAudio: false,
       muteVideo: false,

@@ -1,6 +1,7 @@
 interface State {
   isScreenSharingActive: boolean;
   isLocalScreenSharingActive: boolean;
+  displayName: string;
   onLocalScreensharingStart?: () => void;
   onLocalScreensharingStop?: () => void;
   onToggleAudio?: () => void;
@@ -8,6 +9,7 @@ interface State {
 }
 
 let state: State = {
+  displayName: "",
   isScreenSharingActive: false,
   isLocalScreenSharingActive: false,
   onLocalScreensharingStart: undefined,
@@ -95,7 +97,11 @@ export function removeVideoElement(_: MediaStreamTrack, stream: MediaStream) {
   resizeVideosGrid();
 }
 
-export function setScreensharing(stream: MediaStream, label: string) {
+export function setScreensharing(
+  stream: MediaStream,
+  label: string,
+  selfLabel: string
+) {
   if (state.isScreenSharingActive) {
     console.error(
       "Cannot set screensharing as either local or remote screensharing is active"
@@ -119,7 +125,7 @@ export function setScreensharing(stream: MediaStream, label: string) {
     "div[class='VideoLabel']"
   )! as HTMLDivElement;
 
-  videoLabel.innerText = label;
+  videoLabel.innerText = label.includes(state.displayName) ? selfLabel : label;
 
   const video = screensharing.querySelector("video")!;
   video.id = stream.id;
@@ -136,14 +142,16 @@ export function removeScreensharing() {
   const screensharing = document.getElementById(
     "screensharing"
   )! as HTMLDivElement;
-  screensharing.innerHTML = "";
   screensharing.style.display = "none";
+
+  const video = screensharing.querySelector("video")!;
+  video.srcObject = null;
 
   state.isScreenSharingActive = false;
 
   updateScreensharingToggleButton(true, "start");
   document
-    .getElementById("videochat")!
+    .querySelector("#videochat")!
     .classList.remove("VideoChat-screensharing");
 }
 

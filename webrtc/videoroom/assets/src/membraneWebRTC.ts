@@ -128,9 +128,10 @@ export class MembraneWebRTC {
     });
 
     await phoenix_channel_push_result(this.channel.join());
-    await phoenix_channel_push_result(this.channel.push("start", {})).then(
-      (response) => (this.maxDisplayNum = response.maxDisplayNum)
+    const { maxDisplayNum } = await phoenix_channel_push_result(
+      this.channel.push("start", {})
     );
+    this.maxDisplayNum = maxDisplayNum;
   };
 
   public stop = () => {
@@ -197,18 +198,22 @@ export class MembraneWebRTC {
       const mid = event.transceiver.mid!;
       const isScreenSharing = mid.includes("SCREEN") || false;
 
-      isScreenSharing
-        ? (this.screensharingStream = stream)
-        : this.remoteStreams.add(stream);
+      if (isScreenSharing) {
+        this.screensharingStream = stream;
+      } else {
+        this.remoteStreams.add(stream);
+      }
       this.midToStream.set(mid, stream);
 
       stream.onremovetrack = (event) => {
         const hasTracks = stream.getTracks().length > 0;
 
         if (!hasTracks) {
-          isScreenSharing
-            ? (this.screensharingStream = undefined)
-            : this.remoteStreams.delete(stream);
+          if (isScreenSharing) {
+            this.screensharingStream = undefined;
+          } else {
+            this.remoteStreams.delete(stream);
+          }
           this.midToStream.delete(mid);
           stream.onremovetrack = null;
         }

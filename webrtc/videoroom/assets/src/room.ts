@@ -117,6 +117,7 @@ const setup = async () => {
           localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled)),
         isLocalScreenSharingActive: false,
         isScreenSharingActive: false,
+        onCrash: () => webrtc.crash()
       },
       muteAudio: false,
       muteVideo: false,

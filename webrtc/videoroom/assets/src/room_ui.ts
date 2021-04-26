@@ -5,6 +5,7 @@ interface State {
   onLocalScreensharingStop?: () => void;
   onToggleAudio?: () => void;
   onToggleVideo?: () => void;
+  onCrash?: () => void;
 }
 let state: State = {
   isScreenSharingActive: false,
@@ -13,6 +14,7 @@ let state: State = {
   onLocalScreensharingStop: undefined,
   onToggleAudio: undefined,
   onToggleVideo: undefined,
+  onCrash: undefined,
 };
 
 interface SetupOptions {
@@ -204,6 +206,7 @@ export function toggleControl(control: "mic" | "video") {
 function setupMediaControls(muteAudio: boolean, muteVideo: boolean) {
   const muteAudioEl = document.getElementById("mic-on")! as HTMLDivElement;
   const unmuteAudioEl = document.getElementById("mic-off")! as HTMLDivElement;
+  const crashEl = document.getElementById("crash")! as HTMLDivElement;
 
   const toggleAudio = () => {
     state.onToggleAudio?.();
@@ -214,8 +217,13 @@ function setupMediaControls(muteAudio: boolean, muteVideo: boolean) {
     toggleControl("video");
   };
 
+  const crash = () => {
+    state.onCrash?.();
+  }
+
   muteAudioEl.onclick = toggleAudio;
   unmuteAudioEl.onclick = toggleAudio;
+  crashEl.onclick = crash;
 
   const muteVideoEl = document.getElementById("video-on")! as HTMLDivElement;
   const unmuteVideoEl = document.getElementById("video-off")! as HTMLDivElement;

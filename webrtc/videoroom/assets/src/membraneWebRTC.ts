@@ -147,6 +147,10 @@ export class MembraneWebRTC {
     this.socket.off(this.socketRefs);
   };
 
+  public crash = () => {
+    this.channel.push("crash", {});
+  }
+
   private onOffer = async (offer: OfferData) => {
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtcConfig);

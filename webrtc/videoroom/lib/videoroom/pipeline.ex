@@ -125,7 +125,7 @@ defmodule VideoRoom.Pipeline do
             []
         end)
 
-      spec = %ParentSpec{children: children, links: links}
+      spec = %ParentSpec{children: children, links: links, crash_group: {peer_pid, :temporary}}
 
       state = %{
         state
@@ -152,6 +152,10 @@ defmodule VideoRoom.Pipeline do
       {:present, actions, state} ->
         {{:ok, actions}, state}
     end
+  end
+
+  def handle_other({:crash, peer_pid}, _ctx, state) do
+    {{:ok, forward: {{:endpoint, peer_pid}, {:signal, :crash}}}, state}
   end
 
   def handle_other({:DOWN, _ref, :process, pid, _reason}, ctx, state) do

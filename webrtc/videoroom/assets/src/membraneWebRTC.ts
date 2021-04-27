@@ -134,7 +134,7 @@ export class MembraneWebRTC {
       const participant = this.participants.find(({ mids }) =>
         mids.includes(newTrackId)
       );
-      console.log(participant, "replaceTrack");
+
       this.callbacks.onReplaceStream?.(
         oldStream,
         newStream,
@@ -147,7 +147,7 @@ export class MembraneWebRTC {
       const participant = this.participants.find(({ mids }) =>
         mids.includes(trackId)
       );
-      console.log(participant, "displayTrack");
+
       this.callbacks.onDisplayStream?.(stream, participant?.displayName ?? "");
     });
 

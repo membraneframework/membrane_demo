@@ -1,4 +1,4 @@
-FROM elixir:1.12-alpine AS build
+FROM membraneframeworklabs/elixir-jit-tmp:latest AS build
 
 # install build dependencies
 RUN \

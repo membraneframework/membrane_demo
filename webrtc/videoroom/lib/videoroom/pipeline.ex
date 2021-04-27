@@ -85,9 +85,7 @@ defmodule VideoRoom.Pipeline do
 
       tracks = new_tracks(peer_type)
 
-      endpoint =
-        Endpoint.new(peer_pid, peer_type, tracks)
-        |> Endpoint.put_context(%{display_name: display_name})
+      endpoint = Endpoint.new(peer_pid, peer_type, tracks, %{display_name: display_name})
 
       endpoint_bin = {:endpoint, peer_pid}
 

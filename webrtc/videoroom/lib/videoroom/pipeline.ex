@@ -3,7 +3,6 @@ defmodule VideoRoom.Pipeline do
 
   alias Membrane.WebRTC.{EndpointBin, Track, Endpoint}
   alias VideoRoom.DisplayEngine
-  alias VideoRoom.ParticipantMapper
 
   require Membrane.Logger
 
@@ -50,13 +49,11 @@ defmodule VideoRoom.Pipeline do
 
     Process.send_after(self(), :check_if_empty, @empty_room_timeout)
 
-    {:ok, mapper} = ParticipantMapper.start_link()
     max_display_num = Application.fetch_env!(:membrane_videoroom_demo, :max_display_num)
 
     {{:ok, log_metadata: [room: room_id]},
      %{
        room_id: room_id,
-       participant_mapper: mapper,
        endpoints: %{},
        display_engine: DisplayEngine.new(max_display_num),
        max_display_num: max_display_num,
@@ -87,15 +84,12 @@ defmodule VideoRoom.Pipeline do
       Process.monitor(peer_pid)
 
       tracks = new_tracks(peer_type)
-      endpoint = Endpoint.new(peer_pid, peer_type, tracks)
-      endpoint_bin = {:endpoint, peer_pid}
 
-      ParticipantMapper.register_participant(
-        state.participant_mapper,
-        peer_pid,
-        display_name,
-        tracks
-      )
+      endpoint =
+        Endpoint.new(peer_pid, peer_type, tracks)
+        |> Endpoint.put_context(%{display_name: display_name})
+
+      endpoint_bin = {:endpoint, peer_pid}
 
       display_engine = DisplayEngine.add_new_endpoint(state.display_engine, endpoint)
       state = %{state | display_engine: display_engine}
@@ -238,7 +232,11 @@ defmodule VideoRoom.Pipeline do
         _ctx,
         state
       ) do
-    participants = ParticipantMapper.list_participants(state.participant_mapper)
+    participants =
+      state.endpoints
+      |> Enum.map(fn {_, %Endpoint{inbound_tracks: tracks, ctx: ctx}} ->
+        %{display_name: ctx.display_name, mids: Map.keys(tracks)}
+      end)
 
     send(peer_pid, {:signal, message, participants})
     {:ok, state}
@@ -253,18 +251,6 @@ defmodule VideoRoom.Pipeline do
     display_engine = state.display_engine
     {actions, display_engine} = DisplayEngine.vad_notification(display_engine, val, endpoint_id)
     {{:ok, actions}, %{state | display_engine: display_engine}}
-  end
-
-  def handle_notification({:signal, message}, {:endpoint, peer_pid}, _ctx, state) do
-    send(peer_pid, {:signal, message})
-    {:ok, state}
-  end
-
-  @impl true
-  def handle_shutdown(reason, %{participant_mapper: mapper}) do
-    if reason == :normal do
-      GenServer.stop(mapper)
-    end
   end
 
   defp maybe_remove_peer(peer_pid, ctx, state) do

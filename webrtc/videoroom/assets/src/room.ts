@@ -14,6 +14,7 @@ import {
 
 import { MembraneWebRTC } from "./membraneWebRTC";
 import { Socket } from "phoenix";
+import { parse } from "query-string";
 
 declare global {
   interface MediaDevices {
@@ -69,12 +70,21 @@ const stopLocalScreensharing = () => {
   cleanLocalScreensharing();
 };
 
+const getDisplayNameOrRedirect = (): string => {
+  const { display_name: displayName } = parse(document.location.search);
+
+  // remove query params without reloading the page
+  window.history.replaceState(null, "", window.location.pathname);
+
+  return displayName as string;
+};
+
 const setup = async () => {
   try {
     const socket = new Socket("/socket");
     socket.connect();
 
-    const displayName = `User #${Math.floor(Math.random() * 10000 + 1)}`;
+    const displayName = getDisplayNameOrRedirect();
 
     const webrtc = new MembraneWebRTC(socket, getRoomId(), {
       displayName,

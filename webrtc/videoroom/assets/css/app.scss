@@ -60,10 +60,6 @@ $media-controls-height: 80px;
 
   video {
     width: 100%;
-    border-radius: 0.5 * $space;
-    border-color: #383838;
-    border-style: solid;
-    border-width: 1px;
     object-fit: fill;
   }
 
@@ -99,6 +95,12 @@ $media-controls-height: 80px;
 
 .VideoFeed {
   position: relative;
+  display: flex;
+  border-radius: 0.5 * $space;
+  border-color: #383838;
+  border-style: solid;
+  border-width: 1px;
+  overflow: hidden;
 }
 
 .VideoLabel {
@@ -107,8 +109,7 @@ $media-controls-height: 80px;
   left: 0;
 
   min-width: 10 * $space;
-  padding: $space;
-  padding-top: 0;
+  padding: 0 $space;
   z-index: 1000;
 
   color: white;
@@ -204,6 +205,7 @@ $media-controls-height: 80px;
   .submitButton {
     @include dark-button;
     transition: all 0.1s ease-in-out;
+    margin-top: $space;
     &:hover {
       background-color: transparent;
       border-color: #fff;

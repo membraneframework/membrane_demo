@@ -3,6 +3,7 @@ defmodule VideoRoomWeb do
     quote do
       use Phoenix.Controller, namespace: VideoRoomWeb
       import Plug.Conn
+      alias VideoRoomWeb.Router.Helpers, as: Routes
     end
   end
 

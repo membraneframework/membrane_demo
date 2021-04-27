@@ -73,7 +73,7 @@ defmodule VideoRoom.Pipeline do
   end
 
   @impl true
-  def handle_other({:new_peer, peer_pid, peer_type, ref}, ctx, state) do
+  def handle_other({:new_peer, peer_pid, peer_type, display_name, ref}, ctx, state) do
     send(peer_pid, {:new_peer, {:ok, state.max_display_num}, ref})
 
     if Map.has_key?(ctx.children, {:endpoint, peer_pid}) do
@@ -84,7 +84,9 @@ defmodule VideoRoom.Pipeline do
       Process.monitor(peer_pid)
 
       tracks = new_tracks(peer_type)
-      endpoint = Endpoint.new(peer_pid, peer_type, tracks)
+
+      endpoint = Endpoint.new(peer_pid, peer_type, tracks, %{display_name: display_name})
+
       endpoint_bin = {:endpoint, peer_pid}
 
       display_engine = DisplayEngine.add_new_endpoint(state.display_engine, endpoint)
@@ -109,7 +111,7 @@ defmodule VideoRoom.Pipeline do
           ],
           # TODO: change peer_pid to something that will easier identify peer when we introduce
           # participants labelling
-          log_metadata: [peer: peer_pid]
+          log_metadata: [peer: peer_label(display_name, peer_pid)]
         }
       }
 
@@ -222,15 +224,31 @@ defmodule VideoRoom.Pipeline do
     {{:ok, spec: spec}, state}
   end
 
-  def handle_notification({:vad, val}, {:endpoint, endpoint_id}, _ctx, state) do
-    display_engine = state.display_engine
-    {actions, display_engine} = DisplayEngine.vad_notification(display_engine, val, endpoint_id)
-    {{:ok, actions}, %{state | display_engine: display_engine}}
+  def handle_notification(
+        {:signal, {:sdp_offer, _} = message},
+        {:endpoint, peer_pid},
+        _ctx,
+        state
+      ) do
+    participants =
+      state.endpoints
+      |> Enum.map(fn {_, %Endpoint{inbound_tracks: tracks, ctx: ctx}} ->
+        %{display_name: ctx.display_name, mids: Map.keys(tracks)}
+      end)
+
+    send(peer_pid, {:signal, message, participants})
+    {:ok, state}
   end
 
   def handle_notification({:signal, message}, {:endpoint, peer_pid}, _ctx, state) do
     send(peer_pid, {:signal, message})
     {:ok, state}
+  end
+
+  def handle_notification({:vad, val}, {:endpoint, endpoint_id}, _ctx, state) do
+    display_engine = state.display_engine
+    {actions, display_engine} = DisplayEngine.vad_notification(display_engine, val, endpoint_id)
+    {{:ok, actions}, %{state | display_engine: display_engine}}
   end
 
   defp maybe_remove_peer(peer_pid, ctx, state) do
@@ -327,5 +345,9 @@ defmodule VideoRoom.Pipeline do
       track.type == :audio -> true
       true -> DisplayEngine.display?(display_engine, target_endpoint_id, endpoint.id)
     end
+  end
+
+  defp peer_label(name, pid) do
+    String.slice(name, 0..min(20, String.length(name))) <> ":" <> "#{inspect(pid)}"
   end
 end

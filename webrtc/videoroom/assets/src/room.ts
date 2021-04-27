@@ -17,6 +17,7 @@ import {
 
 import { MembraneWebRTC } from "./membraneWebRTC";
 import { Socket } from "phoenix";
+import { parse } from "query-string";
 
 declare global {
   interface MediaDevices {
@@ -34,7 +35,7 @@ const cleanLocalScreensharing = () => {
   setLocalScreenSharingStatus(false);
 };
 
-const startLocalScreensharing = async (socket: Socket) => {
+const startLocalScreensharing = async (socket: Socket, user: string) => {
   if (screensharing) return;
 
   try {
@@ -43,6 +44,7 @@ const startLocalScreensharing = async (socket: Socket) => {
     );
 
     screensharing = new MembraneWebRTC(socket, getRoomId(), {
+      displayName: `${user} Screensharing`,
       type: "screensharing",
       callbacks: {
         onConnectionError: (message) => {
@@ -71,16 +73,33 @@ const stopLocalScreensharing = () => {
   cleanLocalScreensharing();
 };
 
+const getDisplayNameOrRedirect = (): string => {
+  const { display_name: displayName } = parse(document.location.search);
+
+  // remove query params without reloading the page
+  window.history.replaceState(null, "", window.location.pathname);
+
+  return displayName as string;
+};
+
 const setup = async () => {
   try {
     const socket = new Socket("/socket");
     socket.connect();
 
+    const displayName = getDisplayNameOrRedirect();
+
     const webrtc = new MembraneWebRTC(socket, getRoomId(), {
+      displayName,
       callbacks: {
-        onAddTrack: ({ track, stream, isScreenSharing }) => {
+        onAddTrack: ({
+          track,
+          stream,
+          isScreenSharing,
+          label: displayName,
+        }) => {
           if (isScreenSharing) {
-            setScreensharing(stream);
+            setScreensharing(stream, displayName || "", "My screensharing");
           } else {
             addAudioElement(stream);
           }
@@ -89,8 +108,8 @@ const setup = async () => {
           if (isScreenSharing) {
             removeScreensharing();
           } else {
-            removeVideoElement(track, stream);
-            removeAudioElement(track, stream);
+            removeVideoElement(stream);
+            removeAudioElement(stream);
           }
         },
         onReplaceStream: replaceStream,
@@ -104,12 +123,14 @@ const setup = async () => {
     );
     localStream.getTracks().forEach((track) => {
       webrtc.addTrack(track, localStream);
-      addVideoElement(localStream, true);
     });
+
+    addVideoElement(localStream, "Me", true);
 
     setupRoomUI({
       state: {
-        onLocalScreensharingStart: () => startLocalScreensharing(socket),
+        onLocalScreensharingStart: () =>
+          startLocalScreensharing(socket, displayName),
         onLocalScreensharingStop: stopLocalScreensharing,
         onToggleAudio: () =>
           localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled)),
@@ -117,6 +138,7 @@ const setup = async () => {
           localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled)),
         isLocalScreenSharingActive: false,
         isScreenSharingActive: false,
+        displayName,
       },
       muteAudio: false,
       muteVideo: false,

@@ -11,8 +11,14 @@ const phoenix_channel_push_result = async (push: Push): Promise<any> => {
   });
 };
 
+interface Participant {
+  displayName: string;
+  mids: string[];
+}
+
 interface OfferData {
   data: RTCSessionDescriptionInit;
+  participants: Participant[];
 }
 
 interface CandidateData {
@@ -22,6 +28,7 @@ interface CandidateData {
 interface TrackContext {
   track: MediaStreamTrack;
   stream: MediaStream;
+  label?: string;
   isScreenSharing: boolean;
 }
 
@@ -29,14 +36,19 @@ interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
-  onReplaceStream?: (oldStreamId: String, newStream: MediaStream) => void;
-  onDisplayStream?: (stream: MediaStream) => void;
+  onReplaceStream?: (
+    oldStream: MediaStream,
+    newStream: MediaStream,
+    newLabel: string
+  ) => void;
+  onDisplayStream?: (stream: MediaStream, label: string) => void;
 }
 
 interface MembraneWebRTCConfig {
   callbacks?: Callbacks;
   rtcConfig?: RTCConfiguration;
   type?: "participant" | "screensharing";
+  displayName: string;
 }
 
 export class MembraneWebRTC {
@@ -44,14 +56,16 @@ export class MembraneWebRTC {
   private _channel?: Channel;
   private channelId: string;
   private socketRefs: string[] = [];
+  private displayName: string;
 
   private maxDisplayNum: number = 1;
   private localTracks: Set<MediaStreamTrack> = new Set<MediaStreamTrack>();
   private localStream?: MediaStream;
-  private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
   private screensharingStream?: MediaStream;
+  private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
   private midToStream: Map<String, MediaStream> = new Map();
   private connection?: RTCPeerConnection;
+  private participants: Participant[] = [];
   private readonly rtcConfig: RTCConfiguration = {
     iceServers: [
       {
@@ -74,9 +88,10 @@ export class MembraneWebRTC {
   }
 
   constructor(socket: Socket, roomId: string, config: MembraneWebRTCConfig) {
-    const { type = "participant", callbacks, rtcConfig } = config;
+    const { type = "participant", callbacks, rtcConfig, displayName } = config;
 
     this.socket = socket;
+    this.displayName = displayName;
     this.channelId =
       type === "participant"
         ? `room:${roomId}`
@@ -105,7 +120,9 @@ export class MembraneWebRTC {
   };
 
   public start = async () => {
-    this.channel = this.socket.channel(this.channelId, {});
+    this.channel = this.socket.channel(this.channelId, {
+      displayName: this.displayName,
+    });
 
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onRemoteCandidate);
@@ -113,13 +130,25 @@ export class MembraneWebRTC {
       const oldTrackId = data.data.oldTrackId;
       const newTrackId = data.data.newTrackId;
       const newStream = this.midToStream.get(newTrackId)!;
-      const oldStreamId = this.midToStream.get(oldTrackId)?.id!;
-      this.callbacks.onReplaceStream?.(oldStreamId, newStream);
+      const oldStream = this.midToStream.get(oldTrackId)!;
+      const participant = this.participants.find(({ mids }) =>
+        mids.includes(newTrackId)
+      );
+
+      this.callbacks.onReplaceStream?.(
+        oldStream,
+        newStream,
+        participant?.displayName ?? ""
+      );
     });
     this.channel.on("displayTrack", (data: any) => {
       const trackId = data.data.trackId;
       const stream = this.midToStream.get(trackId)!;
-      this.callbacks.onDisplayStream?.(stream);
+      const participant = this.participants.find(({ mids }) =>
+        mids.includes(trackId)
+      );
+
+      this.callbacks.onDisplayStream?.(stream, participant?.displayName ?? "");
     });
 
     this.channel.on("error", (data: any) => {
@@ -148,6 +177,8 @@ export class MembraneWebRTC {
   };
 
   private onOffer = async (offer: OfferData) => {
+    this.participants = offer.participants;
+
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtcConfig);
       this.connection.onicecandidate = this.onLocalCandidate();
@@ -227,13 +258,22 @@ export class MembraneWebRTC {
 
       this.callbacks.onAddTrack?.({
         track: event.track,
+        label:
+          this.participants.find((p) => p.mids.includes(mid))?.displayName ||
+          "",
         stream: stream,
         isScreenSharing,
       });
 
       if (this.remoteStreams.size <= this.maxDisplayNum && !isScreenSharing) {
+        const participant = this.participants.find(({ mids }) =>
+          mids.includes(mid)
+        );
         // screensharing is displayed by default
-        this.callbacks.onDisplayStream?.(stream);
+        this.callbacks.onDisplayStream?.(
+          stream,
+          participant?.displayName ?? ""
+        );
       }
     };
   };

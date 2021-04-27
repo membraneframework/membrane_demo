@@ -28,7 +28,7 @@ export function setupRoomUI({
   muteAudio = false,
   muteVideo = false,
   state: newState,
-}: SetupOptions) {
+}: SetupOptions): void {
   state = {
     ...state,
     ...newState,
@@ -37,7 +37,7 @@ export function setupRoomUI({
   setupMediaControls(muteAudio, muteVideo);
 }
 
-export function setLocalScreenSharingStatus(active: boolean) {
+export function setLocalScreenSharingStatus(active: boolean): void {
   state.isLocalScreenSharingActive = active;
 }
 
@@ -45,17 +45,23 @@ export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 
+function elementId(stream: MediaStream, type: "video" | "audio" | "feed") {
+  return `${type}-${stream.id}`;
+}
+
 export function addVideoElement(
-  _: MediaStreamTrack,
   stream: MediaStream,
   label: string,
   mute: boolean = false
-) {
-  let video = document.getElementById(stream.id) as HTMLVideoElement;
+): void {
+  const id = elementId(stream, "video");
+  let video = document.getElementById(id) as HTMLVideoElement;
 
   if (!video) {
     video = setupVideoFeed(stream, label);
   }
+
+  video.id = id;
   video.srcObject = stream;
   video.autoplay = true;
   video.playsInline = true;
@@ -74,12 +80,11 @@ function setupVideoFeed(stream: MediaStream, label: string) {
   const feed = copy.querySelector("div[class='VideoFeed']") as HTMLDivElement;
   const video = feed.querySelector("video") as HTMLVideoElement;
   const videoLabel = feed.querySelector(
-    "div[class='VideoLabel"
+    "div[class='VideoLabel']"
   ) as HTMLDivElement;
 
-  feed.id = `feed-${stream.id}`;
+  feed.id = elementId(stream, "feed");
   videoLabel.innerText = label;
-  video.id = stream.id;
 
   const grid = document.querySelector("#videos-grid")!;
   grid.appendChild(feed);
@@ -88,20 +93,41 @@ function setupVideoFeed(stream: MediaStream, label: string) {
   return video;
 }
 
-export function removeVideoElement(_: MediaStreamTrack, stream: MediaStream) {
+export function addAudioElement(stream: MediaStream): void {
+  const id = elementId(stream, "audio");
+  let audio = document.getElementById(id) as HTMLAudioElement;
+
+  if (!audio) {
+    audio = document.createElement("audio");
+  }
+
+  audio.id = id;
+  audio.srcObject = stream;
+  audio.autoplay = true;
+}
+
+export function removeVideoElement(stream: MediaStream): void {
   if (stream.getTracks().length > 0) {
     return;
   }
 
-  document.getElementById(`feed-${stream.id}`)?.remove();
+  document.getElementById(elementId(stream, "feed"))?.remove();
   resizeVideosGrid();
+}
+
+export function removeAudioElement(stream: MediaStream): void {
+  if (stream.getTracks().length > 0) {
+    return;
+  }
+
+  document.getElementById(elementId(stream, "audio"))?.remove();
 }
 
 export function setScreensharing(
   stream: MediaStream,
   label: string,
   selfLabel: string
-) {
+): void {
   if (state.isScreenSharingActive) {
     console.error(
       "Cannot set screensharing as either local or remote screensharing is active"
@@ -138,7 +164,7 @@ export function setScreensharing(
     .classList.add("VideoChat-screensharing");
 }
 
-export function removeScreensharing() {
+export function removeScreensharing(): void {
   const screensharing = document.getElementById(
     "screensharing"
   )! as HTMLDivElement;
@@ -157,12 +183,21 @@ export function removeScreensharing() {
 
 export function setErrorMessage(
   message: string = "Cannot connect to server, refresh the page and try again"
-) {
+): void {
   const errorContainer = document.getElementById("videochat-error");
   if (errorContainer) {
     errorContainer.innerHTML = message;
     errorContainer.style.display = "block";
   }
+}
+
+export function replaceStream(
+  oldStream: MediaStream,
+  newStream: MediaStream,
+  newLabel: string
+): void {
+  removeVideoElement(oldStream);
+  addVideoElement(newStream, newLabel);
 }
 
 function updateScreensharingToggleButton(

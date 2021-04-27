@@ -13,7 +13,7 @@
             <div class="VideoFeed">
                 <video></video>
                 <div class="VideoLabel">Placeholder</div>
-            <div>
+            </div>
         </template>
         <div class="VideoGridContainer">
             <div id="videos-grid" class="grid-1"></div>

@@ -2,10 +2,13 @@ import "../css/app.scss";
 
 import { MEDIA_CONSTRAINTS, SCREENSHARING_CONSTRAINTS } from "./consts";
 import {
+  addAudioElement,
   addVideoElement,
   getRoomId,
+  removeAudioElement,
   removeScreensharing,
   removeVideoElement,
+  replaceStream,
   setErrorMessage,
   setLocalScreenSharingStatus,
   setScreensharing,
@@ -98,16 +101,19 @@ const setup = async () => {
           if (isScreenSharing) {
             setScreensharing(stream, displayName || "", "My screensharing");
           } else {
-            addVideoElement(track, stream, displayName || "", false);
+            addAudioElement(stream);
           }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {
           if (isScreenSharing) {
             removeScreensharing();
           } else {
-            removeVideoElement(track, stream);
+            removeVideoElement(stream);
+            removeAudioElement(stream);
           }
         },
+        onReplaceStream: replaceStream,
+        onDisplayStream: addVideoElement,
         onConnectionError: setErrorMessage,
       },
     });
@@ -117,8 +123,9 @@ const setup = async () => {
     );
     localStream.getTracks().forEach((track) => {
       webrtc.addTrack(track, localStream);
-      addVideoElement(track, localStream, "Me", true);
     });
+
+    addVideoElement(localStream, "Me", true);
 
     setupRoomUI({
       state: {

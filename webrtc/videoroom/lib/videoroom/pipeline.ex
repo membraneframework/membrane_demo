@@ -265,7 +265,7 @@ defmodule VideoRoom.Pipeline do
     participants =
       state.endpoints
       |> Enum.map(fn {_, %Endpoint{inbound_tracks: tracks, ctx: ctx}} ->
-        %{display_name: ctx.display_name, mids: Map.keys(tracks)}
+        %{display_name: ctx.display_name, ids: Map.keys(tracks)}
       end)
 
     send(peer_pid, {:signal, message, participants})

@@ -22,11 +22,15 @@ interface SetupOptions {
   state?: State;
   muteAudio?: boolean;
   muteVideo?: boolean;
+  enableAudio: boolean;
+  enableVideo: boolean;
 }
 
 export function setupRoomUI({
   muteAudio = false,
   muteVideo = false,
+  enableAudio,
+  enableVideo,
   state: newState,
 }: SetupOptions): void {
   state = {
@@ -34,7 +38,7 @@ export function setupRoomUI({
     ...newState,
   };
   updateScreensharingToggleButton(true, "start");
-  setupMediaControls(muteAudio, muteVideo);
+  setupMediaControls(muteAudio, muteVideo, enableAudio, enableVideo);
 }
 
 export function setLocalScreenSharingStatus(active: boolean): void {
@@ -232,9 +236,19 @@ export function toggleControl(control: "mic" | "video") {
   }
 }
 
-function setupMediaControls(muteAudio: boolean, muteVideo: boolean) {
+function setupMediaControls(
+  muteAudio: boolean,
+  muteVideo: boolean,
+  enableAudio: boolean,
+  enableVideo: boolean
+) {
   const muteAudioEl = document.getElementById("mic-on")! as HTMLDivElement;
   const unmuteAudioEl = document.getElementById("mic-off")! as HTMLDivElement;
+
+  if (!enableAudio) {
+    muteAudioEl.classList.add("DisabledControlIcon");
+    unmuteAudioEl.classList.add("DisabledControlIcon");
+  }
 
   const toggleAudio = () => {
     state.onToggleAudio?.();
@@ -250,6 +264,12 @@ function setupMediaControls(muteAudio: boolean, muteVideo: boolean) {
 
   const muteVideoEl = document.getElementById("video-on")! as HTMLDivElement;
   const unmuteVideoEl = document.getElementById("video-off")! as HTMLDivElement;
+
+  if (!enableVideo) {
+    muteVideoEl.classList.add("DisabledControlIcon");
+    unmuteVideoEl.classList.add("DisabledControlIcon");
+  }
+
   muteVideoEl.onclick = toggleVideo;
   unmuteVideoEl.onclick = toggleVideo;
 

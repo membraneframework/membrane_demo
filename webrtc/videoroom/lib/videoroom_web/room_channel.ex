@@ -4,7 +4,14 @@ defmodule VideoRoomWeb.RoomChannel do
   require Logger
 
   @impl true
-  def join("room:" <> room_id, %{"displayName" => name}, socket) do
+  def join("room:" <> room_id, params, socket) do
+    # FIXME: make use of structs that are serialized to/from camel case to snake case existing atoms
+    params = [
+      display_name: Map.fetch!(params, "displayName"),
+      relay_audio?: Map.get(params, "relayAudio", true),
+      relay_video?: Map.get(params, "relayVideo", true)
+    ]
+
     {room_id, peer_type} =
       case room_id do
         "screensharing:" <> id ->
@@ -27,7 +34,7 @@ defmodule VideoRoomWeb.RoomChannel do
            room_id: room_id,
            pipeline: pipeline,
            peer_type: peer_type,
-           display_name: name
+           params: params
          })}
 
       {:error, reason} ->
@@ -46,9 +53,7 @@ defmodule VideoRoomWeb.RoomChannel do
     type = socket.assigns.peer_type
 
     socket
-    |> send_to_pipeline(
-      {:new_peer, self(), type, socket.assigns.display_name, socket_ref(socket)}
-    )
+    |> send_to_pipeline({:new_peer, self(), type, socket.assigns.params, socket_ref(socket)})
 
     {:noreply, socket}
   end

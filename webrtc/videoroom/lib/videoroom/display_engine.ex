@@ -68,6 +68,17 @@ defmodule VideoRoom.DisplayEngine do
   @spec vad_notification(state :: t(), vad :: boolean(), endpoint_id :: Endpoint.id()) ::
           {actions :: [], state :: t()}
   def vad_notification(state, vad, endpoint_id) do
+    with %Endpoint{} = endpoint <- state.endpoints[endpoint_id],
+         video_tracks_count when video_tracks_count > 0 <-
+           Endpoint.get_video_tracks(endpoint) |> length() do
+      handle_vad_notification(state, vad, endpoint_id)
+    else
+      _ ->
+        {[], state}
+    end
+  end
+
+  defp handle_vad_notification(state, vad, endpoint_id) do
     {actions, display_managers} =
       state.display_managers
       |> Map.delete(endpoint_id)

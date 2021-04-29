@@ -1,6 +1,10 @@
 import "../css/app.scss";
 
-import { MEDIA_CONSTRAINTS, SCREENSHARING_CONSTRAINTS } from "./consts";
+import {
+  AUDIO_MEDIA_CONSTRAINTS,
+  SCREENSHARING_CONSTRAINTS,
+  VIDEO_MEDIA_CONSTRAINTS,
+} from "./consts";
 import {
   addAudioElement,
   addVideoElement,
@@ -17,6 +21,7 @@ import {
 
 import { MembraneWebRTC } from "./membraneWebRTC";
 import { Socket } from "phoenix";
+import { createFakeVideoStream } from "./utils";
 import { parse } from "query-string";
 
 declare global {
@@ -24,6 +29,9 @@ declare global {
     getDisplayMedia: (
       constraints: MediaStreamConstraints
     ) => Promise<MediaStream>;
+  }
+  interface HTMLCanvasElement {
+    captureStream(frameRate?: number): MediaStream;
   }
 }
 
@@ -44,7 +52,11 @@ const startLocalScreensharing = async (socket: Socket, user: string) => {
     );
 
     screensharing = new MembraneWebRTC(socket, getRoomId(), {
-      displayName: `${user} Screensharing`,
+      signalingOptions: {
+        displayName: `${user} Screensharing`,
+        relayVideo: true,
+        relayAudio: false,
+      },
       type: "screensharing",
       callbacks: {
         onConnectionError: (message) => {
@@ -89,8 +101,37 @@ const setup = async () => {
 
     const displayName = getDisplayNameOrRedirect();
 
+    let localAudioStream: MediaStream | null = null;
+    let localVideoStream: MediaStream | null = null;
+
+    try {
+      localAudioStream = await navigator.mediaDevices.getUserMedia(
+        AUDIO_MEDIA_CONSTRAINTS
+      );
+    } catch (error) {
+      console.error(
+        "Couldn't get microphone permission:",
+        error
+      );
+    }
+
+    try {
+      localVideoStream = await navigator.mediaDevices.getUserMedia(
+        VIDEO_MEDIA_CONSTRAINTS
+      );
+    } catch (error) {
+      console.error(
+        "Couldn't get camera permission:",
+        error
+      );
+    }
+
     const webrtc = new MembraneWebRTC(socket, getRoomId(), {
-      displayName,
+      signalingOptions: {
+        displayName,
+        relayAudio: localAudioStream !== null,
+        relayVideo: localVideoStream !== null,
+      },
       callbacks: {
         onAddTrack: ({
           track,
@@ -118,14 +159,24 @@ const setup = async () => {
       },
     });
 
-    const localStream = await navigator.mediaDevices.getUserMedia(
-      MEDIA_CONSTRAINTS
-    );
-    localStream.getTracks().forEach((track) => {
-      webrtc.addTrack(track, localStream);
-    });
-
-    addVideoElement(localStream, "Me", true);
+    if (localAudioStream) {
+      localAudioStream
+        .getTracks()
+        .forEach((track) => webrtc.addTrack(track, localAudioStream!));
+    }
+    if (localVideoStream) {
+      localVideoStream
+        .getTracks()
+        .forEach((track) => webrtc.addTrack(track, localVideoStream!));
+      addVideoElement(localVideoStream, "Me", true);
+    } else {
+      const video = VIDEO_MEDIA_CONSTRAINTS.video as MediaTrackConstraintSet;
+      const fakeVideoStream = createFakeVideoStream({
+        height: video!.height as number,
+        width: video.width! as number,
+      });
+      addVideoElement(fakeVideoStream, "Me", true);
+    }
 
     setupRoomUI({
       state: {
@@ -133,15 +184,21 @@ const setup = async () => {
           startLocalScreensharing(socket, displayName),
         onLocalScreensharingStop: stopLocalScreensharing,
         onToggleAudio: () =>
-          localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled)),
+          localAudioStream
+            ?.getAudioTracks()
+            .forEach((t) => (t.enabled = !t.enabled)),
         onToggleVideo: () =>
-          localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled)),
+          localVideoStream
+            ?.getVideoTracks()
+            .forEach((t) => (t.enabled = !t.enabled)),
         isLocalScreenSharingActive: false,
         isScreenSharingActive: false,
         displayName,
       },
       muteAudio: false,
       muteVideo: false,
+      enableAudio: localAudioStream !== null,
+      enableVideo: localVideoStream !== null,
     });
 
     webrtc.start();

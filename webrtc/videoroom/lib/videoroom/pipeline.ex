@@ -128,6 +128,9 @@ defmodule VideoRoom.Pipeline do
       links = new_peer_links(peer_type, endpoint_bin, ctx, state)
 
       tracks_msgs =
+      if tracks == [] do
+        []
+      else
         flat_map_children(ctx, fn
           {:endpoint, other_peer_pid} = endpoint_bin
           when other_peer_pid != state.active_screensharing ->
@@ -136,6 +139,7 @@ defmodule VideoRoom.Pipeline do
           _child ->
             []
         end)
+      end
 
       spec = %ParentSpec{children: children, links: links}
 
@@ -271,7 +275,7 @@ defmodule VideoRoom.Pipeline do
       {endpoint, state} = pop_in(state, [:endpoints, peer_pid])
       {actions, display_engine} = DisplayEngine.remove_endpoint(state.display_engine, endpoint)
       state = %{state | display_engine: display_engine}
-      tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | active?: false})
+      tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
 
       children =
         Endpoint.get_tracks(endpoint)

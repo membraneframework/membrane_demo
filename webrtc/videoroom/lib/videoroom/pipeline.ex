@@ -64,6 +64,13 @@ defmodule VideoRoom.Pipeline do
   end
 
   @impl true
+  def handle_crash_group_down(group_name, _ctx, state) do
+    IO.inspect("#{group_name} down!!!", label: "$$$$")
+
+    {:ok, state}
+  end
+
+  @impl true
   def handle_other({:new_peer, peer_pid, peer_type, ref}, ctx, state) do
     send(peer_pid, {:new_peer, :ok, ref})
 
@@ -115,8 +122,8 @@ defmodule VideoRoom.Pipeline do
             []
         end)
 
-      spec = %ParentSpec{children: children, links: links}
-
+      spec = %ParentSpec{children: children, links: links, crash_group: {peer_pid, :temporary}}
+      # spec = %ParentSpec{children: children, links: links}
       state =
         %{
           state
@@ -162,6 +169,9 @@ defmodule VideoRoom.Pipeline do
   @impl true
   def handle_notification({:new_track, track_id, encoding}, endpoint, ctx, state) do
     Membrane.Logger.info("New incoming #{encoding} track: #{track_id}")
+
+    {:endpoint, peer_pid} = endpoint
+
     tee = {:tee, track_id}
     fake = {:fake, track_id}
     children = %{tee => Membrane.Element.Tee.Parallel, fake => Membrane.Element.Fake.Sink.Buffers}
@@ -181,7 +191,7 @@ defmodule VideoRoom.Pipeline do
             []
         end)
 
-    spec = %ParentSpec{children: children, links: links}
+    spec = %ParentSpec{children: children, links: links, crash_group: {peer_pid, :temporary}}
     state = update_in(state, [:tracks, track_id], &%Track{&1 | encoding: encoding})
     {{:ok, spec: spec}, state}
   end
@@ -260,6 +270,13 @@ defmodule VideoRoom.Pipeline do
   end
 
   defp new_peer_links(:participant, endpoint, ctx, state) do
+    children_list = Map.to_list(ctx.children)
+    IO.inspect(Enum.map(children_list, fn {c, _} -> c end))
+    children_list = Enum.filter(children_list, fn {_key, child} ->
+      Process.alive?(child.pid)
+    end)
+    IO.inspect(Enum.map(children_list, fn {c, _} -> c end))
+    ctx = %{ctx | children: Map.new(children_list)}
     flat_map_children(ctx, fn
       {:tee, track_id} = tee ->
         [

@@ -2,13 +2,12 @@ import "../css/app.scss";
 
 import { MEDIA_CONSTRAINTS, SCREENSHARING_CONSTRAINTS } from "./consts";
 import {
-  addAudioElement,
   addVideoElement,
+  displayVideoElement,
   getRoomId,
-  removeAudioElement,
+  hideVideoElement,
   removeScreensharing,
   removeVideoElement,
-  replaceStream,
   setErrorMessage,
   setLocalScreenSharingStatus,
   setScreensharing,
@@ -101,7 +100,7 @@ const setup = async () => {
           if (isScreenSharing) {
             setScreensharing(stream, displayName || "", "My screensharing");
           } else {
-            addAudioElement(stream);
+            addVideoElement(stream, displayName || "", false);
           }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {
@@ -109,11 +108,14 @@ const setup = async () => {
             removeScreensharing();
           } else {
             removeVideoElement(stream);
-            removeAudioElement(stream);
           }
         },
-        onReplaceStream: replaceStream,
-        onDisplayStream: addVideoElement,
+        onDisplayTrack: (ctx) => {
+          displayVideoElement(ctx.stream.id);
+        },
+        onHideTrack: (ctx) => {
+          hideVideoElement(ctx.stream.id);
+        },
         onConnectionError: setErrorMessage,
       },
     });
@@ -126,6 +128,7 @@ const setup = async () => {
     });
 
     addVideoElement(localStream, "Me", true);
+    displayVideoElement(localStream.id);
 
     setupRoomUI({
       state: {

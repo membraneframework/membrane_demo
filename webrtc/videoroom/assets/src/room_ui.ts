@@ -45,8 +45,8 @@ export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 
-function elementId(stream: MediaStream, type: "video" | "audio" | "feed") {
-  return `${type}-${stream.id}`;
+function elementId(streamId: string, type: "video" | "audio" | "feed") {
+  return `${type}-${streamId}`;
 }
 
 export function addVideoElement(
@@ -54,7 +54,7 @@ export function addVideoElement(
   label: string,
   mute: boolean = false
 ): void {
-  const id = elementId(stream, "video");
+  const id = elementId(stream.id, "video");
   let video = document.getElementById(id) as HTMLVideoElement;
 
   if (!video) {
@@ -66,6 +66,7 @@ export function addVideoElement(
   video.autoplay = true;
   video.playsInline = true;
   video.muted = mute;
+  // video.style.display = "none";
 }
 
 function resizeVideosGrid() {
@@ -78,12 +79,13 @@ function setupVideoFeed(stream: MediaStream, label: string) {
     "#video-feed-template"
   ) as HTMLTemplateElement).content.cloneNode(true) as Element;
   const feed = copy.querySelector("div[class='VideoFeed']") as HTMLDivElement;
+  feed.style.display = "none";
   const video = feed.querySelector("video") as HTMLVideoElement;
   const videoLabel = feed.querySelector(
     "div[class='VideoLabel']"
   ) as HTMLDivElement;
 
-  feed.id = elementId(stream, "feed");
+  feed.id = elementId(stream.id, "feed");
   videoLabel.innerText = label;
 
   const grid = document.querySelector("#videos-grid")!;
@@ -93,34 +95,13 @@ function setupVideoFeed(stream: MediaStream, label: string) {
   return video;
 }
 
-export function addAudioElement(stream: MediaStream): void {
-  const id = elementId(stream, "audio");
-  let audio = document.getElementById(id) as HTMLAudioElement;
-
-  if (!audio) {
-    audio = document.createElement("audio");
-  }
-
-  audio.id = id;
-  audio.srcObject = stream;
-  audio.autoplay = true;
-}
-
 export function removeVideoElement(stream: MediaStream): void {
   if (stream.getTracks().length > 0) {
     return;
   }
 
-  document.getElementById(elementId(stream, "feed"))?.remove();
+  document.getElementById(elementId(stream.id, "feed"))?.remove();
   resizeVideosGrid();
-}
-
-export function removeAudioElement(stream: MediaStream): void {
-  if (stream.getTracks().length > 0) {
-    return;
-  }
-
-  document.getElementById(elementId(stream, "audio"))?.remove();
 }
 
 export function setScreensharing(
@@ -191,13 +172,14 @@ export function setErrorMessage(
   }
 }
 
-export function replaceStream(
-  oldStream: MediaStream,
-  newStream: MediaStream,
-  newLabel: string
-): void {
-  removeVideoElement(oldStream);
-  addVideoElement(newStream, newLabel);
+export function displayVideoElement(videoElementId: string): void {
+  document.getElementById(elementId(videoElementId, "feed"))!.style.display =
+    "block";
+}
+
+export function hideVideoElement(videoElementId: string): void {
+  document.getElementById(elementId(videoElementId, "feed"))!.style.display =
+    "none";
 }
 
 function updateScreensharingToggleButton(

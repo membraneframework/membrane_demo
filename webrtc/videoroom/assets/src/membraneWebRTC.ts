@@ -36,12 +36,8 @@ interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
-  onReplaceStream?: (
-    oldStream: MediaStream,
-    newStream: MediaStream,
-    newLabel: string
-  ) => void;
-  onDisplayStream?: (stream: MediaStream, label: string) => void;
+  onDisplayTrack?: (ctx: TrackContext) => void;
+  onHideTrack?: (ctx: TrackContext) => void;
 }
 
 interface MembraneWebRTCConfig {
@@ -129,26 +125,52 @@ export class MembraneWebRTC {
     this.channel.on("replaceTrack", (data: any) => {
       const oldTrackId = data.data.oldTrackId;
       const newTrackId = data.data.newTrackId;
-      const newStream = this.midToStream.get(newTrackId)!;
       const oldStream = this.midToStream.get(oldTrackId)!;
-      const participant = this.participants.find(({ mids }) =>
+      const newStream = this.midToStream.get(newTrackId)!;
+      const oldTrack = oldStream.getTrackById(oldTrackId)!;
+      const newTrack = newStream.getTrackById(newTrackId)!;
+      const oldParticipant = this.participants.find(({ mids }) =>
+        mids.includes(oldTrackId)
+      );
+      const newParticipant = this.participants.find(({ mids }) =>
         mids.includes(newTrackId)
       );
-
-      this.callbacks.onReplaceStream?.(
-        oldStream,
-        newStream,
-        participant?.displayName ?? ""
-      );
+      const oldCtx = {
+        track: oldTrack,
+        stream: oldStream,
+        label: oldParticipant?.displayName ?? "",
+        isScreenSharing:
+          oldParticipant?.mids
+            .find((mid) => mid === oldTrackId)!
+            .includes("SCREEN") || false,
+      };
+      const newCtx = {
+        track: newTrack,
+        stream: newStream,
+        label: newParticipant?.displayName ?? "",
+        isScreenSharing:
+          newParticipant?.mids
+            .find((mid) => mid === newTrackId)!
+            .includes("SCREEN") || false,
+      };
+      this.callbacks.onHideTrack?.(oldCtx);
+      this.callbacks.onDisplayTrack?.(newCtx);
     });
     this.channel.on("displayTrack", (data: any) => {
       const trackId = data.data.trackId;
       const stream = this.midToStream.get(trackId)!;
+      const track = stream.getTrackById(trackId)!;
       const participant = this.participants.find(({ mids }) =>
         mids.includes(trackId)
       );
 
-      this.callbacks.onDisplayStream?.(stream, participant?.displayName ?? "");
+      this.callbacks.onDisplayTrack?.({
+        track,
+        stream,
+        label: participant?.displayName ?? "",
+        isScreenSharing:
+          participant?.mids.find(trackId)!.includes("SCREEN") || false,
+      });
     });
 
     this.channel.on("error", (data: any) => {
@@ -256,24 +278,22 @@ export class MembraneWebRTC {
         });
       };
 
+      const label =
+        this.participants.find((p) => p.mids.includes(mid))?.displayName || "";
       this.callbacks.onAddTrack?.({
         track: event.track,
-        label:
-          this.participants.find((p) => p.mids.includes(mid))?.displayName ||
-          "",
-        stream: stream,
+        label,
+        stream,
         isScreenSharing,
       });
 
       if (this.remoteStreams.size <= this.maxDisplayNum && !isScreenSharing) {
-        const participant = this.participants.find(({ mids }) =>
-          mids.includes(mid)
-        );
-        // screensharing is displayed by default
-        this.callbacks.onDisplayStream?.(
+        this.callbacks.onDisplayTrack?.({
+          track: event.track,
+          label,
           stream,
-          participant?.displayName ?? ""
-        );
+          isScreenSharing,
+        });
       }
     };
   };

@@ -71,6 +71,13 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
+  def handle_in("crash", _msg, socket) do
+    socket
+    |> send_to_pipeline({:crash, self()})
+
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_info({:signal, {:candidate, candidate, sdp_mline_index}}, socket) do
     push(socket, "candidate", %{
@@ -86,10 +93,25 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   @impl true
+  def handle_info({:signal, {:replace_track, old_track_id, new_track_id}}, socket) do
+    push(socket, "replaceTrack", %{
+      data: %{"oldTrackId" => old_track_id, "newTrackId" => new_track_id}
+    })
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:signal, {:display_track, track_id}}, socket) do
+    push(socket, "displayTrack", %{data: %{"trackId" => track_id}})
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info({:new_peer, response, ref}, socket) do
     case response do
-      :ok ->
-        reply(ref, {:ok, %{}})
+      {:ok, max_display_num} ->
+        reply(ref, {:ok, %{maxDisplayNum: max_display_num}})
 
       {:error, _reason} = error ->
         reply(ref, error)

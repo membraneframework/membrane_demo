@@ -52,21 +52,28 @@ function elementId(streamId: string, type: "video" | "audio" | "feed") {
 export function addVideoElement(
   stream: MediaStream,
   label: string,
-  mute: boolean = false
+  muted: boolean = false
 ): void {
-  const id = elementId(stream.id, "video");
-  let video = document.getElementById(id) as HTMLVideoElement;
-
-  if (!video) {
-    video = setupVideoFeed(stream, label);
+  const videoId = elementId(stream.id, "video");
+  const audioId = elementId(stream.id, "audio");
+  let video = document.getElementById(videoId) as HTMLVideoElement;
+  let audio = document.getElementById(audioId) as HTMLAudioElement;
+  if (!video && !audio) {
+    const values = setupVideoFeed(stream, label);
+    video = values.video;
+    audio = values.audio;
   }
 
-  video.id = id;
+  video.id = videoId;
   video.srcObject = stream;
   video.autoplay = true;
   video.playsInline = true;
-  video.muted = mute;
-  // video.style.display = "none";
+  video.muted = true;
+
+  audio.id = audioId;
+  audio.srcObject = stream;
+  audio.autoplay = true;
+  audio.muted = muted;
 }
 
 function resizeVideosGrid() {
@@ -80,6 +87,7 @@ function setupVideoFeed(stream: MediaStream, label: string) {
   ) as HTMLTemplateElement).content.cloneNode(true) as Element;
   const feed = copy.querySelector("div[class='VideoFeed']") as HTMLDivElement;
   feed.style.display = "none";
+  const audio = feed.querySelector("audio") as HTMLAudioElement;
   const video = feed.querySelector("video") as HTMLVideoElement;
   const videoLabel = feed.querySelector(
     "div[class='VideoLabel']"
@@ -92,7 +100,7 @@ function setupVideoFeed(stream: MediaStream, label: string) {
   grid.appendChild(feed);
   resizeVideosGrid();
 
-  return video;
+  return { audio, video };
 }
 
 export function removeVideoElement(stream: MediaStream): void {
@@ -172,14 +180,14 @@ export function setErrorMessage(
   }
 }
 
-export function displayVideoElement(videoElementId: string): void {
-  document.getElementById(elementId(videoElementId, "feed"))!.style.display =
-    "block";
+export function displayVideoElement(streamId: string): void {
+  const feedId = elementId(streamId, "feed");
+  document.getElementById(feedId)!.style.display = "block";
 }
 
-export function hideVideoElement(videoElementId: string): void {
-  document.getElementById(elementId(videoElementId, "feed"))!.style.display =
-    "none";
+export function hideVideoElement(streamId: string): void {
+  const feedId = elementId(streamId, "feed");
+  document.getElementById(feedId)!.style.display = "none";
 }
 
 function updateScreensharingToggleButton(

@@ -128,18 +128,18 @@ defmodule VideoRoom.Pipeline do
       links = new_peer_links(peer_type, endpoint_bin, ctx, state)
 
       tracks_msgs =
-      if tracks == [] do
-        []
-      else
-        flat_map_children(ctx, fn
-          {:endpoint, other_peer_pid} = endpoint_bin
-          when other_peer_pid != state.active_screensharing ->
-            [forward: {endpoint_bin, {:add_tracks, tracks}}]
+        if tracks == [] do
+          []
+        else
+          flat_map_children(ctx, fn
+            {:endpoint, other_peer_pid} = endpoint_bin
+            when other_peer_pid != state.active_screensharing ->
+              [forward: {endpoint_bin, {:add_tracks, tracks}}]
 
-          _child ->
-            []
-        end)
-      end
+            _child ->
+              []
+          end)
+        end
 
       spec = %ParentSpec{children: children, links: links}
 

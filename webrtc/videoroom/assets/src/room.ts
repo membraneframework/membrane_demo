@@ -72,7 +72,7 @@ const stopLocalScreensharing = () => {
   cleanLocalScreensharing();
 };
 
-const getDisplayNameOrRedirect = (): string => {
+const parseUrl = (): string => {
   const { display_name: displayName } = parse(document.location.search);
 
   // remove query params without reloading the page
@@ -86,7 +86,7 @@ const setup = async () => {
     const socket = new Socket("/socket");
     socket.connect();
 
-    const displayName = getDisplayNameOrRedirect();
+    const displayName = parseUrl();
 
     const webrtc = new MembraneWebRTC(socket, getRoomId(), {
       displayName,
@@ -95,12 +95,12 @@ const setup = async () => {
           track,
           stream,
           isScreenSharing,
-          label: displayName,
+          label: displayName = "",
         }) => {
           if (isScreenSharing) {
-            setScreensharing(stream, displayName || "", "My screensharing");
+            setScreensharing(stream, displayName, "My screensharing");
           } else {
-            addVideoElement(stream, displayName || "", false);
+            addVideoElement(stream, displayName, false);
           }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {

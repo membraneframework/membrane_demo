@@ -127,8 +127,8 @@ export class MembraneWebRTC {
       const newTrackId = data.data.newTrackId;
       const oldStream = this.midToStream.get(oldTrackId)!;
       const newStream = this.midToStream.get(newTrackId)!;
-      const oldTrack = oldStream.getTrackById(oldTrackId)!;
-      const newTrack = newStream.getTrackById(newTrackId)!;
+      const oldTrack = oldStream.getVideoTracks()[0];
+      const newTrack = newStream.getVideoTracks()[0];
       const oldParticipant = this.participants.find(({ mids }) =>
         mids.includes(oldTrackId)
       );
@@ -141,8 +141,8 @@ export class MembraneWebRTC {
         label: oldParticipant?.displayName ?? "",
         isScreenSharing:
           oldParticipant?.mids
-            .find((mid) => mid === oldTrackId)!
-            .includes("SCREEN") || false,
+            .find((mid) => mid === oldTrackId)
+            ?.includes("SCREEN") || false,
       };
       const newCtx = {
         track: newTrack,
@@ -150,8 +150,8 @@ export class MembraneWebRTC {
         label: newParticipant?.displayName ?? "",
         isScreenSharing:
           newParticipant?.mids
-            .find((mid) => mid === newTrackId)!
-            .includes("SCREEN") || false,
+            .find((mid) => mid === newTrackId)
+            ?.includes("SCREEN") || false,
       };
       this.callbacks.onHideTrack?.(oldCtx);
       this.callbacks.onDisplayTrack?.(newCtx);
@@ -159,7 +159,7 @@ export class MembraneWebRTC {
     this.channel.on("displayTrack", (data: any) => {
       const trackId = data.data.trackId;
       const stream = this.midToStream.get(trackId)!;
-      const track = stream.getTrackById(trackId)!;
+      const track = stream.getVideoTracks()[0];
       const participant = this.participants.find(({ mids }) =>
         mids.includes(trackId)
       );
@@ -169,7 +169,9 @@ export class MembraneWebRTC {
         stream,
         label: participant?.displayName ?? "",
         isScreenSharing:
-          participant?.mids.find(trackId)!.includes("SCREEN") || false,
+          participant?.mids
+            .find((mid) => mid === trackId)
+            ?.includes("SCREEN") || false,
       });
     });
 

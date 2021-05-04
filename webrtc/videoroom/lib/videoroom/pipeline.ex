@@ -111,15 +111,15 @@ defmodule VideoRoom.Pipeline do
           ],
           # TODO: change peer_pid to something that will easier identify peer when we introduce
           # participants labelling
-          log_metadata: [peer: peer_label(display_name, peer_pid)],
-          peer_type: peer_type
+          log_metadata: [peer: peer_label(display_name, peer_pid)]
         }
+        |> Map.put(:peer_type, peer_type)
       }
 
       spec = %ParentSpec{children: children}
 
       state = %{
-        state
+        stateie
         | active_screensharing:
             if(peer_type == :screensharing, do: peer_pid, else: state.active_screensharing)
       }

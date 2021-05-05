@@ -73,13 +73,6 @@ defmodule VideoRoom.Pipeline do
   end
 
   @impl true
-  def handle_crash_group_down(group_name, _ctx, state) do
-    IO.inspect("#{group_name} down!!!", label: "$$$$")
-
-    {:ok, state}
-  end
-
-  @impl true
   def handle_other({:new_peer, peer_pid, peer_type, ref}, ctx, state) do
     send(peer_pid, {:new_peer, {:ok, state.max_display_num}, ref})
 
@@ -179,6 +172,16 @@ defmodule VideoRoom.Pipeline do
   end
 
   @impl true
+  def handle_crash_group_down(group_name, ctx, state) do
+    IO.inspect("#{inspect(group_name)} members: #{inspect(ctx.members)}", label: "$$$$")
+    # {_status, actions, state} = maybe_remove_peer(group_name, ctx, state)
+
+    stop_if_empty(state)
+
+    {:ok, state}
+  end
+
+  @impl true
   def handle_notification({:new_track, track_id, encoding}, endpoint_bin, ctx, state) do
     Membrane.Logger.info("New incoming #{encoding} track #{track_id}")
     {:endpoint, endpoint_id} = endpoint_bin
@@ -221,7 +224,7 @@ defmodule VideoRoom.Pipeline do
             []
         end)
 
-    spec = %ParentSpec{children: children, links: links}
+    spec = %ParentSpec{children: children, links: links, crash_group: {endpoint_id, :temporary}}
 
     state =
       update_in(
@@ -250,6 +253,7 @@ defmodule VideoRoom.Pipeline do
     if endpoint == nil or endpoint.terminating? do
       {:absent, [], state}
     else
+      IO.inspect("Im here!!", label: "$$$$")
       {endpoint, state} = pop_in(state, [:endpoints, peer_pid])
       {actions, display_engine} = DisplayEngine.remove_endpoint(state.display_engine, endpoint)
       state = %{state | display_engine: display_engine}

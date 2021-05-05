@@ -22,7 +22,7 @@ defmodule VideoRoom.MixProject do
     [
       # {:membrane_core, "~> 0.6.1"},
       {:membrane_core, path: "/Users/andrzej/Membrane/membrane_core", override: true},
-      {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin"},
+      {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin", branch: "crash-group"},
       {:membrane_element_tee, "~> 0.4.1"},
       {:membrane_element_fake, "~> 0.4.0"},
       {:plug_cowboy, "~> 2.0"},

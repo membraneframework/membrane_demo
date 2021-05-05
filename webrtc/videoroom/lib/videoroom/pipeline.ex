@@ -173,12 +173,23 @@ defmodule VideoRoom.Pipeline do
 
   @impl true
   def handle_crash_group_down(group_name, ctx, state) do
-    IO.inspect("#{inspect(group_name)} members: #{inspect(ctx.members)}", label: "$$$$")
-    # {_status, actions, state} = maybe_remove_peer(group_name, ctx, state)
+    {endpoint, state} = pop_in(state, [:endpoints, group_name])
+    {actions, display_engine} = DisplayEngine.remove_endpoint(state.display_engine, endpoint)
+    state = %{state | display_engine: display_engine}
+    tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
 
-    stop_if_empty(state)
+    tracks_msgs =
+      flat_map_children(ctx, fn
+        {:endpoint, id} when id != group_name ->
+          [forward: {{:endpoint, id}, {:add_tracks, tracks}}]
 
-    {:ok, state}
+        _child ->
+          []
+      end)
+
+    # stop_if_empty(state)
+
+    {{:ok, tracks_msgs ++ actions}, state}
   end
 
   @impl true
@@ -253,7 +264,6 @@ defmodule VideoRoom.Pipeline do
     if endpoint == nil or endpoint.terminating? do
       {:absent, [], state}
     else
-      IO.inspect("Im here!!", label: "$$$$")
       {endpoint, state} = pop_in(state, [:endpoints, peer_pid])
       {actions, display_engine} = DisplayEngine.remove_endpoint(state.display_engine, endpoint)
       state = %{state | display_engine: display_engine}

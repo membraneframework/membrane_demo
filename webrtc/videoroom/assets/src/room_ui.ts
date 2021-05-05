@@ -45,27 +45,35 @@ export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 
-function elementId(stream: MediaStream, type: "video" | "audio" | "feed") {
-  return `${type}-${stream.id}`;
+function elementId(streamId: string, type: "video" | "audio" | "feed") {
+  return `${type}-${streamId}`;
 }
 
 export function addVideoElement(
   stream: MediaStream,
   label: string,
-  mute: boolean = false
+  muted: boolean = false
 ): void {
-  const id = elementId(stream, "video");
-  let video = document.getElementById(id) as HTMLVideoElement;
-
-  if (!video) {
-    video = setupVideoFeed(stream, label);
+  const videoId = elementId(stream.id, "video");
+  const audioId = elementId(stream.id, "audio");
+  let video = document.getElementById(videoId) as HTMLVideoElement;
+  let audio = document.getElementById(audioId) as HTMLAudioElement;
+  if (!video && !audio) {
+    const values = setupVideoFeed(stream, label);
+    video = values.video;
+    audio = values.audio;
   }
 
-  video.id = id;
+  video.id = videoId;
   video.srcObject = stream;
   video.autoplay = true;
   video.playsInline = true;
-  video.muted = mute;
+  video.muted = true;
+
+  audio.id = audioId;
+  audio.srcObject = stream;
+  audio.autoplay = true;
+  audio.muted = muted;
 }
 
 function resizeVideosGrid() {
@@ -78,32 +86,21 @@ function setupVideoFeed(stream: MediaStream, label: string) {
     "#video-feed-template"
   ) as HTMLTemplateElement).content.cloneNode(true) as Element;
   const feed = copy.querySelector("div[class='VideoFeed']") as HTMLDivElement;
+  feed.style.display = "none";
+  const audio = feed.querySelector("audio") as HTMLAudioElement;
   const video = feed.querySelector("video") as HTMLVideoElement;
   const videoLabel = feed.querySelector(
     "div[class='VideoLabel']"
   ) as HTMLDivElement;
 
-  feed.id = elementId(stream, "feed");
+  feed.id = elementId(stream.id, "feed");
   videoLabel.innerText = label;
 
   const grid = document.querySelector("#videos-grid")!;
   grid.appendChild(feed);
   resizeVideosGrid();
 
-  return video;
-}
-
-export function addAudioElement(stream: MediaStream): void {
-  const id = elementId(stream, "audio");
-  let audio = document.getElementById(id) as HTMLAudioElement;
-
-  if (!audio) {
-    audio = document.createElement("audio");
-  }
-
-  audio.id = id;
-  audio.srcObject = stream;
-  audio.autoplay = true;
+  return { audio, video };
 }
 
 export function removeVideoElement(stream: MediaStream): void {
@@ -111,16 +108,8 @@ export function removeVideoElement(stream: MediaStream): void {
     return;
   }
 
-  document.getElementById(elementId(stream, "feed"))?.remove();
+  document.getElementById(elementId(stream.id, "feed"))?.remove();
   resizeVideosGrid();
-}
-
-export function removeAudioElement(stream: MediaStream): void {
-  if (stream.getTracks().length > 0) {
-    return;
-  }
-
-  document.getElementById(elementId(stream, "audio"))?.remove();
 }
 
 export function setScreensharing(
@@ -191,13 +180,14 @@ export function setErrorMessage(
   }
 }
 
-export function replaceStream(
-  oldStream: MediaStream,
-  newStream: MediaStream,
-  newLabel: string
-): void {
-  removeVideoElement(oldStream);
-  addVideoElement(newStream, newLabel);
+export function displayVideoElement(streamId: string): void {
+  const feedId = elementId(streamId, "feed");
+  document.getElementById(feedId)!.style.display = "block";
+}
+
+export function hideVideoElement(streamId: string): void {
+  const feedId = elementId(streamId, "feed");
+  document.getElementById(feedId)!.style.display = "none";
 }
 
 function updateScreensharingToggleButton(

@@ -2,13 +2,12 @@ import "../css/app.scss";
 
 import { MEDIA_CONSTRAINTS, SCREENSHARING_CONSTRAINTS } from "./consts";
 import {
-  addAudioElement,
   addVideoElement,
+  displayVideoElement,
   getRoomId,
-  removeAudioElement,
+  hideVideoElement,
   removeScreensharing,
   removeVideoElement,
-  replaceStream,
   setErrorMessage,
   setLocalScreenSharingStatus,
   setScreensharing,
@@ -73,7 +72,7 @@ const stopLocalScreensharing = () => {
   cleanLocalScreensharing();
 };
 
-const getDisplayNameOrRedirect = (): string => {
+const parseUrl = (): string => {
   const { display_name: displayName } = parse(document.location.search);
 
   // remove query params without reloading the page
@@ -87,7 +86,7 @@ const setup = async () => {
     const socket = new Socket("/socket");
     socket.connect();
 
-    const displayName = getDisplayNameOrRedirect();
+    const displayName = parseUrl();
 
     const webrtc = new MembraneWebRTC(socket, getRoomId(), {
       displayName,
@@ -96,12 +95,12 @@ const setup = async () => {
           track,
           stream,
           isScreenSharing,
-          label: displayName,
+          label: displayName = "",
         }) => {
           if (isScreenSharing) {
-            setScreensharing(stream, displayName || "", "My screensharing");
+            setScreensharing(stream, displayName, "My screensharing");
           } else {
-            addAudioElement(stream);
+            addVideoElement(stream, displayName, false);
           }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {
@@ -109,11 +108,14 @@ const setup = async () => {
             removeScreensharing();
           } else {
             removeVideoElement(stream);
-            removeAudioElement(stream);
           }
         },
-        onReplaceStream: replaceStream,
-        onDisplayStream: addVideoElement,
+        onDisplayTrack: (ctx) => {
+          displayVideoElement(ctx.stream.id);
+        },
+        onHideTrack: (ctx) => {
+          hideVideoElement(ctx.stream.id);
+        },
         onConnectionError: setErrorMessage,
         onServerError: setErrorMessage,
       },
@@ -127,6 +129,7 @@ const setup = async () => {
     });
 
     addVideoElement(localStream, "Me", true);
+    displayVideoElement(localStream.id);
 
     setupRoomUI({
       state: {

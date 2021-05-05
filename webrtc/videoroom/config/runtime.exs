@@ -1,6 +1,19 @@
 import Config
 
 defmodule ConfigParser do
+  def parse_max_participants_num(max_display_num_raw) do
+    case Integer.parse(max_display_num_raw) do
+      {max_display_num, ""} when max_display_num_raw > 0 ->
+        max_display_num
+
+      _ ->
+        raise """
+        Expected MAX_PARTICIPANTS_NUM to be string representing positive integer,
+        got: #{inspect(max_display_num_raw)}
+        """
+    end
+  end
+
   def parse_max_display_num(max_display_num_raw) do
     case Integer.parse(max_display_num_raw) do
       {max_display_num, ""} when max_display_num > 0 ->
@@ -66,11 +79,23 @@ end
 
 # stun_servers: "addr:port"
 # turn_servers: "addr:port:username:password:proto"
-config :membrane_videoroom_demo,
-  stun_servers:
-    System.get_env("STUN_SERVERS", "64.233.163.127:19302") |> ConfigParser.parse_stun_servers(),
-  turn_servers: System.get_env("TURN_SERVERS", "") |> ConfigParser.parse_turn_servers(),
-  max_display_num: System.get_env("MAX_DISPLAY_NUM", "3") |> ConfigParser.parse_max_display_num()
+app_envs =
+  [
+    stun_servers:
+      System.get_env("STUN_SERVERS", "64.233.163.127:19302") |> ConfigParser.parse_stun_servers(),
+    turn_servers: System.get_env("TURN_SERVERS", "") |> ConfigParser.parse_turn_servers(),
+    max_display_num:
+      System.get_env("MAX_DISPLAY_NUM", "3") |> ConfigParser.parse_max_display_num()
+  ] ++
+    case System.get_env("MAX_PARTICIPANTS_NUM") do
+      nil ->
+        []
+
+      max_participants_num_raw ->
+        [max_participants_num: ConfigParser.parse_max_participants_num(max_participants_num_raw)]
+    end
+
+config :membrane_videoroom_demo, app_envs
 
 protocol = if System.get_env("USE_TLS") == "true", do: :https, else: :http
 

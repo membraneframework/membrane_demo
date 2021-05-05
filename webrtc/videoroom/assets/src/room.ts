@@ -115,6 +115,7 @@ const setup = async () => {
         onReplaceStream: replaceStream,
         onDisplayStream: addVideoElement,
         onConnectionError: setErrorMessage,
+        onServerError: setErrorMessage,
       },
     });
 

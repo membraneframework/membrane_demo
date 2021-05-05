@@ -20,6 +20,7 @@ CERT_FILE_PATH={path to certificate file, used when "USE_TLS" is set to true}
 STUN_SERVERS={list of stun servers separated by ",", defaults to a single server "stun1.l.google.com:19302"}
 TURN_SERVERS={list of turn servers separated by ",", defaults to ""}
 MAX_DISPLAY_NUM={maximum number of remote video tiles to send and display, defaults to "3"}
+MAX_PARTICIPANTS_NUM={maximum number of participants in single room}
 ```
 
 ## Run manually

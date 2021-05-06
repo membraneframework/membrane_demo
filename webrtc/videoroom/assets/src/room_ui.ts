@@ -83,9 +83,8 @@ export function setParticipantsNamesList(
     "participants-names-list"
   ) as HTMLDivElement;
 
-  participantsNamesList.innerHTML = participantsNames
-    .map((name) => "<div class='ParticipantName'>" + name + "</div>")
-    .join("");
+  participantsNamesList.innerHTML =
+    "Participants: " + participantsNames.join(", ");
 }
 
 function resizeVideosGrid() {

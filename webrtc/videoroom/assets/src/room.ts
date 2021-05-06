@@ -13,7 +13,6 @@ import {
   setScreensharing,
   setupRoomUI,
   setParticipantsNamesList,
-  // removeNameFromParticipantsNamesList,
 } from "./room_ui";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
@@ -104,10 +103,6 @@ const setup = async () => {
           } else {
             addVideoElement(stream, displayName, false);
           }
-
-          // if (isScreenSharing) {
-          //   removeNameFromParticipantsNamesList(displayName);
-          // }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {
           if (isScreenSharing) {

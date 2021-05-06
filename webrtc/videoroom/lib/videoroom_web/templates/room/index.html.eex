@@ -20,6 +20,7 @@
             <div id="videos-grid" class="grid-1"></div>
         </div>
     </div>
+    <div id="participants-names-list" class="ParticipantsNamesList"></div>
 
     <script src="<%= static_path(@conn, "/js/room.js") %>"></script>
 </div>

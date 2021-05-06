@@ -12,6 +12,8 @@ import {
   setLocalScreenSharingStatus,
   setScreensharing,
   setupRoomUI,
+  setParticipantsNamesList,
+  // removeNameFromParticipantsNamesList,
 } from "./room_ui";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
@@ -102,6 +104,10 @@ const setup = async () => {
           } else {
             addVideoElement(stream, displayName, false);
           }
+
+          // if (isScreenSharing) {
+          //   removeNameFromParticipantsNamesList(displayName);
+          // }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {
           if (isScreenSharing) {
@@ -117,6 +123,12 @@ const setup = async () => {
           hideVideoElement(ctx.stream.id);
         },
         onConnectionError: setErrorMessage,
+        onOfferDataArrival: ({ data, participants }) => {
+          const participantsNames = participants
+            .map((p) => p.displayName)
+            .filter((name) => !name.match("Screensharing$"));
+          setParticipantsNamesList(participantsNames);
+        },
       },
     });
 

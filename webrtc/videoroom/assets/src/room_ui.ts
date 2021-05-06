@@ -76,6 +76,32 @@ export function addVideoElement(
   audio.muted = muted;
 }
 
+export function setParticipantsNamesList(
+  participantsNames: Array<string>
+): void {
+  const participantsNamesList = document.getElementById(
+    "participants-names-list"
+  ) as HTMLDivElement;
+
+  participantsNamesList.innerHTML = participantsNames
+    .map((name) => "<div class='ParticipantName'>" + name + "</div>")
+    .join("");
+}
+
+// export function removeNameFromParticipantsNamesList(name: string): void {
+//   const participantsNamesList = document.getElementById(
+//     "participants-names-list"
+//   ) as HTMLDivElement;
+
+//   participantsNamesList.childNodes.forEach((element) => {
+//     const nameDiv = element as HTMLDivElement;
+//     if (nameDiv.innerText == name) {
+//       console.log(nameDiv.innerText, name);
+//       element.remove();
+//     }
+//   });
+// }
+
 function resizeVideosGrid() {
   const grid = document.getElementById("videos-grid")!;
   grid.className = `grid-${Math.min(2, grid.children.length)}`;

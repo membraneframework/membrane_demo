@@ -50,7 +50,7 @@ defmodule VideoRoom.Pipeline do
     Process.send_after(self(), :check_if_empty, @empty_room_timeout)
 
     max_display_num = Application.fetch_env!(:membrane_videoroom_demo, :max_display_num)
-    max_participants_num = Application.get_env(:membrane_videoroom_demo, :max_participants_num)
+    max_participants_num = Application.fetch_env!(:membrane_videoroom_demo, :max_participants_num)
 
     {{:ok, log_metadata: [room: room_id]},
      %{
@@ -127,8 +127,6 @@ defmodule VideoRoom.Pipeline do
               pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
               cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
             ],
-            # TODO: change peer_pid to something that will easier identify peer when we introduce
-            # participants labelling
             log_metadata: [peer: peer_label(display_name, peer_pid)]
           }
         }

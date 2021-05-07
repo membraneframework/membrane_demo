@@ -117,7 +117,6 @@ const setup = async () => {
           hideVideoElement(ctx.stream.id);
         },
         onConnectionError: setErrorMessage,
-        onServerError: setErrorMessage,
       },
     });
 

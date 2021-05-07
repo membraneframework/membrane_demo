@@ -36,7 +36,6 @@ interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
-  onServerError?: (message: string) => void;
   onReplaceStream?: (
     oldStream: MediaStream,
     newStream: MediaStream,
@@ -195,7 +194,7 @@ export class MembraneWebRTC {
       );
       this.maxDisplayNum = maxDisplayNum;
     } catch (e) {
-      this.callbacks.onServerError?.(e);
+      this.callbacks.onConnectionError?.(e);
       this.stop();
     }
   };

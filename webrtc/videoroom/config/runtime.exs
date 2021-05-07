@@ -87,7 +87,7 @@ config :membrane_videoroom_demo,
   turn_servers: System.get_env("TURN_SERVERS", "") |> ConfigParser.parse_turn_servers(),
   max_display_num: System.get_env("MAX_DISPLAY_NUM", "3") |> ConfigParser.parse_max_display_num(),
   max_participants_num:
-    System.get_env("MAX_PARTICIPANT_NUM") |> ConfigParser.parse_max_participants_num()
+    System.get_env("MAX_PARTICIPANTS_NUM") |> ConfigParser.parse_max_participants_num()
 
 protocol = if System.get_env("USE_TLS") == "true", do: :https, else: :http
 

@@ -96,63 +96,7 @@ defmodule VideoRoom.Pipeline do
         {:ok, state}
 
       true ->
-        send(peer_pid, {:new_peer, {:ok, state.max_display_num}, ref})
-
-        Membrane.Logger.info("New peer #{inspect(peer_pid)} of type #{inspect(peer_type)}")
-        Process.monitor(peer_pid)
-
-        tracks = new_tracks(peer_type)
-
-        endpoint = Endpoint.new(peer_pid, peer_type, tracks, %{display_name: display_name})
-
-        endpoint_bin = {:endpoint, peer_pid}
-
-        display_engine = DisplayEngine.add_new_endpoint(state.display_engine, endpoint)
-        state = %{state | display_engine: display_engine}
-
-        stun_servers = Application.fetch_env!(:membrane_videoroom_demo, :stun_servers)
-        turn_servers = Application.fetch_env!(:membrane_videoroom_demo, :turn_servers)
-
-        children = %{
-          endpoint_bin => %EndpointBin{
-            # screensharing type should not receive any streams
-            outbound_tracks:
-              if(peer_type == :participant, do: get_all_tracks(state.endpoints), else: []),
-            inbound_tracks: tracks,
-            stun_servers: stun_servers,
-            turn_servers: turn_servers,
-            handshake_opts: [
-              client_mode: false,
-              dtls_srtp: true,
-              pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
-              cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
-            ],
-            log_metadata: [peer: peer_label(display_name, peer_pid)]
-          }
-        }
-
-        links = new_peer_links(peer_type, endpoint_bin, ctx, state)
-
-        tracks_msgs =
-          flat_map_children(ctx, fn
-            {:endpoint, other_peer_pid} = endpoint_bin
-            when other_peer_pid != state.active_screensharing ->
-              [forward: {endpoint_bin, {:add_tracks, tracks}}]
-
-            _child ->
-              []
-          end)
-
-        spec = %ParentSpec{children: children, links: links}
-
-        state = %{
-          state
-          | active_screensharing:
-              if(peer_type == :screensharing, do: peer_pid, else: state.active_screensharing)
-        }
-
-        state = put_in(state.endpoints[peer_pid], endpoint)
-        {{:ok, [spec: spec] ++ tracks_msgs}, state}
+        accept_new_peer(peer_pid, peer_type, display_name, ref, ctx, state)
     end
   end
 
@@ -365,5 +309,65 @@ defmodule VideoRoom.Pipeline do
 
   defp peer_label(name, pid) do
     String.slice(name, 0..min(20, String.length(name))) <> ":" <> "#{inspect(pid)}"
+  end
+
+  defp accept_new_peer(peer_pid, peer_type, display_name, ref, ctx, state) do
+    send(peer_pid, {:new_peer, {:ok, state.max_display_num}, ref})
+
+    Membrane.Logger.info("New peer #{inspect(peer_pid)} of type #{inspect(peer_type)}")
+    Process.monitor(peer_pid)
+
+    tracks = new_tracks(peer_type)
+
+    endpoint = Endpoint.new(peer_pid, peer_type, tracks, %{display_name: display_name})
+
+    endpoint_bin = {:endpoint, peer_pid}
+
+    display_engine = DisplayEngine.add_new_endpoint(state.display_engine, endpoint)
+    state = %{state | display_engine: display_engine}
+
+    stun_servers = Application.fetch_env!(:membrane_videoroom_demo, :stun_servers)
+    turn_servers = Application.fetch_env!(:membrane_videoroom_demo, :turn_servers)
+
+    children = %{
+      endpoint_bin => %EndpointBin{
+        # screensharing type should not receive any streams
+        outbound_tracks:
+          if(peer_type == :participant, do: get_all_tracks(state.endpoints), else: []),
+        inbound_tracks: tracks,
+        stun_servers: stun_servers,
+        turn_servers: turn_servers,
+        handshake_opts: [
+          client_mode: false,
+          dtls_srtp: true,
+          pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
+          cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
+        ],
+        log_metadata: [peer: peer_label(display_name, peer_pid)]
+      }
+    }
+
+    links = new_peer_links(peer_type, endpoint_bin, ctx, state)
+
+    tracks_msgs =
+      flat_map_children(ctx, fn
+        {:endpoint, other_peer_pid} = endpoint_bin
+        when other_peer_pid != state.active_screensharing ->
+          [forward: {endpoint_bin, {:add_tracks, tracks}}]
+
+        _child ->
+          []
+      end)
+
+    spec = %ParentSpec{children: children, links: links}
+
+    state = %{
+      state
+      | active_screensharing:
+          if(peer_type == :screensharing, do: peer_pid, else: state.active_screensharing)
+    }
+
+    state = put_in(state.endpoints[peer_pid], endpoint)
+    {{:ok, [spec: spec] ++ tracks_msgs}, state}
   end
 end

@@ -118,7 +118,7 @@ const setup = async () => {
           hideVideoElement(ctx.stream.id);
         },
         onConnectionError: setErrorMessage,
-        onOfferDataArrival: ({ data, participants }) => {
+        onOfferData: ({ data, participants }) => {
           const participantsNames = participants
             .map((p) => p.displayName)
             .filter((name) => !name.match("Screensharing$"));

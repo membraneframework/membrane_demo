@@ -83,7 +83,7 @@ export function setParticipantsNamesList(
     "participants-names-list"
   ) as HTMLDivElement;
 
-  participantsNamesList.innerHTML =
+  participantsNamesList.innerText =
     "Participants: " + participantsNames.join(", ");
 }
 

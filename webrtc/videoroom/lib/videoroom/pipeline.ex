@@ -109,6 +109,10 @@ defmodule VideoRoom.Pipeline do
             pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
             cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
           ],
+          rtp_extensions: [
+            {{:vad, Membrane.RTP.VAD},
+             fn _extension, %Track{encoding: encoding} -> encoding == :OPUS end}
+          ],
           # TODO: change peer_pid to something that will easier identify peer when we introduce
           # participants labelling
           log_metadata: [peer: peer_label(display_name, peer_pid)]
@@ -246,6 +250,7 @@ defmodule VideoRoom.Pipeline do
   end
 
   def handle_notification({:vad, val}, {:endpoint, endpoint_id}, _ctx, state) do
+    IO.inspect("Got vad notification #{inspect(val)} for #{inspect(endpoint_id)}")
     display_engine = state.display_engine
     {actions, display_engine} = DisplayEngine.vad_notification(display_engine, val, endpoint_id)
     {{:ok, actions}, %{state | display_engine: display_engine}}

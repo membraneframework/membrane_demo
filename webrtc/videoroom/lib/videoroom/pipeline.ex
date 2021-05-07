@@ -250,7 +250,6 @@ defmodule VideoRoom.Pipeline do
   end
 
   def handle_notification({:vad, val}, {:endpoint, endpoint_id}, _ctx, state) do
-    IO.inspect("Got vad notification #{inspect(val)} for #{inspect(endpoint_id)}")
     display_engine = state.display_engine
     {actions, display_engine} = DisplayEngine.vad_notification(display_engine, val, endpoint_id)
     {{:ok, actions}, %{state | display_engine: display_engine}}

@@ -52,14 +52,15 @@ function elementId(streamId: string, type: "video" | "audio" | "feed") {
 export function addVideoElement(
   stream: MediaStream,
   label: string,
-  muted: boolean = false
+  muted: boolean = false,
+  userOwnVideo: boolean = false
 ): void {
   const videoId = elementId(stream.id, "video");
   const audioId = elementId(stream.id, "audio");
   let video = document.getElementById(videoId) as HTMLVideoElement;
   let audio = document.getElementById(audioId) as HTMLAudioElement;
   if (!video && !audio) {
-    const values = setupVideoFeed(stream, label);
+    const values = setupVideoFeed(stream, label, userOwnVideo);
     video = values.video;
     audio = values.audio;
   }
@@ -81,7 +82,11 @@ function resizeVideosGrid() {
   grid.className = `grid-${Math.min(2, grid.children.length)}`;
 }
 
-function setupVideoFeed(stream: MediaStream, label: string) {
+function setupVideoFeed(
+  stream: MediaStream,
+  label: string,
+  userOwnVideo: boolean
+) {
   const copy = (document.querySelector(
     "#video-feed-template"
   ) as HTMLTemplateElement).content.cloneNode(true) as Element;
@@ -95,6 +100,10 @@ function setupVideoFeed(stream: MediaStream, label: string) {
 
   feed.id = elementId(stream.id, "feed");
   videoLabel.innerText = label;
+
+  if (userOwnVideo) {
+    video.classList.add("UserOwnVideo");
+  }
 
   const grid = document.querySelector("#videos-grid")!;
   grid.appendChild(feed);

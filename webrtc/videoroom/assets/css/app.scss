@@ -103,6 +103,10 @@ $media-controls-height: 80px;
   overflow: hidden;
 }
 
+.UserOwnVideo {
+  transform: rotateY(180deg);
+}
+
 .VideoLabel {
   position: absolute;
   bottom: 0;

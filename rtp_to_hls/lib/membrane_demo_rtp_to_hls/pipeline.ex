@@ -1,6 +1,5 @@
 defmodule Membrane.Demo.RtpToHls.Pipeline do
   use Membrane.Pipeline
-  alias Membrane.Time
 
   require Logger
 
@@ -11,11 +10,11 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
         local_port_no: port,
         recv_buffer_size: 500_000
       },
-      rtp: %Membrane.RTP.Session.ReceiveBin{
-        fmt_mapping: %{96 => :H264, 127 => :AAC},
+      rtp: %Membrane.RTP.SessionBin{
+        fmt_mapping: %{96 => {:H264, 90_000}, 127 => {:AAC, 48_000}},
         custom_depayloaders: %{
           :H264 => Membrane.RTP.H264.Depayloader,
-          :AAC => %Membrane.RTP.AAC.Depayloader{channels: 1}
+          :AAC => Membrane.RTP.AAC.Depayloader
         }
       },
       hls: %Membrane.HTTPAdaptiveStream.Sink{
@@ -26,7 +25,9 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     }
 
     links = [
-      link(:app_source) |> via_in(:input, buffer: [fail_size: 300]) |> to(:rtp)
+      link(:app_source)
+      |> via_in(Pad.ref(:rtp_input, make_ref()), buffer: [fail_size: 300])
+      |> to(:rtp)
     ]
 
     spec = %ParentSpec{children: children, links: links}
@@ -34,13 +35,9 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
   end
 
   @impl true
-  def handle_notification({:new_rtp_stream, ssrc, :H264}, :rtp, state) do
+  def handle_notification({:new_rtp_stream, ssrc, 96}, :rtp, _ctx, state) do
     children = %{
-      # TODO: remove when moved to the RTP bin
-      video_timestamper: %Membrane.RTP.Timestamper{
-        resolution: Ratio.new(Time.second(), 90_000)
-      },
-      video_nal_parser: %Membrane.Element.FFmpeg.H264.Parser{
+      video_nal_parser: %Membrane.H264.FFmpeg.Parser{
         framerate: {30, 1},
         alignment: :au,
         attach_nalus?: true
@@ -52,7 +49,6 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     links = [
       link(:rtp)
       |> via_out(Pad.ref(:output, ssrc))
-      |> to(:video_timestamper)
       |> to(:video_nal_parser)
       |> to(:video_payloader)
       |> to(:video_cmaf_muxer)
@@ -64,12 +60,8 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     {{:ok, spec: spec}, state}
   end
 
-  def handle_notification({:new_rtp_stream, ssrc, :AAC}, :rtp, state) do
+  def handle_notification({:new_rtp_stream, ssrc, 127}, :rtp, _ctx, state) do
     children = %{
-      # TODO: remove when moved to the RTP bin
-      audio_timestamper: %Membrane.RTP.Timestamper{
-        resolution: Ratio.new(Time.second(), 44100)
-      },
       # fills dropped frames with empty audio, needed for players that
       # don't care about audio timestamps, like Safari
       # audio_filler: Membrane.AAC.Filler,
@@ -80,7 +72,6 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     links = [
       link(:rtp)
       |> via_out(Pad.ref(:output, ssrc))
-      |> to(:audio_timestamper)
       # |> to(:audio_filler)
       |> to(:audio_payloader)
       |> to(:audio_cmaf_muxer)
@@ -92,7 +83,7 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     {{:ok, spec: spec}, state}
   end
 
-  def handle_notification({:new_rtp_stream, ssrc, _}, :rtp, state) do
+  def handle_notification({:new_rtp_stream, ssrc, _}, :rtp, _ctx, state) do
     Logger.warn("Unsupported stream connected")
 
     children = [
@@ -109,7 +100,7 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     {{:ok, spec: spec}, state}
   end
 
-  def handle_notification(_notification, _element, state) do
+  def handle_notification(_notification, _element, _ctx, state) do
     {:ok, state}
   end
 end

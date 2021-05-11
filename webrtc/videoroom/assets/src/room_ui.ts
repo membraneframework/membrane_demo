@@ -53,14 +53,14 @@ export function addVideoElement(
   stream: MediaStream,
   label: string,
   muted: boolean = false,
-  userOwnVideo: boolean = false
+  isLocalVideo: boolean = false
 ): void {
   const videoId = elementId(stream.id, "video");
   const audioId = elementId(stream.id, "audio");
   let video = document.getElementById(videoId) as HTMLVideoElement;
   let audio = document.getElementById(audioId) as HTMLAudioElement;
   if (!video && !audio) {
-    const values = setupVideoFeed(stream, label, userOwnVideo);
+    const values = setupVideoFeed(stream, label, isLocalVideo);
     video = values.video;
     audio = values.audio;
   }
@@ -85,7 +85,7 @@ function resizeVideosGrid() {
 function setupVideoFeed(
   stream: MediaStream,
   label: string,
-  userOwnVideo: boolean
+  isLocalVideo: boolean
 ) {
   const copy = (document.querySelector(
     "#video-feed-template"
@@ -101,7 +101,7 @@ function setupVideoFeed(
   feed.id = elementId(stream.id, "feed");
   videoLabel.innerText = label;
 
-  if (userOwnVideo) {
+  if (isLocalVideo) {
     video.classList.add("UserOwnVideo");
   }
 

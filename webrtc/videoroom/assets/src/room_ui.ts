@@ -45,23 +45,33 @@ export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 
-function elementId(streamId: string, type: "video" | "audio" | "feed") {
+function elementId(
+  streamId: string,
+  type: "video" | "audio" | "placeholder" | "feed"
+) {
   return `${type}-${streamId}`;
 }
 
 export function addVideoElement(
   stream: MediaStream,
   label: string,
-  muted: boolean = false
+  mutedAudio: boolean = false,
+  turnedOffVideo: boolean = false
 ): void {
   const videoId = elementId(stream.id, "video");
   const audioId = elementId(stream.id, "audio");
+  const videoPlaceholderId = elementId(stream.id, "placeholder");
   let video = document.getElementById(videoId) as HTMLVideoElement;
   let audio = document.getElementById(audioId) as HTMLAudioElement;
+  let videoPlaceholder = document.getElementById(
+    videoPlaceholderId
+  ) as HTMLDivElement;
+
   if (!video && !audio) {
     const values = setupVideoFeed(stream, label);
     video = values.video;
     audio = values.audio;
+    videoPlaceholder = values.videoPlaceholder;
   }
 
   video.id = videoId;
@@ -73,7 +83,14 @@ export function addVideoElement(
   audio.id = audioId;
   audio.srcObject = stream;
   audio.autoplay = true;
-  audio.muted = muted;
+  audio.muted = mutedAudio;
+
+  videoPlaceholder.id = videoPlaceholderId;
+  videoPlaceholder.style.display = "none";
+
+  if (turnedOffVideo) {
+    toggleVideoPlaceholder(stream.id);
+  }
 }
 
 function resizeVideosGrid() {
@@ -92,6 +109,9 @@ function setupVideoFeed(stream: MediaStream, label: string) {
   const videoLabel = feed.querySelector(
     "div[class='VideoLabel']"
   ) as HTMLDivElement;
+  const videoPlaceholder = feed.querySelector(
+    "div[class='VideoPlaceholder']"
+  ) as HTMLDivElement;
 
   feed.id = elementId(stream.id, "feed");
   videoLabel.innerText = label;
@@ -100,7 +120,22 @@ function setupVideoFeed(stream: MediaStream, label: string) {
   grid.appendChild(feed);
   resizeVideosGrid();
 
-  return { audio, video };
+  return { audio, video, videoPlaceholder };
+}
+
+export function toggleVideoPlaceholder(streamId: string): void {
+  const video = document.getElementById(elementId(streamId, "video"));
+  const placeholder = document.getElementById(
+    elementId(streamId, "placeholder")
+  );
+
+  if (video) {
+    // video.style.display = video.style.display == "none" ? "block" : "none";
+  }
+  if (placeholder) {
+    placeholder.style.display =
+      placeholder.style.display == "none" ? "flex" : "none";
+  }
 }
 
 export function removeVideoElement(stream: MediaStream): void {

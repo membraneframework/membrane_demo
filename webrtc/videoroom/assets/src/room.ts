@@ -12,6 +12,7 @@ import {
   setLocalScreenSharingStatus,
   setScreensharing,
   setupRoomUI,
+  toggleVideoPlaceholder,
 } from "./room_ui";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
@@ -96,11 +97,12 @@ const setup = async () => {
           stream,
           isScreenSharing,
           label: displayName = "",
+          turnedOffVideo,
         }) => {
           if (isScreenSharing) {
             setScreensharing(stream, displayName, "My screensharing");
           } else {
-            addVideoElement(stream, displayName, false);
+            addVideoElement(stream, displayName, false, turnedOffVideo);
           }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {
@@ -116,6 +118,7 @@ const setup = async () => {
         onHideTrack: (ctx) => {
           hideVideoElement(ctx.stream.id);
         },
+        onToggleVideo: toggleVideoPlaceholder,
         onConnectionError: setErrorMessage,
       },
     });
@@ -137,8 +140,11 @@ const setup = async () => {
         onLocalScreensharingStop: stopLocalScreensharing,
         onToggleAudio: () =>
           localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled)),
-        onToggleVideo: () =>
-          localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled)),
+        onToggleVideo: () => {
+          toggleVideoPlaceholder(localStream.id);
+          webrtc.toggleVideo();
+          localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled));
+        },
         isLocalScreenSharingActive: false,
         isScreenSharingActive: false,
         displayName,

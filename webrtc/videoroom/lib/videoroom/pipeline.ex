@@ -85,7 +85,12 @@ defmodule VideoRoom.Pipeline do
 
       tracks = new_tracks(peer_type)
 
-      endpoint = Endpoint.new(peer_pid, peer_type, tracks, %{display_name: display_name})
+      endpoint =
+        Endpoint.new(peer_pid, peer_type, tracks, %{
+          display_name: display_name,
+          muted_audio: false,
+          turned_off_video: false
+        })
 
       endpoint_bin = {:endpoint, peer_pid}
 
@@ -154,6 +159,34 @@ defmodule VideoRoom.Pipeline do
       {:present, actions, state} ->
         {{:ok, actions}, state}
     end
+  end
+
+  def handle_other({:toggle_video, peer_pid}, ctx, state) do
+    state =
+      update_in(
+        state,
+        [:endpoints],
+        &Map.new(&1, fn {pid, endpoint} ->
+          ctx = %{endpoint.ctx | turned_off_video: !endpoint.ctx.turned_off_video}
+          {pid, %Endpoint{endpoint | ctx: ctx}}
+        end)
+      )
+
+    track_id =
+      ctx.children[{:endpoint, peer_pid}].options.inbound_tracks
+      |> Enum.at(0)
+      |> Map.get(:id)
+
+    ctx.children
+    |> Enum.each(fn
+      {{:endpoint, room_channel_pid}, _child_entry} ->
+        send(room_channel_pid, {:toggle_video, track_id})
+
+      _ ->
+        nil
+    end)
+
+    {:ok, state}
   end
 
   def handle_other({:DOWN, _ref, :process, pid, _reason}, ctx, state) do
@@ -233,7 +266,12 @@ defmodule VideoRoom.Pipeline do
     participants =
       state.endpoints
       |> Enum.map(fn {_, %Endpoint{inbound_tracks: tracks, ctx: ctx}} ->
-        %{display_name: ctx.display_name, mids: Map.keys(tracks)}
+        %{
+          display_name: ctx.display_name,
+          muted_audio: ctx.muted_audio,
+          turned_off_video: ctx.turned_off_video,
+          mids: Map.keys(tracks)
+        }
       end)
 
     send(peer_pid, {:signal, message, participants})

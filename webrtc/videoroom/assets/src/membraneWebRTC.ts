@@ -13,6 +13,8 @@ const phoenix_channel_push_result = async (push: Push): Promise<any> => {
 
 interface Participant {
   displayName: string;
+  mutedAudio: boolean;
+  turnedOffVideo: boolean;
   mids: string[];
 }
 
@@ -29,6 +31,8 @@ interface TrackContext {
   track: MediaStreamTrack;
   stream: MediaStream;
   label?: string;
+  mutedAudio?: boolean;
+  turnedOffVideo?: boolean;
   isScreenSharing: boolean;
 }
 
@@ -38,6 +42,7 @@ interface Callbacks {
   onConnectionError?: (message: string) => void;
   onDisplayTrack?: (ctx: TrackContext) => void;
   onHideTrack?: (ctx: TrackContext) => void;
+  onToggleVideo?: (streamId: string) => void;
 }
 
 interface MembraneWebRTCConfig {
@@ -175,6 +180,13 @@ export class MembraneWebRTC {
       });
     });
 
+    this.channel.on("toggleVideo", (data: any) => {
+      const stream = this.midToStream.get(data.data.trackId);
+      if (stream) {
+        this.callbacks.onToggleVideo?.(stream.id);
+      }
+    });
+
     this.channel.on("error", (data: any) => {
       this.callbacks.onConnectionError?.(data.error);
       this.stop();
@@ -185,6 +197,10 @@ export class MembraneWebRTC {
       this.channel.push("start", {})
     );
     this.maxDisplayNum = maxDisplayNum;
+  };
+
+  public toggleVideo = () => {
+    this.channel.push("toggleVideo", {});
   };
 
   public stop = () => {
@@ -282,11 +298,15 @@ export class MembraneWebRTC {
 
       const label =
         this.participants.find((p) => p.mids.includes(mid))?.displayName || "";
+      const turnedOffVideo = this.participants.find((p) => p.mids.includes(mid))
+        ?.turnedOffVideo;
+
       this.callbacks.onAddTrack?.({
         track: event.track,
         label,
         stream,
         isScreenSharing,
+        turnedOffVideo,
       });
 
       if (this.remoteStreams.size <= this.maxDisplayNum && !isScreenSharing) {

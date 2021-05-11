@@ -11,6 +11,9 @@
         </div>
         <template id="video-feed-template">
             <div class="VideoFeed">
+                <div class="VideoPlaceholder">
+                    <%= PhoenixInlineSvg.Helpers.svg_image(@conn, "video-off") %>
+                </div>
                 <audio></audio>
                 <video></video>
                 <div class="VideoLabel">Placeholder</div>

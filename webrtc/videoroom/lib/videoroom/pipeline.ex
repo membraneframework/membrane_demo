@@ -109,8 +109,6 @@ defmodule VideoRoom.Pipeline do
             pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
             cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
           ],
-          # TODO: change peer_pid to something that will easier identify peer when we introduce
-          # participants labelling
           log_metadata: [peer: peer_label(display_name, peer_pid)]
         }
       }
@@ -188,10 +186,15 @@ defmodule VideoRoom.Pipeline do
       fake => Membrane.Element.Fake.Sink.Buffers
     }
 
+    extensions = [
+      {{:vad, Membrane.RTP.VAD},
+       fn _extension, %Track{encoding: encoding} -> encoding == :OPUS end}
+    ]
+
     links =
       [
         link(endpoint_bin)
-        |> via_out(Pad.ref(:output, track_id))
+        |> via_out(Pad.ref(:output, track_id), options: [extensions: extensions])
         |> to(tee)
         |> to(fake)
       ] ++

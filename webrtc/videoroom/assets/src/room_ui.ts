@@ -83,8 +83,8 @@ export function setParticipantsNamesList(
     "participants-names-list"
   ) as HTMLDivElement;
 
-  participantsNamesList.innerText =
-    "Participants: " + participantsNames.join(", ");
+  participantsNamesList.innerHTML =
+    "<b>Participants</b>: " + participantsNames.join(", ");
 }
 
 function resizeVideosGrid() {

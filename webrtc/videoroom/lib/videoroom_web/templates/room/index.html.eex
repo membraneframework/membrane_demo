@@ -17,6 +17,9 @@
                 <audio></audio>
                 <video></video>
                 <div class="VideoLabel">Placeholder</div>
+                <div class="MutedAudioIcon">
+                    <%= PhoenixInlineSvg.Helpers.svg_image(@conn, "mic-off") %>
+                </div>
             </div>
         </template>
         <div class="VideoGridContainer">

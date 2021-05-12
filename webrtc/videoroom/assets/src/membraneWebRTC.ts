@@ -43,6 +43,7 @@ interface Callbacks {
   onDisplayTrack?: (ctx: TrackContext) => void;
   onHideTrack?: (ctx: TrackContext) => void;
   onToggleVideo?: (streamId: string) => void;
+  onToggleAudio?: (streamId: string) => void;
 }
 
 interface MembraneWebRTCConfig {
@@ -187,6 +188,13 @@ export class MembraneWebRTC {
       }
     });
 
+    this.channel.on("toggleAudio", (data: any) => {
+      const stream = this.midToStream.get(data.data.trackId);
+      if (stream) {
+        this.callbacks.onToggleAudio?.(stream.id);
+      }
+    });
+
     this.channel.on("error", (data: any) => {
       this.callbacks.onConnectionError?.(data.error);
       this.stop();
@@ -201,6 +209,10 @@ export class MembraneWebRTC {
 
   public toggleVideo = () => {
     this.channel.push("toggleVideo", {});
+  };
+
+  public toggleAudio = () => {
+    this.channel.push("toggleAudio", {});
   };
 
   public stop = () => {
@@ -296,10 +308,10 @@ export class MembraneWebRTC {
         });
       };
 
-      const label =
-        this.participants.find((p) => p.mids.includes(mid))?.displayName || "";
-      const turnedOffVideo = this.participants.find((p) => p.mids.includes(mid))
-        ?.turnedOffVideo;
+      const participant = this.participants.find((p) => p.mids.includes(mid));
+      const label = participant?.displayName || "";
+      const turnedOffVideo = participant?.turnedOffVideo;
+      const mutedAudio = participant?.mutedAudio;
 
       this.callbacks.onAddTrack?.({
         track: event.track,
@@ -307,6 +319,7 @@ export class MembraneWebRTC {
         stream,
         isScreenSharing,
         turnedOffVideo,
+        mutedAudio,
       });
 
       if (this.remoteStreams.size <= this.maxDisplayNum && !isScreenSharing) {

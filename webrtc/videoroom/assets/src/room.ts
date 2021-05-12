@@ -13,6 +13,7 @@ import {
   setScreensharing,
   setupRoomUI,
   toggleVideoPlaceholder,
+  toggleMutedAudioIcon,
 } from "./room_ui";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
@@ -98,11 +99,18 @@ const setup = async () => {
           isScreenSharing,
           label: displayName = "",
           turnedOffVideo,
+          mutedAudio,
         }) => {
           if (isScreenSharing) {
             setScreensharing(stream, displayName, "My screensharing");
           } else {
-            addVideoElement(stream, displayName, false, turnedOffVideo);
+            addVideoElement(
+              stream,
+              displayName,
+              false,
+              turnedOffVideo,
+              mutedAudio
+            );
           }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {
@@ -119,6 +127,7 @@ const setup = async () => {
           hideVideoElement(ctx.stream.id);
         },
         onToggleVideo: toggleVideoPlaceholder,
+        onToggleAudio: toggleMutedAudioIcon,
         onConnectionError: setErrorMessage,
       },
     });
@@ -138,8 +147,11 @@ const setup = async () => {
         onLocalScreensharingStart: () =>
           startLocalScreensharing(socket, displayName),
         onLocalScreensharingStop: stopLocalScreensharing,
-        onToggleAudio: () =>
-          localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled)),
+        onToggleAudio: () => {
+          toggleMutedAudioIcon(localStream.id);
+          webrtc.toggleAudio();
+          localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled));
+        },
         onToggleVideo: () => {
           toggleVideoPlaceholder(localStream.id);
           webrtc.toggleVideo();

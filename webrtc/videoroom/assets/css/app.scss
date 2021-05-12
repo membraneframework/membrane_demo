@@ -127,6 +127,13 @@ $media-controls-height: 80px;
   justify-content: center;
 }
 
+.MutedAudioIcon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 0 $space;
+}
+
 .VideoChat-screensharing {
   display: grid;
   grid-template-columns: 4fr 2fr;

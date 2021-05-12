@@ -47,7 +47,7 @@ export function getRoomId(): string {
 
 function elementId(
   streamId: string,
-  type: "video" | "audio" | "placeholder" | "feed"
+  type: "video" | "audio" | "placeholder" | "feed" | "mutedAudioIcon"
 ) {
   return `${type}-${streamId}`;
 }
@@ -56,15 +56,21 @@ export function addVideoElement(
   stream: MediaStream,
   label: string,
   mutedAudio: boolean = false,
-  turnedOffVideo: boolean = false
+  turnedOffVideo: boolean = false,
+  showMutedAudioIcon: boolean = false
 ): void {
   const videoId = elementId(stream.id, "video");
   const audioId = elementId(stream.id, "audio");
   const videoPlaceholderId = elementId(stream.id, "placeholder");
+  const mutedAudioIconId = elementId(stream.id, "mutedAudioIcon");
+
   let video = document.getElementById(videoId) as HTMLVideoElement;
   let audio = document.getElementById(audioId) as HTMLAudioElement;
   let videoPlaceholder = document.getElementById(
     videoPlaceholderId
+  ) as HTMLDivElement;
+  let mutedAudioIcon = document.getElementById(
+    mutedAudioIconId
   ) as HTMLDivElement;
 
   if (!video && !audio) {
@@ -72,6 +78,7 @@ export function addVideoElement(
     video = values.video;
     audio = values.audio;
     videoPlaceholder = values.videoPlaceholder;
+    mutedAudioIcon = values.mutedAudioIcon;
   }
 
   video.id = videoId;
@@ -86,10 +93,13 @@ export function addVideoElement(
   audio.muted = mutedAudio;
 
   videoPlaceholder.id = videoPlaceholderId;
-  videoPlaceholder.style.display = "none";
+  mutedAudioIcon.id = mutedAudioIconId;
 
-  if (turnedOffVideo) {
-    toggleVideoPlaceholder(stream.id);
+  if (!turnedOffVideo) {
+    videoPlaceholder.style.display = "none";
+  }
+  if (!showMutedAudioIcon) {
+    mutedAudioIcon.style.display = "none";
   }
 }
 
@@ -112,6 +122,9 @@ function setupVideoFeed(stream: MediaStream, label: string) {
   const videoPlaceholder = feed.querySelector(
     "div[class='VideoPlaceholder']"
   ) as HTMLDivElement;
+  const mutedAudioIcon = feed.querySelector(
+    "div[class='MutedAudioIcon'"
+  ) as HTMLDivElement;
 
   feed.id = elementId(stream.id, "feed");
   videoLabel.innerText = label;
@@ -120,21 +133,28 @@ function setupVideoFeed(stream: MediaStream, label: string) {
   grid.appendChild(feed);
   resizeVideosGrid();
 
-  return { audio, video, videoPlaceholder };
+  return { audio, video, videoPlaceholder, mutedAudioIcon };
 }
 
 export function toggleVideoPlaceholder(streamId: string): void {
-  const video = document.getElementById(elementId(streamId, "video"));
   const placeholder = document.getElementById(
     elementId(streamId, "placeholder")
   );
 
-  if (video) {
-    // video.style.display = video.style.display == "none" ? "block" : "none";
-  }
   if (placeholder) {
     placeholder.style.display =
       placeholder.style.display == "none" ? "flex" : "none";
+  }
+}
+
+export function toggleMutedAudioIcon(streamId: string): void {
+  const mutedAudioIcon = document.getElementById(
+    elementId(streamId, "mutedAudioIcon")
+  );
+
+  if (mutedAudioIcon) {
+    mutedAudioIcon.style.display =
+      mutedAudioIcon.style.display == "none" ? "block" : "none";
   }
 }
 

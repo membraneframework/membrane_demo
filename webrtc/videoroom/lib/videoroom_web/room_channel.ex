@@ -81,6 +81,13 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
+  def handle_in("toggleAudio", _msg, socket) do
+    socket
+    |> send_to_pipeline({:toggle_audio, self()})
+
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_info({:signal, {:candidate, candidate, sdp_mline_index}}, socket) do
     push(socket, "candidate", %{
@@ -124,6 +131,12 @@ defmodule VideoRoomWeb.RoomChannel do
   @impl true
   def handle_info({:toggle_video, track_id}, socket) do
     push(socket, "toggleVideo", %{data: %{"trackId" => track_id}})
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:toggle_audio, track_id}, socket) do
+    push(socket, "toggleAudio", %{data: %{"trackId" => track_id}})
     {:noreply, socket}
   end
 

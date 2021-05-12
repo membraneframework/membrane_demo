@@ -161,14 +161,20 @@ defmodule VideoRoom.Pipeline do
     end
   end
 
-  def handle_other({:toggle_video, peer_pid}, ctx, state) do
+  def handle_other({toggle_media, peer_pid}, ctx, state)
+      when toggle_media in [:toggle_video, :toggle_audio] do
     state =
       update_in(
         state,
         [:endpoints],
-        &Map.new(&1, fn {pid, endpoint} ->
-          ctx = %{endpoint.ctx | turned_off_video: !endpoint.ctx.turned_off_video}
-          {pid, %Endpoint{endpoint | ctx: ctx}}
+        &Map.update!(&1, peer_pid, fn endpoint ->
+          ctx =
+            case toggle_media do
+              :toggle_video -> %{endpoint.ctx | turned_off_video: !endpoint.ctx.turned_off_video}
+              :toggle_audio -> %{endpoint.ctx | muted_audio: !endpoint.ctx.muted_audio}
+            end
+
+          %Endpoint{endpoint | ctx: ctx}
         end)
       )
 
@@ -180,7 +186,7 @@ defmodule VideoRoom.Pipeline do
     ctx.children
     |> Enum.each(fn
       {{:endpoint, room_channel_pid}, _child_entry} ->
-        send(room_channel_pid, {:toggle_video, track_id})
+        send(room_channel_pid, {toggle_media, track_id})
 
       _ ->
         nil

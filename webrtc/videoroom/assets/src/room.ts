@@ -127,7 +127,7 @@ const setup = async () => {
       webrtc.addTrack(track, localStream);
     });
 
-    addVideoElement(localStream, "Me", true);
+    addVideoElement(localStream, "Me", true, true);
     displayVideoElement(localStream.id);
 
     setupRoomUI({

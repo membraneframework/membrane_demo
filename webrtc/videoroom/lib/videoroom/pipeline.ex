@@ -82,7 +82,7 @@ defmodule VideoRoom.Pipeline do
       |> Enum.count(&(&1.type == :participant))
 
     cond do
-      state[:max_participants_num] && participants_num >= state.max_participants_num ->
+      state.max_participants_num && participants_num >= state.max_participants_num ->
         send(
           peer_pid,
           {:new_peer, {:error, "Maximal number of participans in room has been reached"}, ref}
@@ -148,10 +148,15 @@ defmodule VideoRoom.Pipeline do
       fake => Membrane.Element.Fake.Sink.Buffers
     }
 
+    extensions = [
+      {{:vad, Membrane.RTP.VAD},
+       fn _extension, %Track{encoding: encoding} -> encoding == :OPUS end}
+    ]
+
     links =
       [
         link(endpoint_bin)
-        |> via_out(Pad.ref(:output, track_id))
+        |> via_out(Pad.ref(:output, track_id), options: [extensions: extensions])
         |> to(tee)
         |> to(fake)
       ] ++

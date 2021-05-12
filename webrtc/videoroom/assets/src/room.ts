@@ -108,6 +108,7 @@ const setup = async () => {
               stream,
               displayName,
               false,
+              false,
               turnedOffVideo,
               mutedAudio
             );
@@ -139,7 +140,7 @@ const setup = async () => {
       webrtc.addTrack(track, localStream);
     });
 
-    addVideoElement(localStream, "Me", true);
+    addVideoElement(localStream, "Me", true, true);
     displayVideoElement(localStream.id);
 
     setupRoomUI({

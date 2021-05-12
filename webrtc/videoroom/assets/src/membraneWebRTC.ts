@@ -36,6 +36,12 @@ interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
+  onReplaceStream?: (
+    oldStream: MediaStream,
+    newStream: MediaStream,
+    newLabel: string
+  ) => void;
+  onDisplayStream?: (stream: MediaStream, label: string) => void;
   onDisplayTrack?: (ctx: TrackContext) => void;
   onHideTrack?: (ctx: TrackContext) => void;
 }
@@ -181,10 +187,16 @@ export class MembraneWebRTC {
     });
 
     await phoenix_channel_push_result(this.channel.join());
-    const { maxDisplayNum } = await phoenix_channel_push_result(
-      this.channel.push("start", {})
-    );
-    this.maxDisplayNum = maxDisplayNum;
+
+    try {
+      const { maxDisplayNum } = await phoenix_channel_push_result(
+        this.channel.push("start", {})
+      );
+      this.maxDisplayNum = maxDisplayNum;
+    } catch (e) {
+      this.callbacks.onConnectionError?.(e);
+      this.stop();
+    }
   };
 
   public stop = () => {

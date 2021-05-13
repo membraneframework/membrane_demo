@@ -4,7 +4,7 @@ defmodule VideoRoomWeb.RoomChannel do
   require Logger
 
   @impl true
-  def join("room:" <> room_id, _msg, socket) do
+  def join("room:" <> room_id, %{"displayName" => name}, socket) do
     {room_id, peer_type} =
       case room_id do
         "screensharing:" <> id ->
@@ -26,7 +26,8 @@ defmodule VideoRoomWeb.RoomChannel do
          assign(socket, %{
            room_id: room_id,
            pipeline: pipeline,
-           peer_type: peer_type
+           peer_type: peer_type,
+           display_name: name
          })}
 
       {:error, reason} ->
@@ -45,7 +46,9 @@ defmodule VideoRoomWeb.RoomChannel do
     type = socket.assigns.peer_type
 
     socket
-    |> send_to_pipeline({:new_peer, self(), type, socket_ref(socket)})
+    |> send_to_pipeline(
+      {:new_peer, self(), type, socket.assigns.display_name, socket_ref(socket)}
+    )
 
     {:noreply, socket}
   end
@@ -87,8 +90,25 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:signal, {:sdp_offer, sdp}}, socket) do
-    push(socket, "offer", %{data: %{"type" => "offer", "sdp" => sdp}})
+  def handle_info({:signal, {:sdp_offer, sdp}, participants}, socket) do
+    participants = Enum.map(participants, &%{"displayName" => &1.display_name, "mids" => &1.mids})
+
+    push(socket, "offer", %{data: %{"type" => "offer", "sdp" => sdp}, participants: participants})
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:signal, {:replace_track, old_track_id, new_track_id}}, socket) do
+    push(socket, "replaceTrack", %{
+      data: %{"oldTrackId" => old_track_id, "newTrackId" => new_track_id}
+    })
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:signal, {:display_track, track_id}}, socket) do
+    push(socket, "displayTrack", %{data: %{"trackId" => track_id}})
     {:noreply, socket}
   end
 

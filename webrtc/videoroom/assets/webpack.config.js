@@ -25,7 +25,7 @@ module.exports = (env, options) => {
       publicPath: "/js/",
     },
     resolve: {
-      extensions: [".ts"],
+      extensions: [".ts", ".js"],
     },
     devtool: devMode ? "eval-cheap-module-source-map" : undefined,
     module: {
@@ -40,7 +40,17 @@ module.exports = (env, options) => {
         },
         {
           test: /\.[s]?css$/,
-          use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
+          use: [
+            MiniCssExtractPlugin.loader,
+            "css-loader",
+            {
+              loader: "sass-loader",
+              options: {
+                // Prefer `dart-sass`
+                implementation: require("sass"),
+              },
+            },
+          ],
         },
       ],
     },

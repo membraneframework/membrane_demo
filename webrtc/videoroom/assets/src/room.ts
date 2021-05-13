@@ -4,8 +4,9 @@ import { MEDIA_CONSTRAINTS, SCREENSHARING_CONSTRAINTS } from "./consts";
 import {
   addAudioElement,
   addVideoElement,
+  displayVideoElement,
   getRoomId,
-  removeAudioElement,
+  hideVideoElement,
   removeScreensharing,
   removeVideoElement,
   replaceStream,
@@ -13,10 +14,12 @@ import {
   setLocalScreenSharingStatus,
   setScreensharing,
   setupRoomUI,
+  setParticipantsNamesList,
 } from "./room_ui";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
 import { Socket } from "phoenix";
+import { parse } from "query-string";
 
 declare global {
   interface MediaDevices {
@@ -34,7 +37,7 @@ const cleanLocalScreensharing = () => {
   setLocalScreenSharingStatus(false);
 };
 
-const startLocalScreensharing = async (socket: Socket) => {
+const startLocalScreensharing = async (socket: Socket, user: string) => {
   if (screensharing) return;
 
   try {
@@ -43,6 +46,7 @@ const startLocalScreensharing = async (socket: Socket) => {
     );
 
     screensharing = new MembraneWebRTC(socket, getRoomId(), {
+      displayName: `${user} Screensharing`,
       type: "screensharing",
       callbacks: {
         onConnectionError: (message) => {
@@ -71,31 +75,57 @@ const stopLocalScreensharing = () => {
   cleanLocalScreensharing();
 };
 
+const parseUrl = (): string => {
+  const { display_name: displayName } = parse(document.location.search);
+
+  // remove query params without reloading the page
+  window.history.replaceState(null, "", window.location.pathname);
+
+  return displayName as string;
+};
+
 const setup = async () => {
   try {
     const socket = new Socket("/socket");
     socket.connect();
 
+    const displayName = parseUrl();
+
     const webrtc = new MembraneWebRTC(socket, getRoomId(), {
+      displayName,
       callbacks: {
-        onAddTrack: ({ track, stream, isScreenSharing }) => {
+        onAddTrack: ({
+          track,
+          stream,
+          isScreenSharing,
+          label: displayName = "",
+        }) => {
           if (isScreenSharing) {
-            setScreensharing(stream);
+            setScreensharing(stream, displayName, "My screensharing");
           } else {
-            addAudioElement(stream);
+            addVideoElement(stream, displayName, false);
           }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {
           if (isScreenSharing) {
             removeScreensharing();
           } else {
-            removeVideoElement(track, stream);
-            removeAudioElement(track, stream);
+            removeVideoElement(stream);
           }
         },
-        onReplaceStream: replaceStream,
-        onDisplayStream: addVideoElement,
+        onDisplayTrack: (ctx) => {
+          displayVideoElement(ctx.stream.id);
+        },
+        onHideTrack: (ctx) => {
+          hideVideoElement(ctx.stream.id);
+        },
         onConnectionError: setErrorMessage,
+        onOfferData: ({ data, participants }) => {
+          const participantsNames = participants
+            .map((p) => p.displayName)
+            .filter((name) => !name.match("Screensharing$"));
+          setParticipantsNamesList(participantsNames);
+        },
       },
     });
 
@@ -104,12 +134,15 @@ const setup = async () => {
     );
     localStream.getTracks().forEach((track) => {
       webrtc.addTrack(track, localStream);
-      addVideoElement(localStream, true);
     });
+
+    addVideoElement(localStream, "Me", true, true);
+    displayVideoElement(localStream.id);
 
     setupRoomUI({
       state: {
-        onLocalScreensharingStart: () => startLocalScreensharing(socket),
+        onLocalScreensharingStart: () =>
+          startLocalScreensharing(socket, displayName),
         onLocalScreensharingStop: stopLocalScreensharing,
         onToggleAudio: () =>
           localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled)),
@@ -117,7 +150,7 @@ const setup = async () => {
           localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled)),
         isLocalScreenSharingActive: false,
         isScreenSharingActive: false,
-        onCrash: () => webrtc.crash()
+        displayName,
       },
       muteAudio: false,
       muteVideo: false,

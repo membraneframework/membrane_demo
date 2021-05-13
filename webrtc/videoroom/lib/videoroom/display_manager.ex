@@ -79,8 +79,9 @@ defmodule VideoRoom.DisplayManager do
           {:ok, state}
         else
           queued_endpoint_id = MapSet.to_list(state.queued) |> List.first()
-          move({endpoint_id, :displayed}, :rest, state)
-          move({queued_endpoint_id, :queued}, :displayed, :speech, state)
+          state = move({endpoint_id, :displayed}, :rest, state)
+          state = move({queued_endpoint_id, :queued}, :displayed, :speech, state)
+
           {{:replace, endpoint_id, queued_endpoint_id}, state}
         end
 

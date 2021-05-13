@@ -12,6 +12,7 @@ import {
   setLocalScreenSharingStatus,
   setScreensharing,
   setupRoomUI,
+  setParticipantsNamesList,
 } from "./room_ui";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
@@ -117,6 +118,12 @@ const setup = async () => {
           hideVideoElement(ctx.stream.id);
         },
         onConnectionError: setErrorMessage,
+        onOfferData: ({ data, participants }) => {
+          const participantsNames = participants
+            .map((p) => p.displayName)
+            .filter((name) => !name.match("Screensharing$"));
+          setParticipantsNamesList(participantsNames);
+        },
       },
     });
 

@@ -44,6 +44,7 @@ interface Callbacks {
   onDisplayStream?: (stream: MediaStream, label: string) => void;
   onDisplayTrack?: (ctx: TrackContext) => void;
   onHideTrack?: (ctx: TrackContext) => void;
+  onOfferData?: (data: OfferData) => void;
 }
 
 interface MembraneWebRTCConfig {
@@ -214,6 +215,8 @@ export class MembraneWebRTC {
 
   private onOffer = async (offer: OfferData) => {
     this.participants = offer.participants;
+
+    this.callbacks.onOfferData?.(offer);
 
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtcConfig);

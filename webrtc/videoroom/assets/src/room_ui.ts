@@ -77,6 +77,17 @@ export function addVideoElement(
   audio.muted = muted;
 }
 
+export function setParticipantsNamesList(
+  participantsNames: Array<string>
+): void {
+  const participantsNamesList = document.getElementById(
+    "participants-names-list"
+  ) as HTMLDivElement;
+
+  participantsNamesList.innerHTML =
+    "<b>Participants</b>: " + participantsNames.join(", ");
+}
+
 function resizeVideosGrid() {
   const grid = document.getElementById("videos-grid")!;
   grid.className = `grid-${Math.min(2, grid.children.length)}`;

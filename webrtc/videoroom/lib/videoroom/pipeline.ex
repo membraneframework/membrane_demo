@@ -92,7 +92,6 @@ defmodule VideoRoom.Pipeline do
 
       stun_servers = Application.fetch_env!(:membrane_videoroom_demo, :stun_servers)
       turn_servers = Application.fetch_env!(:membrane_videoroom_demo, :turn_servers)
-
       children = %{
         endpoint_bin => %EndpointBin{
           # screensharing type should not receive any streams
@@ -133,6 +132,7 @@ defmodule VideoRoom.Pipeline do
             if(peer_type == :screensharing, do: peer_pid, else: state.active_screensharing)
       }
 
+      IO.inspect(Map.keys(ctx.children), label: "###1")
       state = put_in(state.endpoints[peer_pid], endpoint)
       {{:ok, [spec: spec] ++ tracks_msgs}, state}
     end
@@ -172,24 +172,36 @@ defmodule VideoRoom.Pipeline do
   end
 
   @impl true
-  def handle_crash_group_down(group_name, ctx, state) do
-    {endpoint, state} = pop_in(state, [:endpoints, group_name])
-    {actions, display_engine} = DisplayEngine.remove_endpoint(state.display_engine, endpoint)
-    state = %{state | display_engine: display_engine}
-    tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
+  def handle_crash_group_down(peer_pid, ctx, state) do
+    {endpoint, state} = pop_in(state, [:endpoints, peer_pid])
 
-    tracks_msgs =
-      flat_map_children(ctx, fn
-        {:endpoint, id} when id != group_name ->
-          [forward: {{:endpoint, id}, {:add_tracks, tracks}}]
+      {actions, display_engine} = DisplayEngine.remove_endpoint(state.display_engine, endpoint)
+      state = %{state | display_engine: display_engine}
+      tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
 
-        _child ->
-          []
-      end)
+      children =
+        Endpoint.get_tracks(endpoint)
+        |> Enum.map(fn track -> track.id end)
+        |> Enum.flat_map(&[tee: {peer_pid, &1}, fake: {peer_pid, &1}])
 
-    # stop_if_empty(state)
+        IO.inspect(state.display_engine.endpoints, label: "$$$$2")
+      tracks_msgs =
+        flat_map_children(ctx, fn
+          {:endpoint, id} when id != peer_pid ->
+            [forward: {{:endpoint, id}, {:add_tracks, tracks}}]
 
-    {{:ok, tracks_msgs ++ actions}, state}
+          _child ->
+            []
+        end)
+
+      state =
+        if state.active_screensharing == peer_pid do
+          %{state | active_screensharing: nil}
+        else
+          state
+        end
+        IO.inspect(Map.keys(state.endpoints), label: "$$$%1")
+      {{:ok, tracks_msgs ++ actions}, state}
   end
 
   @impl true
@@ -207,7 +219,7 @@ defmodule VideoRoom.Pipeline do
     fake = {:fake, {endpoint_id, track_id}}
 
     children = %{
-      tee => Membrane.Element.Tee.Parallel,
+      tee => Membrane.Element.Tee.Master,
       fake => Membrane.Element.Fake.Sink.Buffers
     }
 
@@ -216,6 +228,7 @@ defmodule VideoRoom.Pipeline do
         link(endpoint_bin)
         |> via_out(Pad.ref(:output, track_id))
         |> to(tee)
+        |> via_out(:master)
         |> to(fake)
       ] ++
         flat_map_children(ctx, fn
@@ -225,6 +238,7 @@ defmodule VideoRoom.Pipeline do
 
             [
               link(tee)
+              |> via_out(:copy)
               |> via_in(Pad.ref(:input, track_id),
                 options: [encoding: encoding, track_enabled: track_enabled]
               )
@@ -249,7 +263,8 @@ defmodule VideoRoom.Pipeline do
 
   def handle_notification({:vad, val}, {:endpoint, endpoint_id}, _ctx, state) do
     display_engine = state.display_engine
-    {actions, display_engine} = DisplayEngine.vad_notification(display_engine, val, endpoint_id)
+    # {actions, display_engine} = DisplayEngine.vad_notification(display_engine, val, endpoint_id)
+    actions = []
     {{:ok, actions}, %{state | display_engine: display_engine}}
   end
 
@@ -327,6 +342,7 @@ defmodule VideoRoom.Pipeline do
 
         [
           link(tee)
+          |> via_out(:copy)
           |> via_in(Pad.ref(:input, track_id),
             options: [encoding: track.encoding, track_enabled: track_enabled]
           )

@@ -14,6 +14,7 @@ import {
   setupRoomUI,
   toggleVideoPlaceholder,
   toggleMutedAudioIcon,
+  setParticipantsNamesList,
 } from "./room_ui";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
@@ -130,6 +131,12 @@ const setup = async () => {
         onToggleVideo: toggleVideoPlaceholder,
         onToggleAudio: toggleMutedAudioIcon,
         onConnectionError: setErrorMessage,
+        onOfferData: ({ data, participants }) => {
+          const participantsNames = participants
+            .map((p) => p.displayName)
+            .filter((name) => !name.match("Screensharing$"));
+          setParticipantsNamesList(participantsNames);
+        },
       },
     });
 

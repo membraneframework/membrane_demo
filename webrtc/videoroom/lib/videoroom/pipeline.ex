@@ -403,7 +403,7 @@ defmodule VideoRoom.Pipeline do
           []
       end)
 
-    spec = %ParentSpec{children: children, links: links}
+    spec = %ParentSpec{children: children, links: links, crash_group: {peer_pid, :temporary}}
 
     state = %{
       state

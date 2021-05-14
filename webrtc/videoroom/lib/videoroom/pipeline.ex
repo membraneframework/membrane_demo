@@ -148,10 +148,7 @@ defmodule VideoRoom.Pipeline do
       fake => Membrane.Element.Fake.Sink.Buffers
     }
 
-    extensions = [
-      {{:vad, Membrane.RTP.VAD},
-       fn _extension, %Track{encoding: encoding} -> encoding == :OPUS end}
-    ]
+    extensions = if encoding == :OPUS, do: [{:vad, Membrane.RTP.VAD}], else: []
 
     links =
       [

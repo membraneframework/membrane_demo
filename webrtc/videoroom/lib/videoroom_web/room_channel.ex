@@ -74,13 +74,6 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  def handle_in("crash", _msg, socket) do
-    socket
-    |> send_to_pipeline({:crash, self()})
-
-    {:noreply, socket}
-  end
-
   @impl true
   def handle_info({:signal, {:candidate, candidate, sdp_mline_index}}, socket) do
     push(socket, "candidate", %{

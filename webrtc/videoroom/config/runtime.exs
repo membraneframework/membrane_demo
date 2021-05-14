@@ -1,7 +1,6 @@
 import Config
 
 defmodule ConfigParser do
-
   def parse_max_participants_num(nil), do: nil
 
   def parse_max_participants_num(max_display_num_raw) do

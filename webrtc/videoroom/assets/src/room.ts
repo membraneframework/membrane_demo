@@ -2,14 +2,12 @@ import "../css/app.scss";
 
 import { MEDIA_CONSTRAINTS, SCREENSHARING_CONSTRAINTS } from "./consts";
 import {
-  addAudioElement,
   addVideoElement,
   displayVideoElement,
   getRoomId,
   hideVideoElement,
   removeScreensharing,
   removeVideoElement,
-  replaceStream,
   setErrorMessage,
   setLocalScreenSharingStatus,
   setScreensharing,

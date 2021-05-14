@@ -213,10 +213,6 @@ export class MembraneWebRTC {
     this.socket.off(this.socketRefs);
   };
 
-  public crash = () => {
-    this.channel.push("crash", {});
-  }
-
   private onOffer = async (offer: OfferData) => {
     this.participants = offer.participants;
 

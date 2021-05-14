@@ -100,15 +100,6 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   @impl true
-  def handle_info({:signal, {:replace_track, old_track_id, new_track_id}}, socket) do
-    push(socket, "replaceTrack", %{
-      data: %{"oldTrackId" => old_track_id, "newTrackId" => new_track_id}
-    })
-
-    {:noreply, socket}
-  end
-
-  @impl true
   def handle_info({:signal, {:display_track, track_id}}, socket) do
     push(socket, "displayTrack", %{data: %{"trackId" => track_id}})
     {:noreply, socket}

@@ -116,10 +116,6 @@ defmodule VideoRoom.Pipeline do
     end
   end
 
-  def handle_other({:crash, peer_pid}, _ctx, state) do
-    {{:ok, forward: {{:endpoint, peer_pid}, {:signal, :crash}}}, state}
-  end
-
   def handle_other({:DOWN, _ref, :process, pid, _reason}, ctx, state) do
     {_status, actions, state} = maybe_remove_peer(pid, ctx, state)
 

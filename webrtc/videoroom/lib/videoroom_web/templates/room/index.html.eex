@@ -40,7 +40,4 @@
     <div class="StartScreensharing">
         <button style="display: none;" id="toggle-screensharing"></button>
     </div>
-    <div class="Crash">
-        <button id="crash">Crash</button>
-    </div>
 </div>

@@ -141,14 +141,7 @@ defmodule VideoRoom.Pipeline do
     state = %{state | display_engine: display_engine}
     tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
 
-    tracks_msgs =
-      flat_map_children(ctx, fn
-        {:endpoint, id} when id != peer_pid ->
-          [forward: {{:endpoint, id}, {:add_tracks, tracks}}]
-
-        _child ->
-          []
-      end)
+    tracks_msgs = update_track_messages(ctx)
 
     state =
       if state.active_screensharing == peer_pid do

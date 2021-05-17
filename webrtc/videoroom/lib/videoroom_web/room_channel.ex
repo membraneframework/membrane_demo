@@ -35,7 +35,7 @@ defmodule VideoRoomWeb.RoomChannel do
            pipeline: pipeline,
            peer_type: peer_type,
            params: params
-        })}
+         })}
 
       {:error, reason} ->
         Logger.error("""
@@ -53,9 +53,7 @@ defmodule VideoRoomWeb.RoomChannel do
     type = socket.assigns.peer_type
 
     socket
-    |> send_to_pipeline(
-      {:new_peer, self(), type, socket.assigns.params, socket_ref(socket)}
-    )
+    |> send_to_pipeline({:new_peer, self(), type, socket.assigns.params, socket_ref(socket)})
 
     {:noreply, socket}
   end
@@ -91,7 +89,11 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   def handle_info({:signal, {:sdp_offer, sdp}, participants}, socket) do
-    participants = Enum.map(participants, &%{"displayName" => &1.display_name, "mids" => &1.mids, "hasNoMedia" => false})
+    participants =
+      Enum.map(
+        participants,
+        &%{"displayName" => &1.display_name, "mids" => &1.mids, "id" => &1.id}
+      )
 
     push(socket, "offer", %{data: %{"type" => "offer", "sdp" => sdp}, participants: participants})
     {:noreply, socket}

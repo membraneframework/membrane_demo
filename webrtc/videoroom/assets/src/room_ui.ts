@@ -49,8 +49,8 @@ export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 
-function elementId(streamId: string, type: "video" | "audio" | "feed") {
-  return `${type}-${streamId}`;
+function elementId(participantId: string, type: "video" | "audio" | "feed") {
+  return `${type}-${participantId}`;
 }
 
 export function addVideoElement(

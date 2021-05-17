@@ -138,7 +138,8 @@ defmodule VideoRoom.DisplayManager do
 
       true ->
         # endpoint may have no video tracks therefore it is not present in display manager
-        {:ok, state}    end
+        {:ok, state}
+    end
   end
 
   @doc """

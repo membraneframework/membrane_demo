@@ -18,7 +18,7 @@ import {
   setupRoomUI,
   setParticipantsNamesList,
 } from "./room_ui";
-import { createFakeVideoStream } from "./utils";
+import { createFakeVideoStream } from "../src/utils";
 
 import { MembraneWebRTC } from "./membraneWebRTC";
 import { Socket } from "phoenix";
@@ -155,19 +155,6 @@ const setup = async () => {
             .map((p) => p.displayName)
             .filter((name) => !name.match("Screensharing$"));
           setParticipantsNamesList(participantsNames);
-
-          participants
-            .filter((p) => p.hasNoMedia)
-            .forEach((p) => {
-              const video = VIDEO_MEDIA_CONSTRAINTS.video as MediaTrackConstraintSet;
-              const fakeVideoStream = createFakeVideoStream({
-                height: video!.height as number,
-                width: video.width! as number,
-              });
-              addVideoElement(fakeVideoStream, p.displayName, true, true);
-              displayVideoElement(fakeVideoStream.id);
-              console.log(fakeVideoStream.id, " dupa   ", p.displayName);
-            });
         },
       },
     });

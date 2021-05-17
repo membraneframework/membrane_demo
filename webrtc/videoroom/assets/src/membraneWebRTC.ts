@@ -32,6 +32,12 @@ interface TrackContext {
   isScreenSharing: boolean;
 }
 
+interface SignalingOptions {
+  displayName: string;
+  relayVideo: boolean;
+  relayAudio: boolean;
+}
+
 interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
@@ -51,7 +57,7 @@ interface MembraneWebRTCConfig {
   callbacks?: Callbacks;
   rtcConfig?: RTCConfiguration;
   type?: "participant" | "screensharing";
-  displayName: string;
+  signalingOptions: SignalingOptions;
 }
 
 export class MembraneWebRTC {
@@ -59,11 +65,14 @@ export class MembraneWebRTC {
   private _channel?: Channel;
   private channelId: string;
   private socketRefs: string[] = [];
+  private signalingOptions: SignalingOptions;
   private displayName: string;
 
   private maxDisplayNum: number = 1;
-  private localTracks: Set<MediaStreamTrack> = new Set<MediaStreamTrack>();
-  private localStream?: MediaStream;
+  private localTracksMapping: Map<
+    String,
+    [MediaStreamTrack, MediaStream]
+  > = new Map();
   private screensharingStream?: MediaStream;
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
   private midToStream: Map<String, MediaStream> = new Map();
@@ -91,10 +100,16 @@ export class MembraneWebRTC {
   }
 
   constructor(socket: Socket, roomId: string, config: MembraneWebRTCConfig) {
-    const { type = "participant", callbacks, rtcConfig, displayName } = config;
+    const {
+      type = "participant",
+      callbacks,
+      rtcConfig,
+      signalingOptions,
+    } = config;
 
     this.socket = socket;
-    this.displayName = displayName;
+    this.displayName = signalingOptions.displayName;
+    this.signalingOptions = signalingOptions;
     this.channelId =
       type === "participant"
         ? `room:${roomId}`
@@ -118,14 +133,11 @@ export class MembraneWebRTC {
         "Adding tracks when connection is established is not yet supported"
       );
     }
-    this.localTracks.add(track);
-    this.localStream = stream;
+    this.localTracksMapping.set(track.id, [track, stream]);
   };
 
   public start = async () => {
-    this.channel = this.socket.channel(this.channelId, {
-      displayName: this.displayName,
-    });
+    this.channel = this.socket.channel(this.channelId, this.signalingOptions);
 
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onRemoteCandidate);
@@ -208,7 +220,9 @@ export class MembraneWebRTC {
       this.connection.onicecandidate = null;
       this.connection.ontrack = null;
     }
-    this.localTracks.forEach((t) => t.stop());
+    this.localTracksMapping.forEach(([track, _stream], _trackId) =>
+      track.stop()
+    );
     this.connection = undefined;
     this.socket.off(this.socketRefs);
   };
@@ -222,9 +236,10 @@ export class MembraneWebRTC {
       this.connection = new RTCPeerConnection(this.rtcConfig);
       this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
-      this.localTracks.forEach((track) =>
-        this.connection!.addTrack(track, this.localStream!)
-      );
+      this.localTracksMapping.forEach(([track, stream], _trackId) => {
+        console.log(track);
+        this.connection!.addTrack(track, stream);
+      });
     } else {
       this.connection.createOffer({ iceRestart: true });
     }

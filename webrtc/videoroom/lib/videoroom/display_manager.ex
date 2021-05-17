@@ -137,8 +137,8 @@ defmodule VideoRoom.DisplayManager do
         {:ok, state}
 
       true ->
-        raise("No such endpoint id #{inspect(endpoint_id)}")
-    end
+        # endpoint may have no video tracks therefore it is not present in display manager
+        {:ok, state}    end
   end
 
   @doc """

@@ -74,8 +74,14 @@ defmodule VideoRoom.Pipeline do
     {:ok, state}
   end
 
+  # `opts` keyword list must contain following fields:
+  # * `display_name` - label used to identify participant/screensharing
+  # * `relay_video?` - true|false whether video track should be created
+  # * `relay_audio?` - true|false whether audio track should be created
+  #
+  # IMPORTANT: relay_video? and relay_audio? are ignored for screensharing and video track is created instead
   @impl true
-  def handle_other({:new_peer, peer_pid, peer_type, display_name, ref}, ctx, state) do
+  def handle_other({:new_peer, peer_pid, peer_type, opts, ref}, ctx, state) do
     participants_num =
       state.endpoints
       |> Map.values()
@@ -96,7 +102,7 @@ defmodule VideoRoom.Pipeline do
         {:ok, state}
 
       true ->
-        accept_new_peer(peer_pid, peer_type, display_name, ref, ctx, state)
+        accept_new_peer(peer_pid, peer_type, opts, ref, ctx, state)
     end
   end
 
@@ -236,13 +242,17 @@ defmodule VideoRoom.Pipeline do
       children = [endpoint: peer_pid] ++ children
 
       tracks_msgs =
-        flat_map_children(ctx, fn
-          {:endpoint, id} when id != peer_pid ->
-            [forward: {{:endpoint, id}, {:add_tracks, tracks}}]
+        if tracks == [] do
+          []
+        else
+          flat_map_children(ctx, fn
+            {:endpoint, id} when id != peer_pid ->
+              [forward: {{:endpoint, id}, {:add_tracks, tracks}}]
 
-          _child ->
-            []
-        end)
+            _child ->
+              []
+          end)
+        end
 
       state =
         if state.active_screensharing == peer_pid do
@@ -266,12 +276,19 @@ defmodule VideoRoom.Pipeline do
     ctx.children |> Map.keys() |> Enum.flat_map(fun)
   end
 
-  defp new_tracks(:participant) do
+  defp new_tracks(:participant, opts) do
     stream_id = Track.stream_id()
-    [Track.new(:audio, stream_id), Track.new(:video, stream_id)]
+
+    audio_track =
+      if Keyword.fetch!(opts, :relay_audio?), do: [Track.new(:audio, stream_id)], else: []
+
+    video_track =
+      if Keyword.fetch!(opts, :relay_video?), do: [Track.new(:video, stream_id)], else: []
+
+    audio_track ++ video_track
   end
 
-  defp new_tracks(:screensharing) do
+  defp new_tracks(:screensharing, _opts) do
     screensharing_id = "SCREEN:#{Track.stream_id()}" |> String.slice(0, 16)
     [Track.new(:video, Track.stream_id(), id: screensharing_id)]
   end
@@ -316,13 +333,15 @@ defmodule VideoRoom.Pipeline do
     String.slice(name, 0..min(20, String.length(name))) <> ":" <> "#{inspect(pid)}"
   end
 
-  defp accept_new_peer(peer_pid, peer_type, display_name, ref, ctx, state) do
+  defp accept_new_peer(peer_pid, peer_type, opts, ref, ctx, state) do
     send(peer_pid, {:new_peer, {:ok, state.max_display_num}, ref})
+
+    display_name = Keyword.fetch!(opts, :display_name)
 
     Membrane.Logger.info("New peer #{inspect(peer_pid)} of type #{inspect(peer_type)}")
     Process.monitor(peer_pid)
 
-    tracks = new_tracks(peer_type)
+    tracks = new_tracks(peer_type, opts)
 
     endpoint = Endpoint.new(peer_pid, peer_type, tracks, %{display_name: display_name})
 

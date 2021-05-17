@@ -137,7 +137,7 @@ defmodule VideoRoom.Pipeline do
     state = %{state | display_engine: display_engine}
     tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
 
-    tracks_msgs = update_track_messages(ctx)
+    tracks_msgs = update_track_messages(ctx, tracks, endpoint, state)
 
     state =
       if state.active_screensharing == peer_pid do
@@ -254,7 +254,7 @@ defmodule VideoRoom.Pipeline do
 
       children = [endpoint: peer_pid] ++ children
 
-      tracks_msgs = update_track_messages(ctx)
+      tracks_msgs = update_track_messages(ctx, tracks, endpoint, state)
 
       state =
         if state.active_screensharing == peer_pid do
@@ -367,7 +367,7 @@ defmodule VideoRoom.Pipeline do
 
     links = new_peer_links(peer_type, endpoint_bin, ctx, state)
 
-    tracks_msgs = update_track_messages(ctx)
+    tracks_msgs = update_track_messages(ctx, tracks, endpoint, state)
 
     spec = %ParentSpec{children: children, links: links, crash_group: {peer_pid, :temporary}}
 
@@ -381,7 +381,7 @@ defmodule VideoRoom.Pipeline do
     {{:ok, [spec: spec] ++ tracks_msgs}, state}
   end
 
-  defp update_track_messages(ctx) do
+  defp update_track_messages(ctx, tracks, endpoint_bin, state) do
     flat_map_children(ctx, fn
       {:endpoint, other_peer_pid} = endpoint_bin
       when other_peer_pid != state.active_screensharing ->

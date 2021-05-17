@@ -14,6 +14,7 @@ const phoenix_channel_push_result = async (push: Push): Promise<any> => {
 interface Participant {
   displayName: string;
   mids: string[];
+  hasNoMedia: boolean;
 }
 
 interface OfferData {

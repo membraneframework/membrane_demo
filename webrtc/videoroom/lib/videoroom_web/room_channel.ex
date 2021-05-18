@@ -118,6 +118,12 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
+  @impl true
+  def handle_info({:internal_error, message}, socket) do
+    push(socket, "error", %{error: message})
+    {:noreply, socket}
+  end
+
   def handle_info({:DOWN, _ref, :process, _monitor, reason}, socket) do
     push(socket, "error", %{
       error: "Room stopped working, consider restarting your connection, #{inspect(reason)}"

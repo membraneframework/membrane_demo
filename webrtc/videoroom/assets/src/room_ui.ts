@@ -202,7 +202,7 @@ export function setErrorMessage(
 
 export function displayVideoElement(streamId: string): void {
   const feedId = elementId(streamId, "feed");
-  document.getElementById(feedId)!.style.display = "block";
+  document.getElementById(feedId)!.style.display = "flex";
 }
 
 export function hideVideoElement(streamId: string): void {

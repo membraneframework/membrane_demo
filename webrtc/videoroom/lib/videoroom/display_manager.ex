@@ -37,10 +37,10 @@ defmodule VideoRoom.DisplayManager do
   end
 
   @doc """
-  Updates voice activity status of endpoint with id `endpoint_id`.
+  Updates voice activity status of endpoint with id `endpoint_id`. Raises if endpoint doesn't exist.
 
-  Returns `{:replace, old_endpoint_id, new_endpoint_id}` if video track of `new_endpoint_id` should be replaced by
-  video track with `old_endpoint_id`.
+  Returns `{:replace, old_endpoint_id, new_endpoint_id}` if video track of `old_endpoint_id` should be replaced by
+  video track of `new_endpoint_id`.
   Otherwise it returns `:ok`.
   """
   @spec update(t(), endpoint_id :: endpoint_id_t(), activity :: :speech | :silence) ::
@@ -97,7 +97,7 @@ defmodule VideoRoom.DisplayManager do
   end
 
   @doc """
-  Removes endpoint with id `endpoint_id`.
+  Removes endpoint with id `endpoint_id` if it exists.
 
   Returns `{:replace, old_endpoint_id, new_endpoint_id}` if video track of `new_endpoint_id` should be sent instead of
   video track of `old_endpoint_id`.
@@ -138,7 +138,8 @@ defmodule VideoRoom.DisplayManager do
         {:ok, state}
 
       true ->
-        raise("No such endpoint id #{inspect(endpoint_id)}")
+        Membrane.Logger.debug("No such endpoint id #{inspect(endpoint_id)}")
+        {:ok, state}
     end
   end
 

@@ -85,7 +85,8 @@ defmodule VideoRoom.Pipeline do
       state.max_participants_num && participants_num >= state.max_participants_num ->
         send(
           peer_pid,
-          {:new_peer, {:error, "Maximal number of participans in room has been reached"}, ref}
+          {:new_peer, {:error, "Maximal number of participants in the room has been reached"},
+           ref}
         )
 
         {:ok, state}
@@ -106,22 +107,13 @@ defmodule VideoRoom.Pipeline do
   end
 
   def handle_other({:remove_peer, peer_pid}, ctx, state) do
-    case maybe_remove_peer(peer_pid, ctx, state) do
-      {:absent, [], state} ->
-        Membrane.Logger.info("Peer #{inspect(peer_pid)} already removed")
-        {:ok, state}
-
-      {:present, actions, state} ->
-        {{:ok, actions}, state}
-    end
+    Membrane.Logger.info("Removing peer #{inspect(peer_pid)}.")
+    maybe_remove_peer(peer_pid, ctx, state)
   end
 
   def handle_other({:DOWN, _ref, :process, pid, _reason}, ctx, state) do
-    {_status, actions, state} = maybe_remove_peer(pid, ctx, state)
-
-    stop_if_empty(state)
-
-    {{:ok, actions}, state}
+    Membrane.Logger.info("Connection #{inspect(pid)} is down. Cleaning up.")
+    maybe_remove_peer(pid, ctx, state)
   end
 
   def handle_other(:check_if_empty, _ctx, state) do
@@ -131,22 +123,10 @@ defmodule VideoRoom.Pipeline do
 
   @impl true
   def handle_crash_group_down(peer_pid, ctx, state) do
-    {endpoint, state} = pop_in(state, [:endpoints, peer_pid])
-
-    {actions, display_engine} = DisplayEngine.remove_endpoint(state.display_engine, endpoint)
-    state = %{state | display_engine: display_engine}
-    tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
-
-    tracks_msgs = update_track_messages(ctx, tracks, endpoint, state)
-
-    state =
-      if state.active_screensharing == peer_pid do
-        %{state | active_screensharing: nil}
-      else
-        state
-      end
-
-    {{:ok, tracks_msgs ++ actions}, state}
+    Membrane.Logger.info("Crash group: #{inspect(peer_pid)} is down. Cleaning up.")
+    error = {:internal_error, "Internal server error. Consider restarting your connection."}
+    send(peer_pid, error)
+    maybe_remove_peer(peer_pid, ctx, state)
   end
 
   @impl true
@@ -236,9 +216,19 @@ defmodule VideoRoom.Pipeline do
   end
 
   defp maybe_remove_peer(peer_pid, ctx, state) do
-    endpoint = ctx.children[{:endpoint, peer_pid}]
+    case do_maybe_remove_peer(peer_pid, ctx, state) do
+      {:absent, [], state} ->
+        Membrane.Logger.info("Peer #{inspect(peer_pid)} already removed")
+        {:ok, state}
 
-    if endpoint == nil or endpoint.terminating? do
+      {:present, actions, state} ->
+        stop_if_empty(state)
+        {{:ok, actions}, state}
+    end
+  end
+
+  defp do_maybe_remove_peer(peer_pid, ctx, state) do
+    if !Map.has_key?(state.endpoints, peer_pid) do
       {:absent, [], state}
     else
       {endpoint, state} = pop_in(state, [:endpoints, peer_pid])
@@ -246,15 +236,7 @@ defmodule VideoRoom.Pipeline do
       state = %{state | display_engine: display_engine}
       tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
 
-      children =
-        Endpoint.get_tracks(endpoint)
-        |> Enum.map(fn track -> track.id end)
-        |> Enum.flat_map(&[tee: {peer_pid, &1}, fake: {peer_pid, &1}])
-        |> Enum.filter(&Map.has_key?(ctx.children, &1))
-
-      children = [endpoint: peer_pid] ++ children
-
-      tracks_msgs = update_track_messages(ctx, tracks, endpoint, state)
+      tracks_msgs = update_track_messages(ctx, tracks, {:endpoint, peer_pid}, state)
 
       state =
         if state.active_screensharing == peer_pid do
@@ -263,7 +245,24 @@ defmodule VideoRoom.Pipeline do
           state
         end
 
-      {:present, [remove_child: children] ++ tracks_msgs ++ actions, state}
+      endpoint_bin = ctx.children[{:endpoint, peer_pid}]
+
+      actions =
+        actions ++
+          if endpoint_bin == nil or endpoint_bin.terminating? do
+            []
+          else
+            children =
+              Endpoint.get_tracks(endpoint)
+              |> Enum.map(fn track -> track.id end)
+              |> Enum.flat_map(&[tee: {peer_pid, &1}, fake: {peer_pid, &1}])
+              |> Enum.filter(&Map.has_key?(ctx.children, &1))
+
+            children = [endpoint: peer_pid] ++ children
+            [remove_child: children]
+          end
+
+      {:present, tracks_msgs ++ actions, state}
     end
   end
 
@@ -367,7 +366,7 @@ defmodule VideoRoom.Pipeline do
 
     links = new_peer_links(peer_type, endpoint_bin, ctx, state)
 
-    tracks_msgs = update_track_messages(ctx, tracks, endpoint, state)
+    tracks_msgs = update_track_messages(ctx, tracks, endpoint_bin, state)
 
     spec = %ParentSpec{children: children, links: links, crash_group: {peer_pid, :temporary}}
 
@@ -383,9 +382,9 @@ defmodule VideoRoom.Pipeline do
 
   defp update_track_messages(ctx, tracks, endpoint_bin, state) do
     flat_map_children(ctx, fn
-      {:endpoint, other_peer_pid} = endpoint_bin
-      when other_peer_pid != state.active_screensharing ->
-        [forward: {endpoint_bin, {:add_tracks, tracks}}]
+      {:endpoint, other_peer_pid} = other_endpoint_bin
+      when other_endpoint_bin != endpoint_bin and other_peer_pid != state.active_screensharing ->
+        [forward: {other_endpoint_bin, {:add_tracks, tracks}}]
 
       _child ->
         []

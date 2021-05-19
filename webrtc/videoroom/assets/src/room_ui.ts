@@ -57,7 +57,7 @@ export function addVideoElement(
   label: string,
   isLocalVideo: boolean = false,
   mutedAudio: boolean = false,
-  turnedOffVideo: boolean = false,
+  mutedVideo: boolean = false,
   showMutedAudioIcon: boolean = false
 ): void {
   const videoId = elementId(stream.id, "video");
@@ -96,7 +96,7 @@ export function addVideoElement(
   videoPlaceholder.id = videoPlaceholderId;
   mutedAudioIcon.id = mutedAudioIconId;
 
-  if (!turnedOffVideo) {
+  if (!mutedVideo) {
     videoPlaceholder.style.display = "none";
   }
   if (!showMutedAudioIcon) {

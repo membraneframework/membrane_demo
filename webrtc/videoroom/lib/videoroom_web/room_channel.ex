@@ -74,16 +74,16 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  def handle_in("toggleVideo", _msg, socket) do
+  def handle_in("toggledVideo", _msg, socket) do
     socket
-    |> send_to_pipeline({:toggle_video, self()})
+    |> send_to_pipeline({:toggled_video, self()})
 
     {:noreply, socket}
   end
 
-  def handle_in("toggleAudio", _msg, socket) do
+  def handle_in("toggledAudio", _msg, socket) do
     socket
-    |> send_to_pipeline({:toggle_audio, self()})
+    |> send_to_pipeline({:toggled_audio, self()})
 
     {:noreply, socket}
   end
@@ -105,7 +105,7 @@ defmodule VideoRoomWeb.RoomChannel do
           "displayName" => &1.display_name,
           "mids" => &1.mids,
           "mutedAudio" => &1.muted_audio,
-          "turnedOffVideo" => &1.turned_off_video
+          "mutedVideo" => &1.muted_video
         }
       )
 
@@ -129,14 +129,14 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   @impl true
-  def handle_info({:toggle_video, track_id}, socket) do
-    push(socket, "toggleVideo", %{data: %{"trackId" => track_id}})
+  def handle_info({:toggled_video, track_id}, socket) do
+    push(socket, "toggledVideo", %{data: %{"trackId" => track_id}})
     {:noreply, socket}
   end
 
   @impl true
-  def handle_info({:toggle_audio, track_id}, socket) do
-    push(socket, "toggleAudio", %{data: %{"trackId" => track_id}})
+  def handle_info({:toggled_audio, track_id}, socket) do
+    push(socket, "toggledAudio", %{data: %{"trackId" => track_id}})
     {:noreply, socket}
   end
 

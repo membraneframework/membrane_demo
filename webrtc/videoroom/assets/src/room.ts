@@ -99,7 +99,7 @@ const setup = async () => {
           stream,
           isScreenSharing,
           label: displayName = "",
-          turnedOffVideo,
+          mutedVideo,
           mutedAudio,
         }) => {
           if (isScreenSharing) {
@@ -110,7 +110,7 @@ const setup = async () => {
               displayName,
               false,
               false,
-              turnedOffVideo,
+              mutedVideo,
               mutedAudio
             );
           }
@@ -128,8 +128,8 @@ const setup = async () => {
         onHideTrack: (ctx) => {
           hideVideoElement(ctx.stream.id);
         },
-        onToggleVideo: toggleVideoPlaceholder,
-        onToggleAudio: toggleMutedAudioIcon,
+        onParticipantToggledVideo: toggleVideoPlaceholder,
+        onParticipantToggledAudio: toggleMutedAudioIcon,
         onConnectionError: setErrorMessage,
         onOfferData: ({ data, participants }) => {
           const participantsNames = participants

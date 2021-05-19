@@ -117,25 +117,22 @@ defmodule VideoRoom.Pipeline do
   end
 
   def handle_other({toggle_media, peer_pid}, ctx, state)
-      when toggle_media in [:toggle_video, :toggle_audio] do
+      when toggle_media in [:toggled_video, :toggled_audio] do
     state =
       update_in(
         state,
-        [:endpoints],
-        &Map.update!(&1, peer_pid, fn endpoint ->
-          ctx =
-            case toggle_media do
-              :toggle_video -> %{endpoint.ctx | turned_off_video: !endpoint.ctx.turned_off_video}
-              :toggle_audio -> %{endpoint.ctx | muted_audio: !endpoint.ctx.muted_audio}
-            end
-
+        [:endpoints, peer_pid],
+        fn endpoint ->
+          key = if toggle_media == :toggled_video, do: :muted_video, else: :muted_audio
+          ctx = Map.put(endpoint.ctx, key, !endpoint.ctx[key])
           %Endpoint{endpoint | ctx: ctx}
-        end)
+        end
       )
 
     track_id =
-      ctx.children[{:endpoint, peer_pid}].options.inbound_tracks
-      |> Enum.at(0)
+      state.endpoints[peer_pid].inbound_tracks
+      |> Map.values()
+      |> List.first()
       |> Map.get(:id)
 
     ctx.children
@@ -235,7 +232,7 @@ defmodule VideoRoom.Pipeline do
         %{
           display_name: ctx.display_name,
           muted_audio: ctx.muted_audio,
-          turned_off_video: ctx.turned_off_video,
+          muted_video: ctx.muted_video,
           mids: Map.keys(tracks)
         }
       end)
@@ -367,7 +364,7 @@ defmodule VideoRoom.Pipeline do
       Endpoint.new(peer_pid, peer_type, tracks, %{
         display_name: display_name,
         muted_audio: false,
-        turned_off_video: false
+        muted_video: false
       })
 
     endpoint_bin = {:endpoint, peer_pid}

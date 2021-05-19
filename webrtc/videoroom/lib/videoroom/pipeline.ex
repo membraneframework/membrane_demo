@@ -123,7 +123,11 @@ defmodule VideoRoom.Pipeline do
   end
 
   def handle_other({:DOWN, _ref, :process, pid, _reason}, ctx, state) do
-    {_status, actions, state} = maybe_remove_peer(pid, ctx, state)
+    {status, actions, state} = maybe_remove_peer(pid, ctx, state)
+
+    if status == :present do
+      send_participants_list_to_participants(state.endpoints)
+    end
 
     stop_if_empty(state)
 
@@ -201,15 +205,18 @@ defmodule VideoRoom.Pipeline do
         _ctx,
         state
       ) do
-    participants =
-      state.endpoints
-      |> Enum.map(fn {_, %Endpoint{inbound_tracks: tracks, ctx: ctx}} ->
-        %{id: ctx.participant_id, display_name: ctx.display_name, mids: Map.keys(tracks)}
-      end)
+    with endpoint = %Endpoint{} <- state.endpoints[peer_pid] do
+      participants =
+        state.endpoints
+        |> Enum.map(fn {_, %Endpoint{inbound_tracks: tracks, ctx: ctx}} ->
+          %{id: ctx.participant_id, display_name: ctx.display_name, mids: Map.keys(tracks)}
+        end)
 
-    user_id = state.endpoints[peer_pid].ctx.participant_id
+      user_id = endpoint.ctx.participant_id
 
-    send(peer_pid, {:signal, message, participants, user_id})
+      send(peer_pid, {:signal, message, participants, user_id})
+    end
+
     {:ok, state}
   end
 
@@ -399,5 +406,18 @@ defmodule VideoRoom.Pipeline do
 
     state = put_in(state.endpoints[peer_pid], endpoint)
     {{:ok, [spec: spec] ++ tracks_msgs}, state}
+  end
+
+  def send_participants_list_to_participants(endpoints) do
+    participants =
+      endpoints
+      |> Enum.map(fn {_, %Endpoint{inbound_tracks: tracks, ctx: ctx}} ->
+        %{id: ctx.participant_id, display_name: ctx.display_name, mids: Map.keys(tracks)}
+      end)
+
+    endpoints
+    |> Enum.each(fn {peer_pid, _endpoint} ->
+      send(peer_pid, {:participants_list, participants})
+    end)
   end
 end

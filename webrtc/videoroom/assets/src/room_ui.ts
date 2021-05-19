@@ -85,6 +85,10 @@ export function addVideoElement(
 export function setParticipantsNamesList(
   participantsNames: Array<string>
 ): void {
+  participantsNames = participantsNames.filter(
+    (name) => !name.match("Screensharing$")
+  );
+
   const participantsNamesList = document.getElementById(
     "participants-names-list"
   ) as HTMLDivElement;

@@ -105,6 +105,19 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   @impl true
+  def handle_info({:participants_list, participants}, socket) do
+    participants =
+      Enum.map(
+        participants,
+        &%{"displayName" => &1.display_name, "mids" => &1.mids, "id" => &1.id}
+      )
+
+    push(socket, "participantsList", %{participants: participants})
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info({:signal, {:replace_track, old_track_id, new_track_id}}, socket) do
     push(socket, "replaceTrack", %{
       data: %{"oldTrackId" => old_track_id, "newTrackId" => new_track_id}

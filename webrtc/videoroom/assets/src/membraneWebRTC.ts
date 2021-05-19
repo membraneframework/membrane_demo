@@ -56,6 +56,7 @@ interface Callbacks {
   onOfferData?: (data: OfferData) => void;
   onNoMediaParticipantArrival?: (participant: Participant) => void;
   onNoMediaParticipantLeave?: (participant: Participant) => void;
+  onParticipantsList?: (participants: Participant[]) => void;
 }
 
 interface MembraneWebRTCConfig {
@@ -94,6 +95,7 @@ export class MembraneWebRTC {
       },
     ],
   };
+  private userId?: string;
 
   private readonly callbacks: Callbacks;
 
@@ -209,6 +211,14 @@ export class MembraneWebRTC {
         });
       }
     });
+    this.channel.on("participantsList", (data: any) => {
+      this.executeCallbacksForNoMediaParticipants(
+        data.participants,
+        this.participants
+      );
+      this.participants = data.participants;
+      this.callbacks.onParticipantsList?.(this.participants);
+    });
 
     this.channel.on("error", (data: any) => {
       this.callbacks.onConnectionError?.(data.error);
@@ -244,27 +254,11 @@ export class MembraneWebRTC {
   };
 
   private onOffer = async (offer: OfferData) => {
-    const oldParticipants = this.participants;
-    const oldParticipantsIds = new Set(oldParticipants.map((p) => p.id));
-    const newParticipantsIds = new Set(offer.participants.map((p) => p.id));
-
-    oldParticipants
-      .filter(
-        (p) =>
-          p.mids.length == 0 &&
-          !newParticipantsIds.has(p.id) &&
-          p.id != offer.userId
-      )
-      .forEach((p) => this.callbacks.onNoMediaParticipantLeave?.(p));
-    offer.participants
-      .filter(
-        (p) =>
-          p.mids.length == 0 &&
-          !oldParticipantsIds.has(p.id) &&
-          p.id != offer.userId
-      )
-      .forEach((p) => this.callbacks.onNoMediaParticipantArrival?.(p));
-
+    this.userId = offer.userId;
+    this.executeCallbacksForNoMediaParticipants(
+      offer.participants,
+      this.participants
+    );
     this.participants = offer.participants;
     this.midToParticipant = new Map<String, Participant>();
     this.participants.forEach((p) =>
@@ -294,6 +288,31 @@ export class MembraneWebRTC {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  private executeCallbacksForNoMediaParticipants = (
+    newParticipants: Participant[],
+    oldParticipants: Participant[]
+  ) => {
+    const oldParticipantsIds = new Set(oldParticipants.map((p) => p.id));
+    const newParticipantsIds = new Set(newParticipants.map((p) => p.id));
+
+    oldParticipants
+      .filter(
+        (p) =>
+          p.mids.length == 0 &&
+          !newParticipantsIds.has(p.id) &&
+          p.id != this.userId
+      )
+      .forEach((p) => this.callbacks.onNoMediaParticipantLeave?.(p));
+    newParticipants
+      .filter(
+        (p) =>
+          p.mids.length == 0 &&
+          !oldParticipantsIds.has(p.id) &&
+          p.id != this.userId
+      )
+      .forEach((p) => this.callbacks.onNoMediaParticipantArrival?.(p));
   };
 
   private onRemoteCandidate = (candidate: CandidateData) => {

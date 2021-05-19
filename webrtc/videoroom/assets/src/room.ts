@@ -153,9 +153,7 @@ const setup = async () => {
         },
         onConnectionError: setErrorMessage,
         onOfferData: ({ data, participants }) => {
-          const participantsNames = participants
-            .map((p) => p.displayName)
-            .filter((name) => !name.match("Screensharing$"));
+          const participantsNames = participants.map((p) => p.displayName);
           setParticipantsNamesList(participantsNames);
         },
         onNoMediaParticipantArrival: (participant) => {
@@ -175,6 +173,10 @@ const setup = async () => {
         },
         onNoMediaParticipantLeave: (participant) =>
           hideVideoElement(participant.id),
+        onParticipantsList: (participants) => {
+          const participantsNames = participants.map((p) => p.displayName);
+          setParticipantsNamesList(participantsNames);
+        },
       },
     });
 

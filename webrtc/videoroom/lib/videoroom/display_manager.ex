@@ -39,8 +39,8 @@ defmodule VideoRoom.DisplayManager do
   @doc """
   Updates voice activity status of endpoint with id `endpoint_id`. Raises if endpoint doesn't exist.
 
-  Returns `{:replace, old_endpoint_id, new_endpoint_id}` if video track of `new_endpoint_id` should be replaced by
-  video track with `old_endpoint_id`.
+  Returns `{:replace, old_endpoint_id, new_endpoint_id}` if video track of `old_endpoint_id` should be replaced by
+  video track of `new_endpoint_id`.
   Otherwise it returns `:ok`.
   """
   @spec update(t(), endpoint_id :: endpoint_id_t(), activity :: :speech | :silence) ::

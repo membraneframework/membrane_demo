@@ -88,14 +88,19 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:signal, {:sdp_offer, sdp}, participants}, socket) do
+  def handle_info({:signal, {:sdp_offer, sdp}, participants, user_id}, socket) do
     participants =
       Enum.map(
         participants,
         &%{"displayName" => &1.display_name, "mids" => &1.mids, "id" => &1.id}
       )
 
-    push(socket, "offer", %{data: %{"type" => "offer", "sdp" => sdp}, participants: participants})
+    push(socket, "offer", %{
+      data: %{"type" => "offer", "sdp" => sdp},
+      participants: participants,
+      userId: user_id
+    })
+
     {:noreply, socket}
   end
 

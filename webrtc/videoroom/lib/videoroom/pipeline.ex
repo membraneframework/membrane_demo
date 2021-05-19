@@ -207,7 +207,9 @@ defmodule VideoRoom.Pipeline do
         %{id: ctx.participant_id, display_name: ctx.display_name, mids: Map.keys(tracks)}
       end)
 
-    send(peer_pid, {:signal, message, participants})
+    user_id = state.endpoints[peer_pid].ctx.participant_id
+
+    send(peer_pid, {:signal, message, participants, user_id})
     {:ok, state}
   end
 

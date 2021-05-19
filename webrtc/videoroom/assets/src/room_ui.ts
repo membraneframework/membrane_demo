@@ -55,16 +55,17 @@ function elementId(participantId: string, type: "video" | "audio" | "feed") {
 
 export function addVideoElement(
   stream: MediaStream,
+  participantId: string,
   label: string,
   muted: boolean = false,
   isLocalVideo: boolean = false
 ): void {
-  const videoId = elementId(stream.id, "video");
-  const audioId = elementId(stream.id, "audio");
+  const videoId = elementId(participantId, "video");
+  const audioId = elementId(participantId, "audio");
   let video = document.getElementById(videoId) as HTMLVideoElement;
   let audio = document.getElementById(audioId) as HTMLAudioElement;
   if (!video && !audio) {
-    const values = setupVideoFeed(stream, label, isLocalVideo);
+    const values = setupVideoFeed(participantId, label, isLocalVideo);
     video = values.video;
     audio = values.audio;
   }
@@ -98,7 +99,7 @@ function resizeVideosGrid() {
 }
 
 function setupVideoFeed(
-  stream: MediaStream,
+  participantId: string,
   label: string,
   isLocalVideo: boolean
 ) {
@@ -113,7 +114,7 @@ function setupVideoFeed(
     "div[class='VideoLabel']"
   ) as HTMLDivElement;
 
-  feed.id = elementId(stream.id, "feed");
+  feed.id = elementId(participantId, "feed");
   videoLabel.innerText = label;
 
   if (isLocalVideo) {
@@ -127,12 +128,8 @@ function setupVideoFeed(
   return { audio, video };
 }
 
-export function removeVideoElement(stream: MediaStream): void {
-  if (stream.getTracks().length > 0) {
-    return;
-  }
-
-  document.getElementById(elementId(stream.id, "feed"))?.remove();
+export function removeVideoElement(participantId: string): void {
+  document.getElementById(elementId(participantId, "feed"))?.remove();
   resizeVideosGrid();
 }
 
@@ -204,13 +201,13 @@ export function setErrorMessage(
   }
 }
 
-export function displayVideoElement(streamId: string): void {
-  const feedId = elementId(streamId, "feed");
+export function displayVideoElement(participantId: string): void {
+  const feedId = elementId(participantId, "feed");
   document.getElementById(feedId)!.style.display = "block";
 }
 
-export function hideVideoElement(streamId: string): void {
-  const feedId = elementId(streamId, "feed");
+export function hideVideoElement(participantId: string): void {
+  const feedId = elementId(participantId, "feed");
   document.getElementById(feedId)!.style.display = "none";
 }
 

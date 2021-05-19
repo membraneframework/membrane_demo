@@ -4,6 +4,7 @@ import {
   AUDIO_MEDIA_CONSTRAINTS,
   SCREENSHARING_CONSTRAINTS,
   VIDEO_MEDIA_CONSTRAINTS,
+  LOCAL_PARTICIPANT_ID,
 } from "./consts";
 import {
   addVideoElement,
@@ -127,27 +128,28 @@ const setup = async () => {
         onAddTrack: ({
           track,
           stream,
+          participant,
           isScreenSharing,
           label: displayName = "",
         }) => {
           if (isScreenSharing) {
             setScreensharing(stream, displayName, "My screensharing");
           } else {
-            addVideoElement(stream, displayName, false);
+            addVideoElement(stream, participant.id, displayName, false);
           }
         },
-        onRemoveTrack: ({ track, stream, isScreenSharing }) => {
+        onRemoveTrack: ({ track, participant, stream, isScreenSharing }) => {
           if (isScreenSharing) {
             removeScreensharing();
-          } else {
-            removeVideoElement(stream);
+          } else if (stream.getTracks().length == 0) {
+            removeVideoElement(participant.id);
           }
         },
         onDisplayTrack: (ctx) => {
-          displayVideoElement(ctx.stream.id);
+          displayVideoElement(ctx.participant.id);
         },
         onHideTrack: (ctx) => {
-          hideVideoElement(ctx.stream.id);
+          hideVideoElement(ctx.participant.id);
         },
         onConnectionError: setErrorMessage,
         onOfferData: ({ data, participants }) => {
@@ -156,6 +158,23 @@ const setup = async () => {
             .filter((name) => !name.match("Screensharing$"));
           setParticipantsNamesList(participantsNames);
         },
+        onNoMediaParticipantArrival: (participant) => {
+          const video = VIDEO_MEDIA_CONSTRAINTS.video as MediaTrackConstraintSet;
+          const fakeVideoStream = createFakeVideoStream({
+            height: video!.height as number,
+            width: video.width! as number,
+          });
+          addVideoElement(
+            fakeVideoStream,
+            participant.id,
+            participant.displayName,
+            true,
+            true
+          );
+          displayVideoElement(participant.id);
+        },
+        onNoMediaParticipantLeave: (participant) =>
+          hideVideoElement(participant.id),
       },
     });
 
@@ -168,16 +187,16 @@ const setup = async () => {
       localVideoStream
         .getTracks()
         .forEach((track) => webrtc.addTrack(track, localVideoStream!));
-      addVideoElement(localVideoStream, "Me", true, true);
-      displayVideoElement(localVideoStream.id);
+      addVideoElement(localVideoStream, LOCAL_PARTICIPANT_ID, "Me", true, true);
+      displayVideoElement(LOCAL_PARTICIPANT_ID);
     } else {
       const video = VIDEO_MEDIA_CONSTRAINTS.video as MediaTrackConstraintSet;
       const fakeVideoStream = createFakeVideoStream({
         height: video!.height as number,
         width: video.width! as number,
       });
-      addVideoElement(fakeVideoStream, "Me", true, true);
-      displayVideoElement(fakeVideoStream.id);
+      addVideoElement(fakeVideoStream, LOCAL_PARTICIPANT_ID, "Me", true, true);
+      displayVideoElement(LOCAL_PARTICIPANT_ID);
     }
 
     setupRoomUI({

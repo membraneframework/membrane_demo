@@ -20,6 +20,7 @@ interface Participant {
 interface OfferData {
   data: RTCSessionDescriptionInit;
   participants: Participant[];
+  userId: string;
 }
 
 interface CandidateData {
@@ -29,6 +30,7 @@ interface CandidateData {
 interface TrackContext {
   track: MediaStreamTrack;
   stream: MediaStream;
+  participant: Participant;
   label?: string;
   isScreenSharing: boolean;
 }
@@ -52,6 +54,8 @@ interface Callbacks {
   onDisplayTrack?: (ctx: TrackContext) => void;
   onHideTrack?: (ctx: TrackContext) => void;
   onOfferData?: (data: OfferData) => void;
+  onNoMediaParticipantArrival?: (participant: Participant) => void;
+  onNoMediaParticipantLeave?: (participant: Participant) => void;
 }
 
 interface MembraneWebRTCConfig {
@@ -79,6 +83,10 @@ export class MembraneWebRTC {
   private midToStream: Map<String, MediaStream> = new Map();
   private connection?: RTCPeerConnection;
   private participants: Participant[] = [];
+  private midToParticipant: Map<String, Participant> = new Map<
+    String,
+    Participant
+  >();
   private readonly rtcConfig: RTCConfiguration = {
     iceServers: [
       {
@@ -149,32 +157,36 @@ export class MembraneWebRTC {
       const newStream = this.midToStream.get(newTrackId)!;
       const oldTrack = oldStream.getVideoTracks()[0];
       const newTrack = newStream.getVideoTracks()[0];
-      const oldParticipant = this.participants.find(({ mids }) =>
-        mids.includes(oldTrackId)
-      );
-      const newParticipant = this.participants.find(({ mids }) =>
-        mids.includes(newTrackId)
-      );
-      const oldCtx = {
-        track: oldTrack,
-        stream: oldStream,
-        label: oldParticipant?.displayName ?? "",
-        isScreenSharing:
-          oldParticipant?.mids
-            .find((mid) => mid === oldTrackId)
-            ?.includes("SCREEN") || false,
-      };
-      const newCtx = {
-        track: newTrack,
-        stream: newStream,
-        label: newParticipant?.displayName ?? "",
-        isScreenSharing:
-          newParticipant?.mids
-            .find((mid) => mid === newTrackId)
-            ?.includes("SCREEN") || false,
-      };
-      this.callbacks.onHideTrack?.(oldCtx);
-      this.callbacks.onDisplayTrack?.(newCtx);
+      const oldParticipant = this.midToParticipant.get(oldTrackId);
+      const newParticipant = this.midToParticipant.get(newTrackId);
+
+      if (oldParticipant) {
+        const oldCtx = {
+          track: oldTrack,
+          stream: oldStream,
+          participant: oldParticipant,
+          label: oldParticipant?.displayName ?? "",
+          isScreenSharing:
+            oldParticipant?.mids
+              .find((mid) => mid === oldTrackId)
+              ?.includes("SCREEN") || false,
+        };
+        this.callbacks.onHideTrack?.(oldCtx);
+      }
+
+      if (newParticipant) {
+        const newCtx = {
+          track: newTrack,
+          stream: newStream,
+          participant: newParticipant,
+          label: newParticipant?.displayName ?? "",
+          isScreenSharing:
+            newParticipant?.mids
+              .find((mid) => mid === newTrackId)
+              ?.includes("SCREEN") || false,
+        };
+        this.callbacks.onDisplayTrack?.(newCtx);
+      }
     });
     this.channel.on("displayTrack", (data: any) => {
       const trackId = data.data.trackId;
@@ -184,15 +196,18 @@ export class MembraneWebRTC {
         mids.includes(trackId)
       );
 
-      this.callbacks.onDisplayTrack?.({
-        track,
-        stream,
-        label: participant?.displayName ?? "",
-        isScreenSharing:
-          participant?.mids
-            .find((mid) => mid === trackId)
-            ?.includes("SCREEN") || false,
-      });
+      if (participant) {
+        this.callbacks.onDisplayTrack?.({
+          track,
+          stream,
+          participant,
+          label: participant?.displayName ?? "",
+          isScreenSharing:
+            participant?.mids
+              .find((mid) => mid === trackId)
+              ?.includes("SCREEN") || false,
+        });
+      }
     });
 
     this.channel.on("error", (data: any) => {
@@ -229,7 +244,32 @@ export class MembraneWebRTC {
   };
 
   private onOffer = async (offer: OfferData) => {
+    const oldParticipants = this.participants;
+    const oldParticipantsIds = new Set(oldParticipants.map((p) => p.id));
+    const newParticipantsIds = new Set(offer.participants.map((p) => p.id));
+
+    oldParticipants
+      .filter(
+        (p) =>
+          p.mids.length == 0 &&
+          !newParticipantsIds.has(p.id) &&
+          p.id != offer.userId
+      )
+      .forEach((p) => this.callbacks.onNoMediaParticipantLeave?.(p));
+    offer.participants
+      .filter(
+        (p) =>
+          p.mids.length == 0 &&
+          !oldParticipantsIds.has(p.id) &&
+          p.id != offer.userId
+      )
+      .forEach((p) => this.callbacks.onNoMediaParticipantArrival?.(p));
+
     this.participants = offer.participants;
+    this.midToParticipant = new Map<String, Participant>();
+    this.participants.forEach((p) =>
+      p.mids.forEach((mid) => this.midToParticipant.set(mid, p))
+    );
 
     this.callbacks.onOfferData?.(offer);
 
@@ -282,6 +322,7 @@ export class MembraneWebRTC {
     return (event: RTCTrackEvent) => {
       const [stream] = event.streams;
       const mid = event.transceiver.mid!;
+      const participant = this.midToParticipant.get(mid)!;
       const isScreenSharing = mid.includes("SCREEN") || false;
 
       if (isScreenSharing) {
@@ -306,6 +347,7 @@ export class MembraneWebRTC {
 
         this.callbacks.onRemoveTrack?.({
           track: event.track,
+          participant,
           stream,
           isScreenSharing,
         });
@@ -315,6 +357,7 @@ export class MembraneWebRTC {
         this.participants.find((p) => p.mids.includes(mid))?.displayName || "";
       this.callbacks.onAddTrack?.({
         track: event.track,
+        participant,
         label,
         stream,
         isScreenSharing,
@@ -323,6 +366,7 @@ export class MembraneWebRTC {
       if (this.remoteStreams.size <= this.maxDisplayNum && !isScreenSharing) {
         this.callbacks.onDisplayTrack?.({
           track: event.track,
+          participant,
           label,
           stream,
           isScreenSharing,

@@ -12,6 +12,8 @@ import {
   setLocalScreenSharingStatus,
   setScreensharing,
   setupRoomUI,
+  toggleVideoPlaceholder,
+  toggleMutedAudioIcon,
   setParticipantsNamesList,
 } from "./room_ui";
 
@@ -97,11 +99,20 @@ const setup = async () => {
           stream,
           isScreenSharing,
           label: displayName = "",
+          mutedVideo,
+          mutedAudio,
         }) => {
           if (isScreenSharing) {
             setScreensharing(stream, displayName, "My screensharing");
           } else {
-            addVideoElement(stream, displayName, false);
+            addVideoElement(
+              stream,
+              displayName,
+              false,
+              false,
+              mutedVideo,
+              mutedAudio
+            );
           }
         },
         onRemoveTrack: ({ track, stream, isScreenSharing }) => {
@@ -117,6 +128,8 @@ const setup = async () => {
         onHideTrack: (ctx) => {
           hideVideoElement(ctx.stream.id);
         },
+        onParticipantToggledVideo: toggleVideoPlaceholder,
+        onParticipantToggledAudio: toggleMutedAudioIcon,
         onConnectionError: setErrorMessage,
         onOfferData: ({ data, participants }) => {
           const participantsNames = participants
@@ -142,10 +155,16 @@ const setup = async () => {
         onLocalScreensharingStart: () =>
           startLocalScreensharing(socket, displayName),
         onLocalScreensharingStop: stopLocalScreensharing,
-        onToggleAudio: () =>
-          localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled)),
-        onToggleVideo: () =>
-          localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled)),
+        onToggleAudio: () => {
+          toggleMutedAudioIcon(localStream.id);
+          webrtc.toggleAudio();
+          localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled));
+        },
+        onToggleVideo: () => {
+          toggleVideoPlaceholder(localStream.id);
+          webrtc.toggleVideo();
+          localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled));
+        },
         isLocalScreenSharingActive: false,
         isScreenSharingActive: false,
         displayName,

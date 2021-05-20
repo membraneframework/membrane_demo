@@ -13,6 +13,8 @@ const phoenix_channel_push_result = async (push: Push): Promise<any> => {
 
 interface Participant {
   displayName: string;
+  mutedAudio: boolean;
+  mutedVideo: boolean;
   mids: string[];
 }
 
@@ -29,6 +31,8 @@ interface TrackContext {
   track: MediaStreamTrack;
   stream: MediaStream;
   label?: string;
+  mutedAudio?: boolean;
+  mutedVideo?: boolean;
   isScreenSharing: boolean;
 }
 
@@ -44,6 +48,8 @@ interface Callbacks {
   onDisplayStream?: (stream: MediaStream, label: string) => void;
   onDisplayTrack?: (ctx: TrackContext) => void;
   onHideTrack?: (ctx: TrackContext) => void;
+  onParticipantToggledVideo?: (streamId: string) => void;
+  onParticipantToggledAudio?: (streamId: string) => void;
   onOfferData?: (data: OfferData) => void;
 }
 
@@ -182,6 +188,20 @@ export class MembraneWebRTC {
       });
     });
 
+    this.channel.on("toggledVideo", (data: any) => {
+      const stream = this.midToStream.get(data.data.trackId);
+      if (stream) {
+        this.callbacks.onParticipantToggledVideo?.(stream.id);
+      }
+    });
+
+    this.channel.on("toggledAudio", (data: any) => {
+      const stream = this.midToStream.get(data.data.trackId);
+      if (stream) {
+        this.callbacks.onParticipantToggledAudio?.(stream.id);
+      }
+    });
+
     this.channel.on("error", (data: any) => {
       this.callbacks.onConnectionError?.(data.error);
       this.stop();
@@ -198,6 +218,14 @@ export class MembraneWebRTC {
       this.callbacks.onConnectionError?.(e);
       this.stop();
     }
+  };
+
+  public toggleVideo = () => {
+    this.channel.push("toggledVideo", {});
+  };
+
+  public toggleAudio = () => {
+    this.channel.push("toggledAudio", {});
   };
 
   public stop = () => {
@@ -295,13 +323,18 @@ export class MembraneWebRTC {
         });
       };
 
-      const label =
-        this.participants.find((p) => p.mids.includes(mid))?.displayName || "";
+      const participant = this.participants.find((p) => p.mids.includes(mid));
+      const label = participant?.displayName || "";
+      const mutedVideo = participant?.mutedVideo;
+      const mutedAudio = participant?.mutedAudio;
+
       this.callbacks.onAddTrack?.({
         track: event.track,
         label,
         stream,
         isScreenSharing,
+        mutedVideo,
+        mutedAudio,
       });
 
       if (this.remoteStreams.size <= this.maxDisplayNum && !isScreenSharing) {

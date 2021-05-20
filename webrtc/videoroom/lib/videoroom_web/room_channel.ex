@@ -74,6 +74,20 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
+  def handle_in("toggledVideo", _msg, socket) do
+    socket
+    |> send_to_pipeline({:toggled_video, self()})
+
+    {:noreply, socket}
+  end
+
+  def handle_in("toggledAudio", _msg, socket) do
+    socket
+    |> send_to_pipeline({:toggled_audio, self()})
+
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_info({:signal, {:candidate, candidate, sdp_mline_index}}, socket) do
     push(socket, "candidate", %{
@@ -84,7 +98,16 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   def handle_info({:signal, {:sdp_offer, sdp}, participants}, socket) do
-    participants = Enum.map(participants, &%{"displayName" => &1.display_name, "mids" => &1.mids})
+    participants =
+      Enum.map(
+        participants,
+        &%{
+          "displayName" => &1.display_name,
+          "mids" => &1.mids,
+          "mutedAudio" => &1.muted_audio,
+          "mutedVideo" => &1.muted_video
+        }
+      )
 
     push(socket, "offer", %{data: %{"type" => "offer", "sdp" => sdp}, participants: participants})
     {:noreply, socket}
@@ -102,6 +125,18 @@ defmodule VideoRoomWeb.RoomChannel do
   @impl true
   def handle_info({:signal, {:display_track, track_id}}, socket) do
     push(socket, "displayTrack", %{data: %{"trackId" => track_id}})
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:toggled_video, track_id}, socket) do
+    push(socket, "toggledVideo", %{data: %{"trackId" => track_id}})
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:toggled_audio, track_id}, socket) do
+    push(socket, "toggledAudio", %{data: %{"trackId" => track_id}})
     {:noreply, socket}
   end
 

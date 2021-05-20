@@ -111,6 +111,35 @@ defmodule VideoRoom.Pipeline do
     maybe_remove_peer(peer_pid, ctx, state)
   end
 
+  def handle_other({toggled_media, peer_pid}, ctx, state)
+      when toggled_media in [:toggled_video, :toggled_audio] do
+    state =
+      update_in(
+        state,
+        [:endpoints, peer_pid],
+        fn endpoint ->
+          key = if toggled_media == :toggled_video, do: :muted_video, else: :muted_audio
+          ctx = Map.put(endpoint.ctx, key, !endpoint.ctx[key])
+          %Endpoint{endpoint | ctx: ctx}
+        end
+      )
+
+    track_id =
+      state.endpoints[peer_pid].inbound_tracks
+      |> Map.values()
+      |> List.first()
+      |> Map.get(:id)
+
+    state.endpoints
+    |> Map.delete(peer_pid)
+    |> Enum.each(fn
+      {room_channel_pid, endpoint} ->
+        send(room_channel_pid, {toggled_media, track_id})
+    end)
+
+    {:ok, state}
+  end
+
   def handle_other({:DOWN, _ref, :process, pid, _reason}, ctx, state) do
     Membrane.Logger.info("Connection #{inspect(pid)} is down. Cleaning up.")
     maybe_remove_peer(pid, ctx, state)
@@ -197,7 +226,12 @@ defmodule VideoRoom.Pipeline do
     participants =
       state.endpoints
       |> Enum.map(fn {_, %Endpoint{inbound_tracks: tracks, ctx: ctx}} ->
-        %{display_name: ctx.display_name, mids: Map.keys(tracks)}
+        %{
+          display_name: ctx.display_name,
+          muted_audio: ctx.muted_audio,
+          muted_video: ctx.muted_video,
+          mids: Map.keys(tracks)
+        }
       end)
 
     send(peer_pid, {:signal, message, participants})
@@ -336,7 +370,12 @@ defmodule VideoRoom.Pipeline do
 
     tracks = new_tracks(peer_type)
 
-    endpoint = Endpoint.new(peer_pid, peer_type, tracks, %{display_name: display_name})
+    endpoint =
+      Endpoint.new(peer_pid, peer_type, tracks, %{
+        display_name: display_name,
+        muted_audio: false,
+        muted_video: false
+      })
 
     endpoint_bin = {:endpoint, peer_pid}
 

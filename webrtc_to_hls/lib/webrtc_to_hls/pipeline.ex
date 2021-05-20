@@ -70,10 +70,21 @@ defmodule WebRTCToHLS.Pipeline do
       }"
     )
 
+    stun_servers = Application.fetch_env!(:membrane_webrtc_to_hls_demo, :stun_servers)
+    turn_servers = Application.fetch_env!(:membrane_webrtc_to_hls_demo, :turn_servers)
+
     children = %{
       endpoint: %EndpointBin{
         outbound_tracks: [],
-        inbound_tracks: tracks
+        inbound_tracks: tracks,
+        stun_servers: stun_servers,
+        turn_servers: turn_servers,
+        handshake_opts: [
+          client_mode: false,
+          dtls_srtp: true,
+          pkey: Application.get_env(:membrane_webrtc_to_hls_demo, :dtls_pkey),
+          cert: Application.get_env(:membrane_webrtc_to_hls_demo, :dtls_cert)
+        ]
       },
       hls: %Membrane.HTTPAdaptiveStream.Sink{
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,

@@ -21,10 +21,8 @@ defmodule WebRTCToHLS.MixProject do
   defp deps do
     [
       # {:membrane_core, "~> 0.6.1"},
-      {:membrane_core,
-       github: "membraneframework/membrane_core", branch: "develop", override: true},
-      {:membrane_webrtc_plugin,
-       github: "membraneframework/membrane_webrtc_plugin", branch: "endpoint"},
+      {:membrane_core, github: "membraneframework/membrane_core", override: true},
+      {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin"},
       {:membrane_element_tee, "~> 0.4.1"},
       {:membrane_element_fake, "~> 0.4.0"},
       {:plug_cowboy, "~> 2.0"},
@@ -37,7 +35,7 @@ defmodule WebRTCToHLS.MixProject do
       {:membrane_h264_ffmpeg_plugin,
        [
          env: :prod,
-         git: "https://github.com/membraneframework/membrane_h264_ffmpeg_plugin.git",
+         github: "membraneframework/membrane_h264_ffmpeg_plugin",
          branch: "wait-for-keyframe"
        ]},
       {:membrane_http_adaptive_stream_plugin, "~> 0.1.0"},

@@ -120,6 +120,27 @@ $media-controls-height: 80px;
   background: linear-gradient(to bottom left, transparent 0%, black 150%);
 }
 
+.VideoPlaceholder {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 100;
+}
+
+.MutedAudioIcon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 0 $space;
+  z-index: 100;
+}
+
 .VideoChat-screensharing {
   display: grid;
   grid-template-columns: 4fr 2fr;

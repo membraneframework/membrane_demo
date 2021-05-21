@@ -49,7 +49,10 @@ export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 
-function elementId(participantId: string, type: "video" | "audio" | "feed") {
+function elementId(
+  participantId: string,
+  type: "video" | "audio" | "placeholder" | "feed" | "mutedAudioIcon"
+) {
   return `${type}-${participantId}`;
 }
 
@@ -57,17 +60,31 @@ export function addVideoElement(
   stream: MediaStream,
   participantId: string,
   label: string,
-  muted: boolean = false,
-  isLocalVideo: boolean = false
+  isLocalVideo: boolean = false,
+  mutedAudio: boolean = false,
+  mutedVideo: boolean = false,
+  showMutedAudioIcon: boolean = false
 ): void {
   const videoId = elementId(participantId, "video");
   const audioId = elementId(participantId, "audio");
+  const videoPlaceholderId = elementId(participantId, "placeholder");
+  const mutedAudioIconId = elementId(participantId, "mutedAudioIcon");
+
   let video = document.getElementById(videoId) as HTMLVideoElement;
   let audio = document.getElementById(audioId) as HTMLAudioElement;
+  let videoPlaceholder = document.getElementById(
+    videoPlaceholderId
+  ) as HTMLDivElement;
+  let mutedAudioIcon = document.getElementById(
+    mutedAudioIconId
+  ) as HTMLDivElement;
+
   if (!video && !audio) {
     const values = setupVideoFeed(participantId, label, isLocalVideo);
     video = values.video;
     audio = values.audio;
+    videoPlaceholder = values.videoPlaceholder;
+    mutedAudioIcon = values.mutedAudioIcon;
   }
 
   video.id = videoId;
@@ -79,7 +96,17 @@ export function addVideoElement(
   audio.id = audioId;
   audio.srcObject = stream;
   audio.autoplay = true;
-  audio.muted = muted;
+  audio.muted = mutedAudio;
+
+  videoPlaceholder.id = videoPlaceholderId;
+  mutedAudioIcon.id = mutedAudioIconId;
+
+  if (!mutedVideo) {
+    videoPlaceholder.style.display = "none";
+  }
+  if (!showMutedAudioIcon) {
+    mutedAudioIcon.style.display = "none";
+  }
 }
 
 export function setParticipantsNamesList(
@@ -117,6 +144,12 @@ function setupVideoFeed(
   const videoLabel = feed.querySelector(
     "div[class='VideoLabel']"
   ) as HTMLDivElement;
+  const videoPlaceholder = feed.querySelector(
+    "div[class='VideoPlaceholder']"
+  ) as HTMLDivElement;
+  const mutedAudioIcon = feed.querySelector(
+    "div[class='MutedAudioIcon'"
+  ) as HTMLDivElement;
 
   feed.id = elementId(participantId, "feed");
   videoLabel.innerText = label;
@@ -129,7 +162,29 @@ function setupVideoFeed(
   grid.appendChild(feed);
   resizeVideosGrid();
 
-  return { audio, video };
+  return { audio, video, videoPlaceholder, mutedAudioIcon };
+}
+
+export function toggleVideoPlaceholder(participantId: string): void {
+  const placeholder = document.getElementById(
+    elementId(participantId, "placeholder")
+  );
+
+  if (placeholder) {
+    placeholder.style.display =
+      placeholder.style.display == "none" ? "flex" : "none";
+  }
+}
+
+export function toggleMutedAudioIcon(participantId: string): void {
+  const mutedAudioIcon = document.getElementById(
+    elementId(participantId, "mutedAudioIcon")
+  );
+
+  if (mutedAudioIcon) {
+    mutedAudioIcon.style.display =
+      mutedAudioIcon.style.display == "none" ? "block" : "none";
+  }
 }
 
 export function removeVideoElement(participantId: string): void {
@@ -207,7 +262,7 @@ export function setErrorMessage(
 
 export function displayVideoElement(participantId: string): void {
   const feedId = elementId(participantId, "feed");
-  document.getElementById(feedId)!.style.display = "block";
+  document.getElementById(feedId)!.style.display = "flex";
 }
 
 export function hideVideoElement(participantId: string): void {

@@ -17,6 +17,8 @@ import {
   setLocalScreenSharingStatus,
   setScreensharing,
   setupRoomUI,
+  toggleVideoPlaceholder,
+  toggleMutedAudioIcon,
   setParticipantsNamesList,
 } from "./room_ui";
 import { createFakeVideoStream } from "../src/utils";
@@ -131,11 +133,21 @@ const setup = async () => {
           participant,
           isScreenSharing,
           label: displayName = "",
+          mutedVideo,
+          mutedAudio,
         }) => {
           if (isScreenSharing) {
             setScreensharing(stream, displayName, "My screensharing");
           } else {
-            addVideoElement(stream, participant.id, displayName, false);
+            addVideoElement(
+              stream,
+              participant.id,
+              displayName,
+              false,
+              false,
+              mutedVideo,
+              mutedAudio
+            );
           }
         },
         onRemoveTrack: ({ track, participant, stream, isScreenSharing }) => {
@@ -151,6 +163,8 @@ const setup = async () => {
         onHideTrack: (ctx) => {
           hideVideoElement(ctx.participant.id);
         },
+        onParticipantToggledVideo: toggleVideoPlaceholder,
+        onParticipantToggledAudio: toggleMutedAudioIcon,
         onConnectionError: setErrorMessage,
         onOfferData: ({ data, participants }) => {
           const participantsNames = participants.map((p) => p.displayName);
@@ -206,14 +220,20 @@ const setup = async () => {
         onLocalScreensharingStart: () =>
           startLocalScreensharing(socket, displayName),
         onLocalScreensharingStop: stopLocalScreensharing,
-        onToggleAudio: () =>
+        onToggleAudio: () => {
+          toggleMutedAudioIcon(LOCAL_PARTICIPANT_ID);
+          webrtc.toggleAudio();
           localAudioStream
             ?.getAudioTracks()
-            .forEach((t) => (t.enabled = !t.enabled)),
-        onToggleVideo: () =>
+            .forEach((t) => (t.enabled = !t.enabled));
+        },
+        onToggleVideo: () => {
+          toggleVideoPlaceholder(LOCAL_PARTICIPANT_ID);
+          webrtc.toggleVideo();
           localVideoStream
             ?.getVideoTracks()
-            .forEach((t) => (t.enabled = !t.enabled)),
+            .forEach((t) => (t.enabled = !t.enabled));
+        },
         isLocalScreenSharingActive: false,
         isScreenSharingActive: false,
         displayName,

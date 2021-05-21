@@ -79,6 +79,20 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
+  def handle_in("toggledVideo", _msg, socket) do
+    socket
+    |> send_to_pipeline({:toggled_video, self()})
+
+    {:noreply, socket}
+  end
+
+  def handle_in("toggledAudio", _msg, socket) do
+    socket
+    |> send_to_pipeline({:toggled_audio, self()})
+
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_info({:signal, {:candidate, candidate, sdp_mline_index}}, socket) do
     push(socket, "candidate", %{
@@ -92,7 +106,13 @@ defmodule VideoRoomWeb.RoomChannel do
     participants =
       Enum.map(
         participants,
-        &%{"displayName" => &1.display_name, "mids" => &1.mids, "id" => &1.id}
+        &%{
+          "id" => &1.id,
+          "displayName" => &1.display_name,
+          "mids" => &1.mids,
+          "mutedAudio" => &1.muted_audio,
+          "mutedVideo" => &1.muted_video
+        }
       )
 
     push(socket, "offer", %{
@@ -109,7 +129,13 @@ defmodule VideoRoomWeb.RoomChannel do
     participants =
       Enum.map(
         participants,
-        &%{"displayName" => &1.display_name, "mids" => &1.mids, "id" => &1.id}
+        &%{
+          "id" => &1.id,
+          "displayName" => &1.display_name,
+          "mids" => &1.mids,
+          "mutedAudio" => &1.muted_audio,
+          "mutedVideo" => &1.muted_video
+        }
       )
 
     push(socket, "participantsList", %{participants: participants})
@@ -132,6 +158,20 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
+
+  @impl true
+  def handle_info({:toggled_video, participant_id}, socket) do
+    push(socket, "toggledVideo", %{data: %{"participantId" => participant_id}})
+    {:noreply, socket}
+  end
+
+
+  @impl true
+  def handle_info({:toggled_audio, participant_id}, socket) do
+    push(socket, "toggledAudio", %{data: %{"participantId" => participant_id}})
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_info({:new_peer, response, ref}, socket) do
     case response do
@@ -142,6 +182,12 @@ defmodule VideoRoomWeb.RoomChannel do
         reply(ref, error)
     end
 
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:internal_error, message}, socket) do
+    push(socket, "error", %{error: message})
     {:noreply, socket}
   end
 

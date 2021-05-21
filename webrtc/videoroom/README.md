@@ -36,6 +36,12 @@ Demo has been tested with `node` version `v14.15.0`. You will also need some sys
 brew install srtp libnice clang-format ffmpeg opus
 ```
 
+#### Ubuntu
+
+```
+sudo apt-get install libsrtp2-dev libnice-dev libavcodec-dev libavformat-dev libavutil-dev libopus-dev
+```
+
 ### Running application
 
 Default path for certificate files for non-production environment is `priv/certs/`.

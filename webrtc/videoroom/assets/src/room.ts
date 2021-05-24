@@ -181,6 +181,8 @@ const setup = async () => {
             participant.id,
             participant.displayName,
             true,
+            true,
+            true,
             true
           );
           displayVideoElement(participant.id);
@@ -203,7 +205,15 @@ const setup = async () => {
       localVideoStream
         .getTracks()
         .forEach((track) => webrtc.addTrack(track, localVideoStream!));
-      addVideoElement(localVideoStream, LOCAL_PARTICIPANT_ID, "Me", true, true);
+      addVideoElement(
+        localVideoStream,
+        LOCAL_PARTICIPANT_ID,
+        "Me",
+        true,
+        true,
+        false,
+        localAudioStream === null
+      );
       displayVideoElement(LOCAL_PARTICIPANT_ID);
     } else {
       const video = VIDEO_MEDIA_CONSTRAINTS.video as MediaTrackConstraintSet;
@@ -211,7 +221,15 @@ const setup = async () => {
         height: video!.height as number,
         width: video.width! as number,
       });
-      addVideoElement(fakeVideoStream, LOCAL_PARTICIPANT_ID, "Me", true, true);
+      addVideoElement(
+        fakeVideoStream,
+        LOCAL_PARTICIPANT_ID,
+        "Me",
+        true,
+        true,
+        true,
+        localAudioStream === null
+      );
       displayVideoElement(LOCAL_PARTICIPANT_ID);
     }
 
@@ -238,8 +256,8 @@ const setup = async () => {
         isScreenSharingActive: false,
         displayName,
       },
-      muteAudio: false,
-      muteVideo: false,
+      muteAudio: localAudioStream === null,
+      muteVideo: localVideoStream === null,
       enableAudio: localAudioStream !== null,
       enableVideo: localVideoStream !== null,
     });

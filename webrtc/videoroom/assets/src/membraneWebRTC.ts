@@ -285,6 +285,7 @@ export class MembraneWebRTC {
       this.participants
     );
     this.participants = offer.participants;
+
     this.midToParticipant = new Map<String, Participant>();
     this.participants.forEach((p) =>
       p.mids.forEach((mid) => this.midToParticipant.set(mid, p))
@@ -297,7 +298,6 @@ export class MembraneWebRTC {
       this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
       this.localTracksMapping.forEach(([track, stream], _trackId) => {
-        console.log(track);
         this.connection!.addTrack(track, stream);
       });
     } else {

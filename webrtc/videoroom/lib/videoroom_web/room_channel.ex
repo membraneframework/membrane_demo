@@ -158,13 +158,11 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-
   @impl true
   def handle_info({:toggled_video, participant_id}, socket) do
     push(socket, "toggledVideo", %{data: %{"participantId" => participant_id}})
     {:noreply, socket}
   end
-
 
   @impl true
   def handle_info({:toggled_audio, participant_id}, socket) do

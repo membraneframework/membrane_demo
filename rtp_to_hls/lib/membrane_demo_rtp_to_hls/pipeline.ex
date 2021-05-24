@@ -10,13 +10,7 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
         local_port_no: port,
         recv_buffer_size: 500_000
       },
-      rtp: %Membrane.RTP.SessionBin{
-        fmt_mapping: %{96 => {:H264, 90_000}, 127 => {:AAC, 48_000}},
-        custom_depayloaders: %{
-          :H264 => Membrane.RTP.H264.Depayloader,
-          :AAC => Membrane.RTP.AAC.Depayloader
-        }
-      },
+      rtp: Membrane.RTP.SessionBin,
       hls: %Membrane.HTTPAdaptiveStream.Sink{
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
         target_window_duration: 10 |> Membrane.Time.seconds(),

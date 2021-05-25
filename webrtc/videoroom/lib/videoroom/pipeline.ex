@@ -458,25 +458,6 @@ defmodule VideoRoom.Pipeline do
     {{:ok, [spec: spec] ++ tracks_msgs}, state}
   end
 
-  def send_participants_list_to_participants(endpoints) do
-    participants =
-      endpoints
-      |> Enum.map(fn {_, %Endpoint{inbound_tracks: tracks, ctx: ctx}} ->
-        %{
-          id: ctx.participant_id,
-          display_name: ctx.display_name,
-          mids: Map.keys(tracks),
-          muted_video: ctx.muted_video,
-          muted_audio: ctx.muted_audio
-        }
-      end)
-
-    endpoints
-    |> Enum.each(fn {peer_pid, _endpoint} ->
-      send(peer_pid, {:participants_list, participants})
-    end)
-  end
-
   defp get_participants_data(state) do
     state.endpoints
     |> Enum.map(fn {_, %Endpoint{inbound_tracks: tracks, ctx: ctx}} ->

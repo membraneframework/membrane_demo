@@ -22,7 +22,6 @@ defmodule VideoRoom.MixProject do
     [
       # {:membrane_core, "~> 0.6.1"},
       {:membrane_core, github: "membraneframework/membrane_core", override: true},
-      {:ex_libnice, github: "membraneframework/ex_libnice", override: true},
       {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin"},
       {:membrane_element_tee, "~> 0.4.1"},
       {:membrane_element_fake, "~> 0.4.0"},

@@ -97,7 +97,11 @@ defmodule VideoRoom.DisplayEngine do
                 {:forward, {{:endpoint, id}, {:enable_track, new_track_id}}}
               ]
 
-              send(id, {:signal, {:replace_track, old_track_id, new_track_id}})
+              old_participant_id = state.endpoints[old_id].ctx.participant_id
+              new_participant_id = state.endpoints[new_id].ctx.participant_id
+
+              send(id, {:signal, {:replace_track, old_participant_id, new_participant_id}})
+
               {actions, Map.put(display_managers, id, display_manager)}
           end
       end)
@@ -177,9 +181,11 @@ defmodule VideoRoom.DisplayEngine do
               |> List.first()
               |> (fn %Track{id: id} -> id end).()
 
+            participant_id = endpoints[new_id].ctx.participant_id
+
             actions = [{:forward, {{:endpoint, id}, {:enable_track, new_track_id}}}]
 
-            send(id, {:signal, {:display_track, new_track_id}})
+            send(id, {:signal, {:display_participant, participant_id}})
             {actions, Map.put(display_managers, id, display_manager)}
         end
     end)

@@ -20,17 +20,13 @@ let state: State = {
 
 interface SetupOptions {
   state?: State;
-  muteAudio?: boolean;
-  muteVideo?: boolean;
-  enableAudio: boolean;
-  enableVideo: boolean;
+  audioState: "muted" | "unmuted" | "disabled";
+  videoState: "muted" | "unmuted" | "disabled";
 }
 
 export function setupRoomUI({
-  muteAudio = false,
-  muteVideo = false,
-  enableAudio,
-  enableVideo,
+  audioState,
+  videoState,
   state: newState,
 }: SetupOptions): void {
   state = {
@@ -38,7 +34,7 @@ export function setupRoomUI({
     ...newState,
   };
   updateScreensharingToggleButton(true, "start");
-  setupMediaControls(muteAudio, muteVideo, enableAudio, enableVideo);
+  setupMediaControls(audioState, videoState);
 }
 
 export function setLocalScreenSharingStatus(active: boolean): void {
@@ -112,15 +108,11 @@ export function addVideoElement(
 export function setParticipantsNamesList(
   participantsNames: Array<string>
 ): void {
-  participantsNames = participantsNames.filter(
-    (name) => !name.match("Screensharing$")
-  );
-
-  const participantsNamesList = document.getElementById(
+  const participantsNamesEl = document.getElementById(
     "participants-names-list"
   ) as HTMLDivElement;
 
-  participantsNamesList.innerHTML =
+  participantsNamesEl.innerHTML =
     "<b>Participants</b>: " + participantsNames.join(", ");
 }
 
@@ -303,15 +295,13 @@ export function toggleControl(control: "mic" | "video") {
 }
 
 function setupMediaControls(
-  muteAudio: boolean,
-  muteVideo: boolean,
-  enableAudio: boolean,
-  enableVideo: boolean
+  audioState: "muted" | "unmuted" | "disabled",
+  videoState: "muted" | "unmuted" | "disabled"
 ) {
   const muteAudioEl = document.getElementById("mic-on")! as HTMLDivElement;
   const unmuteAudioEl = document.getElementById("mic-off")! as HTMLDivElement;
 
-  if (!enableAudio) {
+  if (audioState === "disabled") {
     muteAudioEl.classList.add("DisabledControlIcon");
     unmuteAudioEl.classList.add("DisabledControlIcon");
   }
@@ -331,7 +321,7 @@ function setupMediaControls(
   const muteVideoEl = document.getElementById("video-on")! as HTMLDivElement;
   const unmuteVideoEl = document.getElementById("video-off")! as HTMLDivElement;
 
-  if (!enableVideo) {
+  if (videoState === "disabled") {
     muteVideoEl.classList.add("DisabledControlIcon");
     unmuteVideoEl.classList.add("DisabledControlIcon");
   }
@@ -339,19 +329,19 @@ function setupMediaControls(
   muteVideoEl.onclick = toggleVideo;
   unmuteVideoEl.onclick = toggleVideo;
 
-  if (muteAudio) {
-    muteAudioEl.style.display = "none";
-    unmuteAudioEl.style.display = "block";
-  } else {
+  if (audioState === "unmuted") {
     muteAudioEl.style.display = "block";
     unmuteAudioEl.style.display = "none";
+  } else {
+    muteAudioEl.style.display = "none";
+    unmuteAudioEl.style.display = "block";
   }
 
-  if (muteVideo) {
-    muteVideoEl.style.display = "none";
-    unmuteVideoEl.style.display = "block";
-  } else {
+  if (videoState === "unmuted") {
     muteVideoEl.style.display = "block";
     unmuteVideoEl.style.display = "none";
+  } else {
+    muteVideoEl.style.display = "none";
+    unmuteVideoEl.style.display = "block";
   }
 }

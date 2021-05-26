@@ -52,7 +52,7 @@ const startLocalScreensharing = async (socket: Socket, user: string) => {
     );
 
     screensharing = new MembraneWebRTC(socket, getRoomId(), {
-      signalingOptions: {
+      participantConfig: {
         displayName: `${user} Screensharing`,
         relayVideo: true,
         relayAudio: false,
@@ -67,7 +67,7 @@ const startLocalScreensharing = async (socket: Socket, user: string) => {
     });
 
     screenStream.getTracks().forEach((t) => {
-      screensharing?.addTrack(t, screenStream);
+      screensharing?.addLocalTrack(t, screenStream);
       t.onended = () => {
         cleanLocalScreensharing();
       };
@@ -121,7 +121,7 @@ const setup = async () => {
     }
 
     const webrtc = new MembraneWebRTC(socket, getRoomId(), {
-      signalingOptions: {
+      participantConfig: {
         displayName,
         relayAudio: localAudioStream !== null,
         relayVideo: localVideoStream !== null,
@@ -157,17 +157,15 @@ const setup = async () => {
             removeVideoElement(participant.id);
           }
         },
-        onDisplayTrack: (ctx) => {
-          displayVideoElement(ctx.participant.id);
-        },
-        onHideTrack: (ctx) => {
-          hideVideoElement(ctx.participant.id);
-        },
+        onDisplayParticipant: displayVideoElement,
+        onHideParticipant: hideVideoElement,
         onParticipantToggledVideo: toggleVideoPlaceholder,
         onParticipantToggledAudio: toggleMutedAudioIcon,
         onConnectionError: setErrorMessage,
         onOfferData: ({ data, participants }) => {
-          const participantsNames = participants.map((p) => p.displayName);
+          const participantsNames = participants
+            .filter((p) => !p.mids.find((mid) => mid.includes("SCREEN")))
+            .map((p) => p.displayName);
           setParticipantsNamesList(participantsNames);
         },
         onNoMediaParticipantArrival: (participant) => {
@@ -190,7 +188,9 @@ const setup = async () => {
         onNoMediaParticipantLeave: (participant) =>
           hideVideoElement(participant.id),
         onParticipantsList: (participants) => {
-          const participantsNames = participants.map((p) => p.displayName);
+          const participantsNames = participants
+            .filter((p) => !p.mids.find((mid) => mid.includes("SCREEN")))
+            .map((p) => p.displayName);
           setParticipantsNamesList(participantsNames);
         },
       },
@@ -199,12 +199,12 @@ const setup = async () => {
     if (localAudioStream) {
       localAudioStream
         .getTracks()
-        .forEach((track) => webrtc.addTrack(track, localAudioStream!));
+        .forEach((track) => webrtc.addLocalTrack(track, localAudioStream!));
     }
     if (localVideoStream) {
       localVideoStream
         .getTracks()
-        .forEach((track) => webrtc.addTrack(track, localVideoStream!));
+        .forEach((track) => webrtc.addLocalTrack(track, localVideoStream!));
       addVideoElement(
         localVideoStream,
         LOCAL_PARTICIPANT_ID,
@@ -256,10 +256,8 @@ const setup = async () => {
         isScreenSharingActive: false,
         displayName,
       },
-      muteAudio: localAudioStream === null,
-      muteVideo: localVideoStream === null,
-      enableAudio: localAudioStream !== null,
-      enableVideo: localVideoStream !== null,
+      audioState: localAudioStream === null ? "disabled" : "unmuted",
+      videoState: localVideoStream === null ? "disabled" : "unmuted",
     });
 
     webrtc.start();

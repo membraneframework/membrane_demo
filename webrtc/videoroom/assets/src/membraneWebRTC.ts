@@ -39,7 +39,7 @@ interface TrackContext {
   isScreenSharing: boolean;
 }
 
-interface SignalingOptions {
+interface ParticipantConfig {
   displayName: string;
   relayVideo: boolean;
   relayAudio: boolean;
@@ -55,8 +55,8 @@ interface Callbacks {
     newLabel: string
   ) => void;
   onDisplayStream?: (stream: MediaStream, label: string) => void;
-  onDisplayTrack?: (ctx: TrackContext) => void;
-  onHideTrack?: (ctx: TrackContext) => void;
+  onDisplayParticipant?: (participantId: string) => void;
+  onHideParticipant?: (participantId: string) => void;
   onParticipantToggledVideo?: (participantId: string) => void;
   onParticipantToggledAudio?: (participantId: string) => void;
   onOfferData?: (data: OfferData) => void;
@@ -69,7 +69,7 @@ interface MembraneWebRTCConfig {
   callbacks?: Callbacks;
   rtcConfig?: RTCConfiguration;
   type?: "participant" | "screensharing";
-  signalingOptions: SignalingOptions;
+  participantConfig: ParticipantConfig;
 }
 
 export class MembraneWebRTC {
@@ -77,19 +77,17 @@ export class MembraneWebRTC {
   private _channel?: Channel;
   private channelId: string;
   private socketRefs: string[] = [];
-  private signalingOptions: SignalingOptions;
+  private participantConfig: ParticipantConfig;
   private displayName: string;
 
   private maxDisplayNum: number = 1;
-  private localTracksMapping: Map<
-    String,
-    [MediaStreamTrack, MediaStream]
-  > = new Map();
+  private localStreams: Set<MediaStream> = new Set<MediaStream>();
   private screensharingStream?: MediaStream;
   private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
   private midToStream: Map<String, MediaStream> = new Map();
   private connection?: RTCPeerConnection;
   private participants: Participant[] = [];
+  private idToParticipant: Map<String, Participant> = new Map();
   private midToParticipant: Map<String, Participant> = new Map<
     String,
     Participant
@@ -121,12 +119,12 @@ export class MembraneWebRTC {
       type = "participant",
       callbacks,
       rtcConfig,
-      signalingOptions,
+      participantConfig,
     } = config;
 
     this.socket = socket;
-    this.displayName = signalingOptions.displayName;
-    this.signalingOptions = signalingOptions;
+    this.displayName = participantConfig.displayName;
+    this.participantConfig = participantConfig;
     this.channelId =
       type === "participant"
         ? `room:${roomId}`
@@ -144,88 +142,36 @@ export class MembraneWebRTC {
     this.socketRefs.push(socket.onClose(handleError));
   }
 
-  public addTrack = (track: MediaStreamTrack, stream: MediaStream) => {
+  public addLocalTrack = (track: MediaStreamTrack, stream: MediaStream) => {
     if (this.connection) {
       throw new Error(
         "Adding tracks when connection is established is not yet supported"
       );
     }
-    this.localTracksMapping.set(track.id, [track, stream]);
+    this.localStreams.add(stream);
   };
 
   public start = async () => {
-    this.channel = this.socket.channel(this.channelId, this.signalingOptions);
+    this.channel = this.socket.channel(this.channelId, this.participantConfig);
 
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onRemoteCandidate);
-    this.channel.on("replaceTrack", (data: any) => {
-      const oldTrackId = data.data.oldTrackId;
-      const newTrackId = data.data.newTrackId;
-      const oldStream = this.midToStream.get(oldTrackId)!;
-      const newStream = this.midToStream.get(newTrackId)!;
-      const oldTrack = oldStream.getVideoTracks()[0];
-      const newTrack = newStream.getVideoTracks()[0];
-      const oldParticipant = this.midToParticipant.get(oldTrackId);
-      const newParticipant = this.midToParticipant.get(newTrackId);
+    this.channel.on("replaceParticipant", (data: any) => {
+      const oldParticipantId = data.data.oldParticipantId;
+      const newParticipantId = data.data.newParticipantId;
 
-      if (oldParticipant) {
-        const oldCtx = {
-          track: oldTrack,
-          stream: oldStream,
-          participant: oldParticipant,
-          label: oldParticipant?.displayName ?? "",
-          isScreenSharing:
-            oldParticipant?.mids
-              .find((mid) => mid === oldTrackId)
-              ?.includes("SCREEN") || false,
-        };
-        this.callbacks.onHideTrack?.(oldCtx);
-      }
-
-      if (newParticipant) {
-        const newCtx = {
-          track: newTrack,
-          stream: newStream,
-          participant: newParticipant,
-          label: newParticipant?.displayName ?? "",
-          isScreenSharing:
-            newParticipant?.mids
-              .find((mid) => mid === newTrackId)
-              ?.includes("SCREEN") || false,
-        };
-        this.callbacks.onDisplayTrack?.(newCtx);
-      }
+      this.callbacks.onHideParticipant?.(oldParticipantId);
+      this.callbacks.onDisplayParticipant?.(newParticipantId);
     });
-    this.channel.on("displayTrack", (data: any) => {
-      const trackId = data.data.trackId;
-      const stream = this.midToStream.get(trackId)!;
-      const track = stream.getVideoTracks()[0];
-      const participant = this.participants.find(({ mids }) =>
-        mids.includes(trackId)
-      );
-
-      if (participant) {
-        this.callbacks.onDisplayTrack?.({
-          track,
-          stream,
-          participant,
-          label: participant?.displayName ?? "",
-          isScreenSharing:
-            participant?.mids
-              .find((mid) => mid === trackId)
-              ?.includes("SCREEN") || false,
-        });
-      }
+    this.channel.on("displayParticipant", (data: any) => {
+      this.callbacks.onDisplayParticipant?.(data.data.participantId);
     });
     this.channel.on("participantsList", (data: any) => {
       this.executeCallbacksForNoMediaParticipants(
         data.participants,
         this.participants
       );
-      this.participants = data.participants;
-      this.participants.forEach((p) =>
-        p.mids.forEach((mid) => this.midToParticipant.set(mid, p))
-      );
+      this.updateParticipantsData(data.participants);
       this.callbacks.onParticipantsList?.(this.participants);
     });
 
@@ -271,8 +217,8 @@ export class MembraneWebRTC {
       this.connection.onicecandidate = null;
       this.connection.ontrack = null;
     }
-    this.localTracksMapping.forEach(([track, _stream], _trackId) =>
-      track.stop()
+    this.localStreams.forEach((stream) =>
+      stream.getTracks().forEach((track) => track.stop())
     );
     this.connection = undefined;
     this.socket.off(this.socketRefs);
@@ -284,21 +230,17 @@ export class MembraneWebRTC {
       offer.participants,
       this.participants
     );
-    this.participants = offer.participants;
-
-    this.midToParticipant = new Map<String, Participant>();
-    this.participants.forEach((p) =>
-      p.mids.forEach((mid) => this.midToParticipant.set(mid, p))
-    );
-
+    this.updateParticipantsData(offer.participants);
     this.callbacks.onOfferData?.(offer);
 
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtcConfig);
       this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
-      this.localTracksMapping.forEach(([track, stream], _trackId) => {
-        this.connection!.addTrack(track, stream);
+      this.localStreams.forEach((stream) => {
+        stream
+          .getTracks()
+          .forEach((track) => this.connection!.addTrack(track, stream));
       });
     } else {
       this.connection.createOffer({ iceRestart: true });
@@ -412,14 +354,18 @@ export class MembraneWebRTC {
       });
 
       if (this.remoteStreams.size <= this.maxDisplayNum && !isScreenSharing) {
-        this.callbacks.onDisplayTrack?.({
-          track: event.track,
-          participant,
-          label,
-          stream,
-          isScreenSharing,
-        });
+        this.callbacks.onDisplayParticipant?.(participant.id);
       }
     };
+  };
+
+  private updateParticipantsData = (participants: Participant[]) => {
+    this.participants = participants;
+    this.idToParticipant = new Map<String, Participant>();
+    this.midToParticipant = new Map<String, Participant>();
+    this.participants.forEach((p) => {
+      this.idToParticipant.set(p.id, p);
+      p.mids.forEach((mid) => this.midToParticipant.set(mid, p));
+    });
   };
 }

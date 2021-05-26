@@ -103,17 +103,7 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   def handle_info({:signal, {:sdp_offer, sdp}, participants, user_id}, socket) do
-    participants =
-      Enum.map(
-        participants,
-        &%{
-          "id" => &1.id,
-          "displayName" => &1.display_name,
-          "mids" => &1.mids,
-          "mutedAudio" => &1.muted_audio,
-          "mutedVideo" => &1.muted_video
-        }
-      )
+    participants = Enum.map(participants, &camelizeKeys/1)
 
     push(socket, "offer", %{
       data: %{"type" => "offer", "sdp" => sdp},
@@ -126,17 +116,7 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info({:participants_list, participants}, socket) do
-    participants =
-      Enum.map(
-        participants,
-        &%{
-          "id" => &1.id,
-          "displayName" => &1.display_name,
-          "mids" => &1.mids,
-          "mutedAudio" => &1.muted_audio,
-          "mutedVideo" => &1.muted_video
-        }
-      )
+    participants = Enum.map(participants, &camelizeKeys/1)
 
     push(socket, "participantsList", %{participants: participants})
 
@@ -144,17 +124,17 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   @impl true
-  def handle_info({:signal, {:replace_track, old_track_id, new_track_id}}, socket) do
-    push(socket, "replaceTrack", %{
-      data: %{"oldTrackId" => old_track_id, "newTrackId" => new_track_id}
+  def handle_info({:signal, {:replace_track, old_participant_id, new_participant_id}}, socket) do
+    push(socket, "replaceParticipant", %{
+      data: %{"oldParticipantId" => old_participant_id, "newParticipantId" => new_participant_id}
     })
 
     {:noreply, socket}
   end
 
   @impl true
-  def handle_info({:signal, {:display_track, track_id}}, socket) do
-    push(socket, "displayTrack", %{data: %{"trackId" => track_id}})
+  def handle_info({:signal, {:display_participant, participant_id}}, socket) do
+    push(socket, "displayParticipant", %{data: %{"participantId" => participant_id}})
     {:noreply, socket}
   end
 
@@ -199,5 +179,29 @@ defmodule VideoRoomWeb.RoomChannel do
 
   defp send_to_pipeline(socket, message) do
     socket.assigns.pipeline |> send(message)
+  end
+
+  defp camelizeKeys(%{} = map) do
+    map
+    |> Map.new(fn {key, value} ->
+      camelized_key =
+        key
+        |> Atom.to_string()
+        |> Macro.camelize()
+
+      key_prefix =
+        camelized_key
+        |> String.at(0)
+        |> String.downcase()
+
+      key_sufix =
+        camelized_key
+        |> String.slice(1..-1)
+
+      {
+        key_prefix <> key_sufix,
+        value
+      }
+    end)
   end
 end

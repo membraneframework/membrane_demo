@@ -20,10 +20,11 @@ import {
   toggleVideoPlaceholder,
   toggleMutedAudioIcon,
   setParticipantsNamesList,
+  linkStreamwWithVideoElement,
 } from "./room_ui";
 import { createFakeVideoStream } from "../src/utils";
 
-import { MembraneWebRTC } from "./membraneWebRTC";
+import { MembraneWebRTC, isScreenSharingParticipant } from "./membraneWebRTC";
 import { Socket } from "phoenix";
 import { parse } from "query-string";
 
@@ -139,22 +140,23 @@ const setup = async () => {
           if (isScreenSharing) {
             setScreensharing(stream, displayName, "My screensharing");
           } else {
-            addVideoElement(
-              stream,
-              participant.id,
-              displayName,
-              false,
-              false,
-              mutedVideo,
-              mutedAudio
-            );
+            // addVideoElement(
+            //   // stream,
+            //   participant.id,
+            //   displayName,
+            //   false,
+            //   false,
+            //   mutedVideo,
+            //   mutedAudio
+            // );
+            linkStreamwWithVideoElement(stream, participant.id);
           }
         },
         onRemoveTrack: ({ track, participant, stream, isScreenSharing }) => {
           if (isScreenSharing) {
             removeScreensharing();
           } else if (stream.getTracks().length == 0) {
-            removeVideoElement(participant.id);
+            // removeVideoElement(participant.id);
           }
         },
         onDisplayParticipant: displayVideoElement,
@@ -162,37 +164,69 @@ const setup = async () => {
         onParticipantToggledVideo: toggleVideoPlaceholder,
         onParticipantToggledAudio: toggleMutedAudioIcon,
         onConnectionError: setErrorMessage,
-        onOfferData: ({ data, participants }) => {
-          const participantsNames = participants
-            .filter((p) => !p.mids.find((mid) => mid.includes("SCREEN")))
+        onAddParticipant: ({
+          participant,
+          allParticipants,
+          isLocalParticipant,
+        }) => {
+          if (!isScreenSharingParticipant(participant) && !isLocalParticipant) {
+            addVideoElement(
+              participant.id,
+              participant.displayName,
+              false,
+              false,
+              participant.mutedVideo,
+              participant.mutedAudio
+            );
+          }
+
+          const participantsNames = allParticipants
+            .filter((p) => !isScreenSharingParticipant(p))
             .map((p) => p.displayName);
           setParticipantsNamesList(participantsNames);
         },
-        onNoMediaParticipantArrival: (participant) => {
-          const video = VIDEO_MEDIA_CONSTRAINTS.video as MediaTrackConstraintSet;
-          const fakeVideoStream = createFakeVideoStream({
-            height: video!.height as number,
-            width: video.width! as number,
-          });
-          addVideoElement(
-            fakeVideoStream,
-            participant.id,
-            participant.displayName,
-            true,
-            true,
-            true,
-            true
-          );
-          displayVideoElement(participant.id);
+        onRemoveParticipant: ({ participant, allParticipants }) => {
+          if (!isScreenSharingParticipant(participant)) {
+            removeVideoElement(participant.id);
+
+            const participantsNames = allParticipants
+              .filter((p) => !isScreenSharingParticipant(p))
+              .map((p) => p.displayName);
+            setParticipantsNamesList(participantsNames);
+          }
         },
-        onNoMediaParticipantLeave: (participant) =>
-          hideVideoElement(participant.id),
-        onParticipantsList: (participants) => {
-          const participantsNames = participants
-            .filter((p) => !p.mids.find((mid) => mid.includes("SCREEN")))
-            .map((p) => p.displayName);
-          setParticipantsNamesList(participantsNames);
-        },
+
+        // onOfferData: ({ data, participants }) => {
+        //   const participantsNames = participants
+        //     .filter((p) => !p.mids.find((mid) => mid.includes("SCREEN")))
+        //     .map((p) => p.displayName);
+        //   setParticipantsNamesList(participantsNames);
+        // },
+        // onNoMediaParticipantArrival: (participant) => {
+        //   const video = VIDEO_MEDIA_CONSTRAINTS.video as MediaTrackConstraintSet;
+        //   const fakeVideoStream = createFakeVideoStream({
+        //     height: video!.height as number,
+        //     width: video.width! as number,
+        //   });
+        //   addVideoElement(
+        //     fakeVideoStream,
+        //     participant.id,
+        //     participant.displayName,
+        //     true,
+        //     true,
+        //     true,
+        //     true
+        //   );
+        //   displayVideoElement(participant.id);
+        // },
+        // onNoMediaParticipantLeave: (participant) =>
+        //   hideVideoElement(participant.id),
+        // onParticipantsList: (participants) => {
+        //   const participantsNames = participants
+        //     .filter((p) => !p.mids.find((mid) => mid.includes("SCREEN")))
+        //     .map((p) => p.displayName);
+        //   setParticipantsNamesList(participantsNames);
+        // },
       },
     });
 
@@ -206,7 +240,6 @@ const setup = async () => {
         .getTracks()
         .forEach((track) => webrtc.addLocalTrack(track, localVideoStream!));
       addVideoElement(
-        localVideoStream,
         LOCAL_PARTICIPANT_ID,
         "Me",
         true,
@@ -214,15 +247,15 @@ const setup = async () => {
         false,
         localAudioStream === null
       );
+      linkStreamwWithVideoElement(localVideoStream, LOCAL_PARTICIPANT_ID);
       displayVideoElement(LOCAL_PARTICIPANT_ID);
     } else {
       const video = VIDEO_MEDIA_CONSTRAINTS.video as MediaTrackConstraintSet;
       const fakeVideoStream = createFakeVideoStream({
         height: video!.height as number,
         width: video.width! as number,
-      });
+      }) as MediaStream;
       addVideoElement(
-        fakeVideoStream,
         LOCAL_PARTICIPANT_ID,
         "Me",
         true,
@@ -230,6 +263,7 @@ const setup = async () => {
         true,
         localAudioStream === null
       );
+      linkStreamwWithVideoElement(fakeVideoStream, LOCAL_PARTICIPANT_ID);
       displayVideoElement(LOCAL_PARTICIPANT_ID);
     }
 

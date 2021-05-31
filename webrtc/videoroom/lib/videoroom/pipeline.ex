@@ -98,19 +98,26 @@ defmodule VideoRoom.Pipeline do
         {:ok, state}
 
       Map.has_key?(ctx.children, {:endpoint, peer_pid}) ->
-        send(peer_pid, {:new_peer, {:ok, state.max_display_num}, ref})
+        participant_id = state.endpoints[peer_pid].ctx.participant_id
+        participants = get_participants_data(state)
+
+        send(
+          peer_pid,
+          {:new_peer, {:ok, state.max_display_num, participant_id, participants}, ref}
+        )
+
         Membrane.Logger.warn("Peer already connected, ignoring")
         {:ok, state}
 
       true ->
         {{:ok, actions}, state} = accept_new_peer(peer_pid, peer_type, opts, ref, ctx, state)
 
-        participants = get_participants_data(state)
+        participant = get_participant_data(state.endpoints[peer_pid])
 
         state.endpoints
         |> Map.delete(peer_pid)
         |> Enum.each(fn {pid, _endpoint} ->
-          send(pid, {:participants_list, participants})
+          send(pid, {:add_participant, participant})
         end)
 
         {{:ok, actions}, state}
@@ -129,14 +136,16 @@ defmodule VideoRoom.Pipeline do
 
   def handle_other({:DOWN, _ref, :process, pid, _reason}, ctx, state) do
     Membrane.Logger.info("Connection #{inspect(pid)} is down. Cleaning up.")
+
+    removed_participant_id = state.endpoints[pid].ctx.participant_id
     result = maybe_remove_peer(pid, ctx, state)
 
     with {{:ok, _actions}, state} <- result do
-      participants = get_participants_data(state)
+      # participants = get_participants_data(state)
 
       state.endpoints
       |> Enum.each(fn {peer_pid, _endpoint} ->
-        send(peer_pid, {:participants_list, participants})
+        send(peer_pid, {:remove_participant, removed_participant_id})
       end)
     end
 
@@ -388,8 +397,7 @@ defmodule VideoRoom.Pipeline do
   end
 
   defp accept_new_peer(peer_pid, peer_type, opts, ref, ctx, state) do
-    send(peer_pid, {:new_peer, {:ok, state.max_display_num}, ref})
-
+    participant_id = UUID.uuid4()
     display_name = Keyword.fetch!(opts, :display_name)
 
     Membrane.Logger.info("New peer #{inspect(peer_pid)} of type #{inspect(peer_type)}")
@@ -400,7 +408,7 @@ defmodule VideoRoom.Pipeline do
     endpoint =
       Endpoint.new(peer_pid, peer_type, tracks, %{
         display_name: display_name,
-        participant_id: UUID.uuid4(),
+        participant_id: participant_id,
         muted_audio: not Keyword.get(opts, :relay_audio?),
         muted_video: not Keyword.get(opts, :relay_video?)
       })
@@ -444,20 +452,28 @@ defmodule VideoRoom.Pipeline do
     }
 
     state = put_in(state.endpoints[peer_pid], endpoint)
+    participants = get_participants_data(state)
+
+    send(peer_pid, {:new_peer, {:ok, state.max_display_num, participant_id, participants}, ref})
+
     {{:ok, [spec: spec] ++ tracks_msgs}, state}
   end
 
   defp get_participants_data(state) do
     state.endpoints
-    |> Enum.map(fn {_, %Endpoint{inbound_tracks: tracks, ctx: ctx}} ->
-      %{
-        id: ctx.participant_id,
-        display_name: ctx.display_name,
-        mids: Map.keys(tracks),
-        muted_video: ctx.muted_video,
-        muted_audio: ctx.muted_audio
-      }
+    |> Enum.map(fn {_, endpoint} ->
+      get_participant_data(endpoint)
     end)
+  end
+
+  defp get_participant_data(%Endpoint{inbound_tracks: tracks, ctx: ctx}) do
+    %{
+      id: ctx.participant_id,
+      display_name: ctx.display_name,
+      mids: Map.keys(tracks),
+      muted_video: ctx.muted_video,
+      muted_audio: ctx.muted_audio
+    }
   end
 
   defp update_track_messages(_ctx, [] = _tracks, _endpoint_bin, _state), do: []

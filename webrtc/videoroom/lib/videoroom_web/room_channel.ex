@@ -103,7 +103,7 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   def handle_info({:signal, {:sdp_offer, sdp}, participants, user_id}, socket) do
-    participants = Enum.map(participants, &camelizeKeys/1)
+    participants = Enum.map(participants, &camelize_keys/1)
 
     push(socket, "offer", %{
       data: %{"type" => "offer", "sdp" => sdp},
@@ -115,13 +115,27 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   @impl true
-  def handle_info({:participants_list, participants}, socket) do
-    participants = Enum.map(participants, &camelizeKeys/1)
-
-    push(socket, "participantsList", %{participants: participants})
+  def handle_info({:add_participant, participant}, socket) do
+    participant = camelize_keys(participant)
+    push(socket, "addParticipant", %{data: %{"participant" => participant}})
 
     {:noreply, socket}
   end
+
+  @impl true
+  def handle_info({:remove_participant, participant_id}, socket) do
+    push(socket, "removeParticipant", %{data: %{"participantId" => participant_id}})
+
+    {:noreply, socket}
+  end
+
+  # @impl true
+  # def handle_info({:participants_list, participants}, socket) do
+  #   participants = Enum.map(participants, &camelize_keys/1)
+  #   push(socket, "participantsList", %{participants: participants})
+
+  #   {:noreply, socket}
+  # end
 
   @impl true
   def handle_info({:signal, {:replace_track, old_participant_id, new_participant_id}}, socket) do
@@ -153,8 +167,13 @@ defmodule VideoRoomWeb.RoomChannel do
   @impl true
   def handle_info({:new_peer, response, ref}, socket) do
     case response do
-      {:ok, max_display_num} ->
-        reply(ref, {:ok, %{maxDisplayNum: max_display_num}})
+      {:ok, max_display_num, user_id, participants} ->
+        participants = Enum.map(participants, &camelize_keys/1)
+
+        reply(
+          ref,
+          {:ok, %{maxDisplayNum: max_display_num, userId: user_id, participants: participants}}
+        )
 
       {:error, _reason} = error ->
         reply(ref, error)
@@ -181,7 +200,7 @@ defmodule VideoRoomWeb.RoomChannel do
     socket.assigns.pipeline |> send(message)
   end
 
-  defp camelizeKeys(%{} = map) do
+  defp camelize_keys(%{} = map) do
     map
     |> Map.new(fn {key, value} ->
       camelized_key =
@@ -198,10 +217,7 @@ defmodule VideoRoomWeb.RoomChannel do
         camelized_key
         |> String.slice(1..-1)
 
-      {
-        key_prefix <> key_sufix,
-        value
-      }
+      {key_prefix <> key_sufix, value}
     end)
   end
 end

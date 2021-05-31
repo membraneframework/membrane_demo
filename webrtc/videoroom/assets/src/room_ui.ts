@@ -52,8 +52,22 @@ function elementId(
   return `${type}-${participantId}`;
 }
 
-export function addVideoElement(
+export function linkStreamwWithVideoElement(
   stream: MediaStream,
+  participantId: string
+): void {
+  const videoId = elementId(participantId, "video");
+  const audioId = elementId(participantId, "audio");
+
+  let video = document.getElementById(videoId) as HTMLVideoElement;
+  let audio = document.getElementById(audioId) as HTMLAudioElement;
+
+  video.srcObject = stream;
+  audio.srcObject = stream;
+}
+
+export function addVideoElement(
+  // stream: MediaStream,
   participantId: string,
   label: string,
   isLocalVideo: boolean = false,
@@ -84,13 +98,13 @@ export function addVideoElement(
   }
 
   video.id = videoId;
-  video.srcObject = stream;
+  // video.srcObject = stream;
   video.autoplay = true;
   video.playsInline = true;
   video.muted = true;
 
   audio.id = audioId;
-  audio.srcObject = stream;
+  // audio.srcObject = stream;
   audio.autoplay = true;
   audio.muted = mutedAudio;
 

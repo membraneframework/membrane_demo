@@ -100,7 +100,7 @@ defmodule VideoRoom.DisplayEngine do
               old_participant_id = state.endpoints[old_id].ctx.participant_id
               new_participant_id = state.endpoints[new_id].ctx.participant_id
 
-              send(id, {:signal, {:replace_track, old_participant_id, new_participant_id}})
+              send(id, {:signal, {:replace_participant, old_participant_id, new_participant_id}})
 
               {actions, Map.put(display_managers, id, display_manager)}
           end

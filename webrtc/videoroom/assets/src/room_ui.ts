@@ -67,7 +67,6 @@ export function linkStreamwWithVideoElement(
 }
 
 export function addVideoElement(
-  // stream: MediaStream,
   participantId: string,
   label: string,
   isLocalVideo: boolean = false,
@@ -98,13 +97,11 @@ export function addVideoElement(
   }
 
   video.id = videoId;
-  // video.srcObject = stream;
   video.autoplay = true;
   video.playsInline = true;
   video.muted = true;
 
   audio.id = audioId;
-  // audio.srcObject = stream;
   audio.autoplay = true;
   audio.muted = mutedAudio;
 

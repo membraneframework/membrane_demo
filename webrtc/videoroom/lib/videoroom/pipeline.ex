@@ -141,8 +141,6 @@ defmodule VideoRoom.Pipeline do
     result = maybe_remove_peer(pid, ctx, state)
 
     with {{:ok, _actions}, state} <- result do
-      # participants = get_participants_data(state)
-
       state.endpoints
       |> Enum.each(fn {peer_pid, _endpoint} ->
         send(peer_pid, {:remove_participant, removed_participant_id})

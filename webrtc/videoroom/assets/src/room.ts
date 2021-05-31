@@ -129,34 +129,20 @@ const setup = async () => {
       },
       callbacks: {
         onAddTrack: ({
-          track,
           stream,
           participant,
           isScreenSharing,
           label: displayName = "",
-          mutedVideo,
-          mutedAudio,
         }) => {
           if (isScreenSharing) {
             setScreensharing(stream, displayName, "My screensharing");
           } else {
-            // addVideoElement(
-            //   // stream,
-            //   participant.id,
-            //   displayName,
-            //   false,
-            //   false,
-            //   mutedVideo,
-            //   mutedAudio
-            // );
             linkStreamwWithVideoElement(stream, participant.id);
           }
         },
-        onRemoveTrack: ({ track, participant, stream, isScreenSharing }) => {
+        onRemoveTrack: ({ isScreenSharing }) => {
           if (isScreenSharing) {
             removeScreensharing();
-          } else if (stream.getTracks().length == 0) {
-            // removeVideoElement(participant.id);
           }
         },
         onDisplayParticipant: displayVideoElement,
@@ -195,38 +181,6 @@ const setup = async () => {
             setParticipantsNamesList(participantsNames);
           }
         },
-
-        // onOfferData: ({ data, participants }) => {
-        //   const participantsNames = participants
-        //     .filter((p) => !p.mids.find((mid) => mid.includes("SCREEN")))
-        //     .map((p) => p.displayName);
-        //   setParticipantsNamesList(participantsNames);
-        // },
-        // onNoMediaParticipantArrival: (participant) => {
-        //   const video = VIDEO_MEDIA_CONSTRAINTS.video as MediaTrackConstraintSet;
-        //   const fakeVideoStream = createFakeVideoStream({
-        //     height: video!.height as number,
-        //     width: video.width! as number,
-        //   });
-        //   addVideoElement(
-        //     fakeVideoStream,
-        //     participant.id,
-        //     participant.displayName,
-        //     true,
-        //     true,
-        //     true,
-        //     true
-        //   );
-        //   displayVideoElement(participant.id);
-        // },
-        // onNoMediaParticipantLeave: (participant) =>
-        //   hideVideoElement(participant.id),
-        // onParticipantsList: (participants) => {
-        //   const participantsNames = participants
-        //     .filter((p) => !p.mids.find((mid) => mid.includes("SCREEN")))
-        //     .map((p) => p.displayName);
-        //   setParticipantsNamesList(participantsNames);
-        // },
       },
     });
 

@@ -11,7 +11,7 @@ const phoenix_channel_push_result = async (push: Push): Promise<any> => {
   });
 };
 
-export interface Participant {
+interface Participant {
   id: string;
   displayName: string;
   mutedAudio: boolean;
@@ -55,22 +55,12 @@ interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
-  onReplaceStream?: (
-    oldStream: MediaStream,
-    newStream: MediaStream,
-    newLabel: string
-  ) => void;
-  onDisplayStream?: (stream: MediaStream, label: string) => void;
   onDisplayParticipant?: (participantId: string) => void;
   onHideParticipant?: (participantId: string) => void;
   onParticipantToggledVideo?: (participantId: string) => void;
   onParticipantToggledAudio?: (participantId: string) => void;
   onAddParticipant?: (ctx: ParticipantContext) => void;
   onRemoveParticipant?: (ctx: ParticipantContext) => void;
-  // onOfferData?: (data: OfferData) => void;
-  // onNoMediaParticipantArrival?: (participant: Participant) => void;
-  // onNoMediaParticipantLeave?: (participant: Participant) => void;
-  // onParticipantsList?: (participants: Participant[]) => void;
 }
 
 interface MembraneWebRTCConfig {
@@ -94,8 +84,6 @@ export class MembraneWebRTC {
 
   private maxDisplayNum: number = 1;
   private localStreams: Set<MediaStream> = new Set<MediaStream>();
-  // private screensharingStream?: MediaStream;
-  private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
   private midToStream: Map<String, MediaStream> = new Map();
   private connection?: RTCPeerConnection;
   private idToParticipant: Map<String, Participant> = new Map();
@@ -174,18 +162,10 @@ export class MembraneWebRTC {
       this.callbacks.onHideParticipant?.(oldParticipantId);
       this.callbacks.onDisplayParticipant?.(newParticipantId);
     });
+
     this.channel.on("displayParticipant", (data: any) => {
       this.callbacks.onDisplayParticipant?.(data.data.participantId);
     });
-
-    // this.channel.on("participantsList", (data: any) => {
-    //   this.executeCallbacksForNoMediaParticipants(
-    //     data.participants,
-    //     this.participants
-    //   );
-    //   this.updateParticipantsData(data.participants);
-    //   this.callbacks.onParticipantsList?.(this.participants);
-    // });
 
     this.channel.on("toggledVideo", (data: any) => {
       this.callbacks.onParticipantToggledVideo?.(data.data.participantId);
@@ -241,7 +221,6 @@ export class MembraneWebRTC {
   public stop = () => {
     this.channel.push("stop", {});
     this.channel.leave();
-    this.remoteStreams = new Set<MediaStream>();
     if (this.connection) {
       this.connection.onicecandidate = null;
       this.connection.ontrack = null;
@@ -255,12 +234,6 @@ export class MembraneWebRTC {
 
   private onOffer = async (offer: OfferData) => {
     this.userId = offer.userId;
-    // this.executeCallbacksForNoMediaParticipants(
-    //   offer.participants,
-    //   this.participants
-    // );
-    // this.updateParticipantsData(offer.participants);
-    // this.callbacks.onOfferData?.(offer);
 
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtcConfig);
@@ -285,31 +258,6 @@ export class MembraneWebRTC {
       console.error(error);
     }
   };
-
-  // private executeCallbacksForNoMediaParticipants = (
-  //   newParticipants: Participant[],
-  //   oldParticipants: Participant[]
-  // ) => {
-  //   const oldParticipantsIds = new Set(oldParticipants.map((p) => p.id));
-  //   const newParticipantsIds = new Set(newParticipants.map((p) => p.id));
-
-  //   oldParticipants
-  //     .filter(
-  //       (p) =>
-  //         p.mids.length == 0 &&
-  //         !newParticipantsIds.has(p.id) &&
-  //         p.id != this.userId
-  //     )
-  //     .forEach((p) => this.callbacks.onNoMediaParticipantLeave?.(p));
-  //   newParticipants
-  //     .filter(
-  //       (p) =>
-  //         p.mids.length == 0 &&
-  //         !oldParticipantsIds.has(p.id) &&
-  //         p.id != this.userId
-  //     )
-  //     .forEach((p) => this.callbacks.onNoMediaParticipantArrival?.(p));
-  // };
 
   private onRemoteCandidate = (candidate: CandidateData) => {
     try {
@@ -340,22 +288,12 @@ export class MembraneWebRTC {
       const participant = this.midToParticipant.get(mid)!;
       const isScreenSharing = mid.includes("SCREEN") || false;
 
-      if (isScreenSharing) {
-        // this.screensharingStream = stream;
-      } else {
-        this.remoteStreams.add(stream);
-      }
       this.midToStream.set(mid, stream);
 
       stream.onremovetrack = (event) => {
         const hasTracks = stream.getTracks().length > 0;
 
         if (!hasTracks) {
-          if (isScreenSharing) {
-            // this.screensharingStream = undefined;
-          } else {
-            this.remoteStreams.delete(stream);
-          }
           this.midToStream.delete(mid);
           stream.onremovetrack = null;
         }
@@ -381,22 +319,8 @@ export class MembraneWebRTC {
         mutedVideo,
         mutedAudio,
       });
-
-      // if (this.remoteStreams.size <= this.maxDisplayNum && !isScreenSharing) {
-      //   this.callbacks.onDisplayParticipant?.(participant.id);
-      // }
     };
   };
-
-  // private updateParticipantsData = (participants: Participant[]) => {
-  //   this.participants = participants;
-  //   this.idToParticipant = new Map<String, Participant>();
-  //   this.midToParticipant = new Map<String, Participant>();
-  //   this.participants.forEach((p) => {
-  //     this.idToParticipant.set(p.id, p);
-  //     p.mids.forEach((mid) => this.midToParticipant.set(mid, p));
-  //   });
-  // };
 
   private addParticipant = (
     participant: Participant,

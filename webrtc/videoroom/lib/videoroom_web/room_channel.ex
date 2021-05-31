@@ -103,7 +103,7 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   def handle_info({:signal, {:sdp_offer, sdp}, participants, user_id}, socket) do
-    participants = Enum.map(participants, &camelize_keys/1)
+    participants = Enum.map(participants, &serialize_participant/1)
 
     push(socket, "offer", %{
       data: %{"type" => "offer", "sdp" => sdp},
@@ -116,8 +116,7 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info({:add_participant, participant}, socket) do
-    participant = camelize_keys(participant)
-    push(socket, "addParticipant", %{data: %{"participant" => participant}})
+    push(socket, "addParticipant", %{data: %{"participant" => serialize_participant(participant)}})
 
     {:noreply, socket}
   end
@@ -129,16 +128,11 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  # @impl true
-  # def handle_info({:participants_list, participants}, socket) do
-  #   participants = Enum.map(participants, &camelize_keys/1)
-  #   push(socket, "participantsList", %{participants: participants})
-
-  #   {:noreply, socket}
-  # end
-
   @impl true
-  def handle_info({:signal, {:replace_track, old_participant_id, new_participant_id}}, socket) do
+  def handle_info(
+        {:signal, {:replace_participant, old_participant_id, new_participant_id}},
+        socket
+      ) do
     push(socket, "replaceParticipant", %{
       data: %{"oldParticipantId" => old_participant_id, "newParticipantId" => new_participant_id}
     })
@@ -168,7 +162,7 @@ defmodule VideoRoomWeb.RoomChannel do
   def handle_info({:new_peer, response, ref}, socket) do
     case response do
       {:ok, max_display_num, user_id, participants} ->
-        participants = Enum.map(participants, &camelize_keys/1)
+        participants = Enum.map(participants, &serialize_participant/1)
 
         reply(
           ref,
@@ -200,24 +194,13 @@ defmodule VideoRoomWeb.RoomChannel do
     socket.assigns.pipeline |> send(message)
   end
 
-  defp camelize_keys(%{} = map) do
-    map
-    |> Map.new(fn {key, value} ->
-      camelized_key =
-        key
-        |> Atom.to_string()
-        |> Macro.camelize()
-
-      key_prefix =
-        camelized_key
-        |> String.at(0)
-        |> String.downcase()
-
-      key_sufix =
-        camelized_key
-        |> String.slice(1..-1)
-
-      {key_prefix <> key_sufix, value}
-    end)
+  defp serialize_participant(participant) do
+    %{
+      "id" => participant.id,
+      "displayName" => participant.display_name,
+      "mids" => participant.mids,
+      "mutedAudio" => participant.muted_audio,
+      "mutedVideo" => participant.muted_video
+    }
   end
 end

@@ -130,24 +130,16 @@ defmodule VideoRoom.Pipeline do
   end
 
   def handle_other({:remove_peer, peer_pid}, ctx, state) do
-    Membrane.Logger.info("Removing peer #{inspect(peer_pid)}.")
-    maybe_remove_peer(peer_pid, ctx, state)
+    handle_leaving_participant(peer_pid, "Removing peer #{inspect(peer_pid)}.", ctx, state)
   end
 
   def handle_other({:DOWN, _ref, :process, pid, _reason}, ctx, state) do
-    Membrane.Logger.info("Connection #{inspect(pid)} is down. Cleaning up.")
-
-    removed_participant_id = state.endpoints[pid].ctx.participant_id
-    result = maybe_remove_peer(pid, ctx, state)
-
-    with {{:ok, _actions}, state} <- result do
-      state.endpoints
-      |> Enum.each(fn {peer_pid, _endpoint} ->
-        send(peer_pid, {:remove_participant, removed_participant_id})
-      end)
-    end
-
-    result
+    handle_leaving_participant(
+      pid,
+      "Connection #{inspect(pid)} is down. Cleaning up.",
+      ctx,
+      state
+    )
   end
 
   def handle_other({toggled_media, peer_pid}, _ctx, state)
@@ -485,5 +477,20 @@ defmodule VideoRoom.Pipeline do
       _child ->
         []
     end)
+  end
+
+  defp handle_leaving_participant(pid, log, ctx, state) do
+    Membrane.Logger.info(log)
+    removed_endpoint = state.endpoints[pid]
+    result = maybe_remove_peer(pid, ctx, state)
+
+    with {{:ok, _actions}, state} <- result, %Endpoint{ctx: ctx} <- removed_endpoint do
+      state.endpoints
+      |> Enum.each(fn {peer_pid, _endpoint} ->
+        send(peer_pid, {:remove_participant, ctx.participant_id})
+      end)
+    end
+
+    result
   end
 end

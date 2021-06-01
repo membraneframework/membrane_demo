@@ -15,7 +15,7 @@ import {
   removeVideoElement,
   setErrorMessage,
   setLocalScreenSharingStatus,
-  setScreensharing,
+  showScreensharing,
   setupRoomUI,
   toggleVideoPlaceholder,
   toggleMutedAudioIcon,
@@ -73,12 +73,13 @@ const startLocalScreensharing = async (socket: Socket, user: string) => {
         cleanLocalScreensharing();
       };
     });
+    setLocalScreenSharingStatus(true);
 
     await screensharing.start();
-    setLocalScreenSharingStatus(true);
   } catch (error) {
     console.log("Error while starting screensharing", error);
     cleanLocalScreensharing();
+    setLocalScreenSharingStatus(false);
   }
 };
 
@@ -128,22 +129,8 @@ const setup = async () => {
         relayVideo: localVideoStream !== null,
       },
       callbacks: {
-        onAddTrack: ({
-          stream,
-          participant,
-          isScreenSharing,
-          label: displayName = "",
-        }) => {
-          if (isScreenSharing) {
-            setScreensharing(stream, displayName, "My screensharing");
-          } else {
-            linkStreamwWithVideoElement(stream, participant.id);
-          }
-        },
-        onRemoveTrack: ({ isScreenSharing }) => {
-          if (isScreenSharing) {
-            removeScreensharing();
-          }
+        onAddTrack: ({ stream, participant, isScreenSharing }) => {
+          linkStreamwWithVideoElement(stream, participant.id, isScreenSharing);
         },
         onDisplayParticipant: displayVideoElement,
         onHideParticipant: hideVideoElement,
@@ -155,15 +142,19 @@ const setup = async () => {
           allParticipants,
           isLocalParticipant,
         }) => {
-          if (!isScreenSharingParticipant(participant) && !isLocalParticipant) {
-            addVideoElement(
-              participant.id,
-              participant.displayName,
-              false,
-              false,
-              participant.mutedVideo,
-              participant.mutedAudio
-            );
+          if (!isLocalParticipant) {
+            if (isScreenSharingParticipant(participant)) {
+              showScreensharing(participant.displayName, "My screensharing");
+            } else {
+              addVideoElement(
+                participant.id,
+                participant.displayName,
+                false,
+                false,
+                participant.mutedVideo,
+                participant.mutedAudio
+              );
+            }
           }
 
           const participantsNames = allParticipants
@@ -172,7 +163,9 @@ const setup = async () => {
           setParticipantsNamesList(participantsNames);
         },
         onRemoveParticipant: ({ participant, allParticipants }) => {
-          if (!isScreenSharingParticipant(participant)) {
+          if (isScreenSharingParticipant(participant)) {
+            removeScreensharing();
+          } else {
             removeVideoElement(participant.id);
 
             const participantsNames = allParticipants

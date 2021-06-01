@@ -54,16 +54,27 @@ function elementId(
 
 export function linkStreamwWithVideoElement(
   stream: MediaStream,
-  participantId: string
+  participantId: string,
+  isScreenSharing: boolean = false
 ): void {
-  const videoId = elementId(participantId, "video");
-  const audioId = elementId(participantId, "audio");
+  if (isScreenSharing) {
+    const screensharing = document.getElementById(
+      "screensharing-video"
+    )! as HTMLVideoElement;
 
-  let video = document.getElementById(videoId) as HTMLVideoElement;
-  let audio = document.getElementById(audioId) as HTMLAudioElement;
+    screensharing.srcObject = stream;
+    screensharing.autoplay = true;
+    screensharing.playsInline = true;
+  } else {
+    const videoId = elementId(participantId, "video");
+    const audioId = elementId(participantId, "audio");
 
-  video.srcObject = stream;
-  audio.srcObject = stream;
+    let video = document.getElementById(videoId) as HTMLVideoElement;
+    let audio = document.getElementById(audioId) as HTMLAudioElement;
+
+    video.srcObject = stream;
+    audio.srcObject = stream;
+  }
 }
 
 export function addVideoElement(
@@ -195,11 +206,7 @@ export function removeVideoElement(participantId: string): void {
   resizeVideosGrid();
 }
 
-export function setScreensharing(
-  stream: MediaStream,
-  label: string,
-  selfLabel: string
-): void {
+export function showScreensharing(label: string, selfLabel: string): void {
   if (state.isScreenSharingActive) {
     console.error(
       "Cannot set screensharing as either local or remote screensharing is active"
@@ -223,13 +230,9 @@ export function setScreensharing(
     "div[class='VideoLabel']"
   )! as HTMLDivElement;
 
-  videoLabel.innerText = label.includes(state.displayName) ? selfLabel : label;
-
-  const video = screensharing.querySelector("video")!;
-  video.id = stream.id;
-  video.srcObject = stream;
-  video.autoplay = true;
-  video.playsInline = true;
+  console.log("dupa ", label, " | ", selfLabel);
+  videoLabel.innerText =
+    `${state.displayName} Screensharing` === label ? selfLabel : label;
 
   document
     .getElementById("videochat")!

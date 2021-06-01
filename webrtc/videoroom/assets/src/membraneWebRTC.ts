@@ -53,7 +53,6 @@ interface ParticipantConfig {
 
 interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
-  onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
   onDisplayParticipant?: (participantId: string) => void;
   onHideParticipant?: (participantId: string) => void;
@@ -297,13 +296,6 @@ export class MembraneWebRTC {
           this.midToStream.delete(mid);
           stream.onremovetrack = null;
         }
-
-        this.callbacks.onRemoveTrack?.({
-          track: event.track,
-          participant,
-          stream,
-          isScreenSharing,
-        });
       };
 
       const label = participant?.displayName || "";

@@ -115,15 +115,17 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   @impl true
-  def handle_info({:add_participant, participant}, socket) do
-    push(socket, "addParticipant", %{data: %{"participant" => serialize_participant(participant)}})
+  def handle_info({:participant_joined, participant}, socket) do
+    push(socket, "participantJoined", %{
+      data: %{"participant" => serialize_participant(participant)}
+    })
 
     {:noreply, socket}
   end
 
   @impl true
-  def handle_info({:remove_participant, participant_id}, socket) do
-    push(socket, "removeParticipant", %{data: %{"participantId" => participant_id}})
+  def handle_info({:participant_left, participant_id}, socket) do
+    push(socket, "participantLeft", %{data: %{"participantId" => participant_id}})
 
     {:noreply, socket}
   end

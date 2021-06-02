@@ -52,7 +52,7 @@ function elementId(
   return `${type}-${participantId}`;
 }
 
-export function linkStreamwWithVideoElement(
+export function attachStream(
   stream: MediaStream,
   participantId: string,
   isScreenSharing: boolean = false
@@ -230,7 +230,6 @@ export function showScreensharing(label: string, selfLabel: string): void {
     "div[class='VideoLabel']"
   )! as HTMLDivElement;
 
-  console.log("dupa ", label, " | ", selfLabel);
   videoLabel.innerText =
     `${state.displayName} Screensharing` === label ? selfLabel : label;
 

@@ -53,13 +53,14 @@ interface ParticipantConfig {
 
 interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
+  onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
   onDisplayParticipant?: (participantId: string) => void;
   onHideParticipant?: (participantId: string) => void;
   onParticipantToggledVideo?: (participantId: string) => void;
   onParticipantToggledAudio?: (participantId: string) => void;
-  onAddParticipant?: (ctx: ParticipantContext) => void;
-  onRemoveParticipant?: (ctx: ParticipantContext) => void;
+  onParticipantJoined?: (ctx: ParticipantContext) => void;
+  onParticipantLeft?: (ctx: ParticipantContext) => void;
 }
 
 interface MembraneWebRTCConfig {
@@ -140,10 +141,10 @@ export class MembraneWebRTC {
     this.socketRefs.push(socket.onClose(handleError));
   }
 
-  public addLocalTrack = (track: MediaStreamTrack, stream: MediaStream) => {
+  public addLocalStream = (stream: MediaStream) => {
     if (this.connection) {
       throw new Error(
-        "Adding tracks when connection is established is not yet supported"
+        "Adding streams when connection is established is not yet supported"
       );
     }
     this.localStreams.add(stream);
@@ -174,13 +175,13 @@ export class MembraneWebRTC {
       this.callbacks.onParticipantToggledAudio?.(data.data.participantId);
     });
 
-    this.channel.on("addParticipant", (data: any) => {
+    this.channel.on("participantJoined", (data: any) => {
       const participant = data.data.participant;
-      this.addParticipant(participant, participant.id === this.userId);
+      this.onParticipantJoined(participant, participant.id === this.userId);
     });
 
-    this.channel.on("removeParticipant", (data: any) => {
-      this.removeParticipant(data.data.participantId);
+    this.channel.on("participantLeft", (data: any) => {
+      this.onParticipantLeft(data.data.participantId);
     });
 
     this.channel.on("error", (data: any) => {
@@ -201,7 +202,7 @@ export class MembraneWebRTC {
       this.userId = userId;
 
       (participants as Array<Participant>).forEach((p) =>
-        this.addParticipant(p, p.id === userId)
+        this.onParticipantJoined(p, p.id === userId)
       );
     } catch (e) {
       this.callbacks.onConnectionError?.(e);
@@ -296,6 +297,13 @@ export class MembraneWebRTC {
           this.midToStream.delete(mid);
           stream.onremovetrack = null;
         }
+
+        this.callbacks.onRemoveTrack?.({
+          participant,
+          track: event.track,
+          stream,
+          isScreenSharing,
+        });
       };
 
       const label = participant?.displayName || "";
@@ -314,7 +322,7 @@ export class MembraneWebRTC {
     };
   };
 
-  private addParticipant = (
+  private onParticipantJoined = (
     participant: Participant,
     isLocalParticipant: boolean = false
   ) => {
@@ -323,7 +331,7 @@ export class MembraneWebRTC {
       this.midToParticipant.set(mid, participant)
     );
 
-    this.callbacks.onAddParticipant?.({
+    this.callbacks.onParticipantJoined?.({
       participant,
       isLocalParticipant,
       allParticipants: Array.from(this.idToParticipant.values()),
@@ -340,12 +348,12 @@ export class MembraneWebRTC {
     }
   };
 
-  private removeParticipant = (participantId: String) => {
+  private onParticipantLeft = (participantId: String) => {
     const participant = this.idToParticipant.get(participantId);
     this.idToParticipant.delete(participantId);
     if (participant) {
       participant.mids.forEach((mid) => this.midToParticipant.delete(mid));
-      this.callbacks.onRemoveParticipant?.({
+      this.callbacks.onParticipantLeft?.({
         participant,
         allParticipants: Array.from(this.idToParticipant.values()),
       });

@@ -1,9 +1,9 @@
 import "../css/app.scss";
 
 import {
-  AUDIO_MEDIA_CONSTRAINTS,
+  AUDIO_CONSTRAINTS,
   SCREENSHARING_CONSTRAINTS,
-  VIDEO_MEDIA_CONSTRAINTS,
+  VIDEO_CONSTRAINTS,
   LOCAL_PARTICIPANT_ID,
 } from "./consts";
 import {
@@ -20,7 +20,7 @@ import {
   toggleVideoPlaceholder,
   toggleMutedAudioIcon,
   setParticipantsNamesList,
-  linkStreamwWithVideoElement,
+  attachStream,
 } from "./room_ui";
 import { createFakeVideoStream } from "../src/utils";
 
@@ -67,8 +67,8 @@ const startLocalScreensharing = async (socket: Socket, user: string) => {
       },
     });
 
+    screensharing?.addLocalStream(screenStream);
     screenStream.getTracks().forEach((t) => {
-      screensharing?.addLocalTrack(t, screenStream);
       t.onended = () => {
         cleanLocalScreensharing();
       };
@@ -105,19 +105,26 @@ const setup = async () => {
 
     let localAudioStream: MediaStream | null = null;
     let localVideoStream: MediaStream | null = null;
+    let localStream: MediaStream = new MediaStream();
 
     try {
       localAudioStream = await navigator.mediaDevices.getUserMedia(
-        AUDIO_MEDIA_CONSTRAINTS
+        AUDIO_CONSTRAINTS
       );
+      localAudioStream
+        .getTracks()
+        .forEach((track) => localStream.addTrack(track));
     } catch (error) {
       console.error("Couldn't get microphone permission:", error);
     }
 
     try {
       localVideoStream = await navigator.mediaDevices.getUserMedia(
-        VIDEO_MEDIA_CONSTRAINTS
+        VIDEO_CONSTRAINTS
       );
+      localVideoStream
+        .getTracks()
+        .forEach((track) => localStream.addTrack(track));
     } catch (error) {
       console.error("Couldn't get camera permission:", error);
     }
@@ -130,14 +137,14 @@ const setup = async () => {
       },
       callbacks: {
         onAddTrack: ({ stream, participant, isScreenSharing }) => {
-          linkStreamwWithVideoElement(stream, participant.id, isScreenSharing);
+          attachStream(stream, participant.id, isScreenSharing);
         },
         onDisplayParticipant: displayVideoElement,
         onHideParticipant: hideVideoElement,
         onParticipantToggledVideo: toggleVideoPlaceholder,
         onParticipantToggledAudio: toggleMutedAudioIcon,
         onConnectionError: setErrorMessage,
-        onAddParticipant: ({
+        onParticipantJoined: ({
           participant,
           allParticipants,
           isLocalParticipant,
@@ -162,7 +169,7 @@ const setup = async () => {
             .map((p) => p.displayName);
           setParticipantsNamesList(participantsNames);
         },
-        onRemoveParticipant: ({ participant, allParticipants }) => {
+        onParticipantLeft: ({ participant, allParticipants }) => {
           if (isScreenSharingParticipant(participant)) {
             removeScreensharing();
           } else {
@@ -177,15 +184,9 @@ const setup = async () => {
       },
     });
 
-    if (localAudioStream) {
-      localAudioStream
-        .getTracks()
-        .forEach((track) => webrtc.addLocalTrack(track, localAudioStream!));
-    }
+    webrtc.addLocalStream(localStream);
+
     if (localVideoStream) {
-      localVideoStream
-        .getTracks()
-        .forEach((track) => webrtc.addLocalTrack(track, localVideoStream!));
       addVideoElement(
         LOCAL_PARTICIPANT_ID,
         "Me",
@@ -194,10 +195,10 @@ const setup = async () => {
         false,
         localAudioStream === null
       );
-      linkStreamwWithVideoElement(localVideoStream, LOCAL_PARTICIPANT_ID);
+      attachStream(localStream, LOCAL_PARTICIPANT_ID);
       displayVideoElement(LOCAL_PARTICIPANT_ID);
     } else {
-      const video = VIDEO_MEDIA_CONSTRAINTS.video as MediaTrackConstraintSet;
+      const video = VIDEO_CONSTRAINTS.video as MediaTrackConstraintSet;
       const fakeVideoStream = createFakeVideoStream({
         height: video!.height as number,
         width: video.width! as number,
@@ -210,7 +211,7 @@ const setup = async () => {
         true,
         localAudioStream === null
       );
-      linkStreamwWithVideoElement(fakeVideoStream, LOCAL_PARTICIPANT_ID);
+      attachStream(fakeVideoStream, LOCAL_PARTICIPANT_ID);
       displayVideoElement(LOCAL_PARTICIPANT_ID);
     }
 

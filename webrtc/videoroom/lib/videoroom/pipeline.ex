@@ -117,7 +117,7 @@ defmodule VideoRoom.Pipeline do
         state.endpoints
         |> Map.delete(peer_pid)
         |> Enum.each(fn {pid, _endpoint} ->
-          send(pid, {:add_participant, participant})
+          send(pid, {:participant_joined, participant})
         end)
 
         {{:ok, actions}, state}
@@ -487,7 +487,7 @@ defmodule VideoRoom.Pipeline do
     with {{:ok, _actions}, state} <- result, %Endpoint{ctx: ctx} <- removed_endpoint do
       state.endpoints
       |> Enum.each(fn {peer_pid, _endpoint} ->
-        send(peer_pid, {:remove_participant, ctx.participant_id})
+        send(peer_pid, {:participant_left, ctx.participant_id})
       end)
     end
 

@@ -31,7 +31,8 @@ defmodule VideoRoom.MixProject do
       {:phoenix_live_reload, "~> 1.2"},
       {:poison, "~> 3.1"},
       {:jason, "~> 1.2"},
-      {:phoenix_inline_svg, "~> 1.4"}
+      {:phoenix_inline_svg, "~> 1.4"},
+      {:uuid, "~> 1.1"}
     ]
   end
 end

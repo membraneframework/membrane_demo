@@ -12,6 +12,7 @@ const phoenix_channel_push_result = async (push: Push): Promise<any> => {
 };
 
 interface Participant {
+  id: string;
   displayName: string;
   mutedAudio: boolean;
   mutedVideo: boolean;
@@ -21,6 +22,7 @@ interface Participant {
 interface OfferData {
   data: RTCSessionDescriptionInit;
   participants: Participant[];
+  userId: string;
 }
 
 interface CandidateData {
@@ -30,34 +32,46 @@ interface CandidateData {
 interface TrackContext {
   track: MediaStreamTrack;
   stream: MediaStream;
+  participant: Participant;
   label?: string;
   mutedAudio?: boolean;
   mutedVideo?: boolean;
   isScreenSharing: boolean;
 }
 
+interface ParticipantContext {
+  participant: Participant;
+  allParticipants: Participant[];
+  isLocalParticipant?: boolean;
+}
+
+interface ParticipantConfig {
+  displayName: string;
+  relayVideo: boolean;
+  relayAudio: boolean;
+}
+
 interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
-  onReplaceStream?: (
-    oldStream: MediaStream,
-    newStream: MediaStream,
-    newLabel: string
-  ) => void;
-  onDisplayStream?: (stream: MediaStream, label: string) => void;
-  onDisplayTrack?: (ctx: TrackContext) => void;
-  onHideTrack?: (ctx: TrackContext) => void;
-  onParticipantToggledVideo?: (streamId: string) => void;
-  onParticipantToggledAudio?: (streamId: string) => void;
-  onOfferData?: (data: OfferData) => void;
+  onDisplayParticipant?: (participantId: string) => void;
+  onHideParticipant?: (participantId: string) => void;
+  onParticipantToggledVideo?: (participantId: string) => void;
+  onParticipantToggledAudio?: (participantId: string) => void;
+  onParticipantJoined?: (ctx: ParticipantContext) => void;
+  onParticipantLeft?: (ctx: ParticipantContext) => void;
 }
 
 interface MembraneWebRTCConfig {
   callbacks?: Callbacks;
   rtcConfig?: RTCConfiguration;
   type?: "participant" | "screensharing";
-  displayName: string;
+  participantConfig: ParticipantConfig;
+}
+
+export function isScreenSharingParticipant(participant: Participant): boolean {
+  return participant.mids.find((mid) => mid.includes("SCREEN")) !== undefined;
 }
 
 export class MembraneWebRTC {
@@ -65,16 +79,18 @@ export class MembraneWebRTC {
   private _channel?: Channel;
   private channelId: string;
   private socketRefs: string[] = [];
+  private participantConfig: ParticipantConfig;
   private displayName: string;
 
   private maxDisplayNum: number = 1;
-  private localTracks: Set<MediaStreamTrack> = new Set<MediaStreamTrack>();
-  private localStream?: MediaStream;
-  private screensharingStream?: MediaStream;
-  private remoteStreams: Set<MediaStream> = new Set<MediaStream>();
+  private localStreams: Set<MediaStream> = new Set<MediaStream>();
   private midToStream: Map<String, MediaStream> = new Map();
   private connection?: RTCPeerConnection;
-  private participants: Participant[] = [];
+  private idToParticipant: Map<String, Participant> = new Map();
+  private midToParticipant: Map<String, Participant> = new Map<
+    String,
+    Participant
+  >();
   private readonly rtcConfig: RTCConfiguration = {
     iceServers: [
       {
@@ -82,6 +98,7 @@ export class MembraneWebRTC {
       },
     ],
   };
+  private userId?: string;
 
   private readonly callbacks: Callbacks;
 
@@ -97,10 +114,16 @@ export class MembraneWebRTC {
   }
 
   constructor(socket: Socket, roomId: string, config: MembraneWebRTCConfig) {
-    const { type = "participant", callbacks, rtcConfig, displayName } = config;
+    const {
+      type = "participant",
+      callbacks,
+      rtcConfig,
+      participantConfig,
+    } = config;
 
     this.socket = socket;
-    this.displayName = displayName;
+    this.displayName = participantConfig.displayName;
+    this.participantConfig = participantConfig;
     this.channelId =
       type === "participant"
         ? `room:${roomId}`
@@ -118,88 +141,47 @@ export class MembraneWebRTC {
     this.socketRefs.push(socket.onClose(handleError));
   }
 
-  public addTrack = (track: MediaStreamTrack, stream: MediaStream) => {
+  public addLocalStream = (stream: MediaStream) => {
     if (this.connection) {
       throw new Error(
-        "Adding tracks when connection is established is not yet supported"
+        "Adding streams when connection is established is not yet supported"
       );
     }
-    this.localTracks.add(track);
-    this.localStream = stream;
+    this.localStreams.add(stream);
   };
 
   public start = async () => {
-    this.channel = this.socket.channel(this.channelId, {
-      displayName: this.displayName,
-    });
+    this.channel = this.socket.channel(this.channelId, this.participantConfig);
 
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onRemoteCandidate);
-    this.channel.on("replaceTrack", (data: any) => {
-      const oldTrackId = data.data.oldTrackId;
-      const newTrackId = data.data.newTrackId;
-      const oldStream = this.midToStream.get(oldTrackId)!;
-      const newStream = this.midToStream.get(newTrackId)!;
-      const oldTrack = oldStream.getVideoTracks()[0];
-      const newTrack = newStream.getVideoTracks()[0];
-      const oldParticipant = this.participants.find(({ mids }) =>
-        mids.includes(oldTrackId)
-      );
-      const newParticipant = this.participants.find(({ mids }) =>
-        mids.includes(newTrackId)
-      );
-      const oldCtx = {
-        track: oldTrack,
-        stream: oldStream,
-        label: oldParticipant?.displayName ?? "",
-        isScreenSharing:
-          oldParticipant?.mids
-            .find((mid) => mid === oldTrackId)
-            ?.includes("SCREEN") || false,
-      };
-      const newCtx = {
-        track: newTrack,
-        stream: newStream,
-        label: newParticipant?.displayName ?? "",
-        isScreenSharing:
-          newParticipant?.mids
-            .find((mid) => mid === newTrackId)
-            ?.includes("SCREEN") || false,
-      };
-      this.callbacks.onHideTrack?.(oldCtx);
-      this.callbacks.onDisplayTrack?.(newCtx);
-    });
-    this.channel.on("displayTrack", (data: any) => {
-      const trackId = data.data.trackId;
-      const stream = this.midToStream.get(trackId)!;
-      const track = stream.getVideoTracks()[0];
-      const participant = this.participants.find(({ mids }) =>
-        mids.includes(trackId)
-      );
+    this.channel.on("replaceParticipant", (data: any) => {
+      const oldParticipantId = data.data.oldParticipantId;
+      const newParticipantId = data.data.newParticipantId;
 
-      this.callbacks.onDisplayTrack?.({
-        track,
-        stream,
-        label: participant?.displayName ?? "",
-        isScreenSharing:
-          participant?.mids
-            .find((mid) => mid === trackId)
-            ?.includes("SCREEN") || false,
-      });
+      this.callbacks.onHideParticipant?.(oldParticipantId);
+      this.callbacks.onDisplayParticipant?.(newParticipantId);
+    });
+
+    this.channel.on("displayParticipant", (data: any) => {
+      this.callbacks.onDisplayParticipant?.(data.data.participantId);
     });
 
     this.channel.on("toggledVideo", (data: any) => {
-      const stream = this.midToStream.get(data.data.trackId);
-      if (stream) {
-        this.callbacks.onParticipantToggledVideo?.(stream.id);
-      }
+      this.callbacks.onParticipantToggledVideo?.(data.data.participantId);
     });
 
     this.channel.on("toggledAudio", (data: any) => {
-      const stream = this.midToStream.get(data.data.trackId);
-      if (stream) {
-        this.callbacks.onParticipantToggledAudio?.(stream.id);
-      }
+      this.callbacks.onParticipantToggledAudio?.(data.data.participantId);
+    });
+
+    this.channel.on("participantJoined", (data: any) => {
+      const participant = data.data.participant;
+      this.onParticipantJoined(participant, participant.id === this.userId);
+    });
+
+    this.channel.on("participantLeft", (data: any) => {
+      this.onParticipantLeft(data.data.participantId);
     });
 
     this.channel.on("error", (data: any) => {
@@ -210,10 +192,18 @@ export class MembraneWebRTC {
     await phoenix_channel_push_result(this.channel.join());
 
     try {
-      const { maxDisplayNum } = await phoenix_channel_push_result(
-        this.channel.push("start", {})
-      );
+      const {
+        maxDisplayNum,
+        userId,
+        participants,
+      } = await phoenix_channel_push_result(this.channel.push("start", {}));
+
       this.maxDisplayNum = maxDisplayNum;
+      this.userId = userId;
+
+      (participants as Array<Participant>).forEach((p) =>
+        this.onParticipantJoined(p, p.id === userId)
+      );
     } catch (e) {
       this.callbacks.onConnectionError?.(e);
       this.stop();
@@ -231,28 +221,29 @@ export class MembraneWebRTC {
   public stop = () => {
     this.channel.push("stop", {});
     this.channel.leave();
-    this.remoteStreams = new Set<MediaStream>();
     if (this.connection) {
       this.connection.onicecandidate = null;
       this.connection.ontrack = null;
     }
-    this.localTracks.forEach((t) => t.stop());
+    this.localStreams.forEach((stream) =>
+      stream.getTracks().forEach((track) => track.stop())
+    );
     this.connection = undefined;
     this.socket.off(this.socketRefs);
   };
 
   private onOffer = async (offer: OfferData) => {
-    this.participants = offer.participants;
-
-    this.callbacks.onOfferData?.(offer);
+    this.userId = offer.userId;
 
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtcConfig);
       this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
-      this.localTracks.forEach((track) =>
-        this.connection!.addTrack(track, this.localStream!)
-      );
+      this.localStreams.forEach((stream) => {
+        stream
+          .getTracks()
+          .forEach((track) => this.connection!.addTrack(track, stream));
+      });
     } else {
       this.connection.createOffer({ iceRestart: true });
     }
@@ -294,57 +285,78 @@ export class MembraneWebRTC {
     return (event: RTCTrackEvent) => {
       const [stream] = event.streams;
       const mid = event.transceiver.mid!;
+      const participant = this.midToParticipant.get(mid)!;
       const isScreenSharing = mid.includes("SCREEN") || false;
 
-      if (isScreenSharing) {
-        this.screensharingStream = stream;
-      } else {
-        this.remoteStreams.add(stream);
-      }
       this.midToStream.set(mid, stream);
 
       stream.onremovetrack = (event) => {
         const hasTracks = stream.getTracks().length > 0;
 
         if (!hasTracks) {
-          if (isScreenSharing) {
-            this.screensharingStream = undefined;
-          } else {
-            this.remoteStreams.delete(stream);
-          }
           this.midToStream.delete(mid);
           stream.onremovetrack = null;
         }
 
         this.callbacks.onRemoveTrack?.({
+          participant,
           track: event.track,
           stream,
           isScreenSharing,
         });
       };
 
-      const participant = this.participants.find((p) => p.mids.includes(mid));
       const label = participant?.displayName || "";
       const mutedVideo = participant?.mutedVideo;
       const mutedAudio = participant?.mutedAudio;
 
       this.callbacks.onAddTrack?.({
         track: event.track,
+        participant,
         label,
         stream,
         isScreenSharing,
         mutedVideo,
         mutedAudio,
       });
-
-      if (this.remoteStreams.size <= this.maxDisplayNum && !isScreenSharing) {
-        this.callbacks.onDisplayTrack?.({
-          track: event.track,
-          label,
-          stream,
-          isScreenSharing,
-        });
-      }
     };
+  };
+
+  private onParticipantJoined = (
+    participant: Participant,
+    isLocalParticipant: boolean = false
+  ) => {
+    this.idToParticipant.set(participant.id, participant);
+    participant.mids.forEach((mid) =>
+      this.midToParticipant.set(mid, participant)
+    );
+
+    this.callbacks.onParticipantJoined?.({
+      participant,
+      isLocalParticipant,
+      allParticipants: Array.from(this.idToParticipant.values()),
+    });
+
+    if (
+      !isLocalParticipant &&
+      !isScreenSharingParticipant(participant) &&
+      Array.from(this.idToParticipant.values()).filter(
+        (p) => !isScreenSharingParticipant(p) && p.id !== this.userId
+      ).length <= this.maxDisplayNum
+    ) {
+      this.callbacks.onDisplayParticipant?.(participant.id);
+    }
+  };
+
+  private onParticipantLeft = (participantId: String) => {
+    const participant = this.idToParticipant.get(participantId);
+    this.idToParticipant.delete(participantId);
+    if (participant) {
+      participant.mids.forEach((mid) => this.midToParticipant.delete(mid));
+      this.callbacks.onParticipantLeft?.({
+        participant,
+        allParticipants: Array.from(this.idToParticipant.values()),
+      });
+    }
   };
 }

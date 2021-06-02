@@ -138,6 +138,7 @@ defmodule VideoRoom.DisplayManager do
         {:ok, state}
 
       true ->
+        # endpoint may have no video tracks therefore it is not present in display manager
         Membrane.Logger.debug("No such endpoint id #{inspect(endpoint_id)}")
         {:ok, state}
     end

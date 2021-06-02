@@ -258,6 +258,13 @@ $media-controls-height: 80px;
   background-color: black;
 }
 
+.DisabledControlIcon {
+  svg {
+    stroke: #a2071d;
+  }
+  pointer-events: none;
+}
+
 .ControlIcon {
   cursor: pointer;
   margin-right: 3 * $space;

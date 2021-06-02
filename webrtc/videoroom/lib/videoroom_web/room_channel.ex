@@ -4,7 +4,14 @@ defmodule VideoRoomWeb.RoomChannel do
   require Logger
 
   @impl true
-  def join("room:" <> room_id, %{"displayName" => name}, socket) do
+  def join("room:" <> room_id, params, socket) do
+    # FIXME: make use of structs that are serialized to/from camel case to snake case existing atoms
+    params = [
+      display_name: Map.fetch!(params, "displayName"),
+      relay_audio?: Map.get(params, "relayAudio", true),
+      relay_video?: Map.get(params, "relayVideo", true)
+    ]
+
     {room_id, peer_type} =
       case room_id do
         "screensharing:" <> id ->
@@ -27,7 +34,7 @@ defmodule VideoRoomWeb.RoomChannel do
            room_id: room_id,
            pipeline: pipeline,
            peer_type: peer_type,
-           display_name: name
+           params: params
          })}
 
       {:error, reason} ->
@@ -46,9 +53,7 @@ defmodule VideoRoomWeb.RoomChannel do
     type = socket.assigns.peer_type
 
     socket
-    |> send_to_pipeline(
-      {:new_peer, self(), type, socket.assigns.display_name, socket_ref(socket)}
-    )
+    |> send_to_pipeline({:new_peer, self(), type, socket.assigns.params, socket_ref(socket)})
 
     {:noreply, socket}
   end
@@ -97,54 +102,74 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:signal, {:sdp_offer, sdp}, participants}, socket) do
-    participants =
-      Enum.map(
-        participants,
-        &%{
-          "displayName" => &1.display_name,
-          "mids" => &1.mids,
-          "mutedAudio" => &1.muted_audio,
-          "mutedVideo" => &1.muted_video
-        }
-      )
+  def handle_info({:signal, {:sdp_offer, sdp}, participants, user_id}, socket) do
+    participants = Enum.map(participants, &serialize_participant/1)
 
-    push(socket, "offer", %{data: %{"type" => "offer", "sdp" => sdp}, participants: participants})
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_info({:signal, {:replace_track, old_track_id, new_track_id}}, socket) do
-    push(socket, "replaceTrack", %{
-      data: %{"oldTrackId" => old_track_id, "newTrackId" => new_track_id}
+    push(socket, "offer", %{
+      data: %{"type" => "offer", "sdp" => sdp},
+      participants: participants,
+      userId: user_id
     })
 
     {:noreply, socket}
   end
 
   @impl true
-  def handle_info({:signal, {:display_track, track_id}}, socket) do
-    push(socket, "displayTrack", %{data: %{"trackId" => track_id}})
+  def handle_info({:participant_joined, participant}, socket) do
+    push(socket, "participantJoined", %{
+      data: %{"participant" => serialize_participant(participant)}
+    })
+
     {:noreply, socket}
   end
 
   @impl true
-  def handle_info({:toggled_video, track_id}, socket) do
-    push(socket, "toggledVideo", %{data: %{"trackId" => track_id}})
+  def handle_info({:participant_left, participant_id}, socket) do
+    push(socket, "participantLeft", %{data: %{"participantId" => participant_id}})
+
     {:noreply, socket}
   end
 
   @impl true
-  def handle_info({:toggled_audio, track_id}, socket) do
-    push(socket, "toggledAudio", %{data: %{"trackId" => track_id}})
+  def handle_info(
+        {:signal, {:replace_participant, old_participant_id, new_participant_id}},
+        socket
+      ) do
+    push(socket, "replaceParticipant", %{
+      data: %{"oldParticipantId" => old_participant_id, "newParticipantId" => new_participant_id}
+    })
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:signal, {:display_participant, participant_id}}, socket) do
+    push(socket, "displayParticipant", %{data: %{"participantId" => participant_id}})
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:toggled_video, participant_id}, socket) do
+    push(socket, "toggledVideo", %{data: %{"participantId" => participant_id}})
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:toggled_audio, participant_id}, socket) do
+    push(socket, "toggledAudio", %{data: %{"participantId" => participant_id}})
     {:noreply, socket}
   end
 
   @impl true
   def handle_info({:new_peer, response, ref}, socket) do
     case response do
-      {:ok, max_display_num} ->
-        reply(ref, {:ok, %{maxDisplayNum: max_display_num}})
+      {:ok, max_display_num, user_id, participants} ->
+        participants = Enum.map(participants, &serialize_participant/1)
+
+        reply(
+          ref,
+          {:ok, %{maxDisplayNum: max_display_num, userId: user_id, participants: participants}}
+        )
 
       {:error, _reason} = error ->
         reply(ref, error)
@@ -169,5 +194,15 @@ defmodule VideoRoomWeb.RoomChannel do
 
   defp send_to_pipeline(socket, message) do
     socket.assigns.pipeline |> send(message)
+  end
+
+  defp serialize_participant(participant) do
+    %{
+      "id" => participant.id,
+      "displayName" => participant.display_name,
+      "mids" => participant.mids,
+      "mutedAudio" => participant.muted_audio,
+      "mutedVideo" => participant.muted_video
+    }
   end
 end

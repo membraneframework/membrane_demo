@@ -7,7 +7,7 @@
     <div id="videochat-error" class="VideoChatError" style="display: none;"> </div>
     <div id="videochat" class="VideoChat">
         <div id="screensharing" class="Screensharing" style="display: none;">
-            <video></video>
+            <video id="screensharing-video"></video>
             <div class="VideoLabel">Placeholder</div>
         </div>
         <template id="video-feed-template">

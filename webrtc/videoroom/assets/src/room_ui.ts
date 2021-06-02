@@ -20,13 +20,13 @@ let state: State = {
 
 interface SetupOptions {
   state?: State;
-  muteAudio?: boolean;
-  muteVideo?: boolean;
+  audioState: "muted" | "unmuted" | "disabled";
+  videoState: "muted" | "unmuted" | "disabled";
 }
 
 export function setupRoomUI({
-  muteAudio = false,
-  muteVideo = false,
+  audioState,
+  videoState,
   state: newState,
 }: SetupOptions): void {
   state = {
@@ -34,7 +34,7 @@ export function setupRoomUI({
     ...newState,
   };
   updateScreensharingToggleButton(true, "start");
-  setupMediaControls(muteAudio, muteVideo);
+  setupMediaControls(audioState, videoState);
 }
 
 export function setLocalScreenSharingStatus(active: boolean): void {
@@ -46,24 +46,49 @@ export function getRoomId(): string {
 }
 
 function elementId(
-  streamId: string,
+  participantId: string,
   type: "video" | "audio" | "placeholder" | "feed" | "mutedAudioIcon"
 ) {
-  return `${type}-${streamId}`;
+  return `${type}-${participantId}`;
+}
+
+export function attachStream(
+  stream: MediaStream,
+  participantId: string,
+  isScreenSharing: boolean = false
+): void {
+  if (isScreenSharing) {
+    const screensharing = document.getElementById(
+      "screensharing-video"
+    )! as HTMLVideoElement;
+
+    screensharing.srcObject = stream;
+    screensharing.autoplay = true;
+    screensharing.playsInline = true;
+  } else {
+    const videoId = elementId(participantId, "video");
+    const audioId = elementId(participantId, "audio");
+
+    let video = document.getElementById(videoId) as HTMLVideoElement;
+    let audio = document.getElementById(audioId) as HTMLAudioElement;
+
+    video.srcObject = stream;
+    audio.srcObject = stream;
+  }
 }
 
 export function addVideoElement(
-  stream: MediaStream,
+  participantId: string,
   label: string,
   isLocalVideo: boolean = false,
   mutedAudio: boolean = false,
   mutedVideo: boolean = false,
   showMutedAudioIcon: boolean = false
 ): void {
-  const videoId = elementId(stream.id, "video");
-  const audioId = elementId(stream.id, "audio");
-  const videoPlaceholderId = elementId(stream.id, "placeholder");
-  const mutedAudioIconId = elementId(stream.id, "mutedAudioIcon");
+  const videoId = elementId(participantId, "video");
+  const audioId = elementId(participantId, "audio");
+  const videoPlaceholderId = elementId(participantId, "placeholder");
+  const mutedAudioIconId = elementId(participantId, "mutedAudioIcon");
 
   let video = document.getElementById(videoId) as HTMLVideoElement;
   let audio = document.getElementById(audioId) as HTMLAudioElement;
@@ -75,7 +100,7 @@ export function addVideoElement(
   ) as HTMLDivElement;
 
   if (!video && !audio) {
-    const values = setupVideoFeed(stream, label, isLocalVideo);
+    const values = setupVideoFeed(participantId, label, isLocalVideo);
     video = values.video;
     audio = values.audio;
     videoPlaceholder = values.videoPlaceholder;
@@ -83,13 +108,11 @@ export function addVideoElement(
   }
 
   video.id = videoId;
-  video.srcObject = stream;
   video.autoplay = true;
   video.playsInline = true;
   video.muted = true;
 
   audio.id = audioId;
-  audio.srcObject = stream;
   audio.autoplay = true;
   audio.muted = mutedAudio;
 
@@ -107,11 +130,11 @@ export function addVideoElement(
 export function setParticipantsNamesList(
   participantsNames: Array<string>
 ): void {
-  const participantsNamesList = document.getElementById(
+  const participantsNamesEl = document.getElementById(
     "participants-names-list"
   ) as HTMLDivElement;
 
-  participantsNamesList.innerHTML =
+  participantsNamesEl.innerHTML =
     "<b>Participants</b>: " + participantsNames.join(", ");
 }
 
@@ -121,7 +144,7 @@ function resizeVideosGrid() {
 }
 
 function setupVideoFeed(
-  stream: MediaStream,
+  participantId: string,
   label: string,
   isLocalVideo: boolean
 ) {
@@ -142,7 +165,7 @@ function setupVideoFeed(
     "div[class='MutedAudioIcon'"
   ) as HTMLDivElement;
 
-  feed.id = elementId(stream.id, "feed");
+  feed.id = elementId(participantId, "feed");
   videoLabel.innerText = label;
 
   if (isLocalVideo) {
@@ -156,9 +179,9 @@ function setupVideoFeed(
   return { audio, video, videoPlaceholder, mutedAudioIcon };
 }
 
-export function toggleVideoPlaceholder(streamId: string): void {
+export function toggleVideoPlaceholder(participantId: string): void {
   const placeholder = document.getElementById(
-    elementId(streamId, "placeholder")
+    elementId(participantId, "placeholder")
   );
 
   if (placeholder) {
@@ -167,9 +190,9 @@ export function toggleVideoPlaceholder(streamId: string): void {
   }
 }
 
-export function toggleMutedAudioIcon(streamId: string): void {
+export function toggleMutedAudioIcon(participantId: string): void {
   const mutedAudioIcon = document.getElementById(
-    elementId(streamId, "mutedAudioIcon")
+    elementId(participantId, "mutedAudioIcon")
   );
 
   if (mutedAudioIcon) {
@@ -178,20 +201,12 @@ export function toggleMutedAudioIcon(streamId: string): void {
   }
 }
 
-export function removeVideoElement(stream: MediaStream): void {
-  if (stream.getTracks().length > 0) {
-    return;
-  }
-
-  document.getElementById(elementId(stream.id, "feed"))?.remove();
+export function removeVideoElement(participantId: string): void {
+  document.getElementById(elementId(participantId, "feed"))?.remove();
   resizeVideosGrid();
 }
 
-export function setScreensharing(
-  stream: MediaStream,
-  label: string,
-  selfLabel: string
-): void {
+export function showScreensharing(label: string, selfLabel: string): void {
   if (state.isScreenSharingActive) {
     console.error(
       "Cannot set screensharing as either local or remote screensharing is active"
@@ -215,13 +230,8 @@ export function setScreensharing(
     "div[class='VideoLabel']"
   )! as HTMLDivElement;
 
-  videoLabel.innerText = label.includes(state.displayName) ? selfLabel : label;
-
-  const video = screensharing.querySelector("video")!;
-  video.id = stream.id;
-  video.srcObject = stream;
-  video.autoplay = true;
-  video.playsInline = true;
+  videoLabel.innerText =
+    `${state.displayName} Screensharing` === label ? selfLabel : label;
 
   document
     .getElementById("videochat")!
@@ -255,13 +265,13 @@ export function setErrorMessage(
   }
 }
 
-export function displayVideoElement(streamId: string): void {
-  const feedId = elementId(streamId, "feed");
+export function displayVideoElement(participantId: string): void {
+  const feedId = elementId(participantId, "feed");
   document.getElementById(feedId)!.style.display = "flex";
 }
 
-export function hideVideoElement(streamId: string): void {
-  const feedId = elementId(streamId, "feed");
+export function hideVideoElement(participantId: string): void {
+  const feedId = elementId(participantId, "feed");
   document.getElementById(feedId)!.style.display = "none";
 }
 
@@ -297,9 +307,17 @@ export function toggleControl(control: "mic" | "video") {
   }
 }
 
-function setupMediaControls(muteAudio: boolean, muteVideo: boolean) {
+function setupMediaControls(
+  audioState: "muted" | "unmuted" | "disabled",
+  videoState: "muted" | "unmuted" | "disabled"
+) {
   const muteAudioEl = document.getElementById("mic-on")! as HTMLDivElement;
   const unmuteAudioEl = document.getElementById("mic-off")! as HTMLDivElement;
+
+  if (audioState === "disabled") {
+    muteAudioEl.classList.add("DisabledControlIcon");
+    unmuteAudioEl.classList.add("DisabledControlIcon");
+  }
 
   const toggleAudio = () => {
     state.onToggleAudio?.();
@@ -315,22 +333,28 @@ function setupMediaControls(muteAudio: boolean, muteVideo: boolean) {
 
   const muteVideoEl = document.getElementById("video-on")! as HTMLDivElement;
   const unmuteVideoEl = document.getElementById("video-off")! as HTMLDivElement;
+
+  if (videoState === "disabled") {
+    muteVideoEl.classList.add("DisabledControlIcon");
+    unmuteVideoEl.classList.add("DisabledControlIcon");
+  }
+
   muteVideoEl.onclick = toggleVideo;
   unmuteVideoEl.onclick = toggleVideo;
 
-  if (muteAudio) {
-    muteAudioEl.style.display = "none";
-    unmuteAudioEl.style.display = "block";
-  } else {
+  if (audioState === "unmuted") {
     muteAudioEl.style.display = "block";
     unmuteAudioEl.style.display = "none";
+  } else {
+    muteAudioEl.style.display = "none";
+    unmuteAudioEl.style.display = "block";
   }
 
-  if (muteVideo) {
-    muteVideoEl.style.display = "none";
-    unmuteVideoEl.style.display = "block";
-  } else {
+  if (videoState === "unmuted") {
     muteVideoEl.style.display = "block";
     unmuteVideoEl.style.display = "none";
+  } else {
+    muteVideoEl.style.display = "none";
+    unmuteVideoEl.style.display = "block";
   }
 }

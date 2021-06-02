@@ -74,8 +74,14 @@ defmodule VideoRoom.Pipeline do
     {:ok, state}
   end
 
+  # `opts` keyword list must contain following fields:
+  # * `display_name` - label used to identify participant/screensharing
+  # * `relay_video?` - true|false whether video track should be created
+  # * `relay_audio?` - true|false whether audio track should be created
+  #
+  # IMPORTANT: relay_video? and relay_audio? are ignored for screensharing and video track is created instead
   @impl true
-  def handle_other({:new_peer, peer_pid, peer_type, display_name, ref}, ctx, state) do
+  def handle_other({:new_peer, peer_pid, peer_type, opts, ref}, ctx, state) do
     participants_num =
       state.endpoints
       |> Map.values()
@@ -92,12 +98,29 @@ defmodule VideoRoom.Pipeline do
         {:ok, state}
 
       Map.has_key?(ctx.children, {:endpoint, peer_pid}) ->
-        send(peer_pid, {:new_peer, {:ok, state.max_display_num}, ref})
+        participant_id = state.endpoints[peer_pid].ctx.participant_id
+        participants = get_participants_data(state)
+
+        send(
+          peer_pid,
+          {:new_peer, {:ok, state.max_display_num, participant_id, participants}, ref}
+        )
+
         Membrane.Logger.warn("Peer already connected, ignoring")
         {:ok, state}
 
       true ->
-        accept_new_peer(peer_pid, peer_type, display_name, ref, ctx, state)
+        {{:ok, actions}, state} = accept_new_peer(peer_pid, peer_type, opts, ref, ctx, state)
+
+        participant = get_participant_data(state.endpoints[peer_pid])
+
+        state.endpoints
+        |> Map.delete(peer_pid)
+        |> Enum.each(fn {pid, _endpoint} ->
+          send(pid, {:participant_joined, participant})
+        end)
+
+        {{:ok, actions}, state}
     end
   end
 
@@ -107,11 +130,19 @@ defmodule VideoRoom.Pipeline do
   end
 
   def handle_other({:remove_peer, peer_pid}, ctx, state) do
-    Membrane.Logger.info("Removing peer #{inspect(peer_pid)}.")
-    maybe_remove_peer(peer_pid, ctx, state)
+    handle_leaving_participant(peer_pid, "Removing peer #{inspect(peer_pid)}.", ctx, state)
   end
 
-  def handle_other({toggled_media, peer_pid}, ctx, state)
+  def handle_other({:DOWN, _ref, :process, pid, _reason}, ctx, state) do
+    handle_leaving_participant(
+      pid,
+      "Connection #{inspect(pid)} is down. Cleaning up.",
+      ctx,
+      state
+    )
+  end
+
+  def handle_other({toggled_media, peer_pid}, _ctx, state)
       when toggled_media in [:toggled_video, :toggled_audio] do
     state =
       update_in(
@@ -124,25 +155,16 @@ defmodule VideoRoom.Pipeline do
         end
       )
 
-    track_id =
-      state.endpoints[peer_pid].inbound_tracks
-      |> Map.values()
-      |> List.first()
-      |> Map.get(:id)
+    participant_id = state.endpoints[peer_pid].ctx.participant_id
 
     state.endpoints
     |> Map.delete(peer_pid)
     |> Enum.each(fn
-      {room_channel_pid, endpoint} ->
-        send(room_channel_pid, {toggled_media, track_id})
+      {room_channel_pid, _endpoint} ->
+        send(room_channel_pid, {toggled_media, participant_id})
     end)
 
     {:ok, state}
-  end
-
-  def handle_other({:DOWN, _ref, :process, pid, _reason}, ctx, state) do
-    Membrane.Logger.info("Connection #{inspect(pid)} is down. Cleaning up.")
-    maybe_remove_peer(pid, ctx, state)
   end
 
   def handle_other(:check_if_empty, _ctx, state) do
@@ -223,18 +245,13 @@ defmodule VideoRoom.Pipeline do
         _ctx,
         state
       ) do
-    participants =
-      state.endpoints
-      |> Enum.map(fn {_, %Endpoint{inbound_tracks: tracks, ctx: ctx}} ->
-        %{
-          display_name: ctx.display_name,
-          muted_audio: ctx.muted_audio,
-          muted_video: ctx.muted_video,
-          mids: Map.keys(tracks)
-        }
-      end)
+    with endpoint = %Endpoint{} <- state.endpoints[peer_pid] do
+      participants = get_participants_data(state)
+      user_id = endpoint.ctx.participant_id
 
-    send(peer_pid, {:signal, message, participants})
+      send(peer_pid, {:signal, message, participants, user_id})
+    end
+
     {:ok, state}
   end
 
@@ -311,12 +328,19 @@ defmodule VideoRoom.Pipeline do
     ctx.children |> Map.keys() |> Enum.flat_map(fun)
   end
 
-  defp new_tracks(:participant) do
+  defp new_tracks(:participant, opts) do
     stream_id = Track.stream_id()
-    [Track.new(:audio, stream_id), Track.new(:video, stream_id)]
+
+    audio_track =
+      if Keyword.fetch!(opts, :relay_audio?), do: [Track.new(:audio, stream_id)], else: []
+
+    video_track =
+      if Keyword.fetch!(opts, :relay_video?), do: [Track.new(:video, stream_id)], else: []
+
+    audio_track ++ video_track
   end
 
-  defp new_tracks(:screensharing) do
+  defp new_tracks(:screensharing, _opts) do
     screensharing_id = "SCREEN:#{Track.stream_id()}" |> String.slice(0, 16)
     [Track.new(:video, Track.stream_id(), id: screensharing_id)]
   end
@@ -362,19 +386,21 @@ defmodule VideoRoom.Pipeline do
     String.slice(name, 0..min(20, String.length(name))) <> ":" <> "#{inspect(pid)}"
   end
 
-  defp accept_new_peer(peer_pid, peer_type, display_name, ref, ctx, state) do
-    send(peer_pid, {:new_peer, {:ok, state.max_display_num}, ref})
+  defp accept_new_peer(peer_pid, peer_type, opts, ref, ctx, state) do
+    participant_id = UUID.uuid4()
+    display_name = Keyword.fetch!(opts, :display_name)
 
     Membrane.Logger.info("New peer #{inspect(peer_pid)} of type #{inspect(peer_type)}")
     Process.monitor(peer_pid)
 
-    tracks = new_tracks(peer_type)
+    tracks = new_tracks(peer_type, opts)
 
     endpoint =
       Endpoint.new(peer_pid, peer_type, tracks, %{
         display_name: display_name,
-        muted_audio: false,
-        muted_video: false
+        participant_id: participant_id,
+        muted_audio: not Keyword.get(opts, :relay_audio?),
+        muted_video: not Keyword.get(opts, :relay_video?)
       })
 
     endpoint_bin = {:endpoint, peer_pid}
@@ -416,8 +442,31 @@ defmodule VideoRoom.Pipeline do
     }
 
     state = put_in(state.endpoints[peer_pid], endpoint)
+    participants = get_participants_data(state)
+
+    send(peer_pid, {:new_peer, {:ok, state.max_display_num, participant_id, participants}, ref})
+
     {{:ok, [spec: spec] ++ tracks_msgs}, state}
   end
+
+  defp get_participants_data(state) do
+    state.endpoints
+    |> Enum.map(fn {_, endpoint} ->
+      get_participant_data(endpoint)
+    end)
+  end
+
+  defp get_participant_data(%Endpoint{inbound_tracks: tracks, ctx: ctx}) do
+    %{
+      id: ctx.participant_id,
+      display_name: ctx.display_name,
+      mids: Map.keys(tracks),
+      muted_video: ctx.muted_video,
+      muted_audio: ctx.muted_audio
+    }
+  end
+
+  defp update_track_messages(_ctx, [] = _tracks, _endpoint_bin, _state), do: []
 
   defp update_track_messages(ctx, tracks, endpoint_bin, state) do
     flat_map_children(ctx, fn
@@ -428,5 +477,20 @@ defmodule VideoRoom.Pipeline do
       _child ->
         []
     end)
+  end
+
+  defp handle_leaving_participant(pid, log, ctx, state) do
+    Membrane.Logger.info(log)
+    removed_endpoint = state.endpoints[pid]
+    result = maybe_remove_peer(pid, ctx, state)
+
+    with {{:ok, _actions}, state} <- result, %Endpoint{ctx: ctx} <- removed_endpoint do
+      state.endpoints
+      |> Enum.each(fn {peer_pid, _endpoint} ->
+        send(peer_pid, {:participant_left, ctx.participant_id})
+      end)
+    end
+
+    result
   end
 end

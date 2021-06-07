@@ -244,8 +244,7 @@ defmodule VideoRoom.Pipeline do
         _ctx,
         state
       ) do
-    participants = get_participants_data(state)
-    send(peer_pid, {:signal, message, participants})
+    send(peer_pid, {:signal, message})
 
     {:ok, state}
   end

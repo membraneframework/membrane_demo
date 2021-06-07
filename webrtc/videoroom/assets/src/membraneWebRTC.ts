@@ -21,7 +21,6 @@ interface Participant {
 
 interface OfferData {
   data: RTCSessionDescriptionInit;
-  participants: Participant[];
 }
 
 interface CandidateData {

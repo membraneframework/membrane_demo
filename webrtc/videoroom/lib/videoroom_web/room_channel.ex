@@ -29,7 +29,11 @@ defmodule VideoRoomWeb.RoomChannel do
       {:ok, pipeline} ->
         Process.monitor(pipeline)
 
-        {:ok,
+        participant_id = UUID.uuid4()
+        response = %{"userId" => participant_id}
+        params = [participant_id: participant_id] ++ params
+
+        {:ok, response,
          assign(socket, %{
            room_id: room_id,
            pipeline: pipeline,
@@ -102,13 +106,12 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:signal, {:sdp_offer, sdp}, participants, user_id}, socket) do
+  def handle_info({:signal, {:sdp_offer, sdp}, participants}, socket) do
     participants = Enum.map(participants, &serialize_participant/1)
 
     push(socket, "offer", %{
       data: %{"type" => "offer", "sdp" => sdp},
-      participants: participants,
-      userId: user_id
+      participants: participants
     })
 
     {:noreply, socket}
@@ -163,12 +166,12 @@ defmodule VideoRoomWeb.RoomChannel do
   @impl true
   def handle_info({:new_peer, response, ref}, socket) do
     case response do
-      {:ok, max_display_num, user_id, participants} ->
+      {:ok, max_display_num, participants} ->
         participants = Enum.map(participants, &serialize_participant/1)
 
         reply(
           ref,
-          {:ok, %{maxDisplayNum: max_display_num, userId: user_id, participants: participants}}
+          {:ok, %{maxDisplayNum: max_display_num, participants: participants}}
         )
 
       {:error, _reason} = error ->

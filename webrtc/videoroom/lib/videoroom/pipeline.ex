@@ -98,12 +98,11 @@ defmodule VideoRoom.Pipeline do
         {:ok, state}
 
       Map.has_key?(ctx.children, {:endpoint, peer_pid}) ->
-        participant_id = state.endpoints[peer_pid].ctx.participant_id
         participants = get_participants_data(state)
 
         send(
           peer_pid,
-          {:new_peer, {:ok, state.max_display_num, participant_id, participants}, ref}
+          {:new_peer, {:ok, state.max_display_num, participants}, ref}
         )
 
         Membrane.Logger.warn("Peer already connected, ignoring")
@@ -245,12 +244,9 @@ defmodule VideoRoom.Pipeline do
         _ctx,
         state
       ) do
-    with endpoint = %Endpoint{} <- state.endpoints[peer_pid] do
-      participants = get_participants_data(state)
-      user_id = endpoint.ctx.participant_id
 
-      send(peer_pid, {:signal, message, participants, user_id})
-    end
+    participants = get_participants_data(state)
+    send(peer_pid, {:signal, message, participants})
 
     {:ok, state}
   end
@@ -387,7 +383,7 @@ defmodule VideoRoom.Pipeline do
   end
 
   defp accept_new_peer(peer_pid, peer_type, opts, ref, ctx, state) do
-    participant_id = UUID.uuid4()
+    participant_id = Keyword.fetch!(opts, :participant_id)
     display_name = Keyword.fetch!(opts, :display_name)
 
     Membrane.Logger.info("New peer #{inspect(peer_pid)} of type #{inspect(peer_type)}")
@@ -444,7 +440,7 @@ defmodule VideoRoom.Pipeline do
     state = put_in(state.endpoints[peer_pid], endpoint)
     participants = get_participants_data(state)
 
-    send(peer_pid, {:new_peer, {:ok, state.max_display_num, participant_id, participants}, ref})
+    send(peer_pid, {:new_peer, {:ok, state.max_display_num, participants}, ref})
 
     {{:ok, [spec: spec] ++ tracks_msgs}, state}
   end

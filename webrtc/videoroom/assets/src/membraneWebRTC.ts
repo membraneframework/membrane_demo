@@ -22,7 +22,6 @@ interface Participant {
 interface OfferData {
   data: RTCSessionDescriptionInit;
   participants: Participant[];
-  userId: string;
 }
 
 interface CandidateData {
@@ -189,17 +188,15 @@ export class MembraneWebRTC {
       this.stop();
     });
 
-    await phoenix_channel_push_result(this.channel.join());
+    const { userId } = await phoenix_channel_push_result(this.channel.join());
+    this.userId = userId;
 
     try {
-      const {
-        maxDisplayNum,
-        userId,
-        participants,
-      } = await phoenix_channel_push_result(this.channel.push("start", {}));
+      const { maxDisplayNum, participants } = await phoenix_channel_push_result(
+        this.channel.push("start", {})
+      );
 
       this.maxDisplayNum = maxDisplayNum;
-      this.userId = userId;
 
       (participants as Array<Participant>).forEach((p) =>
         this.onParticipantJoined(p, p.id === userId)
@@ -233,8 +230,6 @@ export class MembraneWebRTC {
   };
 
   private onOffer = async (offer: OfferData) => {
-    this.userId = offer.userId;
-
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtcConfig);
       this.connection.onicecandidate = this.onLocalCandidate();

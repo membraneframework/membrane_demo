@@ -4,13 +4,8 @@ defmodule VideoRoomWeb.RoomChannel do
   require Logger
 
   @impl true
-  def join("room:" <> room_id, params, socket) do
+  def join("room:" <> room_id, _params, socket) do
     # FIXME: make use of structs that are serialized to/from camel case to snake case existing atoms
-    params = [
-      display_name: Map.fetch!(params, "displayName"),
-      relay_audio?: Map.get(params, "relayAudio", true),
-      relay_video?: Map.get(params, "relayVideo", true)
-    ]
 
     room_id =
       case room_id do
@@ -28,13 +23,12 @@ defmodule VideoRoomWeb.RoomChannel do
 
         participant_id = UUID.uuid4()
         response = %{"userId" => participant_id}
-        params = [participant_id: participant_id] ++ params
 
         {:ok, response,
          assign(socket, %{
            room_id: room_id,
            pipeline: pipeline,
-           params: params
+           participant_id: participant_id
          })}
 
       {:error, reason} ->
@@ -49,11 +43,27 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   @impl true
-  def handle_in("start", %{"type" => type}, socket) do
+  def handle_in(
+        "start",
+        %{
+          "type" => type,
+          "relayAudio" => relay_audio?,
+          "relayVideo" => relay_video?,
+          "displayName" => display_name
+        },
+        socket
+      ) do
     type = if type == "participant", do: :participant, else: :screensharing
 
+    params = [
+      participant_id: socket.assigns.participant_id,
+      relay_audio?: relay_audio?,
+      relay_video?: relay_video?,
+      display_name: display_name
+    ]
+
     socket
-    |> send_to_pipeline({:new_peer, self(), type, socket.assigns.params, socket_ref(socket)})
+    |> send_to_pipeline({:new_peer, self(), type, params, socket_ref(socket)})
 
     {:noreply, socket}
   end

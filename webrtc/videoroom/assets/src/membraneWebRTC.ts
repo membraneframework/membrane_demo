@@ -152,7 +152,7 @@ export class MembraneWebRTC {
   };
 
   public start = async () => {
-    this.channel = this.socket.channel(this.channelId, this.participantConfig);
+    this.channel = this.socket.channel(this.channelId);
 
     this.channel.on("offer", this.onOffer);
     this.channel.on("candidate", this.onRemoteCandidate);
@@ -194,7 +194,7 @@ export class MembraneWebRTC {
     this.userId = userId;
 
     try {
-      const payload = { type: this.type };
+      const payload = { ...this.participantConfig, type: this.type };
       const { maxDisplayNum, participants } = await phoenix_channel_push_result(
         this.channel.push("start", payload)
       );

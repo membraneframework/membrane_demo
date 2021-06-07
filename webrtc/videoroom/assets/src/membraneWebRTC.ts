@@ -80,6 +80,7 @@ export class MembraneWebRTC {
   private socketRefs: string[] = [];
   private participantConfig: ParticipantConfig;
   private displayName: string;
+  private type: "participant" | "screensharing";
 
   private maxDisplayNum: number = 1;
   private localStreams: Set<MediaStream> = new Set<MediaStream>();
@@ -127,6 +128,7 @@ export class MembraneWebRTC {
       type === "participant"
         ? `room:${roomId}`
         : `room:screensharing:${roomId}`;
+    this.type = type;
 
     this.callbacks = callbacks || {};
     this.rtcConfig = rtcConfig || this.rtcConfig;
@@ -192,8 +194,9 @@ export class MembraneWebRTC {
     this.userId = userId;
 
     try {
+      const payload = { type: this.type };
       const { maxDisplayNum, participants } = await phoenix_channel_push_result(
-        this.channel.push("start", {})
+        this.channel.push("start", payload)
       );
 
       this.maxDisplayNum = maxDisplayNum;

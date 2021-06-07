@@ -12,13 +12,10 @@ defmodule VideoRoomWeb.RoomChannel do
       relay_video?: Map.get(params, "relayVideo", true)
     ]
 
-    {room_id, peer_type} =
+    room_id =
       case room_id do
-        "screensharing:" <> id ->
-          {id, :screensharing}
-
-        ^room_id ->
-          {room_id, :participant}
+        "screensharing:" <> id -> id
+        id -> id
       end
 
     case VideoRoom.Pipeline.lookup(room_id) do
@@ -37,7 +34,6 @@ defmodule VideoRoomWeb.RoomChannel do
          assign(socket, %{
            room_id: room_id,
            pipeline: pipeline,
-           peer_type: peer_type,
            params: params
          })}
 
@@ -53,8 +49,8 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   @impl true
-  def handle_in("start", _msg, socket) do
-    type = socket.assigns.peer_type
+  def handle_in("start", %{"type" => type}, socket) do
+    type = if type == "participant", do: :participant, else: :screensharing
 
     socket
     |> send_to_pipeline({:new_peer, self(), type, socket.assigns.params, socket_ref(socket)})

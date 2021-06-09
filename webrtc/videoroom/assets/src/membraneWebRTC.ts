@@ -1,15 +1,15 @@
-import { Channel, Push, Socket } from "phoenix";
-
-const DEFAULT_ERROR_MESSAGE =
+export const DEFAULT_ERROR_MESSAGE =
   "Cannot connect to the server, try again by refreshing the page";
 
-const phoenix_channel_push_result = async (push: Push): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    push
-      .receive("ok", (response: any) => resolve(response))
-      .receive("error", (response: any) => reject(response));
-  });
-};
+interface MembraneWebRTCTransport {
+  push: (event: string, payload: Object) => void;
+  pushResult: (event: string, payload: Object) => Promise<any>;
+}
+
+interface MembraneWebRTCCallback {
+  event: string;
+  callback: (data: any) => void;
+}
 
 interface Participant {
   id: string;
@@ -61,7 +61,7 @@ interface Callbacks {
   onParticipantLeft?: (ctx: ParticipantContext) => void;
 }
 
-interface MembraneWebRTCConfig {
+export interface MembraneWebRTCConfig {
   callbacks?: Callbacks;
   rtcConfig?: RTCConfiguration;
   type?: "participant" | "screensharing";
@@ -73,13 +73,11 @@ export function isScreenSharingParticipant(participant: Participant): boolean {
 }
 
 export class MembraneWebRTC {
-  private readonly socket: Socket;
-  private _channel?: Channel;
-  private channelId: string;
-  private socketRefs: string[] = [];
   private participantConfig: ParticipantConfig;
   private displayName: string;
   private type: "participant" | "screensharing";
+
+  private transport: MembraneWebRTCTransport;
 
   private maxDisplayNum: number = 1;
   private localStreams: Set<MediaStream> = new Set<MediaStream>();
@@ -101,18 +99,10 @@ export class MembraneWebRTC {
 
   private readonly callbacks: Callbacks;
 
-  private get channel(): Channel {
-    if (!this._channel) {
-      throw new Error("Phoenix channel is not initialized");
-    }
-    return this._channel;
-  }
-
-  private set channel(ch: Channel) {
-    this._channel = ch;
-  }
-
-  constructor(socket: Socket, roomId: string, config: MembraneWebRTCConfig) {
+  constructor(
+    transport: MembraneWebRTCTransport,
+    config: MembraneWebRTCConfig
+  ) {
     const {
       type = "participant",
       callbacks,
@@ -120,26 +110,58 @@ export class MembraneWebRTC {
       participantConfig,
     } = config;
 
-    this.socket = socket;
     this.displayName = participantConfig.displayName;
     this.participantConfig = participantConfig;
-    this.channelId =
-      type === "participant"
-        ? `room:${roomId}`
-        : `room:screensharing:${roomId}`;
     this.type = type;
+    this.transport = transport;
 
     this.callbacks = callbacks || {};
     this.rtcConfig = rtcConfig || this.rtcConfig;
-
-    const handleError = () => {
-      this.callbacks.onConnectionError?.(DEFAULT_ERROR_MESSAGE);
-      this.stop();
-    };
-
-    this.socketRefs.push(socket.onError(handleError));
-    this.socketRefs.push(socket.onClose(handleError));
   }
+
+  public getCallbacks = (): MembraneWebRTCCallback[] => [
+    { event: "offer", callback: this.onOffer },
+    { event: "candidate", callback: this.onRemoteCandidate },
+    { event: "replaceParticipant", callback: this.replaceParticipant },
+    {
+      event: "displayParticipant",
+      callback: (data: any) =>
+        this.callbacks.onDisplayParticipant?.(data.data.participantId),
+    },
+    {
+      event: "toggledVideo",
+      callback: (data: any) =>
+        this.callbacks.onParticipantToggledVideo?.(data.data.participantId),
+    },
+    {
+      event: "toggledAudio",
+      callback: (data: any) =>
+        this.callbacks.onParticipantToggledAudio?.(data.data.participantId),
+    },
+    {
+      event: "participantJoined",
+      callback: (data: any) => {
+        const participant = data.data.participant;
+        this.onParticipantJoined(participant, participant.id === this.userId);
+      },
+    },
+    {
+      event: "participantLeft",
+      callback: (data: any) => this.onParticipantLeft(data.data.participantId),
+    },
+    {
+      event: "error",
+      callback: (data: any) => {
+        this.callbacks.onConnectionError?.(data.error);
+        this.leave();
+      },
+    },
+  ];
+
+  public handleError = () => {
+    this.callbacks.onConnectionError?.(DEFAULT_ERROR_MESSAGE);
+    this.leave();
+  };
 
   public addLocalStream = (stream: MediaStream) => {
     if (this.connection) {
@@ -150,76 +172,41 @@ export class MembraneWebRTC {
     this.localStreams.add(stream);
   };
 
-  public start = async () => {
-    this.channel = this.socket.channel(this.channelId);
-
-    this.channel.on("offer", this.onOffer);
-    this.channel.on("candidate", this.onRemoteCandidate);
-    this.channel.on("replaceParticipant", (data: any) => {
-      const oldParticipantId = data.data.oldParticipantId;
-      const newParticipantId = data.data.newParticipantId;
-
-      this.callbacks.onHideParticipant?.(oldParticipantId);
-      this.callbacks.onDisplayParticipant?.(newParticipantId);
-    });
-
-    this.channel.on("displayParticipant", (data: any) => {
-      this.callbacks.onDisplayParticipant?.(data.data.participantId);
-    });
-
-    this.channel.on("toggledVideo", (data: any) => {
-      this.callbacks.onParticipantToggledVideo?.(data.data.participantId);
-    });
-
-    this.channel.on("toggledAudio", (data: any) => {
-      this.callbacks.onParticipantToggledAudio?.(data.data.participantId);
-    });
-
-    this.channel.on("participantJoined", (data: any) => {
-      const participant = data.data.participant;
-      this.onParticipantJoined(participant, participant.id === this.userId);
-    });
-
-    this.channel.on("participantLeft", (data: any) => {
-      this.onParticipantLeft(data.data.participantId);
-    });
-
-    this.channel.on("error", (data: any) => {
-      this.callbacks.onConnectionError?.(data.error);
-      this.stop();
-    });
-
-    const { userId } = await phoenix_channel_push_result(this.channel.join());
-    this.userId = userId;
-
+  public join = async () => {
     try {
       const payload = { ...this.participantConfig, type: this.type };
-      const { maxDisplayNum, participants } = await phoenix_channel_push_result(
-        this.channel.push("start", payload)
+
+      const { maxDisplayNum, participants } = await this.transport.pushResult(
+        "start",
+        payload
       );
 
       this.maxDisplayNum = maxDisplayNum;
 
       (participants as Array<Participant>).forEach((p) =>
-        this.onParticipantJoined(p, p.id === userId)
+        this.onParticipantJoined(p, p.id === this.userId)
       );
     } catch (e) {
       this.callbacks.onConnectionError?.(e);
-      this.stop();
+      this.leave();
     }
   };
 
+  public setUserId = (userId: string) => {
+    this.userId = userId;
+  };
+
   public toggleVideo = () => {
-    this.channel.push("toggledVideo", {});
+    this.transport.push("toggledVideo", {});
   };
 
   public toggleAudio = () => {
-    this.channel.push("toggledAudio", {});
+    this.transport.push("toggledAudio", {});
   };
 
-  public stop = () => {
-    this.channel.push("stop", {});
-    this.channel.leave();
+  public leave = () => {
+    this.transport.push("stop", {});
+
     if (this.connection) {
       this.connection.onicecandidate = null;
       this.connection.ontrack = null;
@@ -228,7 +215,6 @@ export class MembraneWebRTC {
       stream.getTracks().forEach((track) => track.stop())
     );
     this.connection = undefined;
-    this.socket.off(this.socketRefs);
   };
 
   private onOffer = async (offer: OfferData) => {
@@ -236,10 +222,11 @@ export class MembraneWebRTC {
       this.connection = new RTCPeerConnection(this.rtcConfig);
       this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
+
       this.localStreams.forEach((stream) => {
-        stream
-          .getTracks()
-          .forEach((track) => this.connection!.addTrack(track, stream));
+        stream.getTracks().forEach((track) => {
+          this.connection!.addTrack(track, stream);
+        });
       });
     } else {
       this.connection.createOffer({ iceRestart: true });
@@ -250,10 +237,19 @@ export class MembraneWebRTC {
       const answer = await this.connection.createAnswer();
       await this.connection.setLocalDescription(answer);
 
-      this.channel.push("answer", { data: answer });
+      this.transport.push("answer", { data: answer });
+      // this.channel.push("answer", { data: answer });
     } catch (error) {
       console.error(error);
     }
+  };
+
+  private replaceParticipant = (data: any) => {
+    const oldParticipantId = data.data.oldParticipantId;
+    const newParticipantId = data.data.newParticipantId;
+
+    this.callbacks.onHideParticipant?.(oldParticipantId);
+    this.callbacks.onDisplayParticipant?.(newParticipantId);
   };
 
   private onRemoteCandidate = (candidate: CandidateData) => {
@@ -273,7 +269,7 @@ export class MembraneWebRTC {
   private onLocalCandidate = () => {
     return (event: RTCPeerConnectionIceEvent) => {
       if (event.candidate) {
-        this.channel.push("candidate", { data: event.candidate });
+        this.transport.push("candidate", { data: event.candidate });
       }
     };
   };

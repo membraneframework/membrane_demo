@@ -27,6 +27,7 @@ import { createFakeVideoStream } from "../src/utils";
 import { MembraneWebRTC, isScreenSharingParticipant } from "./membraneWebRTC";
 import { Socket } from "phoenix";
 import { parse } from "query-string";
+import { MembraneWebRTCWrapper } from "./membraneWebRTCHandler";
 
 declare global {
   interface MediaDevices {
@@ -36,10 +37,10 @@ declare global {
   }
 }
 
-let screensharing: MembraneWebRTC | undefined;
+let screensharing: MembraneWebRTCWrapper | undefined;
 
 const cleanLocalScreensharing = () => {
-  screensharing?.stop();
+  screensharing?.leave();
   screensharing = undefined;
   setLocalScreenSharingStatus(false);
 };
@@ -52,7 +53,7 @@ const startLocalScreensharing = async (socket: Socket, user: string) => {
       SCREENSHARING_CONSTRAINTS
     );
 
-    screensharing = new MembraneWebRTC(socket, getRoomId(), {
+    screensharing = new MembraneWebRTCWrapper(socket, getRoomId(), {
       participantConfig: {
         displayName: `${user} Screensharing`,
         relayVideo: true,
@@ -75,7 +76,7 @@ const startLocalScreensharing = async (socket: Socket, user: string) => {
     });
     setLocalScreenSharingStatus(true);
 
-    await screensharing.start();
+    await screensharing.join();
   } catch (error) {
     console.log("Error while starting screensharing", error);
     cleanLocalScreensharing();
@@ -129,7 +130,7 @@ const setup = async () => {
       console.error("Couldn't get camera permission:", error);
     }
 
-    const webrtc = new MembraneWebRTC(socket, getRoomId(), {
+    const webrtc = new MembraneWebRTCWrapper(socket, getRoomId(), {
       participantConfig: {
         displayName,
         relayAudio: localAudioStream !== null,
@@ -242,7 +243,7 @@ const setup = async () => {
       videoState: localVideoStream === null ? "disabled" : "unmuted",
     });
 
-    webrtc.start();
+    webrtc.join();
   } catch (error) {
     console.error(error);
     setErrorMessage(

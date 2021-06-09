@@ -158,6 +158,47 @@ export class MembraneWebRTC {
     },
   ];
 
+  public receiveEvent = (data: any) => {
+    switch (data.type) {
+      case "offer":
+        this.onOffer(data);
+        break;
+
+      case "candidate":
+        this.onRemoteCandidate(data);
+        break;
+
+      case "replaceParticipant":
+        this.replaceParticipant(data);
+        break;
+
+      case "displayParticipant":
+        this.callbacks.onDisplayParticipant?.(data.data.participantId);
+        break;
+
+      case "toggledVideo":
+        this.callbacks.onParticipantToggledVideo?.(data.data.participantId);
+        break;
+
+      case "toggledAudio":
+        this.callbacks.onParticipantToggledAudio?.(data.data.participantId);
+        break;
+
+      case "participantJoined":
+        this.callbacks.onParticipantToggledAudio?.(data.data.participantId);
+        break;
+
+      case "participantLeft":
+        this.onParticipantLeft(data.data.participantId);
+        break;
+
+      case "error":
+        this.callbacks.onConnectionError?.(data.error);
+        this.leave();
+        break;
+    }
+  };
+
   public handleError = () => {
     this.callbacks.onConnectionError?.(DEFAULT_ERROR_MESSAGE);
     this.leave();

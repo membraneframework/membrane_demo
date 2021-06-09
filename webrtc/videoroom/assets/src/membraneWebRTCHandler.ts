@@ -51,13 +51,15 @@ export class MembraneWebRTCWrapper {
         phoenix_channel_push_result(channel.push(event, payload)),
     };
 
-    this.webRTC = new MembraneWebRTC(webRTCTransport, this.webRTCConfig);
-
+    const webRTC = new MembraneWebRTC(webRTCTransport, this.webRTCConfig);
+    this.webRTC = webRTC;
     this.webRTC.getCallbacks().forEach(({ event, callback }) => {
       channel.on(event, (data) => {
         callback(data);
       });
     });
+
+    this.channel.on("membraneWebRTCEvent", webRTC.receiveEvent);
 
     const { userId } = await phoenix_channel_push_result(this.channel.join());
     this.userId = userId;

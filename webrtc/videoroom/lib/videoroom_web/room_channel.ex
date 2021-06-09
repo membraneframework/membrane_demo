@@ -106,6 +106,7 @@ defmodule VideoRoomWeb.RoomChannel do
   @impl true
   def handle_info({:signal, {:candidate, candidate, sdp_mline_index}}, socket) do
     push(socket, "candidate", %{
+      type: "candidate",
       data: %{"candidate" => candidate, "sdpMLineIndex" => sdp_mline_index}
     })
 
@@ -113,7 +114,7 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   def handle_info({:signal, {:sdp_offer, sdp}}, socket) do
-    push(socket, "offer", %{data: %{"type" => "offer", "sdp" => sdp}})
+    push(socket, "offer", %{type: "offer", data: %{"type" => "offer", "sdp" => sdp}})
 
     {:noreply, socket}
   end
@@ -121,6 +122,7 @@ defmodule VideoRoomWeb.RoomChannel do
   @impl true
   def handle_info({:participant_joined, participant}, socket) do
     push(socket, "participantJoined", %{
+      type: "participantJoined",
       data: %{"participant" => serialize_participant(participant)}
     })
 
@@ -129,7 +131,10 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info({:participant_left, participant_id}, socket) do
-    push(socket, "participantLeft", %{data: %{"participantId" => participant_id}})
+    push(socket, "participantLeft", %{
+      type: "participantLeft",
+      data: %{"participantId" => participant_id}
+    })
 
     {:noreply, socket}
   end
@@ -140,6 +145,7 @@ defmodule VideoRoomWeb.RoomChannel do
         socket
       ) do
     push(socket, "replaceParticipant", %{
+      type: "replaceParticipant",
       data: %{"oldParticipantId" => old_participant_id, "newParticipantId" => new_participant_id}
     })
 
@@ -148,19 +154,31 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info({:signal, {:display_participant, participant_id}}, socket) do
-    push(socket, "displayParticipant", %{data: %{"participantId" => participant_id}})
+    push(socket, "displayParticipant", %{
+      type: "displayParticipant",
+      data: %{"participantId" => participant_id}
+    })
+
     {:noreply, socket}
   end
 
   @impl true
   def handle_info({:toggled_video, participant_id}, socket) do
-    push(socket, "toggledVideo", %{data: %{"participantId" => participant_id}})
+    push(socket, "toggledVideo", %{
+      type: "toggledVideo",
+      data: %{"participantId" => participant_id}
+    })
+
     {:noreply, socket}
   end
 
   @impl true
   def handle_info({:toggled_audio, participant_id}, socket) do
-    push(socket, "toggledAudio", %{data: %{"participantId" => participant_id}})
+    push(socket, "toggledAudio", %{
+      type: "toggledAudio",
+      data: %{"participantId" => participant_id}
+    })
+
     {:noreply, socket}
   end
 

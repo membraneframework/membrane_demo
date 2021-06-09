@@ -105,7 +105,7 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info({:signal, {:candidate, candidate, sdp_mline_index}}, socket) do
-    push(socket, "candidate", %{
+    push(socket, "membraneWebRTCEvent", %{
       type: "candidate",
       data: %{"candidate" => candidate, "sdpMLineIndex" => sdp_mline_index}
     })
@@ -114,14 +114,14 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   def handle_info({:signal, {:sdp_offer, sdp}}, socket) do
-    push(socket, "offer", %{type: "offer", data: %{"type" => "offer", "sdp" => sdp}})
+    push(socket, "membraneWebRTCEvent", %{type: "offer", data: %{"type" => "offer", "sdp" => sdp}})
 
     {:noreply, socket}
   end
 
   @impl true
   def handle_info({:participant_joined, participant}, socket) do
-    push(socket, "participantJoined", %{
+    push(socket, "membraneWebRTCEvent", %{
       type: "participantJoined",
       data: %{"participant" => serialize_participant(participant)}
     })
@@ -131,7 +131,7 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info({:participant_left, participant_id}, socket) do
-    push(socket, "participantLeft", %{
+    push(socket, "membraneWebRTCEvent", %{
       type: "participantLeft",
       data: %{"participantId" => participant_id}
     })
@@ -144,7 +144,7 @@ defmodule VideoRoomWeb.RoomChannel do
         {:signal, {:replace_participant, old_participant_id, new_participant_id}},
         socket
       ) do
-    push(socket, "replaceParticipant", %{
+    push(socket, "membraneWebRTCEvent", %{
       type: "replaceParticipant",
       data: %{"oldParticipantId" => old_participant_id, "newParticipantId" => new_participant_id}
     })
@@ -154,7 +154,7 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info({:signal, {:display_participant, participant_id}}, socket) do
-    push(socket, "displayParticipant", %{
+    push(socket, "membraneWebRTCEvent", %{
       type: "displayParticipant",
       data: %{"participantId" => participant_id}
     })
@@ -164,7 +164,7 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info({:toggled_video, participant_id}, socket) do
-    push(socket, "toggledVideo", %{
+    push(socket, "membraneWebRTCEvent", %{
       type: "toggledVideo",
       data: %{"participantId" => participant_id}
     })
@@ -174,7 +174,7 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info({:toggled_audio, participant_id}, socket) do
-    push(socket, "toggledAudio", %{
+    push(socket, "membraneWebRTCEvent", %{
       type: "toggledAudio",
       data: %{"participantId" => participant_id}
     })
@@ -202,12 +202,13 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info({:internal_error, message}, socket) do
-    push(socket, "error", %{error: message})
+    push(socket, "membraneWebRTCEvent", %{type: "error", error: message})
     {:noreply, socket}
   end
 
   def handle_info({:DOWN, _ref, :process, _monitor, reason}, socket) do
-    push(socket, "error", %{
+    push(socket, "membraneWebRTCEvent", %{
+      type: "error",
       error: "Room stopped working, consider restarting your connection, #{inspect(reason)}"
     })
 
@@ -217,6 +218,8 @@ defmodule VideoRoomWeb.RoomChannel do
   defp send_to_pipeline(socket, message) do
     socket.assigns.pipeline |> send(message)
   end
+
+  # przed revertem nazw eventow (jak wsyzstkie to bylo membraneWebRTCEvent) nie dzialalo np dodawanie nowych osob do pokoju
 
   defp serialize_participant(participant) do
     %{

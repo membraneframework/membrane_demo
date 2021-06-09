@@ -1,14 +1,9 @@
 export const DEFAULT_ERROR_MESSAGE =
   "Cannot connect to the server, try again by refreshing the page";
 
-interface MembraneWebRTCTransport {
+interface MediaCallbacks {
   push: (event: string, payload: Object) => void;
   pushResult: (event: string, payload: Object) => Promise<any>;
-}
-
-interface MembraneWebRTCCallback {
-  event: string;
-  callback: (data: any) => void;
 }
 
 interface Participant {
@@ -77,7 +72,7 @@ export class MembraneWebRTC {
   private displayName: string;
   private type: "participant" | "screensharing";
 
-  private transport: MembraneWebRTCTransport;
+  private mediaCallbacks: MediaCallbacks;
 
   private maxDisplayNum: number = 1;
   private localStreams: Set<MediaStream> = new Set<MediaStream>();
@@ -99,10 +94,7 @@ export class MembraneWebRTC {
 
   private readonly callbacks: Callbacks;
 
-  constructor(
-    transport: MembraneWebRTCTransport,
-    config: MembraneWebRTCConfig
-  ) {
+  constructor(mediaCallbacks: MediaCallbacks, config: MembraneWebRTCConfig) {
     const {
       type = "participant",
       callbacks,
@@ -113,50 +105,11 @@ export class MembraneWebRTC {
     this.displayName = participantConfig.displayName;
     this.participantConfig = participantConfig;
     this.type = type;
-    this.transport = transport;
+    this.mediaCallbacks = mediaCallbacks;
 
     this.callbacks = callbacks || {};
     this.rtcConfig = rtcConfig || this.rtcConfig;
   }
-
-  public getCallbacks = (): MembraneWebRTCCallback[] => [
-    { event: "offer", callback: this.onOffer },
-    { event: "candidate", callback: this.onRemoteCandidate },
-    { event: "replaceParticipant", callback: this.replaceParticipant },
-    {
-      event: "displayParticipant",
-      callback: (data: any) =>
-        this.callbacks.onDisplayParticipant?.(data.data.participantId),
-    },
-    {
-      event: "toggledVideo",
-      callback: (data: any) =>
-        this.callbacks.onParticipantToggledVideo?.(data.data.participantId),
-    },
-    {
-      event: "toggledAudio",
-      callback: (data: any) =>
-        this.callbacks.onParticipantToggledAudio?.(data.data.participantId),
-    },
-    {
-      event: "participantJoined",
-      callback: (data: any) => {
-        const participant = data.data.participant;
-        this.onParticipantJoined(participant, participant.id === this.userId);
-      },
-    },
-    {
-      event: "participantLeft",
-      callback: (data: any) => this.onParticipantLeft(data.data.participantId),
-    },
-    {
-      event: "error",
-      callback: (data: any) => {
-        this.callbacks.onConnectionError?.(data.error);
-        this.leave();
-      },
-    },
-  ];
 
   public receiveEvent = (data: any) => {
     switch (data.type) {
@@ -185,7 +138,8 @@ export class MembraneWebRTC {
         break;
 
       case "participantJoined":
-        this.callbacks.onParticipantToggledAudio?.(data.data.participantId);
+        const participant = data.data.participant;
+        this.onParticipantJoined(participant, participant.id === this.userId);
         break;
 
       case "participantLeft":
@@ -217,10 +171,10 @@ export class MembraneWebRTC {
     try {
       const payload = { ...this.participantConfig, type: this.type };
 
-      const { maxDisplayNum, participants } = await this.transport.pushResult(
-        "start",
-        payload
-      );
+      const {
+        maxDisplayNum,
+        participants,
+      } = await this.mediaCallbacks.pushResult("start", payload);
 
       this.maxDisplayNum = maxDisplayNum;
 
@@ -238,15 +192,15 @@ export class MembraneWebRTC {
   };
 
   public toggleVideo = () => {
-    this.transport.push("toggledVideo", {});
+    this.mediaCallbacks.push("toggledVideo", {});
   };
 
   public toggleAudio = () => {
-    this.transport.push("toggledAudio", {});
+    this.mediaCallbacks.push("toggledAudio", {});
   };
 
   public leave = () => {
-    this.transport.push("stop", {});
+    this.mediaCallbacks.push("stop", {});
 
     if (this.connection) {
       this.connection.onicecandidate = null;
@@ -278,7 +232,7 @@ export class MembraneWebRTC {
       const answer = await this.connection.createAnswer();
       await this.connection.setLocalDescription(answer);
 
-      this.transport.push("answer", { data: answer });
+      this.mediaCallbacks.push("answer", { data: answer });
       // this.channel.push("answer", { data: answer });
     } catch (error) {
       console.error(error);
@@ -310,7 +264,7 @@ export class MembraneWebRTC {
   private onLocalCandidate = () => {
     return (event: RTCPeerConnectionIceEvent) => {
       if (event.candidate) {
-        this.transport.push("candidate", { data: event.candidate });
+        this.mediaCallbacks.push("candidate", { data: event.candidate });
       }
     };
   };
@@ -319,6 +273,7 @@ export class MembraneWebRTC {
     return (event: RTCTrackEvent) => {
       const [stream] = event.streams;
       const mid = event.transceiver.mid!;
+
       const participant = this.midToParticipant.get(mid)!;
       const isScreenSharing = mid.includes("SCREEN") || false;
 

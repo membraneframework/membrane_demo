@@ -1,10 +1,6 @@
 import { Channel, Push, Socket } from "phoenix";
 
-import {
-  MembraneWebRTC,
-  isScreenSharingParticipant,
-  MembraneWebRTCConfig,
-} from "./membraneWebRTC";
+import { MembraneWebRTC, MembraneWebRTCConfig } from "./membraneWebRTC";
 
 const phoenix_channel_push_result = async (push: Push): Promise<any> => {
   return new Promise((resolve, reject) => {
@@ -20,7 +16,6 @@ export class MembraneWebRTCWrapper {
   private channel?: Channel;
   private channelId: string;
   private socketRefs: string[] = [];
-  private userId?: string;
   private webRTCConfig: MembraneWebRTCConfig;
   private localStreams: Set<MediaStream> = new Set<MediaStream>();
 
@@ -52,17 +47,11 @@ export class MembraneWebRTCWrapper {
     };
 
     const webRTC = new MembraneWebRTC(webRTCTransport, this.webRTCConfig);
-    this.webRTC = webRTC;
-    this.webRTC.getCallbacks().forEach(({ event, callback }) => {
-      channel.on(event, (data) => {
-        callback(data);
-      });
-    });
 
+    this.webRTC = webRTC;
     this.channel.on("membraneWebRTCEvent", webRTC.receiveEvent);
 
     const { userId } = await phoenix_channel_push_result(this.channel.join());
-    this.userId = userId;
     this.webRTC.setUserId(userId);
     this.localStreams.forEach((stream) => this.webRTC?.addLocalStream(stream));
     this.webRTC.join();

@@ -1,9 +1,14 @@
 export const DEFAULT_ERROR_MESSAGE =
   "Cannot connect to the server, try again by refreshing the page";
 
+export interface MediaEvent {
+  type: string;
+  payload: Object;
+}
+
 interface MediaCallbacks {
-  push: (event: string, payload: Object) => void;
-  pushResult: (event: string, payload: Object) => Promise<any>;
+  push: (mediaEvent: MediaEvent) => void;
+  pushResult: (mediaEvent: MediaEvent) => Promise<any>;
 }
 
 interface Participant {
@@ -174,7 +179,7 @@ export class MembraneWebRTC {
       const {
         maxDisplayNum,
         participants,
-      } = await this.mediaCallbacks.pushResult("start", payload);
+      } = await this.mediaCallbacks.pushResult({ type: "start", payload });
 
       this.maxDisplayNum = maxDisplayNum;
 
@@ -192,15 +197,15 @@ export class MembraneWebRTC {
   };
 
   public toggleVideo = () => {
-    this.mediaCallbacks.push("toggledVideo", {});
+    this.mediaCallbacks.push({ type: "toggledVideo", payload: {} });
   };
 
   public toggleAudio = () => {
-    this.mediaCallbacks.push("toggledAudio", {});
+    this.mediaCallbacks.push({ type: "toggledAudio", payload: {} });
   };
 
   public leave = () => {
-    this.mediaCallbacks.push("stop", {});
+    this.mediaCallbacks.push({ type: "stop", payload: {} });
 
     if (this.connection) {
       this.connection.onicecandidate = null;
@@ -232,8 +237,10 @@ export class MembraneWebRTC {
       const answer = await this.connection.createAnswer();
       await this.connection.setLocalDescription(answer);
 
-      this.mediaCallbacks.push("answer", { data: answer });
-      // this.channel.push("answer", { data: answer });
+      this.mediaCallbacks.push({
+        type: "answer",
+        payload: answer,
+      });
     } catch (error) {
       console.error(error);
     }
@@ -264,7 +271,10 @@ export class MembraneWebRTC {
   private onLocalCandidate = () => {
     return (event: RTCPeerConnectionIceEvent) => {
       if (event.candidate) {
-        this.mediaCallbacks.push("candidate", { data: event.candidate });
+        this.mediaCallbacks.push({
+          type: "candidate",
+          payload: event.candidate,
+        });
       }
     };
   };

@@ -1,6 +1,10 @@
 import { Channel, Push, Socket } from "phoenix";
 
-import { MembraneWebRTC, MembraneWebRTCConfig } from "./membraneWebRTC";
+import {
+  MembraneWebRTC,
+  MembraneWebRTCConfig,
+  MediaEvent,
+} from "./membraneWebRTC";
 
 const phoenix_channel_push_result = async (push: Push): Promise<any> => {
   return new Promise((resolve, reject) => {
@@ -41,15 +45,15 @@ export class MembraneWebRTCWrapper {
     this.channel = channel;
 
     const webRTCTransport = {
-      push: (event: string, payload: Object) => channel.push(event, payload),
-      pushResult: async (event: string, payload: Object) =>
-        phoenix_channel_push_result(channel.push(event, payload)),
+      push: (event: MediaEvent) => channel.push("mediaEvent", event),
+      pushResult: async (event: MediaEvent) =>
+        phoenix_channel_push_result(channel.push("mediaEvent", event)),
     };
 
     const webRTC = new MembraneWebRTC(webRTCTransport, this.webRTCConfig);
 
     this.webRTC = webRTC;
-    this.channel.on("membraneWebRTCEvent", webRTC.receiveEvent);
+    this.channel.on("mediaEvent", webRTC.receiveEvent);
 
     const { userId } = await phoenix_channel_push_result(this.channel.join());
     this.webRTC.setUserId(userId);

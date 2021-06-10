@@ -6,7 +6,7 @@ export interface MediaEvent {
   payload: Object;
 }
 
-interface MediaCallbacks {
+export interface MediaCallbacks {
   push: (mediaEvent: MediaEvent) => void;
   pushResult: (mediaEvent: MediaEvent) => Promise<any>;
 }
@@ -50,6 +50,8 @@ interface ParticipantConfig {
 }
 
 interface Callbacks {
+  onJoin?: () => void;
+  onLeave?: () => void;
   onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
@@ -186,6 +188,8 @@ export class MembraneWebRTC {
       (participants as Array<Participant>).forEach((p) =>
         this.onParticipantJoined(p, p.id === this.userId)
       );
+
+      this.callbacks.onJoin?.();
     } catch (e) {
       this.callbacks.onConnectionError?.(e);
       this.leave();
@@ -215,6 +219,8 @@ export class MembraneWebRTC {
       stream.getTracks().forEach((track) => track.stop())
     );
     this.connection = undefined;
+
+    this.callbacks.onLeave?.();
   };
 
   private onOffer = async (offer: OfferData) => {

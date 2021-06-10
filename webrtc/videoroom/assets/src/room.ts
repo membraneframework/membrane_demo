@@ -25,9 +25,13 @@ import {
 import { createFakeVideoStream } from "../src/utils";
 
 import { MembraneWebRTC, isScreenSharingParticipant } from "./membraneWebRTC";
-import { Socket } from "phoenix";
+import { Channel, Push, Socket } from "phoenix";
 import { parse } from "query-string";
-import { MembraneWebRTCWrapper } from "./membraneWebRTCHandler";
+import {
+  getMediaCallbacksFromPhoenixChannel,
+  getChannelId,
+  phoenixChannelPushResult,
+} from "./membraneWebRTCUtils";
 
 declare global {
   interface MediaDevices {
@@ -37,7 +41,8 @@ declare global {
   }
 }
 
-let screensharing: MembraneWebRTCWrapper | undefined;
+let screensharingSocketRefs: string[] = [];
+let screensharing: MembraneWebRTC | undefined;
 
 const cleanLocalScreensharing = () => {
   screensharing?.leave();
@@ -53,28 +58,48 @@ const startLocalScreensharing = async (socket: Socket, user: string) => {
       SCREENSHARING_CONSTRAINTS
     );
 
-    screensharing = new MembraneWebRTCWrapper(socket, getRoomId(), {
-      participantConfig: {
-        displayName: `${user} Screensharing`,
-        relayVideo: true,
-        relayAudio: false,
-      },
-      type: "screensharing",
-      callbacks: {
-        onConnectionError: (message) => {
-          console.error(message);
-          cleanLocalScreensharing();
+    const screensharingChannel = socket.channel(
+      getChannelId("screensharing", getRoomId())
+    );
+    screensharing = new MembraneWebRTC(
+      getMediaCallbacksFromPhoenixChannel(screensharingChannel),
+      {
+        participantConfig: {
+          displayName: `${user} Screensharing`,
+          relayVideo: true,
+          relayAudio: false,
         },
-      },
-    });
+        type: "screensharing",
+        callbacks: {
+          onConnectionError: (message) => {
+            console.error(message);
+            cleanLocalScreensharing();
+          },
+          onLeave: () => {
+            screensharingChannel.leave();
+            socket.off(screensharingSocketRefs);
+            screensharingSocketRefs = [];
+          },
+        },
+      }
+    );
 
-    screensharing?.addLocalStream(screenStream);
+    screensharingSocketRefs.push(socket.onError(screensharing.handleError));
+    screensharingSocketRefs.push(socket.onClose(screensharing.handleError));
+
+    screensharing.addLocalStream(screenStream);
     screenStream.getTracks().forEach((t) => {
       t.onended = () => {
         cleanLocalScreensharing();
       };
     });
     setLocalScreenSharingStatus(true);
+
+    screensharingChannel.on("mediaEvent", screensharing.receiveEvent);
+    const { userId: screensharingUserId } = await phoenixChannelPushResult(
+      screensharingChannel.join()
+    );
+    screensharing.setUserId(screensharingUserId);
 
     await screensharing.join();
   } catch (error) {
@@ -130,60 +155,83 @@ const setup = async () => {
       console.error("Couldn't get camera permission:", error);
     }
 
-    const webrtc = new MembraneWebRTCWrapper(socket, getRoomId(), {
-      participantConfig: {
-        displayName,
-        relayAudio: localAudioStream !== null,
-        relayVideo: localVideoStream !== null,
-      },
-      callbacks: {
-        onAddTrack: ({ stream, participant, isScreenSharing }) => {
-          attachStream(stream, participant.id, isScreenSharing);
+    const webrtcSocketRefs: string[] = [];
+    const webrtcChannel = socket.channel(
+      getChannelId("participant", getRoomId())
+    );
+    const webrtc = new MembraneWebRTC(
+      getMediaCallbacksFromPhoenixChannel(webrtcChannel),
+      {
+        participantConfig: {
+          displayName,
+          relayAudio: localAudioStream !== null,
+          relayVideo: localVideoStream !== null,
         },
-        onDisplayParticipant: displayVideoElement,
-        onHideParticipant: hideVideoElement,
-        onParticipantToggledVideo: toggleVideoPlaceholder,
-        onParticipantToggledAudio: toggleMutedAudioIcon,
-        onConnectionError: setErrorMessage,
-        onParticipantJoined: ({
-          participant,
-          allParticipants,
-          isLocalParticipant,
-        }) => {
-          if (!isLocalParticipant) {
-            if (isScreenSharingParticipant(participant)) {
-              showScreensharing(participant.displayName, "My screensharing");
-            } else {
-              addVideoElement(
-                participant.id,
-                participant.displayName,
-                false,
-                false,
-                participant.mutedVideo,
-                participant.mutedAudio
-              );
+        callbacks: {
+          onAddTrack: ({ stream, participant, isScreenSharing }) => {
+            attachStream(stream, participant.id, isScreenSharing);
+          },
+          onDisplayParticipant: displayVideoElement,
+          onHideParticipant: hideVideoElement,
+          onParticipantToggledVideo: toggleVideoPlaceholder,
+          onParticipantToggledAudio: toggleMutedAudioIcon,
+          onConnectionError: setErrorMessage,
+          onParticipantJoined: ({
+            participant,
+            allParticipants,
+            isLocalParticipant,
+          }) => {
+            if (!isLocalParticipant) {
+              if (isScreenSharingParticipant(participant)) {
+                showScreensharing(participant.displayName, "My screensharing");
+              } else {
+                addVideoElement(
+                  participant.id,
+                  participant.displayName,
+                  false,
+                  false,
+                  participant.mutedVideo,
+                  participant.mutedAudio
+                );
+              }
             }
-          }
-
-          const participantsNames = allParticipants
-            .filter((p) => !isScreenSharingParticipant(p))
-            .map((p) => p.displayName);
-          setParticipantsNamesList(participantsNames);
-        },
-        onParticipantLeft: ({ participant, allParticipants }) => {
-          if (isScreenSharingParticipant(participant)) {
-            removeScreensharing();
-          } else {
-            removeVideoElement(participant.id);
 
             const participantsNames = allParticipants
               .filter((p) => !isScreenSharingParticipant(p))
               .map((p) => p.displayName);
             setParticipantsNamesList(participantsNames);
-          }
+          },
+          onParticipantLeft: ({ participant, allParticipants }) => {
+            if (isScreenSharingParticipant(participant)) {
+              removeScreensharing();
+            } else {
+              removeVideoElement(participant.id);
+
+              const participantsNames = allParticipants
+                .filter((p) => !isScreenSharingParticipant(p))
+                .map((p) => p.displayName);
+              setParticipantsNamesList(participantsNames);
+            }
+          },
+          onLeave: () => {
+            webrtcChannel.leave();
+            socket.off(webrtcSocketRefs);
+            while (webrtcSocketRefs.length > 0) {
+              webrtcSocketRefs.pop();
+            }
+          },
         },
-      },
-    });
+      }
+    );
+
+    webrtcChannel.on("mediaEvent", webrtc.receiveEvent);
+    const { userId: webrtcUserId } = await phoenixChannelPushResult(
+      webrtcChannel.join()
+    );
+    webrtc.setUserId(webrtcUserId);
+
+    webrtcSocketRefs.push(socket.onError(webrtc.handleError));
+    webrtcSocketRefs.push(socket.onClose(webrtc.handleError));
 
     webrtc.addLocalStream(localStream);
 

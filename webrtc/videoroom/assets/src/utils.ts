@@ -41,8 +41,8 @@ export function getMediaCallbacksFromPhoenixChannel(
   channel: Channel
 ): MediaCallbacks {
   return {
-    push: (event: MediaEvent) => channel.push("mediaEvent", event),
-    pushResult: async (event: MediaEvent) =>
+    onSendMediaEvent: (event: MediaEvent) => channel.push("mediaEvent", event),
+    onSendMediaEventResult: async (event: MediaEvent) =>
       phoenixChannelPushResult(channel.push("mediaEvent", event)),
   };
 }

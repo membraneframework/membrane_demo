@@ -169,7 +169,7 @@ const setup = async () => {
           relayVideo: localVideoStream !== null,
         },
         callbacks: {
-          onAddTrack: ({ stream, peer, isScreenSharing }) => {
+          onTrackAdded: ({ stream, peer, isScreenSharing }) => {
             attachStream(stream, peer.id, isScreenSharing);
           },
           onPeerToggledVideo: ({ peer }) => toggleVideoPlaceholder(peer.id),

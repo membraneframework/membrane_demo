@@ -7,8 +7,8 @@ export interface MediaEvent {
 }
 
 export interface MediaCallbacks {
-  push: (mediaEvent: MediaEvent) => void;
-  pushResult: (mediaEvent: MediaEvent) => Promise<any>;
+  onSendMediaEvent: (mediaEvent: MediaEvent) => void;
+  onSendMediaEventResult: (mediaEvent: MediaEvent) => Promise<any>;
 }
 
 interface Peer {
@@ -53,8 +53,8 @@ interface PeerConfig {
 interface Callbacks {
   onJoin?: () => void;
   onLeave?: () => void;
-  onAddTrack?: (ctx: TrackContext) => void;
-  onRemoveTrack?: (ctx: TrackContext) => void;
+  onTrackAdded?: (ctx: TrackContext) => void;
+  onTrackRemoved?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
   onPeerToggledVideo?: (ctx: PeerContext) => void;
   onPeerToggledAudio?: (ctx: PeerContext) => void;
@@ -164,7 +164,7 @@ export class MembraneWebRTC {
     try {
       const payload = { ...this.peerConfig, type: this.type };
 
-      const { peers } = await this.mediaCallbacks.pushResult({
+      const { peers } = await this.mediaCallbacks.onSendMediaEventResult({
         type: "start",
         payload,
       });
@@ -185,15 +185,15 @@ export class MembraneWebRTC {
   };
 
   public toggleVideo = () => {
-    this.mediaCallbacks.push({ type: "toggledVideo", payload: {} });
+    this.mediaCallbacks.onSendMediaEvent({ type: "toggledVideo", payload: {} });
   };
 
   public toggleAudio = () => {
-    this.mediaCallbacks.push({ type: "toggledAudio", payload: {} });
+    this.mediaCallbacks.onSendMediaEvent({ type: "toggledAudio", payload: {} });
   };
 
   public leave = () => {
-    this.mediaCallbacks.push({ type: "stop", payload: {} });
+    this.mediaCallbacks.onSendMediaEvent({ type: "stop", payload: {} });
 
     if (this.connection) {
       this.connection.onicecandidate = null;
@@ -236,7 +236,7 @@ export class MembraneWebRTC {
       const answer = await this.connection.createAnswer();
       await this.connection.setLocalDescription(answer);
 
-      this.mediaCallbacks.push({
+      this.mediaCallbacks.onSendMediaEvent({
         type: "answer",
         payload: answer,
       });
@@ -262,7 +262,7 @@ export class MembraneWebRTC {
   private onLocalCandidate = () => {
     return (event: RTCPeerConnectionIceEvent) => {
       if (event.candidate) {
-        this.mediaCallbacks.push({
+        this.mediaCallbacks.onSendMediaEvent({
           type: "candidate",
           payload: event.candidate,
         });
@@ -288,7 +288,7 @@ export class MembraneWebRTC {
           stream.onremovetrack = null;
         }
 
-        this.callbacks.onRemoveTrack?.({
+        this.callbacks.onTrackRemoved?.({
           peer,
           track: event.track,
           stream,
@@ -300,7 +300,7 @@ export class MembraneWebRTC {
       const mutedVideo = peer?.mutedVideo;
       const mutedAudio = peer?.mutedAudio;
 
-      this.callbacks.onAddTrack?.({
+      this.callbacks.onTrackAdded?.({
         track: event.track,
         peer,
         label,

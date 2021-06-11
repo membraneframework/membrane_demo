@@ -22,16 +22,16 @@ import {
   setParticipantsNamesList,
   attachStream,
 } from "./room_ui";
-import { createFakeVideoStream } from "../src/utils";
+import {
+  createFakeVideoStream,
+  getMediaCallbacksFromPhoenixChannel,
+  getChannelId,
+  phoenixChannelPushResult,
+} from "../src/utils";
 
 import { MembraneWebRTC, isScreenSharingParticipant } from "./membraneWebRTC";
 import { Channel, Push, Socket } from "phoenix";
 import { parse } from "query-string";
-import {
-  getMediaCallbacksFromPhoenixChannel,
-  getChannelId,
-  phoenixChannelPushResult,
-} from "./membraneWebRTCUtils";
 
 declare global {
   interface MediaDevices {

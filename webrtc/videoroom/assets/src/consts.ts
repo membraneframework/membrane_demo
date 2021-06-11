@@ -13,4 +13,4 @@ export const SCREENSHARING_CONSTRAINTS: MediaStreamConstraints = {
   video: { width: 1280, height: 720, frameRate: 5 },
 };
 
-export const LOCAL_PARTICIPANT_ID = "local-participant";
+export const LOCAL_PEER_ID = "local-peer";

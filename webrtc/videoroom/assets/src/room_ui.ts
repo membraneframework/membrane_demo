@@ -46,15 +46,15 @@ export function getRoomId(): string {
 }
 
 function elementId(
-  participantId: string,
+  peerId: string,
   type: "video" | "audio" | "placeholder" | "feed" | "mutedAudioIcon"
 ) {
-  return `${type}-${participantId}`;
+  return `${type}-${peerId}`;
 }
 
 export function attachStream(
   stream: MediaStream,
-  participantId: string,
+  peerId: string,
   isScreenSharing: boolean = false
 ): void {
   if (isScreenSharing) {
@@ -66,8 +66,8 @@ export function attachStream(
     screensharing.autoplay = true;
     screensharing.playsInline = true;
   } else {
-    const videoId = elementId(participantId, "video");
-    const audioId = elementId(participantId, "audio");
+    const videoId = elementId(peerId, "video");
+    const audioId = elementId(peerId, "audio");
 
     let video = document.getElementById(videoId) as HTMLVideoElement;
     let audio = document.getElementById(audioId) as HTMLAudioElement;
@@ -78,17 +78,17 @@ export function attachStream(
 }
 
 export function addVideoElement(
-  participantId: string,
+  peerId: string,
   label: string,
   isLocalVideo: boolean = false,
   mutedAudio: boolean = false,
   mutedVideo: boolean = false,
   showMutedAudioIcon: boolean = false
 ): void {
-  const videoId = elementId(participantId, "video");
-  const audioId = elementId(participantId, "audio");
-  const videoPlaceholderId = elementId(participantId, "placeholder");
-  const mutedAudioIconId = elementId(participantId, "mutedAudioIcon");
+  const videoId = elementId(peerId, "video");
+  const audioId = elementId(peerId, "audio");
+  const videoPlaceholderId = elementId(peerId, "placeholder");
+  const mutedAudioIconId = elementId(peerId, "mutedAudioIcon");
 
   let video = document.getElementById(videoId) as HTMLVideoElement;
   let audio = document.getElementById(audioId) as HTMLAudioElement;
@@ -100,7 +100,7 @@ export function addVideoElement(
   ) as HTMLDivElement;
 
   if (!video && !audio) {
-    const values = setupVideoFeed(participantId, label, isLocalVideo);
+    const values = setupVideoFeed(peerId, label, isLocalVideo);
     video = values.video;
     audio = values.audio;
     videoPlaceholder = values.videoPlaceholder;
@@ -143,11 +143,7 @@ function resizeVideosGrid() {
   grid.className = `grid-${Math.min(2, grid.children.length)}`;
 }
 
-function setupVideoFeed(
-  participantId: string,
-  label: string,
-  isLocalVideo: boolean
-) {
+function setupVideoFeed(peerId: string, label: string, isLocalVideo: boolean) {
   const copy = (document.querySelector(
     "#video-feed-template"
   ) as HTMLTemplateElement).content.cloneNode(true) as Element;
@@ -165,7 +161,7 @@ function setupVideoFeed(
     "div[class='MutedAudioIcon'"
   ) as HTMLDivElement;
 
-  feed.id = elementId(participantId, "feed");
+  feed.id = elementId(peerId, "feed");
   videoLabel.innerText = label;
 
   if (isLocalVideo) {
@@ -179,10 +175,8 @@ function setupVideoFeed(
   return { audio, video, videoPlaceholder, mutedAudioIcon };
 }
 
-export function toggleVideoPlaceholder(participantId: string): void {
-  const placeholder = document.getElementById(
-    elementId(participantId, "placeholder")
-  );
+export function toggleVideoPlaceholder(peerId: string): void {
+  const placeholder = document.getElementById(elementId(peerId, "placeholder"));
 
   if (placeholder) {
     placeholder.style.display =
@@ -190,9 +184,9 @@ export function toggleVideoPlaceholder(participantId: string): void {
   }
 }
 
-export function toggleMutedAudioIcon(participantId: string): void {
+export function toggleMutedAudioIcon(peerId: string): void {
   const mutedAudioIcon = document.getElementById(
-    elementId(participantId, "mutedAudioIcon")
+    elementId(peerId, "mutedAudioIcon")
   );
 
   if (mutedAudioIcon) {
@@ -201,8 +195,8 @@ export function toggleMutedAudioIcon(participantId: string): void {
   }
 }
 
-export function removeVideoElement(participantId: string): void {
-  document.getElementById(elementId(participantId, "feed"))?.remove();
+export function removeVideoElement(peerId: string): void {
+  document.getElementById(elementId(peerId, "feed"))?.remove();
   resizeVideosGrid();
 }
 
@@ -265,13 +259,13 @@ export function setErrorMessage(
   }
 }
 
-export function displayVideoElement(participantId: string): void {
-  const feedId = elementId(participantId, "feed");
+export function displayVideoElement(peerId: string): void {
+  const feedId = elementId(peerId, "feed");
   document.getElementById(feedId)!.style.display = "flex";
 }
 
-export function hideVideoElement(participantId: string): void {
-  const feedId = elementId(participantId, "feed");
+export function hideVideoElement(peerId: string): void {
+  const feedId = elementId(peerId, "feed");
   document.getElementById(feedId)!.style.display = "none";
 }
 

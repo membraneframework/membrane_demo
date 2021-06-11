@@ -21,14 +21,14 @@ defmodule VideoRoomWeb.RoomChannel do
       {:ok, pipeline} ->
         Process.monitor(pipeline)
 
-        participant_id = UUID.uuid4()
-        response = %{"userId" => participant_id}
+        peer_id = UUID.uuid4()
+        response = %{"userId" => peer_id}
 
         {:ok, response,
          assign(socket, %{
            room_id: room_id,
            pipeline: pipeline,
-           participant_id: participant_id
+           peer_id: peer_id
          })}
 
       {:error, reason} ->
@@ -59,7 +59,7 @@ defmodule VideoRoomWeb.RoomChannel do
     type = if type == "participant", do: :participant, else: :screensharing
 
     params = [
-      participant_id: socket.assigns.participant_id,
+      peer_id: socket.assigns.peer_id,
       relay_audio?: relay_audio?,
       relay_video?: relay_video?,
       display_name: display_name
@@ -134,20 +134,20 @@ defmodule VideoRoomWeb.RoomChannel do
   end
 
   @impl true
-  def handle_info({:participant_joined, participant}, socket) do
+  def handle_info({:peer_joined, peer}, socket) do
     push(socket, "mediaEvent", %{
-      type: "participantJoined",
-      data: %{"participant" => serialize_participant(participant)}
+      type: "peerJoined",
+      data: %{"peer" => serialize_peer(peer)}
     })
 
     {:noreply, socket}
   end
 
   @impl true
-  def handle_info({:participant_left, participant_id}, socket) do
+  def handle_info({:peer_left, peer_id}, socket) do
     push(socket, "mediaEvent", %{
-      type: "participantLeft",
-      data: %{"participantId" => participant_id}
+      type: "peerLeft",
+      data: %{"peerId" => peer_id}
     })
 
     {:noreply, socket}
@@ -155,40 +155,40 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info(
-        {:signal, {:replace_participant, old_participant_id, new_participant_id}},
+        {:signal, {:replace_peer, old_peer_id, new_peer_id}},
         socket
       ) do
-    push(socket, "replaceParticipant", %{
-      data: %{"oldParticipantId" => old_participant_id, "newParticipantId" => new_participant_id}
+    push(socket, "replacePeer", %{
+      data: %{"oldPeerId" => old_peer_id, "newPeerId" => new_peer_id}
     })
 
     {:noreply, socket}
   end
 
   @impl true
-  def handle_info({:signal, {:display_participant, participant_id}}, socket) do
-    push(socket, "displayParticipant", %{
-      data: %{"participantId" => participant_id}
+  def handle_info({:signal, {:display_peer, peer_id}}, socket) do
+    push(socket, "displayPeer", %{
+      data: %{"peerId" => peer_id}
     })
 
     {:noreply, socket}
   end
 
   @impl true
-  def handle_info({:toggled_video, participant_id}, socket) do
+  def handle_info({:toggled_video, peer_id}, socket) do
     push(socket, "mediaEvent", %{
       type: "toggledVideo",
-      data: %{"participantId" => participant_id}
+      data: %{"peerId" => peer_id}
     })
 
     {:noreply, socket}
   end
 
   @impl true
-  def handle_info({:toggled_audio, participant_id}, socket) do
+  def handle_info({:toggled_audio, peer_id}, socket) do
     push(socket, "mediaEvent", %{
       type: "toggledAudio",
-      data: %{"participantId" => participant_id}
+      data: %{"peerId" => peer_id}
     })
 
     {:noreply, socket}
@@ -197,12 +197,12 @@ defmodule VideoRoomWeb.RoomChannel do
   @impl true
   def handle_info({:new_peer, response, ref}, socket) do
     case response do
-      {:ok, participants} ->
-        participants = Enum.map(participants, &serialize_participant/1)
+      {:ok, peers} ->
+        peers = Enum.map(peers, &serialize_peer/1)
 
         reply(
           ref,
-          {:ok, %{participants: participants}}
+          {:ok, %{peers: peers}}
         )
 
       {:error, _reason} = error ->
@@ -238,13 +238,13 @@ defmodule VideoRoomWeb.RoomChannel do
     socket.assigns.pipeline |> send(message)
   end
 
-  defp serialize_participant(participant) do
+  defp serialize_peer(peer) do
     %{
-      "id" => participant.id,
-      "displayName" => participant.display_name,
-      "mids" => participant.mids,
-      "mutedAudio" => participant.muted_audio,
-      "mutedVideo" => participant.muted_video
+      "id" => peer.id,
+      "displayName" => peer.display_name,
+      "mids" => peer.mids,
+      "mutedAudio" => peer.muted_audio,
+      "mutedVideo" => peer.muted_video
     }
   end
 end

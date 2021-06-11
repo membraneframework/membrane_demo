@@ -4,7 +4,7 @@ import {
   AUDIO_CONSTRAINTS,
   SCREENSHARING_CONSTRAINTS,
   VIDEO_CONSTRAINTS,
-  LOCAL_PARTICIPANT_ID,
+  LOCAL_PEER_ID,
 } from "./consts";
 import {
   addVideoElement,
@@ -29,8 +29,8 @@ import {
   phoenixChannelPushResult,
 } from "../src/utils";
 
-import { MembraneWebRTC, isScreenSharingParticipant } from "./membraneWebRTC";
-import { Channel, Push, Socket } from "phoenix";
+import { MembraneWebRTC, isScreenSharingPeer } from "./membraneWebRTC";
+import { Socket } from "phoenix";
 import { parse } from "query-string";
 
 declare global {
@@ -65,7 +65,7 @@ const startLocalScreensharing = async (socket: Socket, user: string) => {
     screensharing = new MembraneWebRTC(
       getMediaCallbacksFromPhoenixChannel(screensharingChannel),
       {
-        participantConfig: {
+        peerConfig: {
           displayName: `${user} Screensharing`,
           relayVideo: true,
           relayAudio: false,
@@ -163,68 +163,56 @@ const setup = async () => {
     const webrtc = new MembraneWebRTC(
       getMediaCallbacksFromPhoenixChannel(webrtcChannel),
       {
-        participantConfig: {
+        peerConfig: {
           displayName,
           relayAudio: localAudioStream !== null,
           relayVideo: localVideoStream !== null,
         },
         callbacks: {
-          onAddTrack: ({ stream, participant, isScreenSharing }) => {
-            attachStream(stream, participant.id, isScreenSharing);
+          onAddTrack: ({ stream, peer, isScreenSharing }) => {
+            attachStream(stream, peer.id, isScreenSharing);
           },
-          onDisplayParticipant: ({ participant }) =>
-            displayVideoElement(participant.id),
-          onHideParticipant: ({ participant }) =>
-            hideVideoElement(participant.id),
-          onParticipantToggledVideo: ({ participant }) =>
-            toggleVideoPlaceholder(participant.id),
-          onParticipantToggledAudio: ({ participant }) =>
-            toggleMutedAudioIcon(participant.id),
+          onPeerToggledVideo: ({ peer }) => toggleVideoPlaceholder(peer.id),
+          onPeerToggledAudio: ({ peer }) => toggleMutedAudioIcon(peer.id),
           onConnectionError: setErrorMessage,
-          onParticipantJoined: ({
-            participant,
-            allParticipants,
-            isLocalParticipant,
-            userId,
-          }) => {
-            if (!isLocalParticipant) {
-              if (isScreenSharingParticipant(participant)) {
-                showScreensharing(participant.displayName, "My screensharing");
+          onPeerJoined: ({ peer, allPeers, isLocalPeer, userId }) => {
+            if (!isLocalPeer) {
+              if (isScreenSharingPeer(peer)) {
+                showScreensharing(peer.displayName, "My screensharing");
               } else {
                 addVideoElement(
-                  participant.id,
-                  participant.displayName,
+                  peer.id,
+                  peer.displayName,
                   false,
                   false,
-                  participant.mutedVideo,
-                  participant.mutedAudio
+                  peer.mutedVideo,
+                  peer.mutedAudio
                 );
               }
             }
 
-            const participantsNames = allParticipants
-              .filter((p) => !isScreenSharingParticipant(p))
+            const participantsNames = allPeers
+              .filter((p) => !isScreenSharingPeer(p))
               .map((p) => p.displayName);
             setParticipantsNamesList(participantsNames);
 
             if (
-              !isLocalParticipant &&
-              !isScreenSharingParticipant(participant) &&
-              allParticipants.filter(
-                (p) => !isScreenSharingParticipant(p) && p.id !== userId
-              ).length <= maxDisplayNum
+              !isLocalPeer &&
+              !isScreenSharingPeer(peer) &&
+              allPeers.filter((p) => !isScreenSharingPeer(p) && p.id !== userId)
+                .length <= maxDisplayNum
             ) {
-              displayVideoElement(participant.id);
+              displayVideoElement(peer.id);
             }
           },
-          onParticipantLeft: ({ participant, allParticipants }) => {
-            if (isScreenSharingParticipant(participant)) {
+          onPeerLeft: ({ peer, allPeers }) => {
+            if (isScreenSharingPeer(peer)) {
               removeScreensharing();
             } else {
-              removeVideoElement(participant.id);
+              removeVideoElement(peer.id);
 
-              const participantsNames = allParticipants
-                .filter((p) => !isScreenSharingParticipant(p))
+              const participantsNames = allPeers
+                .filter((p) => !isScreenSharingPeer(p))
                 .map((p) => p.displayName);
               setParticipantsNamesList(participantsNames);
             }
@@ -241,15 +229,15 @@ const setup = async () => {
     );
 
     webrtcChannel.on("mediaEvent", webrtc.receiveEvent);
-    webrtcChannel.on("replaceParticipant", (data: any) => {
-      const oldParticipantId = data.data.oldParticipantId;
-      const newParticipantId = data.data.newParticipantId;
+    webrtcChannel.on("replacePeer", (data: any) => {
+      const oldPeerId = data.data.oldPeerId;
+      const newPeerId = data.data.newPeerId;
 
-      hideVideoElement(oldParticipantId);
-      displayVideoElement(newParticipantId);
+      hideVideoElement(oldPeerId);
+      displayVideoElement(newPeerId);
     });
-    webrtcChannel.on("displayParticipant", (data: any) =>
-      displayVideoElement(data.data.participantId)
+    webrtcChannel.on("displayPeer", (data: any) =>
+      displayVideoElement(data.data.peerId)
     );
 
     const { userId: webrtcUserId } = await phoenixChannelPushResult(
@@ -269,15 +257,15 @@ const setup = async () => {
 
     if (localVideoStream) {
       addVideoElement(
-        LOCAL_PARTICIPANT_ID,
+        LOCAL_PEER_ID,
         "Me",
         true,
         true,
         false,
         localAudioStream === null
       );
-      attachStream(localStream, LOCAL_PARTICIPANT_ID);
-      displayVideoElement(LOCAL_PARTICIPANT_ID);
+      attachStream(localStream, LOCAL_PEER_ID);
+      displayVideoElement(LOCAL_PEER_ID);
     } else {
       const video = VIDEO_CONSTRAINTS.video as MediaTrackConstraintSet;
       const fakeVideoStream = createFakeVideoStream({
@@ -285,15 +273,15 @@ const setup = async () => {
         width: video.width! as number,
       }) as MediaStream;
       addVideoElement(
-        LOCAL_PARTICIPANT_ID,
+        LOCAL_PEER_ID,
         "Me",
         true,
         true,
         true,
         localAudioStream === null
       );
-      attachStream(fakeVideoStream, LOCAL_PARTICIPANT_ID);
-      displayVideoElement(LOCAL_PARTICIPANT_ID);
+      attachStream(fakeVideoStream, LOCAL_PEER_ID);
+      displayVideoElement(LOCAL_PEER_ID);
     }
 
     setupRoomUI({
@@ -302,14 +290,14 @@ const setup = async () => {
           startLocalScreensharing(socket, displayName),
         onLocalScreensharingStop: stopLocalScreensharing,
         onToggleAudio: () => {
-          toggleMutedAudioIcon(LOCAL_PARTICIPANT_ID);
+          toggleMutedAudioIcon(LOCAL_PEER_ID);
           webrtc.toggleAudio();
           localAudioStream
             ?.getAudioTracks()
             .forEach((t) => (t.enabled = !t.enabled));
         },
         onToggleVideo: () => {
-          toggleVideoPlaceholder(LOCAL_PARTICIPANT_ID);
+          toggleVideoPlaceholder(LOCAL_PEER_ID);
           webrtc.toggleVideo();
           localVideoStream
             ?.getVideoTracks()

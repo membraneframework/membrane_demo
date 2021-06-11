@@ -1,4 +1,4 @@
-export const DEFAULT_ERROR_MESSAGE =
+const DEFAULT_ERROR_MESSAGE =
   "Cannot connect to the server, try again by refreshing the page";
 
 export interface MediaEvent {
@@ -11,7 +11,7 @@ export interface MediaCallbacks {
   pushResult: (mediaEvent: MediaEvent) => Promise<any>;
 }
 
-interface Participant {
+interface Peer {
   id: string;
   displayName: string;
   mutedAudio: boolean;
@@ -30,21 +30,21 @@ interface CandidateData {
 interface TrackContext {
   track: MediaStreamTrack;
   stream: MediaStream;
-  participant: Participant;
+  peer: Peer;
   label?: string;
   mutedAudio?: boolean;
   mutedVideo?: boolean;
   isScreenSharing: boolean;
 }
 
-interface ParticipantContext {
-  participant: Participant;
-  allParticipants: Participant[];
-  isLocalParticipant?: boolean;
+interface PeerContext {
+  peer: Peer;
+  allPeers: Peer[];
+  isLocalPeer?: boolean;
   userId?: string;
 }
 
-interface ParticipantConfig {
+interface PeerConfig {
   displayName: string;
   relayVideo: boolean;
   relayAudio: boolean;
@@ -56,27 +56,25 @@ interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
-  onDisplayParticipant?: (ctx: ParticipantContext) => void;
-  onHideParticipant?: (ctx: ParticipantContext) => void;
-  onParticipantToggledVideo?: (ctx: ParticipantContext) => void;
-  onParticipantToggledAudio?: (ctx: ParticipantContext) => void;
-  onParticipantJoined?: (ctx: ParticipantContext) => void;
-  onParticipantLeft?: (ctx: ParticipantContext) => void;
+  onPeerToggledVideo?: (ctx: PeerContext) => void;
+  onPeerToggledAudio?: (ctx: PeerContext) => void;
+  onPeerJoined?: (ctx: PeerContext) => void;
+  onPeerLeft?: (ctx: PeerContext) => void;
 }
 
 export interface MembraneWebRTCConfig {
   callbacks?: Callbacks;
   rtcConfig?: RTCConfiguration;
   type?: "participant" | "screensharing";
-  participantConfig: ParticipantConfig;
+  peerConfig: PeerConfig;
 }
 
-export function isScreenSharingParticipant(participant: Participant): boolean {
-  return participant.mids.find((mid) => mid.includes("SCREEN")) !== undefined;
+export function isScreenSharingPeer(peer: Peer): boolean {
+  return peer.mids.find((mid) => mid.includes("SCREEN")) !== undefined;
 }
 
 export class MembraneWebRTC {
-  private participantConfig: ParticipantConfig;
+  private peerConfig: PeerConfig;
   private displayName: string;
   private type: "participant" | "screensharing";
 
@@ -85,8 +83,8 @@ export class MembraneWebRTC {
   private localStreams: Set<MediaStream> = new Set<MediaStream>();
   private midToStream: Map<String, MediaStream> = new Map();
   private connection?: RTCPeerConnection;
-  private idToParticipant: Map<String, Participant> = new Map();
-  private midToParticipant: Map<String, Participant> = new Map();
+  private idToPeer: Map<String, Peer> = new Map();
+  private midToPeer: Map<String, Peer> = new Map();
   private readonly rtcConfig: RTCConfiguration = {
     iceServers: [
       {
@@ -99,15 +97,10 @@ export class MembraneWebRTC {
   private readonly callbacks: Callbacks;
 
   constructor(mediaCallbacks: MediaCallbacks, config: MembraneWebRTCConfig) {
-    const {
-      type = "participant",
-      callbacks,
-      rtcConfig,
-      participantConfig,
-    } = config;
+    const { type = "participant", callbacks, rtcConfig, peerConfig } = config;
 
-    this.displayName = participantConfig.displayName;
-    this.participantConfig = participantConfig;
+    this.displayName = peerConfig.displayName;
+    this.peerConfig = peerConfig;
     this.type = type;
     this.mediaCallbacks = mediaCallbacks;
 
@@ -126,24 +119,24 @@ export class MembraneWebRTC {
         break;
 
       case "toggledVideo":
-        this.callbacks.onParticipantToggledVideo?.(
-          this.getParticipantContext(data.data.participantId)
+        this.callbacks.onPeerToggledVideo?.(
+          this.getPeerContext(data.data.peerId)
         );
         break;
 
       case "toggledAudio":
-        this.callbacks.onParticipantToggledAudio?.(
-          this.getParticipantContext(data.data.participantId)
+        this.callbacks.onPeerToggledAudio?.(
+          this.getPeerContext(data.data.peerId)
         );
         break;
 
-      case "participantJoined":
-        const participant = data.data.participant;
-        this.onParticipantJoined(participant, participant.id === this.userId);
+      case "peerJoined":
+        const peer = data.data.peer;
+        this.onPeerJoined(peer, peer.id === this.userId);
         break;
 
-      case "participantLeft":
-        this.onParticipantLeft(data.data.participantId);
+      case "peerLeft":
+        this.onPeerLeft(data.data.peerId);
         break;
 
       case "error":
@@ -169,15 +162,15 @@ export class MembraneWebRTC {
 
   public join = async () => {
     try {
-      const payload = { ...this.participantConfig, type: this.type };
+      const payload = { ...this.peerConfig, type: this.type };
 
-      const { participants } = await this.mediaCallbacks.pushResult({
+      const { peers } = await this.mediaCallbacks.pushResult({
         type: "start",
         payload,
       });
 
-      (participants as Array<Participant>).forEach((p) =>
-        this.onParticipantJoined(p, p.id === this.userId)
+      (peers as Array<Peer>).forEach((p) =>
+        this.onPeerJoined(p, p.id === this.userId)
       );
 
       this.callbacks.onJoin?.();
@@ -214,13 +207,11 @@ export class MembraneWebRTC {
     this.callbacks.onLeave?.();
   };
 
-  private getParticipantContext = (
-    particpantId: string
-  ): ParticipantContext => {
+  private getPeerContext = (peerId: string): PeerContext => {
     return {
-      participant: this.idToParticipant.get(particpantId)!,
-      allParticipants: Array.from(this.idToParticipant.values()),
-      isLocalParticipant: particpantId === this.userId,
+      peer: this.idToPeer.get(peerId)!,
+      allPeers: Array.from(this.idToPeer.values()),
+      isLocalPeer: peerId === this.userId,
       userId: this.userId,
     };
   };
@@ -254,18 +245,6 @@ export class MembraneWebRTC {
     }
   };
 
-  private replaceParticipant = (data: any) => {
-    const oldParticipantId: string = data.data.oldParticipantId;
-    const newParticipantId: string = data.data.newParticipantId;
-
-    this.callbacks.onHideParticipant?.(
-      this.getParticipantContext(oldParticipantId)
-    );
-    this.callbacks.onDisplayParticipant?.(
-      this.getParticipantContext(newParticipantId)
-    );
-  };
-
   private onRemoteCandidate = (candidate: CandidateData) => {
     try {
       const iceCandidate = new RTCIceCandidate(candidate.data);
@@ -296,7 +275,7 @@ export class MembraneWebRTC {
       const [stream] = event.streams;
       const mid = event.transceiver.mid!;
 
-      const participant = this.midToParticipant.get(mid)!;
+      const peer = this.midToPeer.get(mid)!;
       const isScreenSharing = mid.includes("SCREEN") || false;
 
       this.midToStream.set(mid, stream);
@@ -310,20 +289,20 @@ export class MembraneWebRTC {
         }
 
         this.callbacks.onRemoveTrack?.({
-          participant,
+          peer,
           track: event.track,
           stream,
           isScreenSharing,
         });
       };
 
-      const label = participant?.displayName || "";
-      const mutedVideo = participant?.mutedVideo;
-      const mutedAudio = participant?.mutedAudio;
+      const label = peer?.displayName || "";
+      const mutedVideo = peer?.mutedVideo;
+      const mutedAudio = peer?.mutedAudio;
 
       this.callbacks.onAddTrack?.({
         track: event.track,
-        participant,
+        peer,
         label,
         stream,
         isScreenSharing,
@@ -333,31 +312,26 @@ export class MembraneWebRTC {
     };
   };
 
-  private onParticipantJoined = (
-    participant: Participant,
-    isLocalParticipant: boolean = false
-  ) => {
-    this.idToParticipant.set(participant.id, participant);
-    participant.mids.forEach((mid) =>
-      this.midToParticipant.set(mid, participant)
-    );
+  private onPeerJoined = (peer: Peer, isLocalPeer: boolean = false) => {
+    this.idToPeer.set(peer.id, peer);
+    peer.mids.forEach((mid) => this.midToPeer.set(mid, peer));
 
-    this.callbacks.onParticipantJoined?.({
-      participant,
-      isLocalParticipant,
-      allParticipants: Array.from(this.idToParticipant.values()),
+    this.callbacks.onPeerJoined?.({
+      peer,
+      isLocalPeer,
+      allPeers: Array.from(this.idToPeer.values()),
       userId: this.userId,
     });
   };
 
-  private onParticipantLeft = (participantId: String) => {
-    const participant = this.idToParticipant.get(participantId);
-    this.idToParticipant.delete(participantId);
-    if (participant) {
-      participant.mids.forEach((mid) => this.midToParticipant.delete(mid));
-      this.callbacks.onParticipantLeft?.({
-        participant,
-        allParticipants: Array.from(this.idToParticipant.values()),
+  private onPeerLeft = (peerId: String) => {
+    const peer = this.idToPeer.get(peerId);
+    this.idToPeer.delete(peerId);
+    if (peer) {
+      peer.mids.forEach((mid) => this.midToPeer.delete(mid));
+      this.callbacks.onPeerLeft?.({
+        peer,
+        allPeers: Array.from(this.idToPeer.values()),
       });
     }
   };

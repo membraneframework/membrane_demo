@@ -97,10 +97,10 @@ defmodule VideoRoom.DisplayEngine do
                 {:forward, {{:endpoint, id}, {:enable_track, new_track_id}}}
               ]
 
-              old_participant_id = state.endpoints[old_id].ctx.participant_id
-              new_participant_id = state.endpoints[new_id].ctx.participant_id
+              old_peer_d = state.endpoints[old_id].ctx.peer_id
+              new_peer_id = state.endpoints[new_id].ctx.peer_id
 
-              send(id, {:signal, {:replace_participant, old_participant_id, new_participant_id}})
+              send(id, {:signal, {:replace_peer, old_peer_d, new_peer_id}})
 
               {actions, Map.put(display_managers, id, display_manager)}
           end
@@ -181,11 +181,11 @@ defmodule VideoRoom.DisplayEngine do
               |> List.first()
               |> (fn %Track{id: id} -> id end).()
 
-            participant_id = endpoints[new_id].ctx.participant_id
+            peer_id = endpoints[new_id].ctx.peer_id
 
             actions = [{:forward, {{:endpoint, id}, {:enable_track, new_track_id}}}]
 
-            send(id, {:signal, {:display_participant, participant_id}})
+            send(id, {:signal, {:display_peer, peer_id}})
             {actions, Map.put(display_managers, id, display_manager)}
         end
     end)

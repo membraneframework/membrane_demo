@@ -98,11 +98,11 @@ defmodule VideoRoom.Pipeline do
         {:ok, state}
 
       Map.has_key?(ctx.children, {:endpoint, peer_pid}) ->
-        participants = get_participants_data(state)
+        peers = get_peers_data(state)
 
         send(
           peer_pid,
-          {:new_peer, {:ok, participants}, ref}
+          {:new_peer, {:ok, peers}, ref}
         )
 
         Membrane.Logger.warn("Peer already connected, ignoring")
@@ -111,12 +111,12 @@ defmodule VideoRoom.Pipeline do
       true ->
         {{:ok, actions}, state} = accept_new_peer(peer_pid, peer_type, opts, ref, ctx, state)
 
-        participant = get_participant_data(state.endpoints[peer_pid])
+        peer = get_peer_data(state.endpoints[peer_pid])
 
         state.endpoints
         |> Map.delete(peer_pid)
         |> Enum.each(fn {pid, _endpoint} ->
-          send(pid, {:participant_joined, participant})
+          send(pid, {:peer_joined, peer})
         end)
 
         {{:ok, actions}, state}
@@ -129,11 +129,11 @@ defmodule VideoRoom.Pipeline do
   end
 
   def handle_other({:remove_peer, peer_pid}, ctx, state) do
-    handle_leaving_participant(peer_pid, "Removing peer #{inspect(peer_pid)}.", ctx, state)
+    handle_leaving_peer(peer_pid, "Removing peer #{inspect(peer_pid)}.", ctx, state)
   end
 
   def handle_other({:DOWN, _ref, :process, pid, _reason}, ctx, state) do
-    handle_leaving_participant(
+    handle_leaving_peer(
       pid,
       "Connection #{inspect(pid)} is down. Cleaning up.",
       ctx,
@@ -154,13 +154,13 @@ defmodule VideoRoom.Pipeline do
         end
       )
 
-    participant_id = state.endpoints[peer_pid].ctx.participant_id
+    peer_id = state.endpoints[peer_pid].ctx.peer_id
 
     state.endpoints
     |> Map.delete(peer_pid)
     |> Enum.each(fn
       {room_channel_pid, _endpoint} ->
-        send(room_channel_pid, {toggled_media, participant_id})
+        send(room_channel_pid, {toggled_media, peer_id})
     end)
 
     {:ok, state}
@@ -387,7 +387,7 @@ defmodule VideoRoom.Pipeline do
   end
 
   defp accept_new_peer(peer_pid, peer_type, opts, ref, ctx, state) do
-    participant_id = Keyword.fetch!(opts, :participant_id)
+    peer_id = Keyword.fetch!(opts, :peer_id)
     display_name = Keyword.fetch!(opts, :display_name)
 
     Membrane.Logger.info("New peer #{inspect(peer_pid)} of type #{inspect(peer_type)}")
@@ -398,7 +398,7 @@ defmodule VideoRoom.Pipeline do
     endpoint =
       Endpoint.new(peer_pid, peer_type, tracks, %{
         display_name: display_name,
-        participant_id: participant_id,
+        peer_id: peer_id,
         muted_audio: not Keyword.get(opts, :relay_audio?),
         muted_video: not Keyword.get(opts, :relay_video?)
       })
@@ -442,23 +442,23 @@ defmodule VideoRoom.Pipeline do
     }
 
     state = put_in(state.endpoints[peer_pid], endpoint)
-    participants = get_participants_data(state)
+    peers = get_peers_data(state)
 
-    send(peer_pid, {:new_peer, {:ok, participants}, ref})
+    send(peer_pid, {:new_peer, {:ok, peers}, ref})
 
     {{:ok, [spec: spec] ++ tracks_msgs}, state}
   end
 
-  defp get_participants_data(state) do
+  defp get_peers_data(state) do
     state.endpoints
     |> Enum.map(fn {_, endpoint} ->
-      get_participant_data(endpoint)
+      get_peer_data(endpoint)
     end)
   end
 
-  defp get_participant_data(%Endpoint{inbound_tracks: tracks, ctx: ctx}) do
+  defp get_peer_data(%Endpoint{inbound_tracks: tracks, ctx: ctx}) do
     %{
-      id: ctx.participant_id,
+      id: ctx.peer_id,
       display_name: ctx.display_name,
       mids: Map.keys(tracks),
       muted_video: ctx.muted_video,
@@ -479,7 +479,7 @@ defmodule VideoRoom.Pipeline do
     end)
   end
 
-  defp handle_leaving_participant(pid, log, ctx, state) do
+  defp handle_leaving_peer(pid, log, ctx, state) do
     Membrane.Logger.info(log)
     removed_endpoint = state.endpoints[pid]
     result = maybe_remove_peer(pid, ctx, state)
@@ -487,7 +487,7 @@ defmodule VideoRoom.Pipeline do
     with {{:ok, _actions}, state} <- result, %Endpoint{ctx: ctx} <- removed_endpoint do
       state.endpoints
       |> Enum.each(fn {peer_pid, _endpoint} ->
-        send(peer_pid, {:participant_left, ctx.participant_id})
+        send(peer_pid, {:peer_left, ctx.peer_id})
       end)
     end
 

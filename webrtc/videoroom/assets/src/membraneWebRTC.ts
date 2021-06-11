@@ -41,6 +41,7 @@ interface ParticipantContext {
   participant: Participant;
   allParticipants: Participant[];
   isLocalParticipant?: boolean;
+  userId?: string;
 }
 
 interface ParticipantConfig {
@@ -55,10 +56,10 @@ interface Callbacks {
   onAddTrack?: (ctx: TrackContext) => void;
   onRemoveTrack?: (ctx: TrackContext) => void;
   onConnectionError?: (message: string) => void;
-  onDisplayParticipant?: (participantId: string) => void;
-  onHideParticipant?: (participantId: string) => void;
-  onParticipantToggledVideo?: (participantId: string) => void;
-  onParticipantToggledAudio?: (participantId: string) => void;
+  onDisplayParticipant?: (ctx: ParticipantContext) => void;
+  onHideParticipant?: (ctx: ParticipantContext) => void;
+  onParticipantToggledVideo?: (ctx: ParticipantContext) => void;
+  onParticipantToggledAudio?: (ctx: ParticipantContext) => void;
   onParticipantJoined?: (ctx: ParticipantContext) => void;
   onParticipantLeft?: (ctx: ParticipantContext) => void;
 }
@@ -81,15 +82,11 @@ export class MembraneWebRTC {
 
   private mediaCallbacks: MediaCallbacks;
 
-  private maxDisplayNum: number = 1;
   private localStreams: Set<MediaStream> = new Set<MediaStream>();
   private midToStream: Map<String, MediaStream> = new Map();
   private connection?: RTCPeerConnection;
   private idToParticipant: Map<String, Participant> = new Map();
-  private midToParticipant: Map<String, Participant> = new Map<
-    String,
-    Participant
-  >();
+  private midToParticipant: Map<String, Participant> = new Map();
   private readonly rtcConfig: RTCConfiguration = {
     iceServers: [
       {
@@ -128,20 +125,16 @@ export class MembraneWebRTC {
         this.onRemoteCandidate(data);
         break;
 
-      case "replaceParticipant":
-        this.replaceParticipant(data);
-        break;
-
-      case "displayParticipant":
-        this.callbacks.onDisplayParticipant?.(data.data.participantId);
-        break;
-
       case "toggledVideo":
-        this.callbacks.onParticipantToggledVideo?.(data.data.participantId);
+        this.callbacks.onParticipantToggledVideo?.(
+          this.getParticipantContext(data.data.participantId)
+        );
         break;
 
       case "toggledAudio":
-        this.callbacks.onParticipantToggledAudio?.(data.data.participantId);
+        this.callbacks.onParticipantToggledAudio?.(
+          this.getParticipantContext(data.data.participantId)
+        );
         break;
 
       case "participantJoined":
@@ -178,12 +171,10 @@ export class MembraneWebRTC {
     try {
       const payload = { ...this.participantConfig, type: this.type };
 
-      const {
-        maxDisplayNum,
-        participants,
-      } = await this.mediaCallbacks.pushResult({ type: "start", payload });
-
-      this.maxDisplayNum = maxDisplayNum;
+      const { participants } = await this.mediaCallbacks.pushResult({
+        type: "start",
+        payload,
+      });
 
       (participants as Array<Participant>).forEach((p) =>
         this.onParticipantJoined(p, p.id === this.userId)
@@ -223,6 +214,17 @@ export class MembraneWebRTC {
     this.callbacks.onLeave?.();
   };
 
+  private getParticipantContext = (
+    particpantId: string
+  ): ParticipantContext => {
+    return {
+      participant: this.idToParticipant.get(particpantId)!,
+      allParticipants: Array.from(this.idToParticipant.values()),
+      isLocalParticipant: particpantId === this.userId,
+      userId: this.userId,
+    };
+  };
+
   private onOffer = async (offer: OfferData) => {
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtcConfig);
@@ -253,11 +255,15 @@ export class MembraneWebRTC {
   };
 
   private replaceParticipant = (data: any) => {
-    const oldParticipantId = data.data.oldParticipantId;
-    const newParticipantId = data.data.newParticipantId;
+    const oldParticipantId: string = data.data.oldParticipantId;
+    const newParticipantId: string = data.data.newParticipantId;
 
-    this.callbacks.onHideParticipant?.(oldParticipantId);
-    this.callbacks.onDisplayParticipant?.(newParticipantId);
+    this.callbacks.onHideParticipant?.(
+      this.getParticipantContext(oldParticipantId)
+    );
+    this.callbacks.onDisplayParticipant?.(
+      this.getParticipantContext(newParticipantId)
+    );
   };
 
   private onRemoteCandidate = (candidate: CandidateData) => {
@@ -340,17 +346,8 @@ export class MembraneWebRTC {
       participant,
       isLocalParticipant,
       allParticipants: Array.from(this.idToParticipant.values()),
+      userId: this.userId,
     });
-
-    if (
-      !isLocalParticipant &&
-      !isScreenSharingParticipant(participant) &&
-      Array.from(this.idToParticipant.values()).filter(
-        (p) => !isScreenSharingParticipant(p) && p.id !== this.userId
-      ).length <= this.maxDisplayNum
-    ) {
-      this.callbacks.onDisplayParticipant?.(participant.id);
-    }
   };
 
   private onParticipantLeft = (participantId: String) => {

@@ -43,6 +43,7 @@ declare global {
 
 let screensharingSocketRefs: string[] = [];
 let screensharing: MembraneWebRTC | undefined;
+let maxDisplayNum: number = 1;
 
 const cleanLocalScreensharing = () => {
   screensharing?.leave();
@@ -171,15 +172,20 @@ const setup = async () => {
           onAddTrack: ({ stream, participant, isScreenSharing }) => {
             attachStream(stream, participant.id, isScreenSharing);
           },
-          onDisplayParticipant: displayVideoElement,
-          onHideParticipant: hideVideoElement,
-          onParticipantToggledVideo: toggleVideoPlaceholder,
-          onParticipantToggledAudio: toggleMutedAudioIcon,
+          onDisplayParticipant: ({ participant }) =>
+            displayVideoElement(participant.id),
+          onHideParticipant: ({ participant }) =>
+            hideVideoElement(participant.id),
+          onParticipantToggledVideo: ({ participant }) =>
+            toggleVideoPlaceholder(participant.id),
+          onParticipantToggledAudio: ({ participant }) =>
+            toggleMutedAudioIcon(participant.id),
           onConnectionError: setErrorMessage,
           onParticipantJoined: ({
             participant,
             allParticipants,
             isLocalParticipant,
+            userId,
           }) => {
             if (!isLocalParticipant) {
               if (isScreenSharingParticipant(participant)) {
@@ -200,6 +206,16 @@ const setup = async () => {
               .filter((p) => !isScreenSharingParticipant(p))
               .map((p) => p.displayName);
             setParticipantsNamesList(participantsNames);
+
+            if (
+              !isLocalParticipant &&
+              !isScreenSharingParticipant(participant) &&
+              allParticipants.filter(
+                (p) => !isScreenSharingParticipant(p) && p.id !== userId
+              ).length <= maxDisplayNum
+            ) {
+              displayVideoElement(participant.id);
+            }
           },
           onParticipantLeft: ({ participant, allParticipants }) => {
             if (isScreenSharingParticipant(participant)) {
@@ -225,10 +241,26 @@ const setup = async () => {
     );
 
     webrtcChannel.on("mediaEvent", webrtc.receiveEvent);
+    webrtcChannel.on("replaceParticipant", (data: any) => {
+      const oldParticipantId = data.data.oldParticipantId;
+      const newParticipantId = data.data.newParticipantId;
+
+      hideVideoElement(oldParticipantId);
+      displayVideoElement(newParticipantId);
+    });
+    webrtcChannel.on("displayParticipant", (data: any) =>
+      displayVideoElement(data.data.participantId)
+    );
+
     const { userId: webrtcUserId } = await phoenixChannelPushResult(
       webrtcChannel.join()
     );
     webrtc.setUserId(webrtcUserId);
+
+    const response = await phoenixChannelPushResult(
+      webrtcChannel.push("getMaxDisplayNum", {})
+    );
+    maxDisplayNum = response.maxDisplayNum;
 
     webrtcSocketRefs.push(socket.onError(webrtc.handleError));
     webrtcSocketRefs.push(socket.onClose(webrtc.handleError));
@@ -291,7 +323,7 @@ const setup = async () => {
       videoState: localVideoStream === null ? "disabled" : "unmuted",
     });
 
-    webrtc.join();
+    await webrtc.join();
   } catch (error) {
     console.error(error);
     setErrorMessage(

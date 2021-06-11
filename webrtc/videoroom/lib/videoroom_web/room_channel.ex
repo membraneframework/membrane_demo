@@ -110,6 +110,13 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
+  def handle_in("getMaxDisplayNum", _msg, socket) do
+    socket
+    |> send_to_pipeline({:get_max_display_num, self(), socket_ref(socket)})
+
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_info({:signal, {:candidate, candidate, sdp_mline_index}}, socket) do
     push(socket, "mediaEvent", %{
@@ -151,8 +158,7 @@ defmodule VideoRoomWeb.RoomChannel do
         {:signal, {:replace_participant, old_participant_id, new_participant_id}},
         socket
       ) do
-    push(socket, "mediaEvent", %{
-      type: "replaceParticipant",
+    push(socket, "replaceParticipant", %{
       data: %{"oldParticipantId" => old_participant_id, "newParticipantId" => new_participant_id}
     })
 
@@ -161,8 +167,7 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info({:signal, {:display_participant, participant_id}}, socket) do
-    push(socket, "mediaEvent", %{
-      type: "displayParticipant",
+    push(socket, "displayParticipant", %{
       data: %{"participantId" => participant_id}
     })
 
@@ -192,17 +197,24 @@ defmodule VideoRoomWeb.RoomChannel do
   @impl true
   def handle_info({:new_peer, response, ref}, socket) do
     case response do
-      {:ok, max_display_num, participants} ->
+      {:ok, participants} ->
         participants = Enum.map(participants, &serialize_participant/1)
 
         reply(
           ref,
-          {:ok, %{maxDisplayNum: max_display_num, participants: participants}}
+          {:ok, %{participants: participants}}
         )
 
       {:error, _reason} = error ->
         reply(ref, error)
     end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:max_display_num, max_display_num, ref}, socket) do
+    reply(ref, {:ok, %{"maxDisplayNum" => max_display_num}})
 
     {:noreply, socket}
   end

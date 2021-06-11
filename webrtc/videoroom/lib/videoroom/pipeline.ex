@@ -102,7 +102,7 @@ defmodule VideoRoom.Pipeline do
 
         send(
           peer_pid,
-          {:new_peer, {:ok, state.max_display_num, participants}, ref}
+          {:new_peer, {:ok, participants}, ref}
         )
 
         Membrane.Logger.warn("Peer already connected, ignoring")
@@ -168,6 +168,12 @@ defmodule VideoRoom.Pipeline do
 
   def handle_other(:check_if_empty, _ctx, state) do
     stop_if_empty(state)
+    {:ok, state}
+  end
+
+  def handle_other({:get_max_display_num, peer_pid, ref}, _ctx, state) do
+    send(peer_pid, {:max_display_num, state.max_display_num, ref})
+
     {:ok, state}
   end
 
@@ -438,7 +444,7 @@ defmodule VideoRoom.Pipeline do
     state = put_in(state.endpoints[peer_pid], endpoint)
     participants = get_participants_data(state)
 
-    send(peer_pid, {:new_peer, {:ok, state.max_display_num, participants}, ref})
+    send(peer_pid, {:new_peer, {:ok, participants}, ref})
 
     {{:ok, [spec: spec] ++ tracks_msgs}, state}
   end

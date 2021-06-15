@@ -23,7 +23,6 @@ import {
   attachStream,
 } from "./room_ui";
 import {
-  createFakeVideoStream,
   getMediaCallbacksFromPhoenixChannel,
   getChannelId,
   phoenixChannelPushResult,
@@ -267,11 +266,6 @@ const setup = async () => {
       attachStream(localStream, LOCAL_PEER_ID);
       displayVideoElement(LOCAL_PEER_ID);
     } else {
-      const video = VIDEO_CONSTRAINTS.video as MediaTrackConstraintSet;
-      const fakeVideoStream = createFakeVideoStream({
-        height: video!.height as number,
-        width: video.width! as number,
-      }) as MediaStream;
       addVideoElement(
         LOCAL_PEER_ID,
         "Me",
@@ -280,7 +274,6 @@ const setup = async () => {
         true,
         localAudioStream === null
       );
-      attachStream(fakeVideoStream, LOCAL_PEER_ID);
       displayVideoElement(LOCAL_PEER_ID);
     }
 

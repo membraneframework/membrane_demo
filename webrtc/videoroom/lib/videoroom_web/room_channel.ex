@@ -4,8 +4,10 @@ defmodule VideoRoomWeb.RoomChannel do
   require Logger
 
   @impl true
-  def join("room:" <> room_id, _params, socket) do
+  def join("room:" <> room_id, %{"metadata" => metadata}, socket) do
     # FIXME: make use of structs that are serialized to/from camel case to snake case existing atoms
+
+    # metadata
 
     room_id =
       case room_id do
@@ -47,7 +49,7 @@ defmodule VideoRoomWeb.RoomChannel do
         "mediaEvent",
         %{
           "type" => "start",
-          "payload" => %{
+          "data" => %{
             "type" => type,
             "relayAudio" => relay_audio?,
             "relayVideo" => relay_video?,
@@ -71,16 +73,20 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  def handle_in("mediaEvent", %{"type" => "answer", "payload" => %{"sdp" => sdp}}, socket) do
+  def handle_in(
+        "mediaEvent",
+        %{"type" => "answer", "data" => %{"sdpAnswer" => sdp_answer}},
+        socket
+      ) do
     socket
-    |> send_to_pipeline({:signal, self(), {:sdp_answer, sdp}})
+    |> send_to_pipeline({:signal, self(), {:sdp_answer, sdp_answer}})
 
     {:noreply, socket}
   end
 
   def handle_in(
         "mediaEvent",
-        %{"type" => "candidate", "payload" => %{"candidate" => candidate}},
+        %{"type" => "candidate", "data" => %{"candidate" => candidate}},
         socket
       ) do
     socket
@@ -127,8 +133,8 @@ defmodule VideoRoomWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  def handle_info({:signal, {:sdp_offer, sdp}}, socket) do
-    push(socket, "mediaEvent", %{type: "offer", data: %{"type" => "offer", "sdp" => sdp}})
+  def handle_info({:signal, {:sdp_offer, sdp_offer}}, socket) do
+    push(socket, "mediaEvent", %{type: "offer", data: %{"sdpOffer" => sdp_offer}})
 
     {:noreply, socket}
   end
@@ -177,7 +183,7 @@ defmodule VideoRoomWeb.RoomChannel do
   @impl true
   def handle_info({:toggled_video, peer_id}, socket) do
     push(socket, "mediaEvent", %{
-      type: "toggledVideo",
+      type: "peerToggledVideo",
       data: %{"peerId" => peer_id}
     })
 
@@ -187,7 +193,7 @@ defmodule VideoRoomWeb.RoomChannel do
   @impl true
   def handle_info({:toggled_audio, peer_id}, socket) do
     push(socket, "mediaEvent", %{
-      type: "toggledAudio",
+      type: "peerToggledAudio",
       data: %{"peerId" => peer_id}
     })
 
@@ -221,14 +227,17 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_info({:internal_error, message}, socket) do
-    push(socket, "mediaEvent", %{type: "error", error: message})
+    push(socket, "mediaEvent", %{type: "error", data: %{"message" => message}})
     {:noreply, socket}
   end
 
   def handle_info({:DOWN, _ref, :process, _monitor, reason}, socket) do
     push(socket, "mediaEvent", %{
       type: "error",
-      error: "Room stopped working, consider restarting your connection, #{inspect(reason)}"
+      data: %{
+        "message" =>
+          "Room stopped working, consider restarting your connection, #{inspect(reason)}"
+      }
     })
 
     {:noreply, socket}
@@ -241,10 +250,16 @@ defmodule VideoRoomWeb.RoomChannel do
   defp serialize_peer(peer) do
     %{
       "id" => peer.id,
-      "displayName" => peer.display_name,
-      "mids" => peer.mids,
-      "mutedAudio" => peer.muted_audio,
-      "mutedVideo" => peer.muted_video
+      "metadata" => %{
+        "displayName" => peer.display_name,
+        "mids" => peer.mids,
+        "mutedAudio" => peer.muted_audio,
+        "mutedVideo" => peer.muted_video
+      }
     }
+  end
+
+  defp deserialize_metadata(params) do
+    %{display_name: Map.get(params, "displayName")}
   end
 end

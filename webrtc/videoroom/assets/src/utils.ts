@@ -1,6 +1,6 @@
 import { Channel, Push } from "phoenix";
 
-import { MediaEvent, MediaCallbacks } from "./membraneWebRTC";
+import { SerializedMediaEvent } from "./membraneWebRTC";
 
 export const phoenixChannelPushResult = async (push: Push): Promise<any> => {
   return new Promise((resolve, reject) => {
@@ -21,12 +21,15 @@ export function getChannelId(
   }
 }
 
-export function getMediaCallbacksFromPhoenixChannel(
-  channel: Channel
-): MediaCallbacks {
+export function getMediaCallbacksFromPhoenixChannel(channel: Channel) {
   return {
-    onSendMediaEvent: (event: MediaEvent) => channel.push("mediaEvent", event),
-    onSendMediaEventResult: async (event: MediaEvent) =>
-      phoenixChannelPushResult(channel.push("mediaEvent", event)),
+    onSendSerializedMediaEvent: (serializedMediaEvent: SerializedMediaEvent) =>
+      channel.push("mediaEvent", { data: serializedMediaEvent }),
+    onSendSerializedMediaEventResult: async (
+      serializedMediaEvent: SerializedMediaEvent
+    ) =>
+      phoenixChannelPushResult(
+        channel.push("mediaEvent", { data: serializedMediaEvent })
+      ),
   };
 }

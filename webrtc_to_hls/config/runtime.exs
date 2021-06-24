@@ -1,4 +1,5 @@
 import Config
+
 defmodule ConfigParser do
   def parse_stun_servers(""), do: []
 
@@ -61,5 +62,6 @@ if config_env() == :prod do
 end
 
 config :membrane_webrtc_to_hls_demo,
-  stun_servers: System.get_env("STUN_SERVERS", "64.233.163.127:19302") |> ConfigParser.parse_stun_servers(),
+  stun_servers:
+    System.get_env("STUN_SERVERS", "64.233.163.127:19302") |> ConfigParser.parse_stun_servers(),
   turn_servers: System.get_env("TURN_SERVERS", "") |> ConfigParser.parse_turn_servers()

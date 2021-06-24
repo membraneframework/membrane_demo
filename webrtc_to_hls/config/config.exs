@@ -13,10 +13,11 @@ config :membrane_webrtc_to_hls_demo, WebRTCToHLSWeb.Endpoint,
 
 config :logger,
   compile_time_purge_matching: [
-    [level_lower_than: :info],
+    # [level_lower_than: :debug],
     # Silence irrelevant warnings caused by resending handshake events
     [module: Membrane.SRTP.Encryptor, function: "handle_event/4", level_lower_than: :error]
-  ]
+  ],
+  level: :debug
 
 config :logger, :console, metadata: [:room]
 

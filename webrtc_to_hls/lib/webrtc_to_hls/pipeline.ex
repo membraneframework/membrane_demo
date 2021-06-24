@@ -65,9 +65,7 @@ defmodule WebRTCToHLS.Pipeline do
     File.mkdir_p!(directory)
 
     Membrane.Logger.info(
-      "[#{inspect(__MODULE__)}] Created output directory '#{directory}' for owner #{
-        inspect(owner)
-      }"
+      "[#{inspect(__MODULE__)}] Created output directory '#{directory}' for owner #{inspect(owner)}"
     )
 
     stun_servers = Application.fetch_env!(:membrane_webrtc_to_hls_demo, :stun_servers)
@@ -90,7 +88,7 @@ defmodule WebRTCToHLS.Pipeline do
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
         target_window_duration: 10 |> Membrane.Time.seconds(),
         target_segment_duration: 10 |> Membrane.Time.seconds(),
-        persist?: true,
+        persist?: false,
         storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: directory}
       }
     }

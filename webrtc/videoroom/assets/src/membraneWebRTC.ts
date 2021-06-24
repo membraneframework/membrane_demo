@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from "uuid";
+
 export type SerializedMediaEvent = string;
 
 export interface Peer {
@@ -71,14 +73,6 @@ export function isScreenSharingPeer(peer: Peer): boolean {
   );
 }
 
-export function generateRandomString(): string {
-  return (
-    Math.random().toString(36).substring(2) +
-    Math.random().toString(36).substring(2) +
-    Math.random().toString(36).substring(2)
-  );
-}
-
 function serializeMediaEvent(mediaEvent: MediaEvent): SerializedMediaEvent {
   return JSON.stringify(mediaEvent);
 }
@@ -123,7 +117,7 @@ export class MembraneWebRTC {
     this.callbacks = callbacks;
     this.rtcConfig = rtcConfig || this.rtcConfig;
 
-    this.key = generateRandomString();
+    this.key = uuidv4();
     this.id = id;
   }
 
@@ -137,18 +131,17 @@ export class MembraneWebRTC {
         if (stream.getVideoTracks() !== []) relayVideo = true;
       });
 
-      const serializedResponse = await this.onSendMediaEventResult({
-        type: "join",
-        key: this.key,
-        data: {
+      const serializedResponse = await this.onSendMediaEventResult(
+        this.generateMediaEvent("join", {
           id: this.id,
           relayAudio: relayAudio,
           relayVideo: relayVideo,
           receiveMedia: this.receiveMedia,
           metadata: peerMetadata,
           tracksMetadata: Array.from(this.localTrackIdToMetadata.values()),
-        },
-      });
+        })
+      );
+
       const response = deserializeMediaEvent(serializedResponse);
 
       if (response.type === "peerAccepted") {
@@ -208,7 +201,7 @@ export class MembraneWebRTC {
   }
 
   public leave = () => {
-    this.onSendMediaEvent({ type: "leave", key: this.key });
+    this.onSendMediaEvent(this.generateMediaEvent("leave"));
     this.cleanUp();
   };
 
@@ -255,11 +248,7 @@ export class MembraneWebRTC {
         }
       });
 
-      this.onSendMediaEvent({
-        type: "sdpAnswer",
-        key: this.key,
-        data: answer,
-      });
+      this.onSendMediaEvent(this.generateMediaEvent("sdpAnswer", answer));
     } catch (error) {
       console.error(error);
     }
@@ -282,14 +271,12 @@ export class MembraneWebRTC {
   private onLocalCandidate = () => {
     return (event: RTCPeerConnectionIceEvent) => {
       if (event.candidate) {
-        this.onSendMediaEvent({
-          type: "candidate",
-          key: this.key,
-          data: {
+        this.onSendMediaEvent(
+          this.generateMediaEvent("candidate", {
             candidate: event.candidate.candidate,
             sdpMLineIndex: event.candidate.sdpMLineIndex,
-          },
-        });
+          })
+        );
       }
     };
   };
@@ -368,5 +355,13 @@ export class MembraneWebRTC {
       this.midToTrackMetadata.delete(mid);
     });
     this.idToPeer.delete(peer.id);
+  };
+
+  private generateMediaEvent = (type: string, data?: any): MediaEvent => {
+    var event: MediaEvent = { type, key: this.key };
+    if (data) {
+      event = { ...event, data };
+    }
+    return event;
   };
 }

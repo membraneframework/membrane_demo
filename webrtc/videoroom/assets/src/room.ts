@@ -27,14 +27,10 @@ import {
   getChannelId,
   phoenixChannelPushResult,
 } from "../src/utils";
-import {
-  MembraneWebRTC,
-  isScreenSharingPeer,
-  Peer,
-  generateRandomString,
-} from "./membraneWebRTC";
+import { MembraneWebRTC, isScreenSharingPeer, Peer } from "./membraneWebRTC";
 import { Socket } from "phoenix";
 import { parse } from "query-string";
+import { v4 as uuidv4 } from "uuid";
 
 declare global {
   interface MediaDevices {
@@ -68,7 +64,7 @@ const startLocalScreensharing = async (socket: Socket, user: string) => {
     const screensharingChannel = socket.channel(
       getChannelId("screensharing", getRoomId())
     );
-    screensharing = new MembraneWebRTC(generateRandomString(), {
+    screensharing = new MembraneWebRTC(uuidv4(), {
       peerConfig: {
         relayVideo: true,
         relayAudio: false,
@@ -172,7 +168,7 @@ const setup = async () => {
     const relayAudio = localAudioStream !== null;
     const relayVideo = localVideoStream !== null;
 
-    const webrtc = new MembraneWebRTC(generateRandomString(), {
+    const webrtc = new MembraneWebRTC(uuidv4(), {
       peerConfig: { relayAudio, relayVideo },
       callbacks: {
         ...getMediaCallbacksFromPhoenixChannel(webrtcChannel),

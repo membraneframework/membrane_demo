@@ -65,14 +65,6 @@ interface Callbacks {
   onConnectionError?: (message: string) => void;
 }
 
-export function isScreenSharingPeer(peer: Peer): boolean {
-  return (
-    Array.from(peer.midToTrackMetadata.keys()).find((mid) =>
-      mid.includes("SCREEN")
-    ) !== undefined
-  );
-}
-
 function serializeMediaEvent(mediaEvent: MediaEvent): SerializedMediaEvent {
   return JSON.stringify(mediaEvent);
 }
@@ -110,7 +102,7 @@ export class MembraneWebRTC {
   private readonly callbacks: Callbacks;
 
   constructor(id: string, config: MembraneWebRTCConfig) {
-    const { receiveMedia = true, callbacks, rtcConfig, peerConfig } = config;
+    const { receiveMedia = true, callbacks, rtcConfig } = config;
 
     this.receiveMedia = receiveMedia;
 
@@ -233,8 +225,6 @@ export class MembraneWebRTC {
       await this.connection.setRemoteDescription(offer.data);
       const answer = await this.connection.createAnswer();
       await this.connection.setLocalDescription(answer);
-
-      const localMidToTrackMetadata = new Map();
 
       this.connection.getTransceivers().forEach((transceiver) => {
         const trackId = transceiver.sender.track?.id;

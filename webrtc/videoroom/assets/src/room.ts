@@ -26,7 +26,7 @@ import {
   getChannelId,
   phoenixChannelPushResult,
 } from "../src/utils";
-import { MembraneWebRTC, isScreenSharingPeer, Peer } from "./membraneWebRTC";
+import { MembraneWebRTC, Peer } from "./membraneWebRTC";
 import { Socket } from "phoenix";
 import { parse } from "query-string";
 import { v4 as uuidv4 } from "uuid";
@@ -44,6 +44,7 @@ let screensharing: MembraneWebRTC | undefined;
 
 let peers: Peer[] = [];
 let webRtcPeerId: string | undefined;
+let displayName: string | undefined;
 
 const cleanLocalScreensharing = () => {
   screensharing?.leave();
@@ -123,12 +124,24 @@ const parseUrl = (): string => {
   return displayName as string;
 };
 
+const updateParticipantsList = (peersList: Peer[]): void => {
+  const participantsNames = peers
+    .filter((p) => p.metadata.type !== "screensharing")
+    .map((p) => p.metadata.displayName);
+
+  if (displayName) {
+    participantsNames.push(displayName);
+  }
+
+  setParticipantsNamesList(participantsNames);
+};
+
 const setup = async () => {
   try {
     const socket = new Socket("/socket");
     socket.connect();
 
-    const displayName = parseUrl();
+    displayName = parseUrl();
 
     let localAudioStream: MediaStream | null = null;
     let localVideoStream: MediaStream | null = null;
@@ -175,10 +188,11 @@ const setup = async () => {
         },
         onConnectionError: setErrorMessage,
         onPeerJoined: (peer) => {
+          peers.push(peer);
           const isLocalPeer = peer.id === webRtcPeerId;
 
           if (!isLocalPeer) {
-            if (isScreenSharingPeer(peer)) {
+            if (peer.metadata.type === "screensharing") {
               showScreensharing(peer.metadata.displayName, "My screensharing");
             } else {
               addVideoElement(
@@ -192,26 +206,20 @@ const setup = async () => {
             }
           }
 
-          const participantsNames = peers
-            .filter((p) => !isScreenSharingPeer(p))
-            .map((p) => p.metadata.displayName);
-          setParticipantsNamesList(participantsNames);
+          updateParticipantsList(peers);
 
-          if (!isLocalPeer && !isScreenSharingPeer(peer)) {
+          if (!isLocalPeer && peer.metadata.type !== "screensharing") {
             displayVideoElement(peer.id);
           }
         },
         onPeerLeft: (peer) => {
           peers = peers.filter((p) => p.id !== peer.id);
-          if (isScreenSharingPeer(peer)) {
+
+          if (peer.metadata.type === "screensharing") {
             removeScreensharing();
           } else {
             removeVideoElement(peer.id);
-
-            const participantsNames = peers
-              .filter((p) => !isScreenSharingPeer(p))
-              .map((p) => p.metadata.displayName);
-            setParticipantsNamesList(participantsNames);
+            updateParticipantsList(peers);
           }
         },
       },

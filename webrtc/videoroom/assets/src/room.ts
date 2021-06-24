@@ -10,7 +10,6 @@ import {
   addVideoElement,
   displayVideoElement,
   getRoomId,
-  hideVideoElement,
   removeScreensharing,
   removeVideoElement,
   setErrorMessage,
@@ -42,7 +41,6 @@ declare global {
 
 let screensharingSocketRefs: string[] = [];
 let screensharing: MembraneWebRTC | undefined;
-let maxDisplayNum: number = 1;
 
 let peers: Peer[] = [];
 let webRtcPeerId: string | undefined;
@@ -199,13 +197,7 @@ const setup = async () => {
             .map((p) => p.metadata.displayName);
           setParticipantsNamesList(participantsNames);
 
-          if (
-            !isLocalPeer &&
-            !isScreenSharingPeer(peer) &&
-            peers.filter(
-              (p) => !isScreenSharingPeer(p) && p.id !== webRtcPeerId
-            ).length <= maxDisplayNum
-          ) {
+          if (!isLocalPeer && !isScreenSharingPeer(peer)) {
             displayVideoElement(peer.id);
           }
         },
@@ -226,16 +218,6 @@ const setup = async () => {
     });
 
     webrtcChannel.on("mediaEvent", webrtc.receiveEvent);
-    webrtcChannel.on("replacePeer", (data: any) => {
-      const oldPeerId = data.data.oldPeerId;
-      const newPeerId = data.data.newPeerId;
-
-      hideVideoElement(oldPeerId);
-      displayVideoElement(newPeerId);
-    });
-    webrtcChannel.on("displayPeer", (data: any) =>
-      displayVideoElement(data.data.peerId)
-    );
     webrtcChannel.on("peerToggledVideo", (data: any) =>
       toggleVideoPlaceholder(data.data.peerId)
     );
@@ -244,11 +226,6 @@ const setup = async () => {
     );
 
     await phoenixChannelPushResult(webrtcChannel.join());
-
-    const response = await phoenixChannelPushResult(
-      webrtcChannel.push("getMaxDisplayNum", {})
-    );
-    maxDisplayNum = response.maxDisplayNum;
 
     const leave = () => {
       webrtc.leave();

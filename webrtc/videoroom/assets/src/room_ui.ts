@@ -264,11 +264,6 @@ export function displayVideoElement(peerId: string): void {
   document.getElementById(feedId)!.style.display = "flex";
 }
 
-export function hideVideoElement(peerId: string): void {
-  const feedId = elementId(peerId, "feed");
-  document.getElementById(feedId)!.style.display = "none";
-}
-
 function updateScreensharingToggleButton(
   visible: boolean,
   label: "start" | "stop"

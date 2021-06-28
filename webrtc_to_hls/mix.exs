@@ -34,12 +34,21 @@ defmodule WebRTCToHLS.MixProject do
       {:membrane_h264_ffmpeg_plugin,
        [
          env: :prod,
-         path: "../../membrane_h264_ffmpeg_plugin",
+         github: "membraneframework/membrane_h264_ffmpeg_plugin",
+         branch: "propagate-caps",
          override: true
        ]},
       {:membrane_http_adaptive_stream_plugin,
-       path: "../../membrane_http_adaptive_stream_plugin", override: true},
-      {:membrane_mp4_plugin, path: "../../membrane_mp4_plugin"},
+       [
+         github: "membraneframework/membrane_http_adaptive_stream_plugin",
+         branch: "discontinuity-support",
+         override: true
+       ]},
+      {:membrane_mp4_plugin,
+       [
+         github: "membraneframework/membrane_mp4_plugin",
+         branch: "detect-nalus-change"
+       ]},
       {:membrane_opus_plugin, "~> 0.4.0"},
       {:membrane_aac_plugin, "~> 0.6.0"},
       {:membrane_aac_fdk_plugin, "~> 0.5.0"}

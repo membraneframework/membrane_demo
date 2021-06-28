@@ -86,8 +86,8 @@ defmodule WebRTCToHLS.Pipeline do
       },
       hls: %Membrane.HTTPAdaptiveStream.Sink{
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
-        target_window_duration: 10 |> Membrane.Time.seconds(),
-        target_segment_duration: 10 |> Membrane.Time.seconds(),
+        target_window_duration: 20 |> Membrane.Time.seconds(),
+        target_segment_duration: 2 |> Membrane.Time.seconds(),
         persist?: false,
         storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: directory}
       }
@@ -131,7 +131,9 @@ defmodule WebRTCToHLS.Pipeline do
                 attach_nalus?: true
               },
               video_payloader: Membrane.MP4.Payloader.H264,
-              video_cmaf_muxer: Membrane.MP4.CMAF.Muxer
+              video_cmaf_muxer: %Membrane.MP4.CMAF.Muxer{
+                segment_duration: 2 |> Membrane.Time.seconds()
+              }
             },
             links: [
               link(:endpoint)

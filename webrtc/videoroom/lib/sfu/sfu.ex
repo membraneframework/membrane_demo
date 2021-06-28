@@ -81,10 +81,10 @@ defmodule Membrane.SFU do
   end
 
   @impl true
-  def handle_other({:media_event, data}, ctx, state) do
+  def handle_other({:media_event, from, data}, ctx, state) do
     case MediaEvent.deserialize(data) do
       {:ok, event} ->
-        {actions, state} = handle_media_event(event, ctx, state)
+        {actions, state} = handle_media_event(event, from, ctx, state)
         {{:ok, actions}, state}
 
       {:error, :invalid_media_event} ->
@@ -93,49 +93,40 @@ defmodule Membrane.SFU do
     end
   end
 
-  defp handle_media_event(%{type: :join, key: key, data: data} = event, ctx, state) do
-    {actions, state} =
-      if PrivateKey.is_valid(key) do
-        dispatch({:new_peer, data.id, data.metadata, data.track_metadata})
+  defp handle_media_event(%{type: :join, data: data}, peer_id, ctx, state) do
+    dispatch({:new_peer, peer_id, data.metadata, data.track_metadata})
 
-        receive do
-          {:accept_new_peer, peer_id} ->
-            cond do
-              peer_id != data.id ->
-                Membrane.Logger.info("Unknown peer id passed for acceptance: #{inspect(peer_id)}")
-                {[], state}
+    receive do
+      {:accept_new_peer, ^peer_id} ->
+        cond do
+          Map.has_key?(state.peers, peer_id) ->
+            Membrane.Logger.info("Peer with id: #{inspect(peer_id)} has already been added")
+            {[], state}
 
-              Map.has_key?(state.peers, key) ->
-                Membrane.Logger.info("Peer with id: #{inspect(peer_id)} has already been added")
-                {[], state}
+          true ->
+            peer = data
+            state = put_in(state, [:peers, peer_id], peer)
+            {actions, state} = setup_peer(data, ctx, state)
 
-              true ->
-                peer = Map.put(data, :key, key)
-                state = put_in(state, [:peers, key], peer)
-                {actions, state} = setup_peer(data, ctx, state)
-
-                MediaEvent.create_peer_accepted_event(peer_id, Map.delete(state.peers, key))
-                |> dispatch()
-
-                {actions, state}
-            end
-
-          {:deny_new_peer, peer_id} ->
-            MediaEvent.create_peer_denied_event(peer_id)
+            MediaEvent.create_peer_accepted_event(peer_id, Map.delete(state.peers, peer_id))
             |> dispatch()
 
-            {[], state}
+            {{:ok, actions}, state}
         end
-      else
-        Membrane.Logger.info("Invalid private key in media event: #{inspect(event)}")
-        {[], state}
-      end
 
-    {actions, state}
+      {:accept_new_peer, _other_peer_id} ->
+        Membrane.Logger.info("Unknown peer id passed for acceptance: #{inspect(peer_id)}")
+        {[], state}
+
+      {:deny_new_peer, peer_id} ->
+        MediaEvent.create_peer_denied_event(peer_id)
+        |> dispatch()
+
+        {:ok, state}
+    end
   end
 
-  defp handle_media_event(%{type: :answer} = event, _ctx, state) do
-    peer_id = state.peers[event.key].id
+  defp handle_media_event(%{type: :answer} = event, peer_id, _ctx, state) do
     {_track_metadata, state} = pop_in(state, [:peers, peer_id, :track_metadata])
 
     state =
@@ -145,13 +136,11 @@ defmodule Membrane.SFU do
      state}
   end
 
-  defp handle_media_event(%{type: :candidate} = event, _ctx, state) do
-    peer_id = state.peers[event.key].id
+  defp handle_media_event(%{type: :candidate} = event, peer_id, _ctx, state) do
     {{:ok, forward: {{:endpoint, peer_id}, {:signal, {:candidate, event.candidate}}}}, state}
   end
 
-  defp handle_media_event(%{type: :leave} = event, ctx, state) do
-    peer_id = state.peers[event.key].id
+  defp handle_media_event(%{type: :leave}, peer_id, ctx, state) do
     {actions, state} = remove_peer(peer_id, ctx, state)
     {{:ok, actions}, state}
   end

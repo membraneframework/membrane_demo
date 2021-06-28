@@ -33,10 +33,18 @@ defmodule Membrane.Room do
     {:ok, %{sfu_engine: pid}}
   end
 
-  def handle_other({:media_event, event, peer_channel_pid}, _ctx, state) do
-    send(sfu_engine, event)
+  def handle_other({:sfu_media_event, to, event}, _ctx, state) do
+    send(to, {:media_event, event})
     {:ok, state}
   end
 
-  def handle_other()
+  def handle_other({:media_event, _from, _event} = msg, _ctx, state) do
+    send(state.sfu_engine, msg)
+    {:ok, state}
+  end
+
+  def handle_other({:new_peer, peer_id, _metadata, _track_metadata}, _ctx, state) do
+    send(state.sfu_engine, {:accept_new_peer, peer_id})
+    {:ok, state}
+  end
 end

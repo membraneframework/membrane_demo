@@ -1,4 +1,4 @@
-defmodule VideoRoomWeb.RoomChannel do
+defmodule VideoRoomWeb.PeerChannel do
   use Phoenix.Channel
 
   require Logger
@@ -11,8 +11,10 @@ defmodule VideoRoomWeb.RoomChannel do
     end
     |> case do
       {:ok, room} ->
+        peer_id = "#{UUID.uuid4()}"
+        Registry.register(Registry.PeerChanel, peer_id, nil)
         Process.monitor(room)
-        {:ok, assign(socket, %{room_id: room_id, room: room})}
+        {:ok, assign(socket, %{room_id: room_id, room: room, peer_id: peer_id})}
 
       {:error, reason} ->
         Logger.error("""
@@ -27,7 +29,7 @@ defmodule VideoRoomWeb.RoomChannel do
 
   @impl true
   def handle_in("mediaEvent", %{data: event}, socket) do
-    send_to_room(socket, {:media_event, event})
+    send(socket.assigns.room, {:media_event, socket.assigns.peer_id, event})
 
     {:noreply, socket}
   end
@@ -37,19 +39,5 @@ defmodule VideoRoomWeb.RoomChannel do
     push(socket, "mediaEvent", %{data: event})
 
     {:noreply, socket}
-  end
-
-  @impl true
-  def handle_info({:DOWN, _ref, :process, _monitor, reason}, socket) do
-    push(socket, "mediaEvent", %{
-      type: "error",
-      error: "Room stopped working, consider restarting your connection, #{inspect(reason)}"
-    })
-
-    {:noreply, socket}
-  end
-
-  defp send_to_room(socket, message) do
-    socket.assigns.pipeline |> send(message)
   end
 end

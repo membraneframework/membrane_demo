@@ -11,11 +11,13 @@
   "dependencies": {
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",
-    "query-string": "^7.0.0"
+    "query-string": "^7.0.0",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/phoenix": "^1.5.1",
     "@types/query-string": "^6.3.0",
+    "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^4.16.1",
     "@typescript-eslint/parser": "^4.16.1",
     "copy-webpack-plugin": "^5.1.1",

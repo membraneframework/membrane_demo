@@ -1,22 +1,18 @@
-const DEFAULT_ERROR_MESSAGE =
-  "Cannot connect to the server, try again by refreshing the page";
+import { v4 as uuidv4 } from "uuid";
 
-export interface MediaEvent {
-  type: string;
-  payload: Object;
-}
+export type SerializedMediaEvent = string;
 
-export interface MediaCallbacks {
-  onSendMediaEvent: (mediaEvent: MediaEvent) => void;
-  onSendMediaEventResult: (mediaEvent: MediaEvent) => Promise<any>;
-}
-
-interface Peer {
+export interface Peer {
   id: string;
-  displayName: string;
-  mutedAudio: boolean;
-  mutedVideo: boolean;
-  mids: string[];
+  metadata: any;
+  midToTrackMetadata: Map<string, any>;
+}
+
+export interface MembraneWebRTCConfig {
+  callbacks: Callbacks;
+  rtcConfig?: RTCConfiguration;
+  receiveMedia?: boolean;
+  peerConfig: PeerConfig;
 }
 
 interface OfferData {
@@ -27,60 +23,70 @@ interface CandidateData {
   data: RTCIceCandidateInit;
 }
 
+interface MediaEvent {
+  type: string;
+  key?: string;
+  data?: any;
+}
+
 interface TrackContext {
   track: MediaStreamTrack;
   stream: MediaStream;
   peer: Peer;
-  label?: string;
-  mutedAudio?: boolean;
-  mutedVideo?: boolean;
-  isScreenSharing: boolean;
-}
-
-interface PeerContext {
-  peer: Peer;
-  allPeers: Peer[];
-  isLocalPeer?: boolean;
-  userId?: string;
+  mid: string;
+  metadata: any;
 }
 
 interface PeerConfig {
-  displayName: string;
   relayVideo: boolean;
   relayAudio: boolean;
 }
 
+interface JoinResult {
+  accepted: boolean;
+  id?: string;
+  peersInRoom?: Peer[];
+}
+
 interface Callbacks {
-  onJoin?: () => void;
-  onLeave?: () => void;
+  onSendSerializedMediaEvent: (
+    serializedMediaEvent: SerializedMediaEvent
+  ) => void;
+  onSendSerializedMediaEventResult: (
+    serializedMediaEvent: SerializedMediaEvent
+  ) => Promise<any>;
+
   onTrackAdded?: (ctx: TrackContext) => void;
   onTrackRemoved?: (ctx: TrackContext) => void;
+
+  onPeerJoined?: (peer: Peer) => void;
+  onPeerLeft?: (peer: Peer) => void;
+
   onConnectionError?: (message: string) => void;
-  onPeerToggledVideo?: (ctx: PeerContext) => void;
-  onPeerToggledAudio?: (ctx: PeerContext) => void;
-  onPeerJoined?: (ctx: PeerContext) => void;
-  onPeerLeft?: (ctx: PeerContext) => void;
 }
 
-export interface MembraneWebRTCConfig {
-  callbacks?: Callbacks;
-  rtcConfig?: RTCConfiguration;
-  type?: "participant" | "screensharing";
-  peerConfig: PeerConfig;
+function serializeMediaEvent(mediaEvent: MediaEvent): SerializedMediaEvent {
+  return JSON.stringify(mediaEvent);
 }
 
-export function isScreenSharingPeer(peer: Peer): boolean {
-  return peer.mids.find((mid) => mid.includes("SCREEN")) !== undefined;
+function deserializeMediaEvent(
+  serializedMediaEvent: SerializedMediaEvent
+): MediaEvent {
+  return JSON.parse(serializedMediaEvent) as MediaEvent;
 }
 
 export class MembraneWebRTC {
-  private peerConfig: PeerConfig;
-  private displayName: string;
-  private type: "participant" | "screensharing";
+  private key: string;
+  private id: string;
 
-  private mediaCallbacks: MediaCallbacks;
+  private receiveMedia: boolean;
 
-  private localStreams: Set<MediaStream> = new Set<MediaStream>();
+  private localTracksWithStreams: {
+    track: MediaStreamTrack;
+    stream: MediaStream;
+  }[] = [];
+  private midToTrackMetadata: Map<string, any> = new Map();
+  private localTrackIdToMetadata: Map<string, any> = new Map();
   private midToStream: Map<String, MediaStream> = new Map();
   private connection?: RTCPeerConnection;
   private idToPeer: Map<String, Peer> = new Map();
@@ -92,128 +98,114 @@ export class MembraneWebRTC {
       },
     ],
   };
-  private userId?: string;
 
   private readonly callbacks: Callbacks;
 
-  constructor(mediaCallbacks: MediaCallbacks, config: MembraneWebRTCConfig) {
-    const { type = "participant", callbacks, rtcConfig, peerConfig } = config;
+  constructor(id: string, config: MembraneWebRTCConfig) {
+    const { receiveMedia = true, callbacks, rtcConfig } = config;
 
-    this.displayName = peerConfig.displayName;
-    this.peerConfig = peerConfig;
-    this.type = type;
-    this.mediaCallbacks = mediaCallbacks;
+    this.receiveMedia = receiveMedia;
 
-    this.callbacks = callbacks || {};
+    this.callbacks = callbacks;
     this.rtcConfig = rtcConfig || this.rtcConfig;
+
+    this.key = uuidv4();
+    this.id = id;
   }
 
-  public receiveEvent = (data: any) => {
-    switch (data.type) {
+  public join = async (peerMetadata: any): Promise<JoinResult> => {
+    try {
+      let relayAudio = false,
+        relayVideo = false;
+
+      this.localTracksWithStreams.forEach(({ stream }) => {
+        if (stream.getAudioTracks() !== []) relayAudio = true;
+        if (stream.getVideoTracks() !== []) relayVideo = true;
+      });
+
+      const serializedResponse = await this.onSendMediaEventResult(
+        this.generateMediaEvent("join", {
+          id: this.id,
+          relayAudio: relayAudio,
+          relayVideo: relayVideo,
+          receiveMedia: this.receiveMedia,
+          metadata: peerMetadata,
+          tracksMetadata: Array.from(this.localTrackIdToMetadata.values()),
+        })
+      );
+
+      const response = deserializeMediaEvent(serializedResponse);
+
+      if (response.type === "peerAccepted") {
+        const result = {
+          ...response.data,
+          accepted: true,
+        } as JoinResult;
+
+        result.peersInRoom?.forEach((peer) => this.addPeer(peer));
+
+        return result;
+      } else {
+        return { accepted: false };
+      }
+    } catch (e) {
+      this.callbacks.onConnectionError?.(e);
+      this.leave();
+      return { accepted: false };
+    }
+  };
+
+  public receiveEvent = (serializedMediaEvent: SerializedMediaEvent) => {
+    const mediaEvent = deserializeMediaEvent(serializedMediaEvent);
+
+    switch (mediaEvent.type) {
       case "offer":
-        this.onOffer(data);
+        this.onOffer(mediaEvent.data);
         break;
 
       case "candidate":
-        this.onRemoteCandidate(data);
-        break;
-
-      case "toggledVideo":
-        this.callbacks.onPeerToggledVideo?.(
-          this.getPeerContext(data.data.peerId)
-        );
-        break;
-
-      case "toggledAudio":
-        this.callbacks.onPeerToggledAudio?.(
-          this.getPeerContext(data.data.peerId)
-        );
+        this.onRemoteCandidate(mediaEvent.data);
         break;
 
       case "peerJoined":
-        const peer = data.data.peer;
-        this.onPeerJoined(peer, peer.id === this.userId);
+        const peer = mediaEvent.data.peer;
+        this.onPeerJoined(peer);
         break;
 
       case "peerLeft":
-        this.onPeerLeft(data.data.peerId);
+        this.onPeerLeft(mediaEvent.data.peerId);
         break;
 
       case "error":
-        this.callbacks.onConnectionError?.(data.error);
+        this.callbacks.onConnectionError?.(mediaEvent.data.message);
         this.leave();
         break;
     }
   };
 
-  public handleError = () => {
-    this.callbacks.onConnectionError?.(DEFAULT_ERROR_MESSAGE);
-    this.leave();
-  };
-
-  public addLocalStream = (stream: MediaStream) => {
-    if (this.connection) {
-      throw new Error(
-        "Adding streams when connection is established is not yet supported"
-      );
-    }
-    this.localStreams.add(stream);
-  };
-
-  public join = async () => {
-    try {
-      const payload = { ...this.peerConfig, type: this.type };
-
-      const { peers } = await this.mediaCallbacks.onSendMediaEventResult({
-        type: "start",
-        payload,
-      });
-
-      (peers as Array<Peer>).forEach((p) =>
-        this.onPeerJoined(p, p.id === this.userId)
-      );
-
-      this.callbacks.onJoin?.();
-    } catch (e) {
-      this.callbacks.onConnectionError?.(e);
-      this.leave();
-    }
-  };
-
-  public setUserId = (userId: string) => {
-    this.userId = userId;
-  };
-
-  public toggleVideo = () => {
-    this.mediaCallbacks.onSendMediaEvent({ type: "toggledVideo", payload: {} });
-  };
-
-  public toggleAudio = () => {
-    this.mediaCallbacks.onSendMediaEvent({ type: "toggledAudio", payload: {} });
-  };
+  public addLocalTrack(
+    track: MediaStreamTrack,
+    stream: MediaStream,
+    trackMetadata: any = {}
+  ) {
+    this.localTracksWithStreams.push({ track, stream });
+    this.localTrackIdToMetadata.set(track.id, trackMetadata);
+  }
 
   public leave = () => {
-    this.mediaCallbacks.onSendMediaEvent({ type: "stop", payload: {} });
+    this.onSendMediaEvent(this.generateMediaEvent("leave"));
+    this.cleanUp();
+  };
 
+  public cleanUp = () => {
     if (this.connection) {
       this.connection.onicecandidate = null;
       this.connection.ontrack = null;
     }
-    this.localStreams.forEach((stream) =>
-      stream.getTracks().forEach((track) => track.stop())
-    );
+
+    this.localTracksWithStreams.forEach(({ track }) => track.stop());
+    this.localTracksWithStreams = [];
     this.connection = undefined;
-
-    this.callbacks.onLeave?.();
-  };
-
-  private getPeerContext = (peerId: string): PeerContext => {
-    return {
-      peer: this.idToPeer.get(peerId)!,
-      allPeers: Array.from(this.idToPeer.values()),
-      isLocalPeer: peerId === this.userId,
-      userId: this.userId,
-    };
   };
 
   private onOffer = async (offer: OfferData) => {
@@ -222,10 +214,8 @@ export class MembraneWebRTC {
       this.connection.onicecandidate = this.onLocalCandidate();
       this.connection.ontrack = this.onTrack();
 
-      this.localStreams.forEach((stream) => {
-        stream.getTracks().forEach((track) => {
-          this.connection!.addTrack(track, stream);
-        });
+      this.localTracksWithStreams.forEach(({ track, stream }) => {
+        this.connection!.addTrack(track, stream);
       });
     } else {
       this.connection.createOffer({ iceRestart: true });
@@ -236,10 +226,19 @@ export class MembraneWebRTC {
       const answer = await this.connection.createAnswer();
       await this.connection.setLocalDescription(answer);
 
-      this.mediaCallbacks.onSendMediaEvent({
-        type: "answer",
-        payload: answer,
+      this.connection.getTransceivers().forEach((transceiver) => {
+        const trackId = transceiver.sender.track?.id;
+        const mid = transceiver.mid;
+
+        if (trackId && mid) {
+          this.midToTrackMetadata.set(
+            mid,
+            this.localTrackIdToMetadata.get(trackId)
+          );
+        }
       });
+
+      this.onSendMediaEvent(this.generateMediaEvent("sdpAnswer", answer));
     } catch (error) {
       console.error(error);
     }
@@ -262,10 +261,12 @@ export class MembraneWebRTC {
   private onLocalCandidate = () => {
     return (event: RTCPeerConnectionIceEvent) => {
       if (event.candidate) {
-        this.mediaCallbacks.onSendMediaEvent({
-          type: "candidate",
-          payload: event.candidate,
-        });
+        this.onSendMediaEvent(
+          this.generateMediaEvent("candidate", {
+            candidate: event.candidate.candidate,
+            sdpMLineIndex: event.candidate.sdpMLineIndex,
+          })
+        );
       }
     };
   };
@@ -280,7 +281,7 @@ export class MembraneWebRTC {
 
       this.midToStream.set(mid, stream);
 
-      stream.onremovetrack = (event) => {
+      stream.onremovetrack = (e) => {
         const hasTracks = stream.getTracks().length > 0;
 
         if (!hasTracks) {
@@ -290,49 +291,67 @@ export class MembraneWebRTC {
 
         this.callbacks.onTrackRemoved?.({
           peer,
-          track: event.track,
+          track: e.track,
           stream,
-          isScreenSharing,
+          mid: event.transceiver.mid!,
+          metadata: this.midToTrackMetadata.get(mid),
         });
       };
-
-      const label = peer?.displayName || "";
-      const mutedVideo = peer?.mutedVideo;
-      const mutedAudio = peer?.mutedAudio;
 
       this.callbacks.onTrackAdded?.({
         track: event.track,
         peer,
-        label,
         stream,
-        isScreenSharing,
-        mutedVideo,
-        mutedAudio,
+        mid: event.transceiver.mid!,
+        metadata: this.midToTrackMetadata.get(mid),
       });
     };
   };
 
-  private onPeerJoined = (peer: Peer, isLocalPeer: boolean = false) => {
-    this.idToPeer.set(peer.id, peer);
-    peer.mids.forEach((mid) => this.midToPeer.set(mid, peer));
-
-    this.callbacks.onPeerJoined?.({
-      peer,
-      isLocalPeer,
-      allPeers: Array.from(this.idToPeer.values()),
-      userId: this.userId,
-    });
+  private onPeerJoined = (peer: Peer) => {
+    this.addPeer(peer);
+    this.callbacks.onPeerJoined?.(peer);
   };
 
   private onPeerLeft = (peerId: String) => {
     const peer = this.idToPeer.get(peerId);
-    this.idToPeer.delete(peerId);
     if (peer) {
-      peer.mids.forEach((mid) => this.midToPeer.delete(mid));
-      this.callbacks.onPeerLeft?.({
-        peer,
-        allPeers: Array.from(this.idToPeer.values()),
-      });
+      this.removePeer(peer);
+      this.callbacks.onPeerLeft?.(peer);
     }
+  };
+
+  private onSendMediaEvent = (mediaEvent: MediaEvent): void => {
+    this.callbacks.onSendSerializedMediaEvent(serializeMediaEvent(mediaEvent));
+  };
+
+  private onSendMediaEventResult = (mediaEvent: MediaEvent): Promise<any> => {
+    return this.callbacks.onSendSerializedMediaEventResult(
+      serializeMediaEvent(mediaEvent)
+    );
+  };
+
+  private addPeer = (peer: Peer): void => {
+    peer.midToTrackMetadata.forEach((metadata, mid, map) => {
+      this.midToPeer.set(mid, peer);
+      this.midToTrackMetadata.set(mid, metadata);
+    });
+    this.idToPeer.set(peer.id, peer);
+  };
+
+  private removePeer = (peer: Peer): void => {
+    peer.midToTrackMetadata.forEach((metadata, mid, map) => {
+      this.midToPeer.delete(mid);
+      this.midToTrackMetadata.delete(mid);
+    });
+    this.idToPeer.delete(peer.id);
+  };
+
+  private generateMediaEvent = (type: string, data?: any): MediaEvent => {
+    var event: MediaEvent = { type, key: this.key };
+    if (data) {
+      event = { ...event, data };
+    }
+    return event;
   };
 }

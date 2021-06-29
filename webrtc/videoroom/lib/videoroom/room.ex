@@ -6,17 +6,19 @@ defmodule Membrane.Room do
   require Membrane.Logger
 
   def start(opts) do
-    GenServer.start(__MODULE__, opts)
+    GenServer.start(__MODULE__, [], opts)
   end
 
   def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
+    GenServer.start_link(__MODULE__, [], opts)
   end
 
   @impl true
-  def init(room_id: room_id) do
+  def init(opts) do
+    Membrane.Logger.info("Spawning room proces: #{inspect(self())}")
+
     sfu_options = [
-      id: room_id,
+      id: opts[:room_id],
       extension_options: [
         vad: true
       ],
@@ -33,18 +35,31 @@ defmodule Membrane.Room do
     {:ok, %{sfu_engine: pid}}
   end
 
-  def handle_other({:sfu_media_event, to, event}, _ctx, state) do
-    send(to, {:media_event, event})
-    {:ok, state}
+  @impl true
+  def handle_info({_sfu_engine, {:sfu_media_event, :broadcast, event}}, state) do
+    Registry.dispatch(Membrane.PeerChannel.Registry, :peer_channel, fn entries ->
+      for {pid, _value} <- entries, do: send(pid, {:media_event, event})
+    end)
+
+    {:noreply, state}
   end
 
-  def handle_other({:media_event, _from, _event} = msg, _ctx, state) do
-    send(state.sfu_engine, msg)
-    {:ok, state}
+  @impl true
+  def handle_info({_sfu_engine, {:sfu_media_event, to, event}}, state) do
+    [{pid, _value}] = Registry.match(Membrane.PeerChannel.Registry, :peer_channel, to)
+    send(pid, {:media_event, event})
+    {:noreply, state}
   end
 
-  def handle_other({:new_peer, peer_id, _metadata, _track_metadata}, _ctx, state) do
+  @impl true
+  def handle_info({_sfu_engine, {:new_peer, peer_id, _metadata, _track_metadata}}, state) do
     send(state.sfu_engine, {:accept_new_peer, peer_id})
-    {:ok, state}
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:media_event, _from, _event} = msg, state) do
+    send(state.sfu_engine, msg)
+    {:noreply, state}
   end
 end

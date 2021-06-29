@@ -63,7 +63,7 @@ const startLocalScreensharing = async (socket: Socket, user: string) => {
     const screensharingChannel = socket.channel(
       getChannelId("screensharing", getRoomId())
     );
-    screensharing = new MembraneWebRTC(uuidv4(), {
+    screensharing = new MembraneWebRTC({
       peerConfig: {
         relayVideo: true,
         relayAudio: false,
@@ -97,17 +97,17 @@ const startLocalScreensharing = async (socket: Socket, user: string) => {
     screensharingChannel.on("mediaEvent", screensharing.receiveEvent);
     await phoenixChannelPushResult(screensharingChannel.join());
 
-    const { accepted } = await screensharing.join({
+    screensharing.join({
       displayName: `${user} Screensharing`,
       type: "screensharing",
       mutedAudio: true,
       mutedVideo: false,
     });
 
-    if (!accepted) {
-      cleanLocalScreensharing();
-      setLocalScreenSharingStatus(false);
-    }
+    // if (!accepted) {
+    //   cleanLocalScreensharing();
+    //   setLocalScreenSharingStatus(false);
+    // }
   } catch (error) {
     console.log("Error while starting screensharing", error);
     cleanLocalScreensharing();
@@ -179,38 +179,57 @@ const setup = async () => {
     const relayAudio = localAudioStream !== null;
     const relayVideo = localVideoStream !== null;
 
-    const webrtc = new MembraneWebRTC(uuidv4(), {
+    const webrtc = new MembraneWebRTC({
       peerConfig: { relayAudio, relayVideo },
       callbacks: {
         ...getMediaCallbacksFromPhoenixChannel(webrtcChannel),
         onTrackAdded: ({ stream, peer, metadata }) => {
-          attachStream(stream, peer.id, metadata.type === "screensharing");
+          attachStream(stream, peer.id);
         },
         onConnectionError: setErrorMessage,
+        onJoined: (peerId, peersInRoom) => {
+          peers = peersInRoom!;
+          webRtcPeerId = peerId;
+          peers.forEach((peer) => {
+            addVideoElement(
+              peer.id,
+              peer.metadata.displayName,
+              false,
+              false,
+              peer.metadata.mutedVideo,
+              peer.metadata.mutedAudio
+            );
+            displayVideoElement(peer.id);
+          });
+        },
+        onDenied: () => {
+          console.log("onDenied");
+        },
+
         onPeerJoined: (peer) => {
           peers.push(peer);
-          const isLocalPeer = peer.id === webRtcPeerId;
+          // const isLocalPeer = peer.id === webRtcPeerId;
 
-          if (!isLocalPeer) {
-            if (peer.metadata.type === "screensharing") {
-              showScreensharing(peer.metadata.displayName, "My screensharing");
-            } else {
-              addVideoElement(
-                peer.id,
-                peer.metadata.displayName,
-                false,
-                false,
-                peer.metadata.mutedVideo,
-                peer.metadata.mutedAudio
-              );
-            }
-          }
+          // if (!isLocalPeer) {
+          //   if (peer.metadata.type === "screensharing") {
+          //     showScreensharing(peer.metadata.displayName, "My screensharing");
+          //   } else {
+          addVideoElement(
+            peer.id,
+            peer.metadata.displayName,
+            false,
+            false,
+            peer.metadata.mutedVideo,
+            peer.metadata.mutedAudio
+          );
+          //   }
+          // }
 
           updateParticipantsList(peers);
 
-          if (!isLocalPeer && peer.metadata.type !== "screensharing") {
-            displayVideoElement(peer.id);
-          }
+          // if (!isLocalPeer && peer.metadata.type !== "screensharing") {
+          displayVideoElement(peer.id);
+          // }
         },
         onPeerLeft: (peer) => {
           peers = peers.filter((p) => p.id !== peer.id);
@@ -225,7 +244,7 @@ const setup = async () => {
       },
     });
 
-    webrtcChannel.on("mediaEvent", webrtc.receiveEvent);
+    webrtcChannel.on("mediaEvent", (event) => webrtc.receiveEvent(event.data));
     webrtcChannel.on("peerToggledVideo", (data: any) =>
       toggleVideoPlaceholder(data.data.peerId)
     );
@@ -301,16 +320,12 @@ const setup = async () => {
       videoState: localVideoStream === null ? "disabled" : "unmuted",
     });
 
-    const { accepted, peersInRoom, id } = await webrtc.join({
+    webrtc.join({
       displayName,
       type: "participant",
       mutedAudio: !relayAudio,
       mutedVideo: !relayVideo,
     });
-    if (accepted) {
-      peers = peersInRoom!;
-      webRtcPeerId = id;
-    }
   } catch (error) {
     console.error(error);
     setErrorMessage(

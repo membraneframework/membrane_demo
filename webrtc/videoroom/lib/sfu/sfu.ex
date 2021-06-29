@@ -4,7 +4,7 @@ defmodule Membrane.SFU do
   require Membrane.Logger
 
   alias Membrane.WebRTC.{Endpoint, EndpointBin, Track}
-  alias Membrane.SFU.{MediaEvent, PrivateKey}
+  alias Membrane.SFU.MediaEvent
 
   @registry_name Membrane.SFU.Registry.Dispatcher
 
@@ -56,21 +56,29 @@ defmodule Membrane.SFU do
   @impl true
   def handle_init(options) do
     play(self())
-    {:ok, _pid} = Registry.start_link(keys: :duplicate, name: @registry_name)
+    {:ok, _pid} = Registry.start_link(keys: :duplicate, name: get_registry_name(options[:id]))
 
     {{:ok, log_metadata: [sfu: options[:id]]},
-     %{id: options[:id], peers: %{}, endpoints: %{}, options: options}}
+     %{
+       id: options[:id],
+       peers: %{},
+       incoming_peers: MapSet.new(),
+       endpoints: %{},
+       options: options
+     }}
   end
+
+  defp get_registry_name(id), do: String.to_atom("#{@registry_name}:#{id}")
 
   @impl true
   def handle_other({:register, pid}, _ctx, state) do
-    Registry.register(@registry_name, :sfu, pid)
+    Registry.register(get_registry_name(state.id), :sfu, pid)
     {:ok, state}
   end
 
   @impl true
   def handle_other({:unregister, pid}, _ctx, state) do
-    Registry.unregister_match(@registry_name, :sfu, pid)
+    Registry.unregister_match(get_registry_name(state.id), :sfu, pid)
     {:ok, state}
   end
 
@@ -94,7 +102,7 @@ defmodule Membrane.SFU do
   end
 
   defp handle_media_event(%{type: :join, data: data}, peer_id, ctx, state) do
-    dispatch({:new_peer, peer_id, data.metadata, data.track_metadata})
+    dispatch({:new_peer, peer_id, data.metadata, data.track_metadata}, state)
 
     receive do
       {:accept_new_peer, ^peer_id} ->
@@ -104,14 +112,15 @@ defmodule Membrane.SFU do
             {[], state}
 
           true ->
-            peer = data
+            peer = Map.put(data, :id, peer_id)
             state = put_in(state, [:peers, peer_id], peer)
-            {actions, state} = setup_peer(data, ctx, state)
+            {actions, state} = setup_peer(peer, ctx, state)
+            state = %{state | incoming_peers: MapSet.put(state.incoming_peers, peer_id)}
 
             MediaEvent.create_peer_accepted_event(peer_id, Map.delete(state.peers, peer_id))
-            |> dispatch()
+            |> dispatch(state)
 
-            {{:ok, actions}, state}
+            {actions, state}
         end
 
       {:accept_new_peer, _other_peer_id} ->
@@ -120,35 +129,57 @@ defmodule Membrane.SFU do
 
       {:deny_new_peer, peer_id} ->
         MediaEvent.create_peer_denied_event(peer_id)
-        |> dispatch()
+        |> dispatch(state)
 
-        {:ok, state}
+        {[], state}
     end
   end
 
-  defp handle_media_event(%{type: :answer} = event, peer_id, _ctx, state) do
+  defp handle_media_event(%{type: :sdp_answer} = event, peer_id, ctx, state) do
     {_track_metadata, state} = pop_in(state, [:peers, peer_id, :track_metadata])
 
     state =
       put_in(state, [:peers, peer_id, :mid_to_track_metadata], event.data.mid_to_track_metadata)
 
-    {{:ok, forward: {{:endpoint, peer_id}, {:signal, {:sdp_answer, event.data.sdp_answer.sdp}}}},
-     state}
+    actions = [
+      forward: {{:endpoint, peer_id}, {:signal, {:sdp_answer, event.data.sdp_answer.sdp}}}
+    ]
+
+    {tracks_msgs, state} =
+      if MapSet.member?(state.incoming_peers, peer_id) do
+        inbound_tracks = Map.values(state.endpoints[peer_id].inbound_tracks)
+        state = %{state | incoming_peers: MapSet.delete(state.incoming_peers, peer_id)}
+        tracks_msgs = update_track_messages(ctx, inbound_tracks, {:endpoint, peer_id})
+
+        MediaEvent.create_peer_joined_event(
+          peer_id,
+          state.peers[peer_id].metadata,
+          event.data.mid_to_track_metadata
+        )
+        |> dispatch(state)
+
+        {tracks_msgs, state}
+      else
+        {[], state}
+      end
+
+    {actions ++ tracks_msgs, state}
   end
 
   defp handle_media_event(%{type: :candidate} = event, peer_id, _ctx, state) do
-    {{:ok, forward: {{:endpoint, peer_id}, {:signal, {:candidate, event.candidate}}}}, state}
+    actions = [forward: {{:endpoint, peer_id}, {:signal, {:candidate, event.data.candidate}}}]
+    {actions, state}
   end
 
   defp handle_media_event(%{type: :leave}, peer_id, ctx, state) do
     {actions, state} = remove_peer(peer_id, ctx, state)
-    {{:ok, actions}, state}
+    {actions, state}
   end
 
   @impl true
   def handle_notification({:signal, message}, {:endpoint, peer_id}, _ctx, state) do
     MediaEvent.create_signal_event(peer_id, {:signal, message})
-    |> dispatch()
+    |> dispatch(state)
 
     {:ok, state}
   end
@@ -166,7 +197,7 @@ defmodule Membrane.SFU do
       fake => Membrane.Element.Fake.Sink.Buffers
     }
 
-    extensions = setup_extensions(encoding, state.options.extension_options)
+    extensions = setup_extensions(encoding, state[:options][:extension_options])
 
     links =
       [
@@ -189,6 +220,9 @@ defmodule Membrane.SFU do
             else
               []
             end
+
+          _child ->
+            []
         end)
 
     spec = %ParentSpec{children: children, links: links, crash_group: {endpoint_id, :temporary}}
@@ -204,12 +238,12 @@ defmodule Membrane.SFU do
   end
 
   def handle_notification({:vad, val}, {:endpoint, endpoint_id}, _ctx, state) do
-    dispatch({:vad_notification, val, endpoint_id})
+    dispatch({:vad_notification, val, endpoint_id}, state)
     {:ok, state}
   end
 
-  defp dispatch(msg) do
-    Registry.dispatch(@registry_name, :sfu, fn entries ->
+  defp dispatch(msg, state) do
+    Registry.dispatch(get_registry_name(state.id), :sfu, fn entries ->
       for {_, pid} <- entries, do: send(pid, {self(), msg})
     end)
   end
@@ -296,7 +330,7 @@ defmodule Membrane.SFU do
   end
 
   defp setup_extensions(encoding, extension_options) do
-    if encoding == :OPUS and extension_options.vad, do: [{:vad, Membrane.RTP.VAD}], else: []
+    if encoding == :OPUS and extension_options[:vad], do: [{:vad, Membrane.RTP.VAD}], else: []
   end
 
   defp remove_peer(peer_id, ctx, state) do
@@ -306,7 +340,7 @@ defmodule Membrane.SFU do
         {[], state}
 
       {:present, actions, state} ->
-        dispatch({:peer_left, peer_id})
+        dispatch({:peer_left, peer_id}, state)
         {actions, state}
     end
   end
@@ -318,7 +352,7 @@ defmodule Membrane.SFU do
       {endpoint, state} = pop_in(state, [:endpoints, peer_id])
       tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
 
-      tracks_msgs = update_track_messages(ctx, tracks, {:endpoint, peer_id}, state)
+      tracks_msgs = update_track_messages(ctx, tracks, {:endpoint, peer_id})
 
       endpoint_bin = ctx.children[{:endpoint, peer_id}]
 
@@ -340,12 +374,12 @@ defmodule Membrane.SFU do
     end
   end
 
-  defp update_track_messages(_ctx, [] = _tracks, _endpoint_bin, _state), do: []
+  defp update_track_messages(_ctx, [] = _tracks, _endpoint_bin), do: []
 
-  defp update_track_messages(ctx, tracks, endpoint_bin, state) do
+  defp update_track_messages(ctx, tracks, endpoint_bin_name) do
     flat_map_children(ctx, fn
-      {:endpoint, other_peer_pid} = other_endpoint_bin
-      when other_endpoint_bin != endpoint_bin and other_peer_pid != state.active_screensharing ->
+      {:endpoint, _endpoint_id} = other_endpoint_bin
+      when other_endpoint_bin != endpoint_bin_name ->
         [forward: {other_endpoint_bin, {:add_tracks, tracks}}]
 
       _child ->

@@ -12,7 +12,7 @@ defmodule VideoRoomWeb.PeerChannel do
     |> case do
       {:ok, room} ->
         peer_id = "#{UUID.uuid4()}"
-        Registry.register(Registry.PeerChanel, peer_id, nil)
+        Registry.register(Membrane.PeerChannel.Registry, :peer_channel, peer_id)
         Process.monitor(room)
         {:ok, assign(socket, %{room_id: room_id, room: room, peer_id: peer_id})}
 
@@ -28,7 +28,7 @@ defmodule VideoRoomWeb.PeerChannel do
   end
 
   @impl true
-  def handle_in("mediaEvent", %{data: event}, socket) do
+  def handle_in("mediaEvent", %{"data" => event}, socket) do
     send(socket.assigns.room, {:media_event, socket.assigns.peer_id, event})
 
     {:noreply, socket}

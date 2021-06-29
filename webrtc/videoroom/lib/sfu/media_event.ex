@@ -1,8 +1,8 @@
 defmodule Membrane.SFU.MediaEvent do
   def create_peer_accepted_event(peer_id, peers) do
     peers =
-      Enum.map(peers, fn peer ->
-        %{id: peer.id, metadata: peer.metadata, midToTrackMetadata: peer.mid_to_track_metadata}
+      Enum.map(peers, fn {id, peer} ->
+        %{id: id, metadata: peer.metadata, midToTrackMetadata: peer.mid_to_track_metadata}
       end)
 
     %{type: "peerAccepted", data: %{id: peer_id, peersInRoom: peers}}
@@ -75,7 +75,7 @@ defmodule Membrane.SFU.MediaEvent do
   defp do_create(event, to) do
     event
     |> serialize()
-    |> then(fn event -> {:media_event, to, event} end)
+    |> then(fn event -> {:sfu_media_event, to, event} end)
   end
 
   def serialize(event), do: Jason.encode!(event)
@@ -96,7 +96,7 @@ defmodule Membrane.SFU.MediaEvent do
           "relayVideo" => relay_video,
           "receiveMedia" => receive_media,
           "metadata" => metadata,
-          "trackMetadata" => track_metadata
+          "tracksMetadata" => track_metadata
         }
       } = event
 

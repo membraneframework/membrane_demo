@@ -5,7 +5,7 @@ export type SerializedMediaEvent = string;
 export interface Peer {
   id: string;
   metadata: any;
-  midToTrackMetadata: Map<string, any>;
+  midToTrackMetadata: any;
 }
 
 export interface MembraneWebRTCConfig {
@@ -56,6 +56,9 @@ interface Callbacks {
     serializedMediaEvent: SerializedMediaEvent
   ) => Promise<any>;
 
+  onJoined?: (peerId: string, peersInRoom: [Peer]) => void;
+  onDenied?: () => void;
+
   onTrackAdded?: (ctx: TrackContext) => void;
   onTrackRemoved?: (ctx: TrackContext) => void;
 
@@ -76,8 +79,7 @@ function deserializeMediaEvent(
 }
 
 export class MembraneWebRTC {
-  private key: string;
-  private id: string;
+  private id?: string;
 
   private receiveMedia: boolean;
 
@@ -101,19 +103,16 @@ export class MembraneWebRTC {
 
   private readonly callbacks: Callbacks;
 
-  constructor(id: string, config: MembraneWebRTCConfig) {
+  constructor(config: MembraneWebRTCConfig) {
     const { receiveMedia = true, callbacks, rtcConfig } = config;
 
     this.receiveMedia = receiveMedia;
 
     this.callbacks = callbacks;
     this.rtcConfig = rtcConfig || this.rtcConfig;
-
-    this.key = uuidv4();
-    this.id = id;
   }
 
-  public join = async (peerMetadata: any): Promise<JoinResult> => {
+  public join = (peerMetadata: any): void => {
     try {
       let relayAudio = false,
         relayVideo = false;
@@ -123,9 +122,8 @@ export class MembraneWebRTC {
         if (stream.getVideoTracks() !== []) relayVideo = true;
       });
 
-      const serializedResponse = await this.onSendMediaEventResult(
+      this.onSendMediaEvent(
         this.generateMediaEvent("join", {
-          id: this.id,
           relayAudio: relayAudio,
           relayVideo: relayVideo,
           receiveMedia: this.receiveMedia,
@@ -133,33 +131,32 @@ export class MembraneWebRTC {
           tracksMetadata: Array.from(this.localTrackIdToMetadata.values()),
         })
       );
-
-      const response = deserializeMediaEvent(serializedResponse);
-
-      if (response.type === "peerAccepted") {
-        const result = {
-          ...response.data,
-          accepted: true,
-        } as JoinResult;
-
-        result.peersInRoom?.forEach((peer) => this.addPeer(peer));
-
-        return result;
-      } else {
-        return { accepted: false };
-      }
     } catch (e) {
       this.callbacks.onConnectionError?.(e);
       this.leave();
-      return { accepted: false };
     }
   };
 
   public receiveEvent = (serializedMediaEvent: SerializedMediaEvent) => {
     const mediaEvent = deserializeMediaEvent(serializedMediaEvent);
-
     switch (mediaEvent.type) {
-      case "offer":
+      case "peerAccepted":
+        this.id = mediaEvent.data.id;
+        this.callbacks.onJoined?.(
+          mediaEvent.data.id,
+          mediaEvent.data.peersInRoom
+        );
+        let peers = mediaEvent.data.peersInRoom as Peer[];
+        peers.forEach(peer => {
+          this.addPeer(peer);
+        });
+        break;
+
+      case "peerDenied":
+        this.callbacks.onDenied?.();
+        break;
+
+      case "sdpOffer":
         this.onOffer(mediaEvent.data);
         break;
 
@@ -169,7 +166,9 @@ export class MembraneWebRTC {
 
       case "peerJoined":
         const peer = mediaEvent.data.peer;
-        this.onPeerJoined(peer);
+        if (peer.id != this.id) {
+          this.onPeerJoined(peer);
+        }
         break;
 
       case "peerLeft":
@@ -208,7 +207,7 @@ export class MembraneWebRTC {
     this.connection = undefined;
   };
 
-  private onOffer = async (offer: OfferData) => {
+  private onOffer = async (offer: RTCSessionDescriptionInit) => {
     if (!this.connection) {
       this.connection = new RTCPeerConnection(this.rtcConfig);
       this.connection.onicecandidate = this.onLocalCandidate();
@@ -222,31 +221,43 @@ export class MembraneWebRTC {
     }
 
     try {
-      await this.connection.setRemoteDescription(offer.data);
+      await this.connection.setRemoteDescription(offer);
       const answer = await this.connection.createAnswer();
       await this.connection.setLocalDescription(answer);
+
+      const localTrackMidToMetadata = {} as any;
 
       this.connection.getTransceivers().forEach((transceiver) => {
         const trackId = transceiver.sender.track?.id;
         const mid = transceiver.mid;
-
         if (trackId && mid) {
           this.midToTrackMetadata.set(
             mid,
             this.localTrackIdToMetadata.get(trackId)
           );
+
+          localTrackMidToMetadata[mid] = this.localTrackIdToMetadata.get(
+            trackId
+          );
+          // localTrackMidToMetadata.set(
+          //   mid,
+          //   this.localTrackIdToMetadata.get(trackId)
+          // );
         }
       });
-
-      this.onSendMediaEvent(this.generateMediaEvent("sdpAnswer", answer));
+      let mediaEvent = this.generateMediaEvent("sdpAnswer", {
+        sdpAnswer: answer,
+        midToTrackMetadata: localTrackMidToMetadata,
+      });
+      this.onSendMediaEvent(mediaEvent);
     } catch (error) {
       console.error(error);
     }
   };
 
-  private onRemoteCandidate = (candidate: CandidateData) => {
+  private onRemoteCandidate = (candidate: RTCIceCandidate) => {
     try {
-      const iceCandidate = new RTCIceCandidate(candidate.data);
+      const iceCandidate = new RTCIceCandidate(candidate);
       if (!this.connection) {
         throw new Error(
           "Received new remote candidate but RTCConnection is undefined"
@@ -297,7 +308,7 @@ export class MembraneWebRTC {
           metadata: this.midToTrackMetadata.get(mid),
         });
       };
-
+      
       this.callbacks.onTrackAdded?.({
         track: event.track,
         peer,
@@ -332,23 +343,23 @@ export class MembraneWebRTC {
   };
 
   private addPeer = (peer: Peer): void => {
-    peer.midToTrackMetadata.forEach((metadata, mid, map) => {
-      this.midToPeer.set(mid, peer);
-      this.midToTrackMetadata.set(mid, metadata);
-    });
+    for (let key in peer.midToTrackMetadata) {
+      this.midToPeer.set(key, peer);
+      this.midToTrackMetadata.set(key, peer.midToTrackMetadata[key]);
+    }
     this.idToPeer.set(peer.id, peer);
   };
 
   private removePeer = (peer: Peer): void => {
-    peer.midToTrackMetadata.forEach((metadata, mid, map) => {
-      this.midToPeer.delete(mid);
-      this.midToTrackMetadata.delete(mid);
-    });
+    // peer.midToTrackMetadata.forEach((metadata, mid, map) => {
+    //   this.midToPeer.delete(mid);
+    //   this.midToTrackMetadata.delete(mid);
+    // });
     this.idToPeer.delete(peer.id);
   };
 
   private generateMediaEvent = (type: string, data?: any): MediaEvent => {
-    var event: MediaEvent = { type, key: this.key };
+    var event: MediaEvent = { type };
     if (data) {
       event = { ...event, data };
     }

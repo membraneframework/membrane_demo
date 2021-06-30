@@ -13,12 +13,8 @@ import {
   setParticipantsNamesList,
   attachStream,
 } from "./room_ui";
-import {
-  getMediaCallbacksFromPhoenixChannel,
-  getChannelId,
-  phoenixChannelPushResult,
-} from "../src/utils";
-import { MembraneWebRTC, Peer } from "./membraneWebRTC";
+import { getChannelId, phoenixChannelPushResult } from "../src/utils";
+import { MembraneWebRTC, Peer, SerializedMediaEvent } from "./membraneWebRTC";
 import { Socket } from "phoenix";
 import { parse } from "query-string";
 
@@ -87,10 +83,9 @@ const setup = async () => {
 
     const webrtcSocketRefs: string[] = [];
     const metadata = {};
-    const webrtcChannel = socket.channel(
-      getChannelId("participant", getRoomId()),
-      { metadata: metadata }
-    );
+    const webrtcChannel = socket.channel(getChannelId(getRoomId()), {
+      metadata: metadata,
+    });
 
     const relayAudio = localAudioStream !== null;
     const relayVideo = localVideoStream !== null;
@@ -98,7 +93,9 @@ const setup = async () => {
     const webrtc = new MembraneWebRTC({
       peerConfig: { relayAudio, relayVideo },
       callbacks: {
-        ...getMediaCallbacksFromPhoenixChannel(webrtcChannel),
+        onSendSerializedMediaEvent: (serializedMediaEvent: SerializedMediaEvent) => {
+          webrtcChannel.push("mediaEvent", { data: serializedMediaEvent })
+        },
         onTrackAdded: ({ stream, peer, metadata }) => {
           attachStream(stream, peer.id);
         },
@@ -125,9 +122,6 @@ const setup = async () => {
 
         onPeerJoined: (peer) => {
           peers.push(peer);
-          // const isLocalPeer = peer.id === webRtcPeerId;
-
-          // if (!isLocalPeer) {
           addVideoElement(
             peer.id,
             peer.metadata.displayName,
@@ -136,14 +130,9 @@ const setup = async () => {
             peer.metadata.mutedVideo,
             peer.metadata.mutedAudio
           );
-          //   }
-          // }
 
           updateParticipantsList(peers);
-
-          // if (!isLocalPeer) {
           displayVideoElement(peer.id);
-          // }
         },
         onPeerLeft: (peer) => {
           peers = peers.filter((p) => p.id !== peer.id);

@@ -1,5 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
-
 export type SerializedMediaEvent = string;
 
 export interface Peer {
@@ -42,19 +40,10 @@ interface PeerConfig {
   relayAudio: boolean;
 }
 
-interface JoinResult {
-  accepted: boolean;
-  id?: string;
-  peersInRoom?: Peer[];
-}
-
 interface Callbacks {
   onSendSerializedMediaEvent: (
     serializedMediaEvent: SerializedMediaEvent
   ) => void;
-  onSendSerializedMediaEventResult: (
-    serializedMediaEvent: SerializedMediaEvent
-  ) => Promise<any>;
 
   onJoined?: (peerId: string, peersInRoom: [Peer]) => void;
   onDenied?: () => void;
@@ -239,10 +228,6 @@ export class MembraneWebRTC {
           localTrackMidToMetadata[mid] = this.localTrackIdToMetadata.get(
             trackId
           );
-          // localTrackMidToMetadata.set(
-          //   mid,
-          //   this.localTrackIdToMetadata.get(trackId)
-          // );
         }
       });
       let mediaEvent = this.generateMediaEvent("sdpAnswer", {
@@ -335,12 +320,6 @@ export class MembraneWebRTC {
     this.callbacks.onSendSerializedMediaEvent(serializeMediaEvent(mediaEvent));
   };
 
-  private onSendMediaEventResult = (mediaEvent: MediaEvent): Promise<any> => {
-    return this.callbacks.onSendSerializedMediaEventResult(
-      serializeMediaEvent(mediaEvent)
-    );
-  };
-
   private addPeer = (peer: Peer): void => {
     for (let key in peer.midToTrackMetadata) {
       this.midToPeer.set(key, peer);
@@ -350,10 +329,10 @@ export class MembraneWebRTC {
   };
 
   private removePeer = (peer: Peer): void => {
-    // peer.midToTrackMetadata.forEach((metadata, mid, map) => {
-    //   this.midToPeer.delete(mid);
-    //   this.midToTrackMetadata.delete(mid);
-    // });
+    for (let key in peer.midToTrackMetadata) {
+      this.midToPeer.delete(key);
+      this.midToTrackMetadata.delete(key);
+    }
     this.idToPeer.delete(peer.id);
   };
 

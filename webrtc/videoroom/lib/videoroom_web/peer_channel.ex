@@ -12,8 +12,9 @@ defmodule VideoRoomWeb.PeerChannel do
     |> case do
       {:ok, room} ->
         peer_id = "#{UUID.uuid4()}"
-        Registry.register(Membrane.PeerChannel.Registry, :peer_channel, peer_id)
+        # TODO handle crash of room?
         Process.monitor(room)
+        Membrane.Room.add_peer_channel(room, self(), peer_id)
         {:ok, assign(socket, %{room_id: room_id, room: room, peer_id: peer_id})}
 
       {:error, reason} ->

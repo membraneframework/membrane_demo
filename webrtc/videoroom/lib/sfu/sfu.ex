@@ -340,7 +340,9 @@ defmodule Membrane.SFU do
         {[], state}
 
       {:present, actions, state} ->
-        dispatch({:peer_left, peer_id}, state)
+        MediaEvent.create_peer_left_event(peer_id)
+        |> dispatch(state)
+
         {actions, state}
     end
   end
@@ -350,6 +352,7 @@ defmodule Membrane.SFU do
       {:absent, [], state}
     else
       {endpoint, state} = pop_in(state, [:endpoints, peer_id])
+      {_peer, state} = pop_in(state, [:peers, peer_id])
       tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
 
       tracks_msgs = update_track_messages(ctx, tracks, {:endpoint, peer_id})

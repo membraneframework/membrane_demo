@@ -9,8 +9,7 @@ defmodule VideoRoom.Application do
     children = [
       VideoRoomWeb.Endpoint,
       {Phoenix.PubSub, name: VideoRoom.PubSub},
-      {Registry, keys: :unique, name: Membrane.Room.Registry},
-      {Registry, keys: :duplicate, name: Membrane.PeerChannel.Registry}
+      {Registry, keys: :unique, name: Membrane.Room.Registry}
     ]
 
     opts = [strategy: :one_for_one, name: __MODULE__]

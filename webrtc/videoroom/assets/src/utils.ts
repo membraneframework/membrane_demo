@@ -10,15 +10,8 @@ export const phoenixChannelPushResult = async (push: Push): Promise<any> => {
   });
 };
 
-export function getChannelId(
-  type: "participant" | "screensharing",
-  roomId: string
-) {
-  if (type === "participant") {
-    return `room:${roomId}`;
-  } else {
-    return `room:screensharing:${roomId}`;
-  }
+export function getChannelId(roomId: string) {
+  return `room:${roomId}`;
 }
 
 export function getMediaCallbacksFromPhoenixChannel(channel: Channel) {

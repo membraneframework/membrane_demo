@@ -147,7 +147,7 @@ export class MembraneWebRTC {
           mediaEvent.data.peersInRoom
         );
         let peers = mediaEvent.data.peersInRoom as Peer[];
-        peers.forEach(peer => {
+        peers.forEach((peer) => {
           this.addPeer(peer);
         });
         break;
@@ -288,7 +288,6 @@ export class MembraneWebRTC {
       const mid = event.transceiver.mid!;
 
       const peer = this.midToPeer.get(mid)!;
-      const isScreenSharing = mid.includes("SCREEN") || false;
 
       this.midToStream.set(mid, stream);
 
@@ -308,7 +307,7 @@ export class MembraneWebRTC {
           metadata: this.midToTrackMetadata.get(mid),
         });
       };
-      
+
       this.callbacks.onTrackAdded?.({
         track: event.track,
         peer,

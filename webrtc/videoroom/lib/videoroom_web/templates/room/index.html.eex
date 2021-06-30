@@ -6,10 +6,6 @@
     <div id="participants-names-list"></div>
     <div id="videochat-error" class="VideoChatError" style="display: none;"> </div>
     <div id="videochat" class="VideoChat">
-        <div id="screensharing" class="Screensharing" style="display: none;">
-            <video id="screensharing-video"></video>
-            <div class="VideoLabel">Placeholder</div>
-        </div>
         <template id="video-feed-template">
             <div class="VideoFeed">
                 <div class="VideoPlaceholder">
@@ -42,8 +38,5 @@
     </div>
     <div id="mic-off" class="ControlIcon" style="display: none;">
         <%= PhoenixInlineSvg.Helpers.svg_image(@conn, "mic-off") %>
-    </div>
-    <div class="StartScreensharing">
-        <button style="display: none;" id="toggle-screensharing"></button>
     </div>
 </div>

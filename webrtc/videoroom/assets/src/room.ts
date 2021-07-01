@@ -14,7 +14,7 @@ import {
   attachStream,
 } from "./room_ui";
 import { phoenixChannelPushResult } from "../src/utils";
-import { MembraneWebRTC, Peer, SerializedMediaEvent } from "./membraneWebRTC";
+import { MembraneWebRTC, Peer, SerializedMediaEvent } from "membrane_sfu";
 import { Socket } from "phoenix";
 import { parse } from "query-string";
 
@@ -90,10 +90,8 @@ const setup = async () => {
     const webrtc = new MembraneWebRTC({
       peerConfig: { relayAudio, relayVideo },
       callbacks: {
-        onSendSerializedMediaEvent: (
-          serializedMediaEvent: SerializedMediaEvent
-        ) => {
-          webrtcChannel.push("mediaEvent", { data: serializedMediaEvent });
+        onSendMediaEvent: (mediaEvent: SerializedMediaEvent) => {
+          webrtcChannel.push("mediaEvent", { data: mediaEvent });
         },
         onTrackAdded: ({ stream, peer, metadata }) => {
           attachStream(stream, peer.id);
@@ -142,7 +140,7 @@ const setup = async () => {
       },
     });
 
-    webrtcChannel.on("mediaEvent", (event) => webrtc.receiveEvent(event.data));
+    webrtcChannel.on("mediaEvent", (event) => webrtc.receiveMediaEvent(event.data));
     webrtcChannel.on("peerToggledVideo", (data: any) =>
       toggleVideoPlaceholder(data.data.peerId)
     );
@@ -166,7 +164,7 @@ const setup = async () => {
 
     localStream
       .getTracks()
-      .forEach((track) => webrtc.addLocalTrack(track, localStream));
+      .forEach((track) => webrtc.addTrack(track, localStream));
 
     if (localVideoStream) {
       addVideoElement(

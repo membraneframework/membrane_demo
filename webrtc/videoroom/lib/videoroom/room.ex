@@ -24,7 +24,7 @@ defmodule Membrane.Room do
     sfu_options = [
       id: opts[:room_id],
       extension_options: [
-        vad: true
+        vad: false
       ],
       network_options: [
         stun_servers: [

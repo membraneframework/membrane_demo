@@ -13,7 +13,7 @@ import {
   setParticipantsNamesList,
   attachStream,
 } from "./room_ui";
-import { getChannelId, phoenixChannelPushResult } from "../src/utils";
+import { phoenixChannelPushResult } from "../src/utils";
 import { MembraneWebRTC, Peer, SerializedMediaEvent } from "./membraneWebRTC";
 import { Socket } from "phoenix";
 import { parse } from "query-string";
@@ -82,10 +82,7 @@ const setup = async () => {
     }
 
     const webrtcSocketRefs: string[] = [];
-    const metadata = {};
-    const webrtcChannel = socket.channel(getChannelId(getRoomId()), {
-      metadata: metadata,
-    });
+    const webrtcChannel = socket.channel(`room:${getRoomId()}`);
 
     const relayAudio = localAudioStream !== null;
     const relayVideo = localVideoStream !== null;
@@ -93,8 +90,10 @@ const setup = async () => {
     const webrtc = new MembraneWebRTC({
       peerConfig: { relayAudio, relayVideo },
       callbacks: {
-        onSendSerializedMediaEvent: (serializedMediaEvent: SerializedMediaEvent) => {
-          webrtcChannel.push("mediaEvent", { data: serializedMediaEvent })
+        onSendSerializedMediaEvent: (
+          serializedMediaEvent: SerializedMediaEvent
+        ) => {
+          webrtcChannel.push("mediaEvent", { data: serializedMediaEvent });
         },
         onTrackAdded: ({ stream, peer, metadata }) => {
           attachStream(stream, peer.id);

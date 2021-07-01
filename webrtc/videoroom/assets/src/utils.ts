@@ -7,7 +7,3 @@ export const phoenixChannelPushResult = async (push: Push): Promise<any> => {
       .receive("error", (response: any) => reject(response));
   });
 };
-
-export function getChannelId(roomId: string) {
-  return `room:${roomId}`;
-}

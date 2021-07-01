@@ -62,7 +62,7 @@ defmodule Membrane.SFU do
      %{
        id: options[:id],
        peers: %{},
-       incoming_peers: MapSet.new(),
+       incoming_peers: %{},
        endpoints: %{},
        options: options
      }}
@@ -96,7 +96,7 @@ defmodule Membrane.SFU do
         {{:ok, actions}, state}
 
       {:error, :invalid_media_event} ->
-        Membrane.Logger.info("Invalid media event #{inspect(data)}")
+        Membrane.Logger.warn("Invalid media event #{inspect(data)}")
         {:ok, state}
     end
   end
@@ -108,14 +108,13 @@ defmodule Membrane.SFU do
       {:accept_new_peer, ^peer_id} ->
         cond do
           Map.has_key?(state.peers, peer_id) ->
-            Membrane.Logger.info("Peer with id: #{inspect(peer_id)} has already been added")
+            Membrane.Logger.warn("Peer with id: #{inspect(peer_id)} has already been added")
             {[], state}
 
           true ->
             peer = Map.put(data, :id, peer_id)
-            state = put_in(state, [:peers, peer_id], peer)
+            state = put_in(state, [:incoming_peers, peer_id], peer)
             {actions, state} = setup_peer(peer, ctx, state)
-            state = %{state | incoming_peers: MapSet.put(state.incoming_peers, peer_id)}
 
             MediaEvent.create_peer_accepted_event(peer_id, Map.delete(state.peers, peer_id))
             |> dispatch(state)
@@ -124,7 +123,7 @@ defmodule Membrane.SFU do
         end
 
       {:accept_new_peer, _other_peer_id} ->
-        Membrane.Logger.info("Unknown peer id passed for acceptance: #{inspect(peer_id)}")
+        Membrane.Logger.warn("Unknown peer id passed for acceptance: #{inspect(peer_id)}")
         {[], state}
 
       {:deny_new_peer, peer_id} ->
@@ -136,19 +135,17 @@ defmodule Membrane.SFU do
   end
 
   defp handle_media_event(%{type: :sdp_answer} = event, peer_id, ctx, state) do
-    {_tracks_metadata, state} = pop_in(state, [:peers, peer_id, :tracks_metadata])
-
-    state =
-      put_in(state, [:peers, peer_id, :mid_to_track_metadata], event.data.mid_to_track_metadata)
-
     actions = [
       forward: {{:endpoint, peer_id}, {:signal, {:sdp_answer, event.data.sdp_answer.sdp}}}
     ]
 
     {tracks_msgs, state} =
-      if MapSet.member?(state.incoming_peers, peer_id) do
+      if Map.has_key?(state.incoming_peers, peer_id) do
         inbound_tracks = Map.values(state.endpoints[peer_id].inbound_tracks)
-        state = %{state | incoming_peers: MapSet.delete(state.incoming_peers, peer_id)}
+        {peer, state} = pop_in(state, [:incoming_peers, peer_id])
+        peer = Map.delete(peer, :tracks_metadata)
+        peer = Map.put(peer, :mid_to_track_metadata, event.data.mid_to_track_metadata)
+        state = put_in(state, [:peers, peer_id], peer)
         tracks_msgs = update_track_messages(ctx, inbound_tracks, {:endpoint, peer_id})
 
         MediaEvent.create_peer_joined_event(
@@ -186,7 +183,10 @@ defmodule Membrane.SFU do
 
   @impl true
   def handle_notification({:new_track, track_id, encoding}, endpoint_bin_name, ctx, state) do
-    Membrane.Logger.info("New incoming #{encoding} track #{track_id}")
+    Membrane.Logger.info(
+      "New incoming #{encoding} track #{track_id} from #{inspect(endpoint_bin_name)}"
+    )
+
     {:endpoint, endpoint_id} = endpoint_bin_name
 
     tee = {:tee, {endpoint_id, track_id}}

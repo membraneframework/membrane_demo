@@ -13,14 +13,6 @@ export interface MembraneWebRTCConfig {
   peerConfig: PeerConfig;
 }
 
-interface OfferData {
-  data: RTCSessionDescriptionInit;
-}
-
-interface CandidateData {
-  data: RTCIceCandidateInit;
-}
-
 interface MediaEvent {
   type: string;
   key?: string;

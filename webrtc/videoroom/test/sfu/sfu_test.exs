@@ -36,7 +36,7 @@ defmodule Membrane.SFUTest do
         "displayName" => "Bob"
       }
 
-      track_metadata = [
+      tracks_metadata = [
         %{
           "type" => "audio",
           "source" => "microphone"
@@ -50,46 +50,18 @@ defmodule Membrane.SFUTest do
       media_event =
         %{
           "type" => "join",
-          "key" => generate_key(),
           "data" => %{
-            "id" => peer_id,
             "relayAudio" => true,
             "relayVideo" => true,
             "receiveMedia" => true,
             "metadata" => metadata,
-            "trackMetadata" => track_metadata
+            "tracksMetadata" => tracks_metadata
           }
         }
         |> Jason.encode!()
 
-      send(sfu_engine, {:media_event, media_event})
-      assert_receive {_from, {:new_peer, ^peer_id, ^metadata, ^track_metadata}}
-    end
-
-    test ":new_peer notification is not sent after receiving join media event with improper key",
-         %{sfu_engine: sfu_engine} do
-      peer_id = "sample_id"
-
-      media_event =
-        %{
-          type: "join",
-          key: "invalid_key",
-          data: %{
-            id: peer_id,
-            relayAudio: true,
-            relayVideo: true,
-            receiveMedia: true,
-            metadata: %{displayName: "Bob"},
-            trackMetadata: [
-              %{type: "audio", source: "microphone"},
-              %{type: "video", source: "camera"}
-            ]
-          }
-        }
-        |> Jason.encode!()
-
-      send(sfu_engine, {:media_event, media_event})
-      refute_receive {_from, {:new_peer, _peer_id, _metadata, _track_metadata}}
+      send(sfu_engine, {:media_event, peer_id, media_event})
+      assert_receive {_from, {:new_peer, ^peer_id, ^metadata, ^tracks_metadata}}
     end
   end
 
@@ -101,7 +73,7 @@ defmodule Membrane.SFUTest do
         "displayName" => "Bob"
       }
 
-      track_metadata = [
+      tracks_metadata = [
         %{
           "type" => "audio",
           "source" => "microphone"
@@ -115,32 +87,23 @@ defmodule Membrane.SFUTest do
       media_event =
         %{
           type: "join",
-          key: generate_key(),
           data: %{
-            id: peer_id,
             relayAudio: true,
             relayVideo: true,
             receiveMedia: true,
             metadata: metadata,
-            trackMetadata: track_metadata
+            tracksMetadata: tracks_metadata
           }
         }
         |> Jason.encode!()
 
-      send(sfu_engine, {:media_event, media_event})
-      assert_receive {_from, {:new_peer, ^peer_id, ^metadata, ^track_metadata}}
+      send(sfu_engine, {:media_event, peer_id, media_event})
+      assert_receive {_from, {:new_peer, ^peer_id, ^metadata, ^tracks_metadata}}
       send(sfu_engine, {:accept_new_peer, peer_id})
-      assert_receive {_from, {:media_event, ^peer_id, media_event}}
+      assert_receive {_from, {:sfu_media_event, ^peer_id, media_event}}
 
       assert %{"type" => "peerAccepted", "data" => %{"id" => peer_id, "peersInRoom" => []}} ==
                Jason.decode!(media_event)
     end
-
-    # test "accepting already accepted peer does nothing" do
-    # end
-  end
-
-  defp generate_key() do
-    "#{UUID.uuid4()}"
   end
 end

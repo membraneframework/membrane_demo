@@ -102,7 +102,7 @@ defmodule Membrane.SFU do
   end
 
   defp handle_media_event(%{type: :join, data: data}, peer_id, ctx, state) do
-    dispatch({:new_peer, peer_id, data.metadata, data.track_metadata}, state)
+    dispatch({:new_peer, peer_id, data.metadata, data.tracks_metadata}, state)
 
     receive do
       {:accept_new_peer, ^peer_id} ->
@@ -136,7 +136,7 @@ defmodule Membrane.SFU do
   end
 
   defp handle_media_event(%{type: :sdp_answer} = event, peer_id, ctx, state) do
-    {_track_metadata, state} = pop_in(state, [:peers, peer_id, :track_metadata])
+    {_tracks_metadata, state} = pop_in(state, [:peers, peer_id, :tracks_metadata])
 
     state =
       put_in(state, [:peers, peer_id, :mid_to_track_metadata], event.data.mid_to_track_metadata)

@@ -96,7 +96,7 @@ defmodule Membrane.SFU.MediaEvent do
           "relayVideo" => relay_video,
           "receiveMedia" => receive_media,
           "metadata" => metadata,
-          "tracksMetadata" => track_metadata
+          "tracksMetadata" => tracks_metadata
         }
       } = event
 
@@ -111,7 +111,7 @@ defmodule Membrane.SFU.MediaEvent do
              relay_video: relay_video,
              receive_media: receive_media,
              metadata: metadata,
-             track_metadata: track_metadata
+             tracks_metadata: tracks_metadata
            }
          }}
       end

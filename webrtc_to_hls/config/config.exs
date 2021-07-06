@@ -6,18 +6,17 @@ config :phoenix, :json_library, Jason
 
 config :membrane_webrtc_to_hls_demo, WebRTCToHLSWeb.Endpoint,
   pubsub_server: WebRTCToHLS.PubSub,
-  https: [
-    otp_app: :membrane_webrtc_to_hls_demo,
-    cipher_suite: :strong
+  http: [
+    otp_app: :membrane_webrtc_to_hls_demo
   ]
 
 config :logger,
   compile_time_purge_matching: [
-    # [level_lower_than: :debug],
+    [level_lower_than: :info],
     # Silence irrelevant warnings caused by resending handshake events
     [module: Membrane.SRTP.Encryptor, function: "handle_event/4", level_lower_than: :error]
   ],
-  level: :debug
+  level: :info
 
 config :logger, :console, metadata: [:room]
 

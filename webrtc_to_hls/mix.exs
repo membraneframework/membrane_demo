@@ -5,7 +5,7 @@ defmodule WebRTCToHLS.MixProject do
     [
       app: :membrane_webrtc_to_hls_demo,
       version: "0.1.0",
-      elixir: "~> 1.10",
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -20,8 +20,10 @@ defmodule WebRTCToHLS.MixProject do
 
   defp deps do
     [
-      {:membrane_core, github: "membraneframework/membrane_core", override: true},
-      {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin"},
+      {:membrane_core, "~> 0.7.0", override: true},
+      {:membrane_webrtc_plugin,
+       github: "membraneframework/membrane_webrtc_plugin", override: true},
+      {:membrane_sfu, github: "membraneframework/membrane_sfu", branch: "develop"},
       {:membrane_element_tee, "~> 0.4.1"},
       {:membrane_element_fake, "~> 0.4.0"},
       {:plug_cowboy, "~> 2.0"},
@@ -32,26 +34,20 @@ defmodule WebRTCToHLS.MixProject do
       {:jason, "~> 1.2"},
       {:membrane_file_plugin, "~> 0.5.0"},
       {:membrane_h264_ffmpeg_plugin,
-       [
-         env: :prod,
-         github: "membraneframework/membrane_h264_ffmpeg_plugin",
-         branch: "propagate-caps",
-         override: true
-       ]},
+       github: "membraneframework/membrane_h264_ffmpeg_plugin", override: true},
       {:membrane_http_adaptive_stream_plugin,
        [
          github: "membraneframework/membrane_http_adaptive_stream_plugin",
-         branch: "discontinuity-support",
-         override: true
+         branch: "discontinuity-support"
        ]},
       {:membrane_mp4_plugin,
        [
          github: "membraneframework/membrane_mp4_plugin",
          branch: "detect-nalus-change"
        ]},
-      {:membrane_opus_plugin, "~> 0.4.0"},
+      {:membrane_opus_plugin, "~> 0.5.0"},
       {:membrane_aac_plugin, "~> 0.6.0"},
-      {:membrane_aac_fdk_plugin, "~> 0.5.0"}
+      {:membrane_aac_fdk_plugin, "~> 0.6.0"}
     ]
   end
 end

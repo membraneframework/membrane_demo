@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "phoenix": "file:../deps/phoenix",
+    "membrane_sfu": "file:../deps/membrane_sfu/",
     "phoenix_html": "file:../deps/phoenix_html"
   },
   "devDependencies": {

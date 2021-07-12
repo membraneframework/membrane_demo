@@ -1,228 +1,136 @@
 import "../css/app.scss";
 
-import { AUDIO_CONSTRAINTS, VIDEO_CONSTRAINTS, LOCAL_PEER_ID } from "./consts";
+import { MEDIA_CONSTRAINTS, LOCAL_PEER_ID } from "./consts";
 import {
   addVideoElement,
-  displayVideoElement,
   getRoomId,
   removeVideoElement,
   setErrorMessage,
-  setupRoomUI,
-  toggleVideoPlaceholder,
-  toggleMutedAudioIcon,
-  setParticipantsNamesList,
+  setParticipantsList,
   attachStream,
 } from "./room_ui";
-import { phoenixChannelPushResult } from "../src/utils";
 import { MembraneWebRTC, Peer, SerializedMediaEvent } from "membrane_sfu";
-import { Socket } from "phoenix";
+import { Push, Socket } from "phoenix";
 import { parse } from "query-string";
 
-declare global {
-  interface MediaDevices {
-    getDisplayMedia: (
-      constraints: MediaStreamConstraints
-    ) => Promise<MediaStream>;
-  }
-}
+export class Room {
+  private peers: Peer[] = [];
+  private displayName: string;
+  private localStream: MediaStream | undefined;
+  private webrtc: MembraneWebRTC;
 
-let peers: Peer[] = [];
-let displayName: string | undefined;
+  private socket;
+  private webrtcSocketRefs: string[] = [];
+  private webrtcChannel;
 
-const parseUrl = (): string => {
-  const { display_name: displayName } = parse(document.location.search);
+  constructor() {
+    this.socket = new Socket("/socket");
+    this.socket.connect();
+    this.displayName = this.parseUrl();
+    this.webrtcChannel = this.socket.channel(`room:${getRoomId()}`);
 
-  // remove query params without reloading the page
-  window.history.replaceState(null, "", window.location.pathname);
+    this.webrtcSocketRefs.push(this.socket.onError(this.leave));
+    this.webrtcSocketRefs.push(this.socket.onClose(this.leave));
 
-  return displayName as string;
-};
-
-const updateParticipantsList = (peersList: Peer[]): void => {
-  const participantsNames = peers.map((p) => p.metadata.displayName);
-
-  if (displayName) {
-    participantsNames.push(displayName);
-  }
-
-  setParticipantsNamesList(participantsNames);
-};
-
-const setup = async () => {
-  try {
-    const socket = new Socket("/socket");
-    socket.connect();
-
-    displayName = parseUrl();
-
-    let localAudioStream: MediaStream | null = null;
-    let localVideoStream: MediaStream | null = null;
-    let localStream: MediaStream = new MediaStream();
-
-    try {
-      localAudioStream = await navigator.mediaDevices.getUserMedia(
-        AUDIO_CONSTRAINTS
-      );
-      localAudioStream
-        .getTracks()
-        .forEach((track) => localStream.addTrack(track));
-    } catch (error) {
-      console.error("Couldn't get microphone permission:", error);
-    }
-
-    try {
-      localVideoStream = await navigator.mediaDevices.getUserMedia(
-        VIDEO_CONSTRAINTS
-      );
-      localVideoStream
-        .getTracks()
-        .forEach((track) => localStream.addTrack(track));
-    } catch (error) {
-      console.error("Couldn't get camera permission:", error);
-    }
-
-    const webrtcSocketRefs: string[] = [];
-    const webrtcChannel = socket.channel(`room:${getRoomId()}`);
-
-    const relayAudio = localAudioStream !== null;
-    const relayVideo = localVideoStream !== null;
-
-    const webrtc = new MembraneWebRTC({
-      peerConfig: { relayAudio, relayVideo },
+    this.webrtc = new MembraneWebRTC({
       callbacks: {
         onSendMediaEvent: (mediaEvent: SerializedMediaEvent) => {
-          webrtcChannel.push("mediaEvent", { data: mediaEvent });
+          this.webrtcChannel.push("mediaEvent", { data: mediaEvent });
         },
         onTrackAdded: ({ stream, peer, metadata }) => {
           attachStream(stream, peer.id);
         },
         onConnectionError: setErrorMessage,
         onJoined: (peerId, peersInRoom) => {
-          peers = peersInRoom!;
-          peers.forEach((peer) => {
-            addVideoElement(
-              peer.id,
-              peer.metadata.displayName,
-              false,
-              false,
-              peer.metadata.mutedVideo,
-              peer.metadata.mutedAudio
-            );
-            displayVideoElement(peer.id);
+          this.peers = peersInRoom;
+          this.peers.forEach((peer) => {
+            addVideoElement(peer.id, peer.metadata.displayName, false);
           });
 
-          updateParticipantsList(peers);
+          this.updateParticipantsList();
         },
-        onDenied: () => {
-          console.log("onDenied");
+        onDenied: (data) => {
+          throw `Peer denied.`;
         },
 
         onPeerJoined: (peer) => {
-          peers.push(peer);
-          addVideoElement(
-            peer.id,
-            peer.metadata.displayName,
-            false,
-            false,
-            peer.metadata.mutedVideo,
-            peer.metadata.mutedAudio
-          );
-
-          updateParticipantsList(peers);
-          displayVideoElement(peer.id);
+          this.peers.push(peer);
+          this.updateParticipantsList();
+          addVideoElement(peer.id, peer.metadata.displayName, false);
         },
         onPeerLeft: (peer) => {
-          peers = peers.filter((p) => p.id !== peer.id);
-
+          this.peers = this.peers.filter((p) => p.id !== peer.id);
           removeVideoElement(peer.id);
-          updateParticipantsList(peers);
+          this.updateParticipantsList();
         },
       },
     });
 
-    webrtcChannel.on("mediaEvent", (event) => webrtc.receiveMediaEvent(event.data));
-    webrtcChannel.on("peerToggledVideo", (data: any) =>
-      toggleVideoPlaceholder(data.data.peerId)
-    );
-    webrtcChannel.on("peerToggledAudio", (data: any) =>
-      toggleMutedAudioIcon(data.data.peerId)
-    );
-
-    await phoenixChannelPushResult(webrtcChannel.join());
-
-    const leave = () => {
-      webrtc.leave();
-      webrtcChannel.leave();
-      socket.off(webrtcSocketRefs);
-      while (webrtcSocketRefs.length > 0) {
-        webrtcSocketRefs.pop();
-      }
-    };
-
-    webrtcSocketRefs.push(socket.onError(leave));
-    webrtcSocketRefs.push(socket.onClose(leave));
-
-    localStream
-      .getTracks()
-      .forEach((track) => webrtc.addTrack(track, localStream));
-
-    if (localVideoStream) {
-      addVideoElement(
-        LOCAL_PEER_ID,
-        "Me",
-        true,
-        true,
-        false,
-        localAudioStream === null
-      );
-      attachStream(localStream, LOCAL_PEER_ID);
-      displayVideoElement(LOCAL_PEER_ID);
-    } else {
-      addVideoElement(
-        LOCAL_PEER_ID,
-        "Me",
-        true,
-        true,
-        true,
-        localAudioStream === null
-      );
-      displayVideoElement(LOCAL_PEER_ID);
-    }
-
-    setupRoomUI({
-      state: {
-        onToggleAudio: () => {
-          toggleMutedAudioIcon(LOCAL_PEER_ID);
-          webrtcChannel.push("toggledAudio", {});
-          localAudioStream
-            ?.getAudioTracks()
-            .forEach((t) => (t.enabled = !t.enabled));
-        },
-        onToggleVideo: () => {
-          toggleVideoPlaceholder(LOCAL_PEER_ID);
-          webrtcChannel.push("toggledVideo", {});
-          localVideoStream
-            ?.getVideoTracks()
-            .forEach((t) => (t.enabled = !t.enabled));
-        },
-        displayName,
-      },
-      audioState: localAudioStream === null ? "disabled" : "unmuted",
-      videoState: localVideoStream === null ? "disabled" : "unmuted",
-    });
-
-    webrtc.join({
-      displayName,
-      type: "participant",
-      mutedAudio: !relayAudio,
-      mutedVideo: !relayVideo,
-    });
-  } catch (error) {
-    console.error(error);
-    setErrorMessage(
-      "Failed to setup video room, make sure to grant camera and microphone permissions"
+    this.webrtcChannel.on("mediaEvent", (event) =>
+      this.webrtc.receiveMediaEvent(event.data)
     );
   }
-};
 
-setup();
+  public init = async () => {
+    await this.phoenixChannelPushResult(this.webrtcChannel.join());
+
+    try {
+      this.localStream = await navigator.mediaDevices.getUserMedia(
+        MEDIA_CONSTRAINTS
+      );
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(
+        "Failed to setup video room, make sure to grant camera and microphone permissions"
+      );
+      throw "error";
+    }
+
+    this.localStream
+      .getTracks()
+      .forEach((track) => this.webrtc.addTrack(track, this.localStream!));
+
+    addVideoElement(LOCAL_PEER_ID, "Me", true);
+    attachStream(this.localStream, LOCAL_PEER_ID);
+  };
+
+  public join = () => {
+    this.webrtc.join({ displayName: this.displayName });
+  };
+
+  private leave = () => {
+    this.webrtc.leave();
+    this.webrtcChannel.leave();
+    this.socket.off(this.webrtcSocketRefs);
+    while (this.webrtcSocketRefs.length > 0) {
+      this.webrtcSocketRefs.pop();
+    }
+  };
+
+  private parseUrl = (): string => {
+    const { display_name: displayName } = parse(document.location.search);
+
+    // remove query params without reloading the page
+    window.history.replaceState(null, "", window.location.pathname);
+
+    return displayName as string;
+  };
+
+  private updateParticipantsList = (): void => {
+    const participantsNames = this.peers.map((p) => p.metadata.displayName);
+
+    if (this.displayName) {
+      participantsNames.push(this.displayName);
+    }
+
+    setParticipantsList(participantsNames);
+  };
+
+  private phoenixChannelPushResult = async (push: Push): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      push
+        .receive("ok", (response: any) => resolve(response))
+        .receive("error", (response: any) => reject(response));
+    });
+  };
+}

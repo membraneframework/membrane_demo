@@ -2,6 +2,13 @@ export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 
+export function setupDisconnectButton(fun) {
+  const disconnectButton = document.getElementById(
+    "disconnect"
+  )! as HTMLButtonElement;
+  disconnectButton.onclick = fun;
+}
+
 function elementId(peerId: string, type: "video" | "audio" | "feed") {
   return `${type}-${peerId}`;
 }

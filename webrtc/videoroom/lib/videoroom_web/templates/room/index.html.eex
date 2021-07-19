@@ -20,3 +20,8 @@
 
     <script src="<%= static_path(@conn, "/js/room.js") %>"></script>
 </div>
+<div id="controls", class="Controls">
+    <div class="Disconnect">
+        <button id="disconnect">Disconnect</button>
+    </div>
+</div>

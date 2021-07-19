@@ -8,6 +8,7 @@ import {
   setErrorMessage,
   setParticipantsList,
   attachStream,
+  setupDisconnectButton,
 } from "./room_ui";
 import { MembraneWebRTC, Peer, SerializedMediaEvent } from "membrane_sfu";
 import { Push, Socket } from "phoenix";
@@ -95,6 +96,10 @@ export class Room {
   };
 
   public join = () => {
+    setupDisconnectButton(() => {
+      this.leave();
+      window.location.replace("");
+    });
     this.webrtc.join({ displayName: this.displayName });
   };
 

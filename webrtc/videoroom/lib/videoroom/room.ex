@@ -1,4 +1,4 @@
-defmodule Membrane.Room do
+defmodule Videoroom.Room do
   @moduledoc false
 
   use GenServer
@@ -23,9 +23,6 @@ defmodule Membrane.Room do
 
     sfu_options = [
       id: opts[:room_id],
-      extension_options: [
-        vad: false
-      ],
       network_options: [
         stun_servers: [
           %{server_addr: "stun.l.google.com", server_port: 19_302}

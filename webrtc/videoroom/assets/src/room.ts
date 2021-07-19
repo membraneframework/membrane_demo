@@ -41,7 +41,7 @@ export class Room {
           attachStream(stream, peer.id);
         },
         onConnectionError: setErrorMessage,
-        onJoined: (peerId, peersInRoom) => {
+        onJoinSuccess: (peerId, peersInRoom) => {
           this.peers = peersInRoom;
           this.peers.forEach((peer) => {
             addVideoElement(peer.id, peer.metadata.displayName, false);
@@ -49,7 +49,7 @@ export class Room {
 
           this.updateParticipantsList();
         },
-        onDenied: (data) => {
+        onJoinError: (data) => {
           throw `Peer denied.`;
         },
 

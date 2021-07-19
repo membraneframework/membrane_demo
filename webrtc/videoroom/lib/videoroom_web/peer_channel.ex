@@ -5,16 +5,16 @@ defmodule VideoRoomWeb.PeerChannel do
 
   @impl true
   def join("room:" <> room_id, _params, socket) do
-    case Registry.lookup(Membrane.Room.Registry, room_id) do
+    case Registry.lookup(Videoroom.Room.Registry, room_id) do
       [{pid, _value}] -> {:ok, pid}
-      [] -> Membrane.Room.start(name: {:via, Registry, {Membrane.Room.Registry, room_id}})
+      [] -> Videoroom.Room.start(name: {:via, Registry, {Videoroom.Room.Registry, room_id}})
     end
     |> case do
       {:ok, room} ->
         peer_id = "#{UUID.uuid4()}"
         # TODO handle crash of room?
         Process.monitor(room)
-        Membrane.Room.add_peer_channel(room, self(), peer_id)
+        Videoroom.Room.add_peer_channel(room, self(), peer_id)
         {:ok, assign(socket, %{room_id: room_id, room: room, peer_id: peer_id})}
 
       {:error, reason} ->

@@ -44,7 +44,7 @@ defmodule WebRTCToHLS.Stream do
   end
 
   @impl true
-  def handle_info({_sfu_engine, {:sfu_media_event, to, event}}, state) do
+  def handle_info({_sfu_engine, {:sfu_media_event, _to, event}}, state) do
     send(state.channel_pid, {:media_event, event})
     {:noreply, state}
   end

@@ -262,7 +262,7 @@ defmodule WebRTCToHLS.Pipeline do
     {:ok, state}
   end
 
-  defp dispatch(msg, state) do
+  defp dispatch(msg, _state) do
     Registry.dispatch(get_registry_name(), self(), fn entries ->
       for {_, pid} <- entries, do: send(pid, {self(), msg})
     end)

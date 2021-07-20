@@ -1,4 +1,4 @@
-name: WebRTC Videoroom - Tag Build and Deploy
+name: WebRTC Videoroom Advanced - Tag Build and Deploy
 on:
   push:
     tags: 
@@ -39,19 +39,19 @@ jobs:
         id: docker_build_tag
         uses: docker/build-push-action@v2
         with:
-          context: webrtc/videoroom
-          file: webrtc/videoroom/Dockerfile
+          context: webrtc/videoroom_advanced
+          file: webrtc/videoroom_advanced/Dockerfile
           push: true
-          tags: membraneframework/demo_webrtc_videoroom:${{ steps.tag.outputs.tag }}
+          tags: membraneframework/demo_webrtc_videoroom_advanced:${{ steps.tag.outputs.tag }}
 
       - name: Build and push latest version 
         id: docker_build_latest
         uses: docker/build-push-action@v2
         with:
-          context: webrtc/videoroom
-          file: webrtc/videoroom/Dockerfile
+          context: webrtc/videoroom_advanced
+          file: webrtc/videoroom_advanced/Dockerfile
           push: true
-          tags: membraneframework/demo_webrtc_videoroom:latest
+          tags: membraneframework/demo_webrtc_videoroom_advanced:latest
       
       - name: Deploy to Swarm
         id: deploy
@@ -60,7 +60,7 @@ jobs:
           remote_host: ${{ secrets.DEMO_SWARM_MANAGER }}
           ssh_private_key: ${{ secrets.SSH_PRIV_KEY }}
           ssh_public_key: ${{ secrets.SSH_SERVER_PUBLIC_KEY}}
-          args: stack deploy --compose-file webrtc/videoroom/docker-compose.yml videoroom
+          args: stack deploy --compose-file webrtc/videoroom_advanced/docker-compose.yml videoroom_advanced
 
 
           

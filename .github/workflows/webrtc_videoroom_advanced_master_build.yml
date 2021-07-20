@@ -35,10 +35,10 @@ jobs:
         id: docker_build_latest
         uses: docker/build-push-action@v2
         with:
-          context: webrtc/videoroom
-          file: webrtc/videoroom/Dockerfile
+          context: webrtc/videoroom_advanced
+          file: webrtc/videoroom_advanced/Dockerfile
           push: true
-          tags: membraneframework/demo_webrtc_videoroom:latest
+          tags: membraneframework/demo_webrtc_videoroom_advanced:latest
 
 
           

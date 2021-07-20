@@ -32,18 +32,18 @@ jobs:
         id: docker_build_sandbox
         uses: docker/build-push-action@v2
         with:
-          context: webrtc/videoroom
-          file: webrtc/videoroom/Dockerfile
+          context: webrtc/videoroom_advanced
+          file: webrtc/videoroom_advanced/Dockerfile
           push: true
-          tags: membraneframework/demo_webrtc_videoroom:sandbox
+          tags: membraneframework/demo_webrtc_videoroom_advanced:sandbox
       
       - name: Change Docker-Compose tag before deployment
         id: sed_that_compose
-        run: sed -i -e "s/latest/sandbox/g" webrtc/videoroom/docker-compose.yml
+        run: sed -i -e "s/latest/sandbox/g" webrtc/videoroom_advanced/docker-compose.yml
       
       - name: Change Docker-Compose address before deployment
         id: sed_it_again
-        run: sed -i -e "s/demo-/sandbox-/g" webrtc/videoroom/docker-compose.yml
+        run: sed -i -e "s/demo-/sandbox-/g" webrtc/videoroom_advanced/docker-compose.yml
 
       - name: Deploy to Swarm
         id: deploy
@@ -52,7 +52,4 @@ jobs:
           remote_host: ${{ secrets.SANDBOX_SWARM_MANAGER }}
           ssh_private_key: ${{ secrets.SSH_PRIV_KEY }}
           ssh_public_key: ${{ secrets.SSH_SERVER_PUBLIC_KEY}}
-          args: stack deploy --compose-file webrtc/videoroom/docker-compose.yml videoroom
-
-
-          
+          args: stack deploy --compose-file webrtc/videoroom_advanced/docker-compose.yml videoroom_advanced

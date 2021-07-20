@@ -1,0 +1,10 @@
+<div class="Index">
+    <h2>Create or join existing room</h2>
+    <form method="post" class="RoomForm" id="form">
+      <label for="room_name" class="nameLabel">Room name</label>
+      <input name="room_name" class="nameInput" type="text" required value="<%= @room_id %>">
+      <label for="display_name" class="nameLabel">Display name</label>
+      <input name="display_name" class="nameInput" type="text" required>
+      <button type="submit" class="submitButton">Enter </button>
+    </form>
+</div>

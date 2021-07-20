@@ -50,7 +50,7 @@ export class Room {
 
           this.updateParticipantsList();
         },
-        onJoinError: (data) => {
+        onJoinError: (metadata) => {
           throw `Peer denied.`;
         },
 

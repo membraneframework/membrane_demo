@@ -1,7 +1,7 @@
 import "../css/app.scss";
 
-import { Channel, Push, Socket } from "phoenix";
-import { MembraneWebRTC, Peer, SerializedMediaEvent } from "membrane_sfu";
+import { MembraneWebRTC, SerializedMediaEvent } from "membrane_sfu";
+import { Push, Socket } from "phoenix";
 import {
   setErrorMessage,
   setPlayerInfo,
@@ -35,9 +35,6 @@ export const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
 };
 
 export const LOCAL_PEER_ID = "local-peer";
-
-let peers: Peer[] = [];
-
 
 const setup = async () => {
   const socket = new Socket("/socket");
@@ -81,9 +78,6 @@ const setup = async () => {
   }
   
   webrtcChannel.onError(onError);
-
-  const relayAudio = localAudioStream !== null;
-  const relayVideo = localVideoStream !== null;
 
   const webrtc = new MembraneWebRTC({
     callbacks: {

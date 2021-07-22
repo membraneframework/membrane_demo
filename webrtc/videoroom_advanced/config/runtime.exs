@@ -53,6 +53,8 @@ defmodule ConfigParser do
   end
 end
 
+# stun_servers: "addr:port"
+# turn_servers: "addr:port:username:password:proto"
 config :membrane_videoroom_demo,
   stun_servers:
     System.get_env("STUN_SERVERS", "64.233.163.127:19302") |> ConfigParser.parse_stun_servers(),

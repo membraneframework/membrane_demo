@@ -11,8 +11,8 @@ USE_TLS={"true" or "false", if set to "true" then https will be used and certifi
 KEY_FILE_PATH={path to certificate key file, used when "USE_TLS" is set to true}
 CERT_FILE_PATH={path to certificate file, used when "USE_TLS" is set to true}
 
-STUN_SERVERS={list of stun servers separated by ",", defaults to a single server "stun1.l.google.com:19302"}
-TURN_SERVERS={list of turn servers separated by ",", defaults to ""}
+STUN_SERVERS={list of stun servers in form of "addr:port" separated by ",", defaults to a single server "stun1.l.google.com:19302"}
+TURN_SERVERS={list of turn servers in form of "addr:port:username:password:proto" separated by ",", defaults to ""}
 ```
 
 ## Run manually

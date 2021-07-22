@@ -24,7 +24,7 @@ export class Room {
   private webrtcSocketRefs: string[] = [];
   private webrtcChannel;
 
-  constructor() {
+  constructor(iceServers: RTCIceServer[]) {
     this.socket = new Socket("/socket");
     this.socket.connect();
     this.displayName = this.parseUrl();
@@ -65,6 +65,7 @@ export class Room {
           this.updateParticipantsList();
         },
       },
+      rtcConfig: {iceServers},
     });
 
     this.webrtcChannel.on("mediaEvent", (event) =>

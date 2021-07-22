@@ -2,7 +2,6 @@ version: "3.8"
 services:
   videoroom_advanced:
     image: membraneframework/demo_webrtc_videoroom_advanced:latest
-    restart: unless-stopped
     secrets:
       - turn_servers
     environment:
@@ -12,7 +11,6 @@ services:
 
   nginx-proxy:
     image: jwilder/nginx-proxy:0.8.0
-    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
@@ -26,7 +24,6 @@ services:
 
   nginx-letsencrypt:
     image: jrcs/letsencrypt-nginx-proxy-companion:2.0.2
-    restart: unless-stopped
     volumes:
       - nginx-certs:/etc/nginx/certs
       - nginx-vhost:/etc/nginx/vhost.d

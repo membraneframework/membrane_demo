@@ -86,28 +86,24 @@ const setup = async () => {
   const relayVideo = localVideoStream !== null;
 
   const webrtc = new MembraneWebRTC({
-    peerConfig: { relayAudio: true, relayVideo: true },
     callbacks: {
-      onSendSerializedMediaEvent: (
-        serializedMediaEvent: SerializedMediaEvent
+      onSendMediaEvent: (
+        mediaEvent: SerializedMediaEvent
       ) => {
-        webrtcChannel.push("mediaEvent", { data: serializedMediaEvent });
+        webrtcChannel.push("mediaEvent", { data: mediaEvent });
       },
     },
   });
   
   await awaitPhoenixPush(webrtcChannel.join());
 
-  localStream.getTracks().forEach(track => webrtc.addLocalTrack(track, localStream /* some metadata */))
+  localStream.getTracks().forEach(track => webrtc.addTrack(track, localStream))
 
   webrtc.join({
     displayName: "It's me, Mario!",
-    type: "participant",
-    mutedAudio: !relayAudio,
-    mutedVideo: !relayVideo,
   });
 
-  webrtcChannel.on("mediaEvent", (event) => webrtc.receiveEvent(event.data));
+  webrtcChannel.on("mediaEvent", (event) => webrtc.receiveMediaEvent(event.data));
   webrtcChannel.on("playlistPlayable", ({playlistId}) => {
     console.log("HLS playlist has become playable: ", playlistId);
     setPlayerInfo(playlistId);

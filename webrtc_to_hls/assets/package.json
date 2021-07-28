@@ -9,8 +9,8 @@
   },
   "dependencies": {
     "phoenix": "file:../deps/phoenix",
-    "membrane_sfu": "file:../deps/membrane_sfu/",
-    "phoenix_html": "file:../deps/phoenix_html"
+    "phoenix_html": "file:../deps/phoenix_html",
+    "membrane_rfc_engine": "file:../deps/membrane_rtc_engine"
   },
   "devDependencies": {
     "@types/phoenix": "^1.5.1",

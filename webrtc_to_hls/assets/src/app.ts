@@ -1,12 +1,8 @@
 import "../css/app.scss";
 
-import { MembraneWebRTC, SerializedMediaEvent } from "membrane_sfu";
+import { MembraneWebRTC, SerializedMediaEvent } from "membrane_rfc_engine";
 import { Push, Socket } from "phoenix";
-import {
-  setErrorMessage,
-  setPlayerInfo,
-  setPreview,
-} from "./ui";
+import { setErrorMessage, setPlayerInfo, setPreview } from "./ui";
 
 declare global {
   interface MediaDevices {
@@ -65,40 +61,42 @@ const setup = async () => {
   } catch (error) {
     console.error("Couldn't get camera permission:", error);
   }
-  
+
   setPreview(localStream);
 
   const webrtcChannel = socket.channel("stream");
-  
-  const onError = (error: any) =>  {
+
+  const onError = (error: any) => {
     setErrorMessage(error);
-    
+
     webrtc.leave();
     webrtcChannel.leave();
-  }
-  
+  };
+
   webrtcChannel.onError(onError);
 
   const webrtc = new MembraneWebRTC({
     callbacks: {
-      onSendMediaEvent: (
-        mediaEvent: SerializedMediaEvent
-      ) => {
+      onSendMediaEvent: (mediaEvent: SerializedMediaEvent) => {
         webrtcChannel.push("mediaEvent", { data: mediaEvent });
       },
     },
   });
-  
+
   await awaitPhoenixPush(webrtcChannel.join());
 
-  localStream.getTracks().forEach(track => webrtc.addTrack(track, localStream))
+  localStream
+    .getTracks()
+    .forEach((track) => webrtc.addTrack(track, localStream));
 
   webrtc.join({
     displayName: "It's me, Mario!",
   });
 
-  webrtcChannel.on("mediaEvent", (event) => webrtc.receiveMediaEvent(event.data));
-  webrtcChannel.on("playlistPlayable", ({playlistId}) => {
+  webrtcChannel.on("mediaEvent", (event) =>
+    webrtc.receiveMediaEvent(event.data)
+  );
+  webrtcChannel.on("playlistPlayable", ({ playlistId }) => {
     console.log("HLS playlist has become playable: ", playlistId);
     setPlayerInfo(playlistId);
   });

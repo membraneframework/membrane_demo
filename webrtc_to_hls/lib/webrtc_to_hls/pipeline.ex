@@ -4,7 +4,7 @@ defmodule WebRTCToHLS.Pipeline do
   require Membrane.Logger
 
   alias Membrane.WebRTC.{Endpoint, EndpointBin, Track}
-  alias Membrane.SFU.MediaEvent
+  alias Membrane.RTC.Engine.MediaEvent
 
   import WebRTCToHLS.Helpers
 
@@ -84,9 +84,10 @@ defmodule WebRTCToHLS.Pipeline do
   end
 
   @impl true
-  def handle_other({:remove_peer, id}, ctx, state) do
-    {actions, state} = remove_peer(id, ctx, state)
-    {{:ok, actions}, state}
+  def handle_other({:remove_peer, _id}, _ctx, state) do
+    # pipeline supports just a single peer, it will be closed when peer's
+    # process stops
+    {:ok, state}
   end
 
   @impl true
@@ -128,19 +129,17 @@ defmodule WebRTCToHLS.Pipeline do
     end
   end
 
-  defp handle_media_event(%{type: :sdp_answer} = event, peer_id, ctx, state) do
+  defp handle_media_event(%{type: :sdp_answer} = event, peer_id, _ctx, state) do
     actions = [
       forward: {{:endpoint, peer_id}, {:signal, {:sdp_answer, event.data.sdp_answer.sdp}}}
     ]
 
-    {tracks_msgs, state} =
+    state =
       if Map.has_key?(state.incoming_peers, peer_id) do
-        inbound_tracks = Map.values(state.endpoints[peer_id].inbound_tracks)
         {peer, state} = pop_in(state, [:incoming_peers, peer_id])
         peer = Map.delete(peer, :tracks_metadata)
         peer = Map.put(peer, :mid_to_track_metadata, event.data.mid_to_track_metadata)
         state = put_in(state, [:peers, peer_id], peer)
-        tracks_msgs = update_track_messages(ctx, inbound_tracks, {:endpoint, peer_id})
 
         MediaEvent.create_peer_joined_event(
           peer_id,
@@ -149,12 +148,12 @@ defmodule WebRTCToHLS.Pipeline do
         )
         |> dispatch(state)
 
-        {tracks_msgs, state}
+        state
       else
-        {[], state}
+        state
       end
 
-    {actions ++ tracks_msgs, state}
+    {actions, state}
   end
 
   defp handle_media_event(%{type: :candidate} = event, peer_id, _ctx, state) do
@@ -162,9 +161,10 @@ defmodule WebRTCToHLS.Pipeline do
     {actions, state}
   end
 
-  defp handle_media_event(%{type: :leave}, peer_id, ctx, state) do
-    {actions, state} = remove_peer(peer_id, ctx, state)
-    {actions, state}
+  defp handle_media_event(%{type: :leave}, _peer_id, _ctx, state) do
+    # pipeline is handling just a single peer, do nothing as once peer's process stops
+    # the pipeline will be automatically closed
+    {[], state}
   end
 
   @impl true
@@ -176,55 +176,24 @@ defmodule WebRTCToHLS.Pipeline do
   end
 
   @impl true
-  def handle_notification({:new_track, track_id, encoding}, endpoint_bin_name, ctx, state) do
+  def handle_notification({:new_track, track_id, encoding}, endpoint_bin_name, _ctx, state) do
     Membrane.Logger.info(
       "New incoming #{encoding} track #{track_id} from #{inspect(endpoint_bin_name)}"
     )
 
     {:endpoint, endpoint_id} = endpoint_bin_name
 
-    tee = {:tee, {endpoint_id, track_id}}
-    fake = {:fake, {endpoint_id, track_id}}
-
-    children = %{
-      tee => Membrane.Element.Tee.Master,
-      fake => Membrane.Element.Fake.Sink.Buffers
-    }
-
     extensions = setup_extensions(encoding, state[:options][:extension_options])
 
-    links =
-      [
-        link(endpoint_bin_name)
-        |> via_out(Pad.ref(:output, track_id), options: [extensions: extensions])
-        |> to(tee)
-        |> via_out(:master)
-        |> to(fake)
-      ] ++
-        flat_map_children(ctx, fn
-          {:endpoint, other_endpoint_id} = other_endpoint_name ->
-            if endpoint_bin_name != other_endpoint_name and
-                 state.endpoints[other_endpoint_id].ctx.receive_media do
-              [
-                link(tee)
-                |> via_out(:copy)
-                |> via_in(Pad.ref(:input, track_id), options: [encoding: encoding])
-                |> to(other_endpoint_name)
-              ]
-            else
-              []
-            end
+    link_builder =
+      link(endpoint_bin_name)
+      |> via_out(Pad.ref(:output, track_id), options: [extensions: extensions])
 
-          _child ->
-            []
-        end)
-
-    %{children: hls_children, links: hls_links} =
-      create_hls_links(endpoint_bin_name, track_id, encoding)
+    %{children: hls_children, links: hls_links} = hls_links_and_children(link_builder, encoding)
 
     spec = %ParentSpec{
-      children: Map.merge(children, hls_children),
-      links: links ++ hls_links,
+      children: hls_children,
+      links: hls_links,
       crash_group: {endpoint_id, :temporary}
     }
 
@@ -268,7 +237,7 @@ defmodule WebRTCToHLS.Pipeline do
     end)
   end
 
-  defp setup_peer(config, ctx, state) do
+  defp setup_peer(config, _ctx, state) do
     inbound_tracks = create_inbound_tracks(config.relay_audio, config.relay_video)
     outbound_tracks = get_outbound_tracks(state.endpoints, config.receive_media)
 
@@ -325,9 +294,7 @@ defmodule WebRTCToHLS.Pipeline do
       }
     }
 
-    links = create_links(config.receive_media, endpoint_bin_name, ctx, state)
-
-    spec = %ParentSpec{children: children, links: links, crash_group: {config.id, :temporary}}
+    spec = %ParentSpec{children: children, links: [], crash_group: {config.id, :temporary}}
 
     state = put_in(state.endpoints[config.id], endpoint)
 
@@ -347,32 +314,7 @@ defmodule WebRTCToHLS.Pipeline do
 
   defp get_outbound_tracks(_endpoints, false), do: []
 
-  defp create_links(_receive_media = true, new_endpoint_bin_name, ctx, state) do
-    flat_map_children(ctx, fn
-      {:tee, {endpoint_id, track_id}} = tee ->
-        endpoint = state.endpoints[endpoint_id]
-        track = Endpoint.get_track_by_id(endpoint, track_id)
-
-        [
-          link(tee)
-          |> via_out(:copy)
-          |> via_in(Pad.ref(:input, track_id), options: [encoding: track.encoding])
-          |> to(new_endpoint_bin_name)
-        ]
-
-      _child ->
-        []
-    end)
-  end
-
-  defp create_links(_receive_media = false, _endpoint, _ctx, _state) do
-    []
-  end
-
-  defp create_hls_links(endpoint_bin_name, track_id, encoding) do
-    {:endpoint, endpoint_id} = endpoint_bin_name
-    tee_element = {:tee, {endpoint_id, track_id}}
-
+  defp hls_links_and_children(link_builder, encoding) do
     case encoding do
       :H264 ->
         %{
@@ -388,8 +330,7 @@ defmodule WebRTCToHLS.Pipeline do
             }
           },
           links: [
-            link(tee_element)
-            |> via_out(:copy)
+            link_builder
             |> to(:video_parser)
             |> to(:video_payloader)
             |> to(:video_cmaf_muxer)
@@ -408,8 +349,7 @@ defmodule WebRTCToHLS.Pipeline do
             audio_cmaf_muxer: Membrane.MP4.CMAF.Muxer
           },
           links: [
-            link(tee_element)
-            |> via_out(:copy)
+            link_builder
             |> to(:opus_decoder)
             |> to(:aac_encoder)
             |> to(:aac_parser)
@@ -424,66 +364,5 @@ defmodule WebRTCToHLS.Pipeline do
 
   defp setup_extensions(encoding, extension_options) do
     if encoding == :OPUS and extension_options[:vad], do: [{:vad, Membrane.RTP.VAD}], else: []
-  end
-
-  defp remove_peer(peer_id, ctx, state) do
-    case do_remove_peer(peer_id, ctx, state) do
-      {:absent, [], state} ->
-        Membrane.Logger.info("Peer #{inspect(peer_id)} already removed")
-        {[], state}
-
-      {:present, actions, state} ->
-        MediaEvent.create_peer_left_event(peer_id)
-        |> dispatch(state)
-
-        {actions, state}
-    end
-  end
-
-  defp do_remove_peer(peer_id, ctx, state) do
-    if !Map.has_key?(state.endpoints, peer_id) do
-      {:absent, [], state}
-    else
-      {endpoint, state} = pop_in(state, [:endpoints, peer_id])
-      {_peer, state} = pop_in(state, [:peers, peer_id])
-      tracks = Enum.map(Endpoint.get_tracks(endpoint), &%Track{&1 | enabled?: false})
-
-      tracks_msgs = update_track_messages(ctx, tracks, {:endpoint, peer_id})
-
-      endpoint_bin = ctx.children[{:endpoint, peer_id}]
-
-      actions =
-        if endpoint_bin == nil or endpoint_bin.terminating? do
-          []
-        else
-          children =
-            Endpoint.get_tracks(endpoint)
-            |> Enum.map(fn track -> track.id end)
-            |> Enum.flat_map(&[tee: {peer_id, &1}, fake: {peer_id, &1}])
-            |> Enum.filter(&Map.has_key?(ctx.children, &1))
-
-          children = [endpoint: peer_id] ++ children
-          [remove_child: children]
-        end
-
-      {:present, tracks_msgs ++ actions, state}
-    end
-  end
-
-  defp update_track_messages(_ctx, [] = _tracks, _endpoint_bin), do: []
-
-  defp update_track_messages(ctx, tracks, endpoint_bin_name) do
-    flat_map_children(ctx, fn
-      {:endpoint, _endpoint_id} = other_endpoint_bin
-      when other_endpoint_bin != endpoint_bin_name ->
-        [forward: {other_endpoint_bin, {:add_tracks, tracks}}]
-
-      _child ->
-        []
-    end)
-  end
-
-  defp flat_map_children(ctx, fun) do
-    ctx.children |> Map.keys() |> Enum.flat_map(fun)
   end
 end

@@ -38,6 +38,7 @@ export class Room {
           this.webrtcChannel.push("mediaEvent", { data: mediaEvent });
         },
         onTrackAdded: ({ stream, peer, metadata }) => {
+          console.log(peer)
           attachStream(stream, peer.id);
         },
         onConnectionError: setErrorMessage,

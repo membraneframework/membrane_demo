@@ -3,6 +3,9 @@ on:
   push:
     branches: 
       - "sandbox"
+    paths:
+      - "webrtc/videoroom"
+      - "!webrtc/videoroom/README.md"
 
 jobs:
   build_and_deploy:

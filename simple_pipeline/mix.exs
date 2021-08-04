@@ -28,7 +28,7 @@ defmodule Membrane.Demo.SimplePipeline.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:membrane_core, "~> 0.7.0", override: true},
+      {:membrane_core, "~> 0.7.0"},
       {:membrane_file_plugin, "~> 0.6.0"},
       {:membrane_portaudio_plugin, "~> 0.7.0"},
       {:membrane_ffmpeg_swresample_plugin, "~> 0.7.1"},

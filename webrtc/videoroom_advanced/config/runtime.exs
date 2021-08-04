@@ -24,20 +24,31 @@ defmodule ConfigParser do
     servers
     |> String.split(",")
     |> Enum.map(fn server ->
-      with [addr, port, username, password, proto] when proto in ["udp", "tcp", "tls"] <-
-             String.split(server, ":"),
-           {port, ""} <- Integer.parse(port) do
-        %{
-          server_addr: parse_addr(addr),
-          server_port: port,
-          username: username,
-          password: password,
-          relay_type: String.to_atom(proto)
-        }
-      else
+      case String.split(server, ":") do
+        [addr, port, username, password, proto] when proto in ["udp", "tcp", "tls"] ->
+          {port, ""} = Integer.parse(port)
+
+          %{
+            server_addr: parse_addr(addr),
+            server_port: port,
+            username: username,
+            password: password,
+            relay_type: String.to_atom(proto)
+          }
+
+        [addr, port, secret, proto] when proto in ["udp", "tcp", "tls"] ->
+          {port, ""} = Integer.parse(port)
+
+          %{
+            server_addr: parse_addr(addr),
+            server_port: port,
+            secret: secret,
+            relay_type: String.to_atom(proto)
+          }
+
         _ ->
           raise("""
-          "Bad TURN server format. Expected addr:port:username:password:proto, got: \
+          "Bad TURN server format. Expected addr:port:username:password:proto or addr:port:secret:proto, got: \
           #{inspect(server)}
           """)
       end
@@ -55,9 +66,9 @@ end
 
 # stun_servers: "addr:port"
 # turn_servers: "addr:port:username:password:proto"
+# turn_servers: "addr:port:secret:proto"
 config :membrane_videoroom_demo,
-  stun_servers:
-    System.get_env("STUN_SERVERS", "64.233.163.127:19302") |> ConfigParser.parse_stun_servers(),
+  stun_servers: System.get_env("STUN_SERVERS", "") |> ConfigParser.parse_stun_servers(),
   turn_servers: System.get_env("TURN_SERVERS", "") |> ConfigParser.parse_turn_servers()
 
 protocol = if System.get_env("USE_TLS") == "true", do: :https, else: :http

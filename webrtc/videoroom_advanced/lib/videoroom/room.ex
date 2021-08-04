@@ -29,7 +29,8 @@ defmodule Videoroom.Room do
       ]
     ]
 
-    {:ok, pid} = Membrane.SFU.start(sfu_options, [])
+    IO.inspect(sfu_options, label: :sfu_options)
+    {:ok, pid} = Membrane.RTC.Engine.start(sfu_options, [])
     send(pid, {:register, self()})
     {:ok, %{sfu_engine: pid, peer_channels: %{}}}
   end

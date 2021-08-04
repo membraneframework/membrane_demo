@@ -9,7 +9,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "membrane_sfu": "file:../deps/membrane_sfu/",
+    "membrane_rtc_engine": "file:../deps/membrane_rtc_engine/",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",
     "query-string": "^7.0.0",

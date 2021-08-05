@@ -1,19 +1,21 @@
-# Membrane simple pipeline demo
+# VideoMixer
 
-This demo shows 
+**TODO: Add description**
 
-## Prerequisites
+## Installation
 
+If [available in Hex](https://hex.pm/docs/publish), the package can be installed
+by adding `video_mixer` to your list of dependencies in `mix.exs`:
 
-### How to run
+```elixir
+def deps do
+  [
+    {:video_mixer, "~> 0.1.0"}
+  ]
+end
+```
 
+Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
+and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
+be found at [https://hexdocs.pm/video_mixer](https://hexdocs.pm/video_mixer).
 
-## Sample License
-
-## Copyright and License
-
-Copyright 2018, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
-
-[![Software Mansion](https://membraneframework.github.io/static/logo/swm_logo_readme.png)](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
-
-Licensed under the [Apache License, Version 2.0](LICENSE)

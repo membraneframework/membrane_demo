@@ -18,7 +18,7 @@ This demo shows how to create a pipeline that plays an mp3 file.
     ```
     One-liner for MacOS
     ```bash
-    brew install clang-format portaudio ffmpeg libmad
+    brew install clang-format portaudio ffmpeg libmad pkg-config
     ```
 1. Make sure you have Elixir installed on your machine. See: https://elixir-lang.org/install.html
 1. Fetch the required dependencies by running `mix deps.get`

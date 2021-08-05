@@ -27,7 +27,9 @@ defmodule Videoroom.Room do
         stun_servers: [
           %{server_addr: "stun.l.google.com", server_port: 19_302}
         ],
-        turn_servers: []
+        turn_servers: [],
+        dtls_pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
+        dtls_cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
       ]
     ]
 

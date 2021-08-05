@@ -20,7 +20,9 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      {:membrane_sfu, github: "membraneframework/membrane_sfu", branch: "client-send-offer-one-channel"},
+      {:membrane_rtc_engine,
+       github: "membraneframework/membrane_sfu", branch: "client-send-offer-one-channel"},
+      # {:membrane_rtc_engine, path: "~/dev/membrane_sfu"},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.5"},
       {:phoenix_html, "~> 2.14"},

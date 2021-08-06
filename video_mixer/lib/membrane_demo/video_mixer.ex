@@ -19,16 +19,8 @@ defmodule Membrane.Demo.VideoMixer do
           format: :s16le
         }
       },
-      converter: %Membrane.FFmpeg.SWResample.Converter{
-        input_caps: %Membrane.Caps.Audio.Raw{channels: 1, sample_rate: 16_000, format: :s16le},
-        output_caps: %Membrane.Caps.Audio.Raw{
-          channels: 2,
-          sample_rate: 48000,
-          format: :s16le
-        }
-      },
-      # Stream data into PortAudio to play it on speakers.
-      portaudio: Membrane.PortAudio.Sink
+      aac_fdk: Membrane.AAC.FDK.Encoder,
+      file_sink: %Membrane.File.Sink{location: "output.aac"}
     }
 
     # Setup the flow of the data
@@ -36,8 +28,8 @@ defmodule Membrane.Demo.VideoMixer do
       link(:file_1)
       |> to(:parser_1)
       |> to(:mixer)
-      |> to(:converter)
-      |> to(:portaudio),
+      |> to(:aac_fdk)
+      |> to(:file_sink),
       link(:file_2)
       |> to(:parser_2)
       |> via_in(:input, options: [offset: Membrane.Time.milliseconds(2000)])

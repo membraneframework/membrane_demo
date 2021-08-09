@@ -1,4 +1,7 @@
-test_audio.wav
+test_audio*.wav
+test_video*.h264
+output*
+
 compile_commands.json
 .gdb_history
 bundlex.sh

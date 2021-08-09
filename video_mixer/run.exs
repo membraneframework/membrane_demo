@@ -1,7 +1,7 @@
-# alias Membrane.Demo.VideoMixer
-# {:ok, pid} = VideoMixer.start_link({"test_audio.wav", "test_audio.wav"})
-# VideoMixer.play(pid)
+# alias Membrane.Demo.AudioOnly
+# {:ok, pid} = AudioOnly.start_link({"test_audio.wav", "test_audio.wav"})
+# AudioOnly.play(pid)
 
 alias Membrane.Demo.VideoOnly
-{:ok, pid} = VideoOnly.start_link({"test_video2.h264", "test_video2.h264"})
+{:ok, pid} = VideoOnly.start_link({"red.h264", "green.h264"})
 VideoOnly.play(pid)

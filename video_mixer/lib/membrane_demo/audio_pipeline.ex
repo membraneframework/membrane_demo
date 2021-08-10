@@ -1,6 +1,6 @@
 defmodule Membrane.Demo.AudioPipeline do
   @moduledoc """
-  Documentation for `VideoMixer`.
+  Mix several .wav files into single .aac file.
   """
   use Membrane.Pipeline
   alias Membrane.File.{Sink, Source}
@@ -42,7 +42,7 @@ defmodule Membrane.Demo.AudioPipeline do
       # offset file by 2 seconds
       |> via_in(:input, options: [offset: Membrane.Time.milliseconds(2000)])
       |> to(:mixer),
-      # save mixer's output in .aac format
+      # convert and save mixer's output in .aac format
       link(:mixer)
       |> to(:aac_fdk)
       |> to(:file_sink)

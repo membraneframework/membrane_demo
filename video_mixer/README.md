@@ -32,13 +32,13 @@ To start the demo run `mix run --no-halt run.exs` or type the following commands
 Start AudioPipeline
 ```elixir
 alias Membrane.Demo.AudioPipeline
-{:ok, pid} = AudioPipeline.start_link("sample.mp3")
+{:ok, pid} = AudioPipeline.start_link({"sound_500f.wav", "sound_1000f.wav"})
 AudioPipeline.play(pid)
 ```
 Start VideoPipeline
 ```elixir
 alias Membrane.Demo.VideoPipeline
-{:ok, pid} = VideoPipeline.start_link("sample.mp3")
+{:ok, pid} = VideoPipeline.start_link({"video_red.h264", "video_green.h264"})
 VideoPipeline.play(pid)
 ```
 

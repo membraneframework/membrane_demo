@@ -1,6 +1,6 @@
 defmodule Membrane.Demo.VideoPipeline do
   @moduledoc """
-  Documentation for `VideoMixer`.
+  Merge several .h264 files into single .h264 file.
   """
   use Membrane.Pipeline
   alias Membrane.VideoCutAndMerge
@@ -27,21 +27,27 @@ defmodule Membrane.Demo.VideoPipeline do
       sink: %Sink{location: "output.h264"}
     }
 
+    # take first 5 seconds form the first file
     stream_1 = %VideoCutAndMerge.Stream{intervals: [{0, Membrane.Time.seconds(5)}]}
+    # take everything but the first 5 seconds from the second file
     stream_2 = %VideoCutAndMerge.Stream{intervals: [{Membrane.Time.seconds(5), :infinity}]}
 
     # Setup the flow of the data
     links = [
+      # parse and decode first file
       link(:file_1)
       |> to(:parser_1)
       |> to(:decoder_1)
+      # pass it to :cut_and_merge with specified stream
       |> via_in(Pad.ref(:input, 1), options: [stream: stream_1])
       |> to(:cut_and_merge),
+      # repeat for second file
       link(:file_2)
       |> to(:parser_2)
       |> to(:decoder_2)
       |> via_in(Pad.ref(:input, 2), options: [stream: stream_2])
       |> to(:cut_and_merge),
+      # encode and save :cut_and_merge output to .h264 format
       link(:cut_and_merge)
       |> to(:encoder)
       |> to(:sink)

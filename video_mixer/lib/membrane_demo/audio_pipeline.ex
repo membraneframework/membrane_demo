@@ -1,4 +1,4 @@
-defmodule Membrane.Demo.AudioOnly do
+defmodule Membrane.Demo.AudioPipeline do
   @moduledoc """
   Documentation for `VideoMixer`.
   """

@@ -12,19 +12,25 @@ defmodule Membrane.Demo.VideoOnly do
     children = %{
       # Stream from file
       file_1: %Source{chunk_size: 40_960, location: path_to_file_1},
-      parser_1: %Parser{framerate: {25, 1}},
-      decoder_1: Decoder,
       file_2: %Source{chunk_size: 40_960, location: path_to_file_2},
+      # add timestamps
+      parser_1: %Parser{framerate: {25, 1}},
       parser_2: %Parser{framerate: {25, 1}},
+      # decode h264 file to raw video
+      decoder_1: Decoder,
       decoder_2: Decoder,
+      # cut and merge 2 videos into one
       cut_and_merge: VideoCutAndMerge,
+      # encode output in h264 format
       encoder: Encoder,
+      # save output to file
       sink: %Sink{location: "output.h264"}
     }
 
     stream_1 = %VideoCutAndMerge.Stream{intervals: [{0, Membrane.Time.seconds(5)}]}
     stream_2 = %VideoCutAndMerge.Stream{intervals: [{Membrane.Time.seconds(5), :infinity}]}
 
+    # Setup the flow of the data
     links = [
       link(:file_1)
       |> to(:parser_1)

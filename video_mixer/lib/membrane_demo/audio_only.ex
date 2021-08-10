@@ -10,8 +10,10 @@ defmodule Membrane.Demo.AudioOnly do
       # Stream from file
       audio_file_1: %Membrane.File.Source{location: path_to_wav_1},
       audio_file_2: %Membrane.File.Source{location: path_to_wav_2},
+      # Parse each wav file to raw audio
       parser_1: Membrane.WAV.Parser,
       parser_2: Membrane.WAV.Parser,
+      # Mix two files
       mixer: %Membrane.AudioMixer{
         caps: %Membrane.Caps.Audio.Raw{
           channels: 1,
@@ -19,7 +21,9 @@ defmodule Membrane.Demo.AudioOnly do
           format: :s16le
         }
       },
+      # Convert mixed audio to aac format
       aac_fdk: Membrane.AAC.FDK.Encoder,
+      # Save output in a file
       file_sink: %Membrane.File.Sink{location: "output.aac"}
     }
 

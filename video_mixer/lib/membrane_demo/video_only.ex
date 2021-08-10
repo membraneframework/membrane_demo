@@ -20,7 +20,6 @@ defmodule Membrane.Demo.VideoOnly do
       cut_and_merge: VideoCutAndMerge,
       encoder: Encoder,
       sink: %Sink{location: "output.h264"}
-      # sink: %Sink{location: "output.raw"}
     }
 
     stream_1 = %VideoCutAndMerge.Stream{intervals: [{0, Membrane.Time.seconds(5)}]}

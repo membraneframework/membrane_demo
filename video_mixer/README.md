@@ -1,21 +1,55 @@
-# VideoMixer
+# Membrane video mixer demo
 
-**TODO: Add description**
+This demo shows how to mix audio and video files.
+Audio files in .wav format are merged to single .aac file.
+Video files in .h264 are merged into single .h264 file.
 
-## Installation
+## Prerequisites
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `video_mixer` to your list of dependencies in `mix.exs`:
+1. Make sure you have following libraries installed on your OS:
+   * clang-format, 
+   * portaudio19-dev, 
+   * ffmpeg, 
+   * libavutil-dev, 
+   * libswresample-dev, 
+   * libmad0-dev
+   
+    One-liner for Ubuntu
+    ```bash
+    apt install clang-format portaudio19-dev ffmpeg libavutil-dev libswresample-dev libmad0-dev
+    ```
+    One-liner for MacOS
+    ```bash
+    brew install clang-format portaudio ffmpeg libmad pkg-config
+    ```
+1. Make sure you have Elixir installed on your machine. See: https://elixir-lang.org/install.html
+1. Fetch the required dependencies by running `mix deps.get`
 
+### How to run
+
+To start the demo run `mix run --no-halt run.exs` or type the following commands into an IEx shell (started by `iex -S mix`):
+
+Start AudioPipeline
 ```elixir
-def deps do
-  [
-    {:video_mixer, "~> 0.1.0"}
-  ]
-end
+alias Membrane.Demo.AudioPipeline
+{:ok, pid} = AudioPipeline.start_link("sample.mp3")
+AudioPipeline.play(pid)
+```
+Start VideoPipeline
+```elixir
+alias Membrane.Demo.VideoPipeline
+{:ok, pid} = VideoPipeline.start_link("sample.mp3")
+VideoPipeline.play(pid)
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/video_mixer](https://hexdocs.pm/video_mixer).
+## Sample License
 
+Sample is provided under Creative Commons. Song is called Swan Song by [Paper Navy](https://papernavy.bandcamp.com/album/all-grown-up).
+
+## Copyright and License
+
+Copyright 2021, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
+
+[![Software Mansion](https://membraneframework.github.io/static/logo/swm_logo_readme.png)](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
+
+Licensed under the [Apache License, Version 2.0](LICENSE)

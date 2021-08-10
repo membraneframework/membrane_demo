@@ -1,7 +1,6 @@
 defmodule Membrane.Demo.VideoMixer.MixProject do
   use Mix.Project
 
-
   @version "0.1.0"
   @github_url "https://github.com/membraneframework/membrane-demo"
 

@@ -1,7 +1,7 @@
 # Membrane video mixer demo
 
-This demo shows how to mix audio and video files.
-Audio files in .wav format are merged to single .aac file.
+This demo shows how to mix audio and video files.  
+Audio files in .wav format are merged to single .aac file.  
 Video files in .h264 are merged into single .h264 file.
 
 ## Prerequisites

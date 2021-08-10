@@ -30,12 +30,8 @@ defmodule Membrane.Demo.VideoMixer.MixProject do
     [
       {:membrane_core, "~> 0.7.0"},
       {:membrane_file_plugin, "~> 0.6.0"},
-      {:membrane_portaudio_plugin, "~> 0.7.0"},
-      {:membrane_ffmpeg_swresample_plugin, "~> 0.7.1"},
-      {:membrane_mp3_mad_plugin, "~> 0.7.0"},
       {:membrane_video_merger_plugin, "~> 0.1.0"},
       {:membrane_wav_plugin, "~> 0.1.0"},
-      {:membrane_mp4_plugin, "~> 0.6.0"},
       {:membrane_h264_ffmpeg_plugin, "~> 0.10.0"},
       {:membrane_aac_fdk_plugin, "~> 0.6.1"},
       {:membrane_audio_mixer_plugin, "~> 0.1.0"},

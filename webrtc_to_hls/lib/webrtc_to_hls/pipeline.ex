@@ -279,7 +279,13 @@ defmodule WebRTCToHLS.Pipeline do
         stun_servers: state.options[:network_options][:stun_servers] || [],
         turn_servers: state.options[:network_options][:turn_servers] || [],
         video_codecs: [
-          %ExSDP.Attribute.RTPMapping{payload_type: 96, encoding: "H264", clock_rate: 90_000}
+          %ExSDP.Attribute.RTPMapping{payload_type: 96, encoding: "H264", clock_rate: 90_000},
+          %ExSDP.Attribute.FMTP{
+            pt: 96,
+            level_asymmetry_allowed: true,
+            packetization_mode: 1,
+            profile_level_id: 0x42E01F
+          }
         ],
         use_default_codecs: [:audio],
         handshake_opts: handshake_opts,

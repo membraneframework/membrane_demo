@@ -11,7 +11,7 @@ defmodule VideoRoomWeb.Endpoint do
     from: :membrane_videoroom_demo,
     brotli: true,
     gzip: true,
-    only: ~w(css html js robots.txt favicon.ico)
+    only: ~w(css html js svg robots.txt favicon.ico)
   )
 
   if code_reloading? do

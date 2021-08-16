@@ -2,8 +2,26 @@
     <a href="/">
         <h2>Membrane WebRTC video room demo</h2>
     </a>
-    <h3>Room: <%= @room_id %></h3>
-    <div id="videochat" class="VideoChat"> </div>
-    <div id="control" class="Control" />
-    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+    <h3 class="roomName">Room: <%= @room_id %></h3>
+    <div id="participants-list"></div>
+    <div id="videochat-error" class="VideoChatError" style="display: none;"> </div>
+    <div id="videochat" class="VideoChat">
+        <template id="video-feed-template">
+            <div class="VideoFeed">
+                <audio></audio>
+                <video></video>
+                <div class="VideoLabel">Placeholder</div>
+            </div>
+        </template>
+        <div class="VideoGridContainer">
+            <div id="videos-grid" class="grid-1"></div>
+        </div>
+    </div>
+
+    <script src="<%= static_path(@conn, "/js/room.js") %>"></script>
+</div>
+<div id="controls", class="Controls">
+    <div class="Disconnect">
+        <button id="disconnect">Disconnect</button>
+    </div>
 </div>

@@ -3,6 +3,7 @@ defmodule VideoRoomWeb do
     quote do
       use Phoenix.Controller, namespace: VideoRoomWeb
       import Plug.Conn
+      alias VideoRoomWeb.Router.Helpers, as: Routes
     end
   end
 
@@ -14,6 +15,7 @@ defmodule VideoRoomWeb do
         namespace: VideoRoomWeb
 
       import VideoRoomWeb.Router.Helpers
+      use PhoenixInlineSvg.Helpers
 
       use Phoenix.HTML
     end

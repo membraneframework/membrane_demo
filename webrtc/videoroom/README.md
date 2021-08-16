@@ -1,27 +1,58 @@
 # Membrane WebRTC video room demo
 
-## Dependencies
+This project demonstrates an example usage of Membrane SFU API defined in [membrane_sfu](https://github.com/membraneframework/membrane_sfu).
 
-### Mac OS X
+## Run manually
+
+### Dependencies
+
+In order to run phoenix application manually you will need to have `node` installed.
+Demo has been tested with `node` version `v14.15.0`. You will also need some system dependencies.
+
+#### Mac OS X
 
 ```
 brew install srtp libnice clang-format ffmpeg opus
 ```
 
-## Usage
+#### Ubuntu
 
-Firstly, generate certificate, as described in the [signaling server readme](https://github.com/membraneframework/membrane_demo/tree/master/webrtc/simple#https). 
+```
+sudo apt-get install libsrtp2-dev libnice-dev libavcodec-dev libavformat-dev libavutil-dev libopus-dev
+```
+
+### To run
+First install all dependencies:
+```
+mix deps.get
+npm ci --prefix=assets
+```
 
 In order to run, type:
 
 ```
-mix deps.get
-mix run --no-halt
+mix phx.server 
 ```
 
-Then, go to <https://localhost:8443/>.
+Then go to <http://localhost:4000/>.
 
-IP, port and friends can be set in `config/config.exs`.
+## Run with docker
+
+Videoroom demo provides a `Dockerfile` that you can use to run videoroom application yourself without any additional setup and dependencies.
+
+### To run:
+
+```bash
+docker run -p 4000:4000 membraneframework/demo_webrtc_videoroom:latest
+```
+
+Or build and run docker image from source:
+```bash
+docker build  -t membrane_videoroom .
+docker run -p 4000:4000 membrane_videoroom 
+```
+
+Then go to <http://localhost:4000/>.
 
 ## Copyright and License
 

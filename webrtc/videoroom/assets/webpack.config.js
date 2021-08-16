@@ -1,5 +1,4 @@
 const path = require("path");
-const glob = require("glob");
 const HardSourceWebpackPlugin = require("hard-source-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
@@ -17,7 +16,7 @@ module.exports = (env, options) => {
       ],
     },
     entry: {
-      app: "./src/app.ts",
+      room: "./src/index.ts",
     },
     output: {
       filename: "[name].js",
@@ -25,7 +24,7 @@ module.exports = (env, options) => {
       publicPath: "/js/",
     },
     resolve: {
-      extensions: [".ts"],
+      extensions: [".ts", ".js"],
     },
     devtool: devMode ? "eval-cheap-module-source-map" : undefined,
     module: {
@@ -40,7 +39,17 @@ module.exports = (env, options) => {
         },
         {
           test: /\.[s]?css$/,
-          use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
+          use: [
+            MiniCssExtractPlugin.loader,
+            "css-loader",
+            {
+              loader: "sass-loader",
+              options: {
+                // Prefer `dart-sass`
+                implementation: require("sass"),
+              },
+            },
+          ],
         },
       ],
     },

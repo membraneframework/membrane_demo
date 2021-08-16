@@ -1,11 +1,19 @@
+* {
+  margin: 0px;
+  padding: 0px;
+}
+
 body {
-  margin: 40px auto;
-  max-width: 900px;
   line-height: 1.6;
   font-size: 18px;
   color: rgb(211, 211, 211);
   font-family: arial;
   background-color: black;
+  margin: 0;
+}
+
+main {
+  height: 100vh;
 }
 
 h1,
@@ -14,26 +22,112 @@ h3 {
   line-height: 1.2;
 }
 
+@mixin dark-button {
+  position: relative;
+  display: block;
+  height: 36px;
+  width: 100%;
+  border-radius: 9px;
+  background-color: #505050;
+  border: solid 1px transparent;
+  color: #fff;
+  outline: none;
+  font-size: 18px;
+  font-weight: 300;
+  cursor: pointer;
+}
+
+$space: 10px;
+
 .Index {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 20px;
+  padding: 8 * $space 2 * $space;
 }
 
 .VideoChat {
-  display: grid;
-  grid-gap: 10px;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 
   video {
-    max-width: 100%;
-    border-radius: 5px;
+    width: 100%;
+    object-fit: fill;
+  }
+
+  #videos-grid {
+    margin: 0.5 * $space;
+  }
+
+  .VideoGridContainer {
+    display: flex;
+    justify-content: center;
+    overflow-y: auto;
+  }
+
+  .grid-1 {
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    video {
+      max-height: calc(100vh - 150px);
+      max-width: calc(100vw - 100px);
+      width: auto;
+    }
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: $space;
+    width: 65%;
   }
 }
 
+.VideoFeed {
+  position: relative;
+  display: flex;
+  border-radius: 0.5 * $space;
+  border-color: #383838;
+  border-style: solid;
+  border-width: 1px;
+  overflow: hidden;
+}
+
+.UserOwnVideo {
+  transform: rotateY(180deg);
+}
+
+.VideoLabel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+
+  min-width: 10 * $space;
+  padding: 0 $space;
+  z-index: 1000;
+
+  color: white;
+  background: linear-gradient(to bottom left, transparent 0%, black 150%);
+}
+
 .Room {
-  padding: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  box-sizing: border-box;
+  padding: 2 * $space;
+
+  .roomName {
+    margin-bottom: $space;
+  }
 
   a {
     text-decoration: none;
@@ -55,7 +149,7 @@ h3 {
   display: flex;
   justify-content: center;
   flex-direction: column;
-  max-width: 500px;
+  max-width: 50 * $space;
   width: 100%;
 
   .nameLabel {
@@ -73,19 +167,9 @@ h3 {
   }
 
   .submitButton {
-    position: relative;
-    display: block;
-    height: 36px;
-    width: 100%;
-    border-radius: 9px;
-    background-color: #505050;
-    border: solid 1px transparent;
-    color: #fff;
-    outline: none;
-    font-size: 18px;
-    font-weight: 300;
-    cursor: pointer;
+    @include dark-button;
     transition: all 0.1s ease-in-out;
+    margin-top: $space;
     &:hover {
       background-color: transparent;
       border-color: #fff;
@@ -94,7 +178,44 @@ h3 {
   }
 }
 
-.Control {
+.VideoChatError {
   text-align: center;
-  margin: 20px;
+  padding: $space;
+}
+
+.ControlIcon {
+  cursor: pointer;
+  margin-right: 3 * $space;
+
+  svg {
+    height: 3 * $space;
+    width: 3 * $space;
+  }
+
+  &:hover {
+    svg {
+      stroke: gray;
+    }
+  }
+}
+
+.Controls {
+  position: fixed;
+  box-sizing: border-box;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2 * $space 3 * $space;
+  background-color: black;
+}
+
+.Disconnect {
+  button {
+    @include dark-button;
+    padding: 0.5 * $space;
+  }
 }

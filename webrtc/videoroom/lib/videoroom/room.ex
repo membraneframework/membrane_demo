@@ -21,7 +21,7 @@ defmodule Videoroom.Room do
   def init(opts) do
     Membrane.Logger.info("Spawning room proces: #{inspect(self())}")
 
-    sfu_options = [
+    engine_options = [
       id: opts[:room_id],
       network_options: [
         stun_servers: [
@@ -30,10 +30,13 @@ defmodule Videoroom.Room do
         turn_servers: [],
         dtls_pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
         dtls_cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
-      ]
+      ],
+      packet_filters: %{
+        :OPUS => [{:silence_discarder, %Membrane.RTP.SilenceDiscarder{}}]
+      }
     ]
 
-    {:ok, pid} = Membrane.RTC.Engine.start(sfu_options, [])
+    {:ok, pid} = Membrane.RTC.Engine.start(engine_options, [])
     send(pid, {:register, self()})
     {:ok, %{sfu_engine: pid, peer_channels: %{}}}
   end

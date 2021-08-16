@@ -1,51 +1,105 @@
 import "../css/app.scss";
 
-import {
-  addVideoElement,
-  removeVideoElement,
-  setErrorMessage,
-  setPlayerUrl,
-} from "./ui";
+import { MembraneWebRTC, SerializedMediaEvent } from "membrane_rfc_engine";
+import { Push, Socket } from "phoenix";
+import { setErrorMessage, setPlayerInfo, setPreview } from "./ui";
 
-import { MembraneWebRTC } from "./membraneWebRTC";
-import { Socket } from "phoenix";
+declare global {
+  interface MediaDevices {
+    getDisplayMedia: (
+      constraints: MediaStreamConstraints
+    ) => Promise<MediaStream>;
+  }
+}
 
-const CONSTRAINTS = {
-  audio: true,
-  video: { width: 1280, height: 720 },
+const awaitPhoenixPush = async (push: Push): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    push
+      .receive("ok", (response: any) => resolve(response))
+      .receive("error", (response: any) => reject(response));
+  });
 };
+
+export const AUDIO_CONSTRAINTS: MediaStreamConstraints = {
+  audio: true,
+  video: false,
+};
+
+export const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
+  audio: false,
+  video: { width: 640, height: 360, frameRate: 24 },
+};
+
+export const LOCAL_PEER_ID = "local-peer";
 
 const setup = async () => {
   const socket = new Socket("/socket");
   socket.connect();
 
-  const roomEl = document.getElementById("room");
-  if (roomEl) {
-    try {
-      const localStream = await navigator.mediaDevices.getUserMedia(
-        CONSTRAINTS
-      );
+  let localAudioStream: MediaStream | null = null;
+  let localVideoStream: MediaStream | null = null;
+  let localStream: MediaStream = new MediaStream();
 
-      localStream
-        .getTracks()
-        .forEach((track) => addVideoElement(track, localStream, true));
-
-      new MembraneWebRTC(socket, localStream, {
-        onAddTrack: addVideoElement,
-        onRemoveTrack: removeVideoElement,
-        onConnectionError: setErrorMessage,
-        // FIXME: should be a link that redirects to hls player
-        onHlsPath: setPlayerUrl,
-      }).start();
-    } catch (error) {
-      console.error(error);
-      setErrorMessage(
-        "Failed to setup video room, make sure to grant camera and microphone permissions"
-      );
-    }
-  } else {
-    console.error("room element is missing, cannot join video room");
+  try {
+    localAudioStream = await navigator.mediaDevices.getUserMedia(
+      AUDIO_CONSTRAINTS
+    );
+    localAudioStream
+      .getTracks()
+      .forEach((track) => localStream.addTrack(track));
+  } catch (error) {
+    console.error("Couldn't get microphone permission:", error);
   }
+
+  try {
+    localVideoStream = await navigator.mediaDevices.getUserMedia(
+      VIDEO_CONSTRAINTS
+    );
+    localVideoStream
+      .getTracks()
+      .forEach((track) => localStream.addTrack(track));
+  } catch (error) {
+    console.error("Couldn't get camera permission:", error);
+  }
+
+  setPreview(localStream);
+
+  const webrtcChannel = socket.channel("stream");
+
+  const onError = (error: any) => {
+    setErrorMessage(error);
+
+    webrtc.leave();
+    webrtcChannel.leave();
+  };
+
+  webrtcChannel.onError(onError);
+
+  const webrtc = new MembraneWebRTC({
+    callbacks: {
+      onSendMediaEvent: (mediaEvent: SerializedMediaEvent) => {
+        webrtcChannel.push("mediaEvent", { data: mediaEvent });
+      },
+    },
+  });
+
+  await awaitPhoenixPush(webrtcChannel.join());
+
+  localStream
+    .getTracks()
+    .forEach((track) => webrtc.addTrack(track, localStream));
+
+  webrtc.join({
+    displayName: "It's me, Mario!",
+  });
+
+  webrtcChannel.on("mediaEvent", (event) =>
+    webrtc.receiveMediaEvent(event.data)
+  );
+  webrtcChannel.on("playlistPlayable", ({ playlistId }) => {
+    console.log("HLS playlist has become playable: ", playlistId);
+    setPlayerInfo(playlistId);
+  });
 };
 
 setup();

@@ -9,7 +9,7 @@ export function setPreview(stream: MediaStream) {
   video.srcObject = stream;
   video.autoplay = true;
   video.playsInline = true;
-  video.muted = false;
+  video.muted = true;
 }
 
 export function setErrorMessage(

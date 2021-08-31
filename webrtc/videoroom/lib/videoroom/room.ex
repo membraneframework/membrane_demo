@@ -53,7 +53,10 @@ defmodule Videoroom.Room do
 
   @impl true
   def handle_info({_sfu_engine, {:sfu_media_event, to, event}}, state) do
-    send(state.peer_channels[to], {:media_event, event})
+    if state.peer_channels[to] != nil do
+      send(state.peer_channels[to], {:media_event, event})
+    end
+
     {:noreply, state}
   end
 

@@ -9,6 +9,7 @@ export function setupDisconnectButton(fun) {
   disconnectButton.onclick = fun;
 }
 
+
 function elementId(peerId: string, type: "video" | "audio" | "feed") {
   return `${type}-${peerId}`;
 }
@@ -24,10 +25,37 @@ export function attachStream(stream: MediaStream, peerId: string): void {
   audio.srcObject = stream;
 }
 
+function changeVideo(peerId: string, getStreams: (id: string) => MediaStream[]) {
+
+  const streamIds: string[] = []
+  const streams = getStreams(peerId).filter(stream => {
+    if (!streamIds.includes(stream.id)) {
+      streamIds.push(stream.id);
+      return true;
+    } else
+      return false;
+  })
+  console.log("streams: ", getStreams(peerId))
+  const videoId = elementId(peerId, "video");
+  let video = document.getElementById(videoId) as HTMLVideoElement;
+
+  const stream = video.srcObject
+
+  let index = streams.indexOf(stream as MediaStream)
+
+
+  index = index == -1 ? 0 : (index + 1) % streams.length
+
+  video.srcObject = streams[index];
+}
+
+type fnGetStreams = (peerId: string) => MediaStream[]
+
 export function addVideoElement(
   peerId: string,
   label: string,
-  isLocalVideo: boolean
+  isLocalVideo: boolean,
+  getStreams: fnGetStreams | null = null
 ): void {
   const videoId = elementId(peerId, "video");
   const audioId = elementId(peerId, "audio");
@@ -51,6 +79,10 @@ export function addVideoElement(
   if (isLocalVideo) {
     audio.muted = true;
   }
+
+
+  if (getStreams != null)
+    video.onclick = (event) => changeVideo(peerId, getStreams)
 }
 
 export function setParticipantsList(participants: Array<string>): void {

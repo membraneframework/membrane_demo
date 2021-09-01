@@ -6,7 +6,7 @@ import {
   setErrorMessage,
   setParticipantsList,
   attachStream,
-  setupDisconnectButton,
+  setupDisconnectButton
 } from "./room_ui";
 import {
   MembraneWebRTC,
@@ -58,8 +58,8 @@ export class Room {
         onTrackReady: ({ stream, peer, metadata }) => {
           attachStream(stream!, peer.id);
         },
-        onTrackAdded: (ctx) => {},
-        onTrackRemoved: (ctx) => {},
+        onTrackAdded: (ctx) => { },
+        onTrackRemoved: (ctx) => { },
         onPeerJoined: (peer) => {
           this.peers.push(peer);
           this.updateParticipantsList();
@@ -70,11 +70,11 @@ export class Room {
           removeVideoElement(peer.id);
           this.updateParticipantsList();
         },
-        onPeerUpdated: (ctx) => {},
+        onPeerUpdated: (ctx) => { },
       },
     });
 
-    this.webrtcChannel.on("mediaEvent", (event) =>
+    this.webrtcChannel.on("mediaEvent", (event: any) =>
       this.webrtc.receiveMediaEvent(event.data)
     );
   }

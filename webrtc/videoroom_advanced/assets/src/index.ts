@@ -39,6 +39,7 @@ function parseStunServers(stunServersRaw: String | undefined): RTCIceServer[] {
 }
 
 function parseTurnServers(turnServersRaw: String | undefined): RTCIceServer[] {
+  console.log(turnServersRaw);
   if (turnServersRaw == undefined) {
     return [];
   }
@@ -61,5 +62,6 @@ function parseTurnServers(turnServersRaw: String | undefined): RTCIceServer[] {
     };
     rtcIceServers.push(rtcIceServer);
   }
+
   return rtcIceServers;
 }

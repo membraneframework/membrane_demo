@@ -20,8 +20,8 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine", branch: "turn-servers"},
-#      {:membrane_rtc_engine, path: "/home/michal/Repos/membrane_rtc_engine"},
+      # {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine", branch: "turn-servers"},
+     {:membrane_rtc_engine, path: "/Users/feliks/membrane/membrane_rtc_engine"},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.5"},
       {:phoenix_html, "~> 2.14"},

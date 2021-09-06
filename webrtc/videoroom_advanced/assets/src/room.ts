@@ -10,7 +10,11 @@ import {
   attachStream,
   setupDisconnectButton,
 } from "./room_ui";
-import { MembraneWebRTC, Peer, SerializedMediaEvent } from "membrane_rtc_engine";
+import {
+  MembraneWebRTC,
+  Peer,
+  SerializedMediaEvent,
+} from "membrane_rtc_engine";
 import { Push, Socket } from "phoenix";
 import { parse } from "query-string";
 
@@ -24,7 +28,7 @@ export class Room {
   private webrtcSocketRefs: string[] = [];
   private webrtcChannel;
 
-  constructor(iceServers: RTCIceServer[]) {
+  constructor() {
     this.socket = new Socket("/socket");
     this.socket.connect();
     this.displayName = this.parseUrl();

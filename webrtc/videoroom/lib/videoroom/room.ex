@@ -39,8 +39,8 @@ defmodule Videoroom.Room do
   end
 
   @impl true
-  def handle_call({:add_peer_channel, peer_channel_pid, peer_pid}, _from, state) do
-    state = put_in(state, [:peer_channels, peer_pid], peer_channel_pid)
+  def handle_call({:add_peer_channel, peer_channel_pid, peer_id}, _from, state) do
+    state = put_in(state, [:peer_channels, peer_id], peer_channel_pid)
     Process.monitor(peer_channel_pid)
     {:reply, :ok, state}
   end
@@ -62,7 +62,10 @@ defmodule Videoroom.Room do
 
   @impl true
   def handle_info({sfu_engine, {:new_peer, peer_id, _metadata, _track_metadata}}, state) do
-    send(sfu_engine, {:accept_new_peer, peer_id})
+    # get node the peer with peer_id is running on
+    peer_channel_pid = Map.get(state.peer_channels, peer_id)
+    peer_node = node(peer_channel_pid)
+    send(sfu_engine, {:accept_new_peer, peer_id, peer_node})
     {:noreply, state}
   end
 

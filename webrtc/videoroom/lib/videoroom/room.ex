@@ -27,18 +27,20 @@ defmodule Videoroom.Room do
         stun_servers: [
           %{server_addr: "stun.l.google.com", server_port: 19_302}
         ],
-        turn_servers: []
+        turn_servers: [],
+        dtls_pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
+        dtls_cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
       ]
     ]
 
-    {:ok, pid} = Membrane.SFU.start(sfu_options, [])
+    {:ok, pid} = Membrane.RTC.Engine.start(sfu_options, [])
     send(pid, {:register, self()})
     {:ok, %{sfu_engine: pid, peer_channels: %{}}}
   end
 
   @impl true
-  def handle_call({:add_peer_channel, peer_channel_pid, peer_pid}, _from, state) do
-    state = put_in(state, [:peer_channels, peer_pid], peer_channel_pid)
+  def handle_call({:add_peer_channel, peer_channel_pid, peer_id}, _from, state) do
+    state = put_in(state, [:peer_channels, peer_id], peer_channel_pid)
     Process.monitor(peer_channel_pid)
     {:reply, :ok, state}
   end
@@ -51,13 +53,19 @@ defmodule Videoroom.Room do
 
   @impl true
   def handle_info({_sfu_engine, {:sfu_media_event, to, event}}, state) do
-    send(state.peer_channels[to], {:media_event, event})
+    if state.peer_channels[to] != nil do
+      send(state.peer_channels[to], {:media_event, event})
+    end
+
     {:noreply, state}
   end
 
   @impl true
   def handle_info({sfu_engine, {:new_peer, peer_id, _metadata, _track_metadata}}, state) do
-    send(sfu_engine, {:accept_new_peer, peer_id})
+    # get node the peer with peer_id is running on
+    peer_channel_pid = Map.get(state.peer_channels, peer_id)
+    peer_node = node(peer_channel_pid)
+    send(sfu_engine, {:accept_new_peer, peer_id, peer_node})
     {:noreply, state}
   end
 

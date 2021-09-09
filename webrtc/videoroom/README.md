@@ -54,6 +54,42 @@ docker run -p 4000:4000 membrane_videoroom
 
 Then go to <http://localhost:4000/>.
 
+## Run distributed
+
+Videoroom demo does not automatically start a cluster, but you can check the distributed functionalities by starting one manually.
+
+Open two terminals. On the first run:
+
+```bash
+$ SERVER_PORT=4001 iex --sname one -S mix phx.server
+```
+
+On the second, run:
+
+```bash
+$ SERVER_PORT=4002 iex --sname two -S mix phx.server
+```
+
+This will start two videoroom instances, one running on port `4001` on node `one@{your-local-hostname}`
+and the other on port `4002` on node `two@{your-local-hostname}`.
+
+To create a cluster, run this on the first terminal:
+
+```elixir
+iex(one@{your-local-hostname})1> :net_kernel.connect_node(:'two@{your-local-hostname}')
+true
+```
+
+You can check that the cluster has been created with:
+
+```elixir
+iex(one@{your-local-hostname})2> :erlang.nodes()                     
+[:two@{your-local-hostname}]
+```
+
+Then, open two tabs on your browser. Go to <http://localhost:4001/> on one, and <http://localhost:4002/> on the other.
+Join the same room, and you shall see two participants in the room. Every participant EndPoint will be running on their respective node.
+
 ## Copyright and License
 
 Copyright 2020, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)

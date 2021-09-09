@@ -13,4 +13,6 @@ config :logger,
 
 config :logger, :console, metadata: [:room, :peer]
 
+config :ex_libnice, impl: NIF
+
 import_config("#{config_env()}.exs")

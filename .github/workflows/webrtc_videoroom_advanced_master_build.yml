@@ -3,6 +3,9 @@ on:
   push:
     branches: 
       - "master"
+    paths:
+      - "webrtc/videoroom"
+      - "!webrtc/videoroom/README.md"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:

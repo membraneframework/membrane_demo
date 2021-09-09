@@ -20,7 +20,7 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      {:membrane_sfu, github: "membraneframework/membrane_sfu", branch: :develop},
+      {:membrane_rtc_engine, "~> 0.1.0-alpha.2"},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.5"},
       {:phoenix_html, "~> 2.14"},

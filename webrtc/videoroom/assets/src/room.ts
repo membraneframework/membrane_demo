@@ -12,7 +12,7 @@ import {
   MembraneWebRTC,
   Peer,
   SerializedMediaEvent,
-} from "membrane_rtc_engine";
+} from "membrane_sfu";
 import { Push, Socket } from "phoenix";
 import { parse } from "query-string";
 
@@ -25,6 +25,18 @@ export class Room {
   private socket;
   private webrtcSocketRefs: string[] = [];
   private webrtcChannel;
+  private peerIdToStreams: Map<string, MediaStream[]> = new Map();
+  private screenShareTrack: MediaStreamTrack | null = null;
+  private screenShareTrackId: string | null = null;
+  private tracks: MediaStreamTrack[] = []
+  private videoTrackId: string | null = null
+
+  // 1. Screen share with removing old track
+  // 2. Replace track
+  // 3. Update peerMetadata
+  // 4. Update track metadata
+  private version = 4
+
 
   constructor() {
     this.socket = new Socket("/socket");
@@ -66,6 +78,7 @@ export class Room {
           addVideoElement(peer.id, peer.metadata.displayName, false);
         },
         onPeerLeft: (peer) => {
+          console.log("Peer left")
           this.peers = this.peers.filter((p) => p.id !== peer.id);
           removeVideoElement(peer.id);
           this.updateParticipantsList();

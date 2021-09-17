@@ -5,8 +5,12 @@ defmodule VideoRoom.MixProject do
     [
       app: :membrane_videoroom_demo,
       version: "0.1.0",
+<<<<<<< HEAD
       elixir: "~> 1.12",
       aliases: aliases(),
+=======
+      elixir: "~> 1.1",
+>>>>>>> bdc36959 (Updated version for rtc_engine changes)
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]

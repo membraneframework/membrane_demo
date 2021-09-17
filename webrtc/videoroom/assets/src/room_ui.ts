@@ -9,7 +9,6 @@ export function setupDisconnectButton(fun) {
   disconnectButton.onclick = fun;
 }
 
-
 function elementId(peerId: string, type: "video" | "audio" | "feed") {
   return `${type}-${peerId}`;
 }
@@ -25,37 +24,20 @@ export function attachStream(stream: MediaStream, peerId: string): void {
   audio.srcObject = stream;
 }
 
-function changeVideo(peerId: string, getStreams: (id: string) => MediaStream[]) {
-
-  const streamIds: string[] = []
-  const streams = getStreams(peerId).filter(stream => {
-    if (!streamIds.includes(stream.id)) {
-      streamIds.push(stream.id);
-      return true;
-    } else
-      return false;
-  })
-  console.log("streams: ", getStreams(peerId))
+export function changeVideo(peerId: string, streams: MediaStream[]) {
   const videoId = elementId(peerId, "video");
   let video = document.getElementById(videoId) as HTMLVideoElement;
-
-  const stream = video.srcObject
-
-  let index = streams.indexOf(stream as MediaStream)
-
-
-  index = index == -1 ? 0 : (index + 1) % streams.length
-
+  const stream = video.srcObject;
+  let index = streams.indexOf(stream as MediaStream);
+  index = index == -1 ? 0 : (index + 1) % streams.length;
   video.srcObject = streams[index];
 }
-
-type fnGetStreams = (peerId: string) => MediaStream[]
 
 export function addVideoElement(
   peerId: string,
   label: string,
   isLocalVideo: boolean,
-  getStreams: fnGetStreams | null = null
+  peerIdToStreams: Map<string, MediaStream[]> = new Map()
 ): void {
   const videoId = elementId(peerId, "video");
   const audioId = elementId(peerId, "audio");
@@ -80,9 +62,12 @@ export function addVideoElement(
     audio.muted = true;
   }
 
-
-  if (getStreams != null)
-    video.onclick = (event) => changeVideo(peerId, getStreams)
+  video.onclick = (event) => {
+    if (peerIdToStreams.has(peerId)) {
+      const streams = peerIdToStreams.get(peerId)!.filter(stream => stream.getVideoTracks().length != 0);
+      changeVideo(peerId, streams);
+    }
+  };
 }
 
 export function setParticipantsList(participants: Array<string>): void {

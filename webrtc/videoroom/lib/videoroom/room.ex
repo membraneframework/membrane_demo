@@ -23,6 +23,7 @@ defmodule Videoroom.Room do
 
     sfu_options = [
       id: opts[:room_id],
+      payload_and_depayload_tracks?: false,
       network_options: [
         stun_servers: [
           %{server_addr: "stun.l.google.com", server_port: 19_302}

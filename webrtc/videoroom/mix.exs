@@ -20,7 +20,11 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      {:membrane_rtc_engine, "~> 0.1.0-alpha.2"},
+      {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine", branch: "use-payloaders-and-depayloaders-flag"},
+      {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin", branch: "optional-jitter-buffer", override: true},
+      {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin", branch: "removing-jitter-buffer-from-stream-receive-bin", override: true},
+      {:ex_libsrtp, "~> 0.2.0", override: true},
+      {:telemetry, "~> 0.4.0"},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.5"},
       {:phoenix_html, "~> 2.14"},

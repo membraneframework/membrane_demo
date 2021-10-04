@@ -8,14 +8,14 @@ defmodule RtmpToHls.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      # Start the Pipeline
+      Membrane.Demo.RtmpToHls,
       # Start the Telemetry supervisor
       RtmpToHlsWeb.Telemetry,
       # Start the PubSub system
       {Phoenix.PubSub, name: RtmpToHls.PubSub},
       # Start the Endpoint (http/https)
-      RtmpToHlsWeb.Endpoint,
-      # Start the Pipeline
-      # Membrane.Demo.RtmpToHls
+      RtmpToHlsWeb.Endpoint
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

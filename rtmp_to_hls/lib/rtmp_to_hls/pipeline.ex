@@ -8,8 +8,8 @@ defmodule Membrane.Demo.RtmpToHls do
         src: %Membrane.RTMP.Source{port: 9009},
         sink: %Membrane.HTTPAdaptiveStream.SinkBin{
           manifest_module: Membrane.HTTPAdaptiveStream.HLS,
-          target_window_duration: 20 |> Membrane.Time.seconds(),
-          target_segment_duration: 8 |> Membrane.Time.seconds(),
+          target_window_duration: 60 |> Membrane.Time.seconds(),
+          muxer_segment_duration: 8 |> Membrane.Time.seconds(),
           persist?: false,
           storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: "output"}
         }

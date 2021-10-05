@@ -19,31 +19,27 @@ defmodule ConfigParser do
   def parse_turn_servers(""), do: []
 
   def parse_turn_servers(servers) do
-    if String.starts_with?(servers, "/") do
-      servers = File.read!(servers)
-    else
-      servers
-      |> String.split(",")
-      |> Enum.map(fn server ->
-        with [addr, port, username, password, proto] when proto in ["udp", "tcp", "tls"] <-
-               String.split(server, ":"),
-             {port, ""} <- Integer.parse(port) do
-          %{
-            server_addr: parse_addr(addr),
-            server_port: port,
-            username: username,
-            password: password,
-            relay_type: String.to_atom(proto)
-          }
-        else
-          _ ->
-            raise("""
-            "Bad TURN server format. Expected addr:port:username:password:proto, got: \
-            #{inspect(server)}
-            """)
-        end
-      end)
-    end
+    servers
+    |> String.split(",")
+    |> Enum.map(fn server ->
+      with [addr, port, username, password, proto] when proto in ["udp", "tcp", "tls"] <-
+             String.split(server, ":"),
+           {port, ""} <- Integer.parse(port) do
+        %{
+          server_addr: parse_addr(addr),
+          server_port: port,
+          username: username,
+          password: password,
+          relay_type: String.to_atom(proto)
+        }
+      else
+        _ ->
+          raise("""
+          "Bad TURN server format. Expected addr:port:username:password:proto, got: \
+          #{inspect(server)}
+          """)
+      end
+    end)
   end
 
   def parse_addr(addr) do

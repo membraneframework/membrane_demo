@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <%= csrf_meta_tag() %>
-    <%= live_title_tag assigns[:page_title] || "RtmpToHls", suffix: " · Phoenix Framework" %>
+    <%= live_title_tag assigns[:page_title] || "RtmpToHls", suffix: " · Membrane Framework" %>
     <link phx-track-static rel="stylesheet" href={Routes.static_path(@conn, "/assets/app.css")}/>
     <script defer phx-track-static type="text/javascript" src={Routes.static_path(@conn, "/assets/app.js")}></script>
   </head>
@@ -14,13 +14,12 @@
       <section class="container">
         <nav>
           <ul>
-            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
+            <li><a href="https://membraneframework.org/guide/v0.7/introduction.html">Get Started with Membrane</a></li>
             
           </ul>
         </nav>
         <a href="https://membraneframework.org/" class="phx-logo">
-          <img src={Routes.static_path(@conn, "/images/membrane.png")} alt="Membrane Framework Logo" height="75" style="display: block;"/>
-          Membrane Framework
+          <img class="logo" src="https://www.membraneframework.org/wp-content/uploads/2018/06/membrane_fw_h_white_.png" alt="Membrane Framework" height="65" style="display: inline-block">
         </a>
       </section>
     </header>

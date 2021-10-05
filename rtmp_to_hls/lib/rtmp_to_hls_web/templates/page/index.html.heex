@@ -1,5 +1,8 @@
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<video id="player" controls autoplay class="Player"></video>
+
+<div class="container">
+  <video id="player" controls autoplay class="Player"></video>
+</div>
 <script>
   var video = document.getElementById('player');
   var videoSrc = window.location.origin + `/video/index.m3u8`;
@@ -7,8 +10,7 @@
     var hls = new Hls();
     hls.loadSource(videoSrc);
     hls.attachMedia(video);
-  }
-  else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
     video.src = videoSrc;
   }
 </script>

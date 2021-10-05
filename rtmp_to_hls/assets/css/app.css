@@ -87,3 +87,9 @@
   text-decoration: none;
   cursor: pointer;
 }
+
+#player {
+  width: 100%;
+  height: auto;
+  margin: auto auto;
+}

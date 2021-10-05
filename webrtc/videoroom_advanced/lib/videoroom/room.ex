@@ -21,7 +21,7 @@ defmodule Videoroom.Room do
   def init(opts) do
     Membrane.Logger.info("Spawning room proces: #{inspect(self())}")
 
-    sfu_options = [
+    rtc_engine_options = [
       id: opts[:room_id],
       network_options: [
         stun_servers: Application.fetch_env!(:membrane_videoroom_demo, :stun_servers),
@@ -29,9 +29,9 @@ defmodule Videoroom.Room do
       ]
     ]
 
-    {:ok, pid} = Membrane.SFU.start(sfu_options, [])
+    {:ok, pid} = Membrane.RTC.Engine.start(rtc_engine_options, [])
     send(pid, {:register, self()})
-    {:ok, %{sfu_engine: pid, peer_channels: %{}}}
+    {:ok, %{rtc_engine: pid, peer_channels: %{}}}
   end
 
   @impl true
@@ -42,31 +42,31 @@ defmodule Videoroom.Room do
   end
 
   @impl true
-  def handle_info({_sfu_engine, {:sfu_media_event, :broadcast, event}}, state) do
+  def handle_info({_rtc_engine, {:sfu_media_event, :broadcast, event}}, state) do
     for {_peer_id, pid} <- state.peer_channels, do: send(pid, {:media_event, event})
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({_sfu_engine, {:sfu_media_event, to, event}}, state) do
+  def handle_info({_rtc_engine, {:sfu_media_event, to, event}}, state) do
     send(state.peer_channels[to], {:media_event, event})
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({sfu_engine, {:new_peer, peer_id, _metadata, _track_metadata}}, state) do
-    send(sfu_engine, {:accept_new_peer, peer_id})
+  def handle_info({rtc_engine, {:new_peer, peer_id, _metadata, _track_metadata}}, state) do
+    send(rtc_engine, {:accept_new_peer, peer_id})
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({_sfu_engine, {:peer_left, _peer_id}}, state) do
+  def handle_info({_rtc_engine, {:peer_left, _peer_id}}, state) do
     {:noreply, state}
   end
 
   @impl true
   def handle_info({:media_event, _from, _event} = msg, state) do
-    send(state.sfu_engine, msg)
+    send(state.rtc_engine, msg)
     {:noreply, state}
   end
 
@@ -76,7 +76,7 @@ defmodule Videoroom.Room do
       state.peer_channels
       |> Enum.find(fn {_peer_id, peer_channel_pid} -> peer_channel_pid == pid end)
 
-    send(state.sfu_engine, {:remove_peer, peer_id})
+    send(state.rtc_engine, {:remove_peer, peer_id})
     {_elem, state} = pop_in(state, [:peer_channels, peer_id])
     {:noreply, state}
   end

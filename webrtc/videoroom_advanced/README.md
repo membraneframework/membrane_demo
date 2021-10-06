@@ -12,7 +12,7 @@ KEY_FILE_PATH={path to certificate key file, used when "USE_TLS" is set to true}
 CERT_FILE_PATH={path to certificate file, used when "USE_TLS" is set to true}
 
 STUN_SERVERS={list of stun servers in form of "addr:port" separated by ",", defaults to a single server "stun1.l.google.com:19302"}
-TURN_SERVERS={list of turn servers in form of "addr:port:username:password:proto" separated by ",", defaults to ""}
+TURN_SETTINGS={turn servers settings in form of "addr:secret" or "addr:secret:cert"}
 ```
 
 ## Run manually

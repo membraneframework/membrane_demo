@@ -16,43 +16,33 @@ defmodule ConfigParser do
     end)
   end
 
-  def parse_turn_servers(""), do: []
+  def parse_turn_settings(settings) do
+    optional_error_message = """
+    "Bad TURN servers settings format. Expected addr:secret:cert or addr:secret, got: \
+    #{inspect(settings)}
+    """
 
-  def parse_turn_servers("/" <> _rest = path), do: File.read!(path) |> parse_turn_servers()
+    settings
+    |> String.split(":")
+    |> then(fn
+      [ip | tail] ->
+        {:ok, ip} = ip |> to_charlist() |> :inet.parse_address()
+        [ip | tail]
 
-  def parse_turn_servers(servers) do
-    servers
-    |> String.split(",")
-    |> Enum.map(fn server ->
-      case String.split(server, ":") do
-        [addr, port, username, password, proto] when proto in ["udp", "tcp", "tls"] ->
-          {port, ""} = Integer.parse(port)
-
-          %{
-            server_addr: parse_addr(addr),
-            server_port: port,
-            username: username,
-            password: password,
-            relay_type: String.to_atom(proto)
-          }
-
-        [addr, port, secret, proto] when proto in ["udp", "tcp", "tls"] ->
-          {port, ""} = Integer.parse(port)
-
-          %{
-            server_addr: parse_addr(addr),
-            server_port: port,
-            secret: secret,
-            relay_type: String.to_atom(proto)
-          }
-
-        _ ->
-          raise("""
-          "Bad TURN server format. Expected addr:port:username:password:proto or addr:port:secret:proto, got: \
-          #{inspect(server)}
-          """)
-      end
+      _ ->
+        raise(optional_error_message)
     end)
+    |> then(fn
+      [ip, secret] ->
+        [ip: ip, secret: secret]
+
+      [ip, secret, cert] ->
+        [ip: ip, secret: secret, cert: cert]
+
+      _ ->
+        raise(optional_error_message)
+    end)
+    |> IO.inspect(label: "dupa parse_turn_settings")
   end
 
   def parse_addr(addr) do
@@ -65,11 +55,12 @@ defmodule ConfigParser do
 end
 
 # stun_servers: "addr:port"
-# turn_servers: "addr:port:username:password:proto"
-# turn_servers: "addr:port:secret:proto"
+# turn_settings: "addr:secret"
+# turn_settings: "addr:secret:cert"
 config :membrane_videoroom_demo,
   stun_servers: System.get_env("STUN_SERVERS", "") |> ConfigParser.parse_stun_servers(),
-  turn_servers: System.get_env("TURN_SERVERS", "") |> ConfigParser.parse_turn_servers()
+  turn_settings:
+    System.get_env("TURN_SETTINGS", "127.0.0.1:abc") |> ConfigParser.parse_turn_settings()
 
 protocol = if System.get_env("USE_TLS") == "true", do: :https, else: :http
 

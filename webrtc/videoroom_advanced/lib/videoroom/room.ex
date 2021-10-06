@@ -25,7 +25,7 @@ defmodule Videoroom.Room do
       id: opts[:room_id],
       network_options: [
         stun_servers: Application.fetch_env!(:membrane_videoroom_demo, :stun_servers),
-        turn_servers: Application.fetch_env!(:membrane_videoroom_demo, :turn_servers)
+        turn_settings: Application.fetch_env!(:membrane_videoroom_demo, :turn_settings)
       ]
     ]
 

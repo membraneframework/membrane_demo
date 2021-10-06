@@ -8,7 +8,7 @@ services:
       VIRTUAL_HOST: "demo-webrtc-videoroom-advanced.membraneframework.org"
       LETSENCRYPT_HOST: "demo-webrtc-videoroom-advanced.membraneframework.org"
       STUN_SERVERS: "stun.l.google.com:19302"
-      TURN_SERVERS: "/run/secrets/turn_servers"
+      # TURN_SETTINGS: "135.181.115.87:abc"
 
   nginx-proxy:
     image: jwilder/nginx-proxy:0.8.0

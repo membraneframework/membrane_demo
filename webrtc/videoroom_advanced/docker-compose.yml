@@ -2,12 +2,9 @@ version: "3.8"
 services:
   videoroom_advanced:
     image: membraneframework/demo_webrtc_videoroom_advanced:latest
-    secrets:
-      - turn_servers
     environment:
       VIRTUAL_HOST: "demo-webrtc-videoroom-advanced.membraneframework.org"
       LETSENCRYPT_HOST: "demo-webrtc-videoroom-advanced.membraneframework.org"
-      TURN_SERVERS: "/run/secrets/turn_servers"
 
   nginx-proxy:
     image: jwilder/nginx-proxy:0.8.0
@@ -31,10 +28,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       DEFAULT_EMAIL: admin+demo@membraneframework.org
-
-secrets:
-  turn_servers:
-    external: true
 
 volumes:
   nginx-certs:

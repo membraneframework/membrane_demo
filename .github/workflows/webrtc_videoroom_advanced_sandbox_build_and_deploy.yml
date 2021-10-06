@@ -1,4 +1,4 @@
-name: WebRTC Videoroom - Sandbox Build and Deploy
+name: WebRTC Videoroom Advanced - Sandbox Build and Deploy
 on:
   push:
     branches: 

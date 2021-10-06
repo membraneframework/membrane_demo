@@ -1,4 +1,4 @@
-name: WebRTC Videoroom Advanced - Master Build
+name: WebRTC Videoroom - Master Build
 on:
   push:
     branches: 
@@ -38,10 +38,7 @@ jobs:
         id: docker_build_latest
         uses: docker/build-push-action@v2
         with:
-          context: webrtc/videoroom_advanced
-          file: webrtc/videoroom_advanced/Dockerfile
+          context: webrtc/videoroom
+          file: webrtc/videoroom/Dockerfile
           push: true
-          tags: membraneframework/demo_webrtc_videoroom_advanced:latest
-
-
-          
+          tags: membraneframework/demo_webrtc_videoroom:latest

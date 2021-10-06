@@ -41,7 +41,4 @@ jobs:
           context: webrtc/videoroom_advanced
           file: webrtc/videoroom_advanced/Dockerfile
           push: true
-          tags: membraneframework/demo_webrtc_videoroom_advanced:latest
-
-
-          
+          tags: membraneframework/demo_webrtc_videoroom_advanced:latest    

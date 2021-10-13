@@ -42,22 +42,41 @@ export class Room {
         onSendMediaEvent: (mediaEvent: SerializedMediaEvent) => {
           this.webrtcChannel.push("mediaEvent", { data: mediaEvent });
         },
-        onTrackAdded: ({ stream, peer, metadata }) => {
-          attachStream(stream, peer.id);
-        },
         onConnectionError: setErrorMessage,
         onJoinSuccess: (peerId, peersInRoom) => {
-          this.peers = peersInRoom;
-          this.peers.forEach((peer) => {
-            addVideoElement(peer.id, peer.metadata.displayName, false);
-          });
+          try {
+            navigator.mediaDevices
+              .getUserMedia(MEDIA_CONSTRAINTS)
+              .then((stream) => {
+                stream
+                  .getTracks()
+                  .forEach((track) => this.webrtc.addTrack(track, stream));
 
-          this.updateParticipantsList();
+                addVideoElement(LOCAL_PEER_ID, "Me", true);
+                attachStream(stream, LOCAL_PEER_ID);
+
+                this.peers = peersInRoom;
+                this.peers.forEach((peer) => {
+                  addVideoElement(peer.id, peer.metadata.displayName, false);
+                });
+                this.updateParticipantsList();
+              });
+          } catch (error) {
+            console.error(error);
+            setErrorMessage(
+              "Failed to setup video room, make sure to grant camera and microphone permissions"
+            );
+            throw "error";
+          }
         },
         onJoinError: (metadata) => {
           throw `Peer denied.`;
         },
-
+        onTrackReady: ({ stream, peer, metadata }) => {
+          attachStream(stream, peer.id);
+        },
+        onTrackAdded: (ctx) => {},
+        onTrackRemoved: (ctx) => {},
         onPeerJoined: (peer) => {
           this.peers.push(peer);
           this.updateParticipantsList();
@@ -68,6 +87,7 @@ export class Room {
           removeVideoElement(peer.id);
           this.updateParticipantsList();
         },
+        onPeerUpdated: (ctx) => {},
       },
     });
 
@@ -78,25 +98,6 @@ export class Room {
 
   public init = async () => {
     await this.phoenixChannelPushResult(this.webrtcChannel.join());
-
-    try {
-      this.localStream = await navigator.mediaDevices.getUserMedia(
-        MEDIA_CONSTRAINTS
-      );
-    } catch (error) {
-      console.error(error);
-      setErrorMessage(
-        "Failed to setup video room, make sure to grant camera and microphone permissions"
-      );
-      throw "error";
-    }
-
-    this.localStream
-      .getTracks()
-      .forEach((track) => this.webrtc.addTrack(track, this.localStream!));
-
-    addVideoElement(LOCAL_PEER_ID, "Me", true);
-    attachStream(this.localStream, LOCAL_PEER_ID);
   };
 
   public join = () => {

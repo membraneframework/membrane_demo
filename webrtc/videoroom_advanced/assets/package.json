@@ -1,0 +1,41 @@
+{
+  "repository": {},
+  "description": " ",
+  "license": "MIT",
+  "scripts": {
+    "deploy": "webpack --mode production",
+    "format": "prettier --write .",
+    "watch": "webpack --mode development --watch",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "membrane_rtc_engine": "file:../deps/membrane_rtc_engine/",
+    "phoenix": "file:../deps/phoenix",
+    "phoenix_html": "file:../deps/phoenix_html",
+    "query-string": "^7.0.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/phoenix": "^1.5.1",
+    "@types/query-string": "^6.3.0",
+    "@types/uuid": "^8.3.0",
+    "@typescript-eslint/eslint-plugin": "^4.16.1",
+    "@typescript-eslint/parser": "^4.16.1",
+    "copy-webpack-plugin": "^5.1.1",
+    "css-loader": "^3.4.2",
+    "eslint": "^7.21.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-prettier": "^3.3.1",
+    "hard-source-webpack-plugin": "^0.13.1",
+    "mini-css-extract-plugin": "^0.9.0",
+    "optimize-css-assets-webpack-plugin": "^5.0.1",
+    "prettier": "^2.2.1",
+    "sass": "^1.32.11",
+    "sass-loader": "^8.0.2",
+    "terser-webpack-plugin": "^2.3.2",
+    "ts-loader": "^8.0.17",
+    "typescript": "^4.2.2",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.2"
+  }
+}

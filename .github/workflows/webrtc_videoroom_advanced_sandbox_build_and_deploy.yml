@@ -1,8 +1,8 @@
-name: WebRTC Videoroom - Tag Build and Deploy
+name: WebRTC Videoroom Advanced - Sandbox Build and Deploy
 on:
   push:
-    tags: 
-      - "*.*.*"
+    branches: 
+      - "sandbox"
     paths:
       - "webrtc/videoroom"
       - "!webrtc/videoroom/README.md"
@@ -12,10 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-      - name: Get tag
-        id: tag
-        uses: dawidd6/action-get-tag@v1
 
       - name: Cache Docker layers
         uses: actions/cache@v2
@@ -35,32 +31,28 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Build and push tagged version
-        id: docker_build_tag
+      - name: Build and push sandbox version 
+        id: docker_build_sandbox
         uses: docker/build-push-action@v2
         with:
-          context: webrtc/videoroom
-          file: webrtc/videoroom/Dockerfile
+          context: webrtc/videoroom_advanced
+          file: webrtc/videoroom_advanced/Dockerfile
           push: true
-          tags: membraneframework/demo_webrtc_videoroom:${{ steps.tag.outputs.tag }}
-
-      - name: Build and push latest version 
-        id: docker_build_latest
-        uses: docker/build-push-action@v2
-        with:
-          context: webrtc/videoroom
-          file: webrtc/videoroom/Dockerfile
-          push: true
-          tags: membraneframework/demo_webrtc_videoroom:latest
+          tags: membraneframework/demo_webrtc_videoroom_advanced:sandbox
       
+      - name: Change Docker-Compose tag before deployment
+        id: sed_that_compose
+        run: sed -i -e "s/latest/sandbox/g" webrtc/videoroom_advanced/docker-compose.yml
+      
+      - name: Change Docker-Compose address before deployment
+        id: sed_it_again
+        run: sed -i -e "s/demo-/sandbox-/g" webrtc/videoroom_advanced/docker-compose.yml
+
       - name: Deploy to Swarm
         id: deploy
         uses: sagebind/docker-swarm-deploy-action@v2
         with:
-          remote_host: ${{ secrets.DEMO_SWARM_MANAGER }}
+          remote_host: ${{ secrets.SANDBOX_SWARM_MANAGER }}
           ssh_private_key: ${{ secrets.SSH_PRIV_KEY }}
           ssh_public_key: ${{ secrets.SSH_SERVER_PUBLIC_KEY}}
-          args: stack deploy --compose-file webrtc/videoroom/docker-compose.yml videoroom
-
-
-          
+          args: stack deploy --compose-file webrtc/videoroom_advanced/docker-compose.yml videoroom_advanced

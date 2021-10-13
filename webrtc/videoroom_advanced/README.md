@@ -66,7 +66,7 @@ docker run -p 4000:4000 --env-file .env membraneframework/demo_webrtc_videoroom_
 Or build and run docker image from source:
 ```bash
 docker build  -t membrane_videoroom_advanced .
-docker run -p 4000:4000 --env_file .env membrane_videoroom_advanced 
+docker run -p 4000:4000 --env-file .env membrane_videoroom_advanced 
 ```
 
 Then go to <http://localhost:4000/>.

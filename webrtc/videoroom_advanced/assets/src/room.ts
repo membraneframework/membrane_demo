@@ -69,7 +69,6 @@ export class Room {
           this.updateParticipantsList();
         },
       },
-      rtcConfig: {},
     });
 
     this.webrtcChannel.on("mediaEvent", (event) =>

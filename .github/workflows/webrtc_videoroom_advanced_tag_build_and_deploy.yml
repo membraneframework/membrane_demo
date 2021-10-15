@@ -4,8 +4,8 @@ on:
     tags: 
       - "*.*.*"
     paths:
-      - "webrtc/videoroom"
-      - "!webrtc/videoroom/README.md"
+      - "webrtc/videoroom_advanced"
+      - "!webrtc/videoroom_advanced/README.md"
 
 jobs:
   build_and_deploy:

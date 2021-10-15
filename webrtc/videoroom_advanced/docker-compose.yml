@@ -10,6 +10,7 @@ services:
       STUN_SERVERS: "stun.l.google.com:19302"
       TURN_SETTINGS: "127.0.0.1:abc"
 
+
   nginx-proxy:
     image: jwilder/nginx-proxy:0.8.0
     ports:
@@ -36,7 +37,7 @@ services:
 secrets:
   turn_servers:
     external: true
-
+    
 volumes:
   nginx-certs:
   nginx-vhost:

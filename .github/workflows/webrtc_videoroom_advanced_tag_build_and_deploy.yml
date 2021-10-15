@@ -4,8 +4,8 @@ on:
     tags: 
       - "*.*.*"
     paths:
-      - "webrtc/videoroom"
-      - "!webrtc/videoroom/README.md"
+      - "webrtc/videoroom_advanced"
+      - "!webrtc/videoroom_advanced/README.md"
 
 jobs:
   build_and_deploy:
@@ -61,6 +61,3 @@ jobs:
           ssh_private_key: ${{ secrets.SSH_PRIV_KEY }}
           ssh_public_key: ${{ secrets.SSH_SERVER_PUBLIC_KEY}}
           args: stack deploy --compose-file webrtc/videoroom_advanced/docker-compose.yml videoroom_advanced
-
-
-          

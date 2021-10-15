@@ -15,7 +15,7 @@ defmodule VideoRoomWeb.PeerChannel do
         # TODO handle crash of room?
         Process.monitor(room)
         Videoroom.Room.add_peer_channel(room, self(), peer_id)
-        {:ok, assign(socket, %{room_id: room_id, room: room, peer_id: peer_id})}
+        {:ok, Phoenix.Socket.assign(socket, %{room_id: room_id, room: room, peer_id: peer_id})}
 
       {:error, reason} ->
         Logger.error("""

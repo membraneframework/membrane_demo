@@ -1,11 +1,11 @@
-name: WebRTC Videoroom - Sandbox Build and Deploy
+name: WebRTC Videoroom Advanced - Sandbox Build and Deploy
 on:
   push:
     branches: 
       - "sandbox"
     paths:
-      - "webrtc/videoroom"
-      - "!webrtc/videoroom/README.md"
+      - "webrtc/videoroom_advanced"
+      - "!webrtc/videoroom_advanced/README.md"
 
 jobs:
   build_and_deploy:

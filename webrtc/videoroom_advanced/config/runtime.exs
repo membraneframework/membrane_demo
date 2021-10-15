@@ -58,7 +58,8 @@ end
 # turn_settings: "addr:secret"
 # turn_settings: "addr:secret:cert"
 config :membrane_videoroom_demo,
-  stun_servers: System.get_env("STUN_SERVERS", "") |> ConfigParser.parse_stun_servers(),
+  stun_servers:
+    System.get_env("STUN_SERVERS", "64.233.163.127:19302") |> ConfigParser.parse_stun_servers(),
   turn_settings:
     System.get_env("TURN_SETTINGS", "127.0.0.1:abc") |> ConfigParser.parse_turn_settings()
 

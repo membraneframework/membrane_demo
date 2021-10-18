@@ -44,30 +44,15 @@ export class Room {
         },
         onConnectionError: setErrorMessage,
         onJoinSuccess: (peerId, peersInRoom) => {
-          try {
-            navigator.mediaDevices
-              .getUserMedia(MEDIA_CONSTRAINTS)
-              .then((stream) => {
-                stream
-                  .getTracks()
-                  .forEach((track) => this.webrtc.addTrack(track, stream));
+          this.localStream!.getTracks().forEach((track) =>
+            this.webrtc.addTrack(track, this.localStream!)
+          );
 
-                addVideoElement(LOCAL_PEER_ID, "Me", true);
-                attachStream(stream, LOCAL_PEER_ID);
-
-                this.peers = peersInRoom;
-                this.peers.forEach((peer) => {
-                  addVideoElement(peer.id, peer.metadata.displayName, false);
-                });
-                this.updateParticipantsList();
-              });
-          } catch (error) {
-            console.error(error);
-            setErrorMessage(
-              "Failed to setup video room, make sure to grant camera and microphone permissions"
-            );
-            throw "error";
-          }
+          this.peers = peersInRoom;
+          this.peers.forEach((peer) => {
+            addVideoElement(peer.id, peer.metadata.displayName, false);
+          });
+          this.updateParticipantsList();
         },
         onJoinError: (metadata) => {
           throw `Peer denied.`;
@@ -97,6 +82,21 @@ export class Room {
   }
 
   public init = async () => {
+    try {
+      this.localStream = await navigator.mediaDevices.getUserMedia(
+        MEDIA_CONSTRAINTS
+      );
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(
+        "Failed to setup video room, make sure to grant camera and microphone permissions"
+      );
+      throw "error";
+    }
+
+    addVideoElement(LOCAL_PEER_ID, "Me", true);
+    attachStream(this.localStream!, LOCAL_PEER_ID);
+
     await this.phoenixChannelPushResult(this.webrtcChannel.join());
   };
 

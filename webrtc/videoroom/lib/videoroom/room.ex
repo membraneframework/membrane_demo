@@ -61,7 +61,7 @@ defmodule Videoroom.Room do
   end
 
   @impl true
-  def handle_info({sfu_engine, {:new_peer, peer_id, _metadata, _track_metadata}}, state) do
+  def handle_info({sfu_engine, {:new_peer, peer_id, _metadata}}, state) do
     # get node the peer with peer_id is running on
     peer_channel_pid = Map.get(state.peer_channels, peer_id)
     peer_node = node(peer_channel_pid)

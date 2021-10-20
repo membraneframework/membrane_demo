@@ -16,6 +16,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Declare variables
+        id: vars
+        shell: bash
+        run: |
+          echo "::set-output name=version::$(git describe --tags --always)"
+
       - name: Cache Docker layers
         uses: actions/cache@v2
         with:
@@ -41,4 +47,5 @@ jobs:
           context: webrtc/videoroom_advanced
           file: webrtc/videoroom_advanced/Dockerfile
           push: true
+          build-args: VERSION= ${{ steps.vars.outputs.version }}
           tags: membraneframework/demo_webrtc_videoroom_advanced:latest    

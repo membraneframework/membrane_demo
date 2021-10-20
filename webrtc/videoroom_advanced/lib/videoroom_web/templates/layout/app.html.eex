@@ -16,5 +16,8 @@
       <main role="main">
         <%= @inner_content %>
       </main>
+      <div>
+        <label class="VersionLabel">Version: <%= version() %></label>
+      </div>
   </body>
 </html>

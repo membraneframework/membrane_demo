@@ -10,6 +10,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Declare variables
+        id: vars
+        shell: bash
+        run: |
+          echo "::set-output name=version::$(git describe --tags --always)"
+
       - name: Get tag
         id: tag
         uses: dawidd6/action-get-tag@v1
@@ -39,6 +45,7 @@ jobs:
           context: webrtc/videoroom
           file: webrtc/videoroom/Dockerfile
           push: true
+          build-args: VERSION= ${{ steps.vars.outputs.version }}
           tags: membraneframework/demo_webrtc_videoroom:${{ steps.tag.outputs.tag }}
 
       - name: Build and push latest version 
@@ -48,4 +55,5 @@ jobs:
           context: webrtc/videoroom
           file: webrtc/videoroom/Dockerfile
           push: true
+          build-args: VERSION= ${{ steps.vars.outputs.version }}
           tags: membraneframework/demo_webrtc_videoroom:latest          

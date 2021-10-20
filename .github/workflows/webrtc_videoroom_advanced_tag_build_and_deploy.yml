@@ -3,9 +3,6 @@ on:
   push:
     tags: 
       - "*.*.*"
-    paths:
-      - "webrtc/videoroom_advanced"
-      - "!webrtc/videoroom_advanced/README.md"
 
 jobs:
   build_and_deploy:

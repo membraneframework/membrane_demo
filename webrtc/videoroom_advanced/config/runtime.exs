@@ -16,30 +16,16 @@ defmodule ConfigParser do
     end)
   end
 
-  def parse_turn_servers(""), do: []
-
-  def parse_turn_servers(servers) do
-    servers
-    |> String.split(",")
-    |> Enum.map(fn server ->
-      with [addr, port, username, password, proto] when proto in ["udp", "tcp", "tls"] <-
-             String.split(server, ":"),
-           {port, ""} <- Integer.parse(port) do
-        %{
-          server_addr: parse_addr(addr),
-          server_port: port,
-          username: username,
-          password: password,
-          relay_type: String.to_atom(proto)
-        }
-      else
-        _ ->
-          raise("""
-          "Bad TURN server format. Expected addr:port:username:password:proto, got: \
-          #{inspect(server)}
-          """)
-      end
-    end)
+  def parse_turn_ip(ip) do
+    with {:ok, parsed_ip} <- ip |> to_charlist() |> :inet.parse_address() do
+      parsed_ip
+    else
+      _ ->
+        raise("""
+        Bad TURN IP format. Expected IPv4, got: \
+        #{inspect(ip)}
+        """)
+    end
   end
 
   def parse_addr(addr) do
@@ -54,7 +40,7 @@ end
 config :membrane_videoroom_demo,
   stun_servers:
     System.get_env("STUN_SERVERS", "64.233.163.127:19302") |> ConfigParser.parse_stun_servers(),
-  turn_servers: System.get_env("TURN_SERVERS", "") |> ConfigParser.parse_turn_servers()
+  turn_ip: System.get_env("TURN_IP", "127.0.0.1") |> ConfigParser.parse_turn_ip()
 
 protocol = if System.get_env("USE_TLS") == "true", do: :https, else: :http
 

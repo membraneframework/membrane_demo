@@ -42,10 +42,6 @@ alias Membrane.Demo.VideoPipeline
 VideoPipeline.play(pid)
 ```
 
-## Sample License
-
-Sample is provided under Creative Commons. Song is called Swan Song by [Paper Navy](https://papernavy.bandcamp.com/album/all-grown-up).
-
 ## Copyright and License
 
 Copyright 2021, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)

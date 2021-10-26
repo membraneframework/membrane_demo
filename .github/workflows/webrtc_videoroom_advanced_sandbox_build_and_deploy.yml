@@ -4,14 +4,20 @@ on:
     branches: 
       - "sandbox"
     paths:
-      - "webrtc/videoroom"
-      - "!webrtc/videoroom/README.md"
+      - "webrtc/videoroom_advanced/**"
+      - "!webrtc/videoroom_advanced/README.md"
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Declare variables
+        id: vars
+        shell: bash
+        run: |
+          echo "::set-output name=version::$(git describe --tags --always)"
 
       - name: Cache Docker layers
         uses: actions/cache@v2
@@ -38,6 +44,7 @@ jobs:
           context: webrtc/videoroom_advanced
           file: webrtc/videoroom_advanced/Dockerfile
           push: true
+          build-args: VERSION= ${{ steps.vars.outputs.version }}
           tags: membraneframework/demo_webrtc_videoroom_advanced:sandbox
       
       - name: Change Docker-Compose tag before deployment

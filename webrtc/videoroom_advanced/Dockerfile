@@ -16,6 +16,9 @@ RUN \
     opus-dev \
     clang-dev
 
+ARG VERSION
+ENV VERSION=${VERSION}
+
 # Create build workdir
 WORKDIR /app
 

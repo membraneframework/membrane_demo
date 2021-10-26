@@ -4,6 +4,8 @@ config :phoenix, :json_library, Jason
 
 config :membrane_videoroom_demo, VideoRoomWeb.Endpoint, pubsub_server: VideoRoom.PubSub
 
+config :membrane_videoroom_demo, version: System.get_env("VERSION", "unknown")
+
 config :logger,
   compile_time_purge_matching: [
     [level_lower_than: :info],

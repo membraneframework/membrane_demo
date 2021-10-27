@@ -22,13 +22,20 @@ defmodule VideoRoom.MixProject do
   defp deps do
     [
       {:membrane_core, github: "membraneframework/membrane_core", override: true},
-      {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
       {:esbuild, "~> 0.1", runtime: Mix.env() == :dev},
+      {:membrane_rtc_engine,
+       github: "membraneframework/membrane_rtc_engine", branch: "modular_rtc_engine"},
+      {:membrane_http_adaptive_stream_plugin, path: "~/dev/membrane_http_adaptive_stream_plugin"},
+      {:membrane_mp4_plugin, "~> 0.7.0", override: true},
+      {:membrane_aac_plugin, "~> 0.6.0"},
+      {:membrane_aac_format, "~> 0.3.0", override: true},
+      {:membrane_aac_fdk_plugin, "~> 0.8.0"},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_view, "~> 0.16.0"},
       {:phoenix_live_reload, "~> 1.2"},
+      {:poison, "~> 3.1"},
       {:jason, "~> 1.2"},
       {:phoenix_inline_svg, "~> 1.4"},
       {:uuid, "~> 1.1"}

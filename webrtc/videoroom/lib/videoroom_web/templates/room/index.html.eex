@@ -8,7 +8,7 @@
             <div id="participants-list" class="text-xl font-medium text-white"></div>
         </header>
         <div id="videochat-error" class="VideoChatError" style="display: none;"> </div>
-        <div id="videochat" class="px-4">
+        <div id="videochat" class="px-20">
             <template id="video-feed-template">
                 <div name="video-feed" class="relative">
                     <audio></audio>

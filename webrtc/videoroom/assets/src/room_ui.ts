@@ -2,21 +2,6 @@ export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 
-// TODO: remove me when testing is done
-let localVideoElement: Node;
-let localMediaStream: MediaStream;
-
-function cloneLocalVideo() {
-  if (!localVideoElement) return;
-
-  console.log("Adding element once again...");
-
-  const grid = document.querySelector("#videos-grid")!;
-  const video = localVideoElement.query;
-  grid.appendChild(localVideoElement);
-  resizeVideosGrid();
-}
-
 export function setupDisconnectButton(fun) {
   const disconnectButton = document.getElementById(
     "disconnect"
@@ -34,9 +19,6 @@ export function attachStream(stream: MediaStream, peerId: string): void {
 
   let video = document.getElementById(videoId) as HTMLVideoElement;
   let audio = document.getElementById(audioId) as HTMLAudioElement;
-
-  // TODO: remove me after testing
-  localMediaStream = stream;
 
   video.srcObject = stream;
   audio.srcObject = stream;
@@ -89,7 +71,7 @@ function resizeVideosGrid() {
   // break points for grid layout
   if (videos < 2) {
     videosPerRow = 1;
-  } else if (videos < 4) {
+  } else if (videos < 5) {
     videosPerRow = 2;
   } else if (videos < 7) {
     videosPerRow = 3;
@@ -130,11 +112,6 @@ function setupVideoFeed(peerId: string, label: string, isLocalVideo: boolean) {
 
   if (isLocalVideo) {
     video.classList.add("flip-horizontally");
-
-    localVideoElement = feed.cloneNode(true);
-
-    // @ts-ignore
-    window.CLONE = cloneLocalVideo;
   }
 
   const grid = document.querySelector("#videos-grid")!;

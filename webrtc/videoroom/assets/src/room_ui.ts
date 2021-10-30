@@ -2,6 +2,22 @@ export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 
+// TODO: remove me when testing is done
+let localVideoElement: Node;
+let localMediaStream: MediaStream;
+
+function cloneLocalVideo() {
+  if (!localVideoElement) return;
+  
+  console.log("Adding element once again...");
+  
+  const grid = document.querySelector("#videos-grid")!;
+  const video = localVideoElement.query
+  grid.appendChild(localVideoElement);
+  resizeVideosGrid();
+}
+
+
 export function setupDisconnectButton(fun) {
   const disconnectButton = document.getElementById(
     "disconnect"
@@ -19,6 +35,9 @@ export function attachStream(stream: MediaStream, peerId: string): void {
 
   let video = document.getElementById(videoId) as HTMLVideoElement;
   let audio = document.getElementById(audioId) as HTMLAudioElement;
+  
+  // TODO: remove me after testing
+  localMediaStream = stream;
 
   video.srcObject = stream;
   audio.srcObject = stream;
@@ -63,25 +82,62 @@ export function setParticipantsList(participants: Array<string>): void {
 
 function resizeVideosGrid() {
   const grid = document.getElementById("videos-grid")!;
-  grid.className = `grid-${Math.min(2, grid.children.length)}`;
+  
+  const videos = grid.children.length;
+  
+  let videosPerRow;
+  
+  // break points for grid layout
+  if (videos < 2) {
+    videosPerRow = 1;
+  } else if (videos < 4) {
+    videosPerRow = 2;
+  } else if (videos < 7) {
+    videosPerRow = 3;
+  } else {
+    videosPerRow = 4;
+  }
+  
+  let indexFound = -1;
+  let classToRemove: string | undefined = undefined;
+  for (const [index, value] of grid.classList.entries()) {
+    if (value.startsWith("grid-cols")) {
+      indexFound = index;
+      classToRemove = value;
+      break;
+    }
+  }
+  
+  if (indexFound !== -1 && classToRemove) {
+    grid.classList.remove(classToRemove);
+  }
+  
+  grid.classList.add(`grid-cols-${videosPerRow}`);
 }
 
 function setupVideoFeed(peerId: string, label: string, isLocalVideo: boolean) {
   const copy = (document.querySelector(
     "#video-feed-template"
   ) as HTMLTemplateElement).content.cloneNode(true) as Element;
-  const feed = copy.querySelector("div[class='VideoFeed']") as HTMLDivElement;
+  const feed = copy.querySelector("div[name='video-feed']") as HTMLDivElement;
   const audio = feed.querySelector("audio") as HTMLAudioElement;
   const video = feed.querySelector("video") as HTMLVideoElement;
   const videoLabel = feed.querySelector(
-    "div[class='VideoLabel']"
+    "div[name='video-label']"
   ) as HTMLDivElement;
 
   feed.id = elementId(peerId, "feed");
   videoLabel.innerText = label;
 
   if (isLocalVideo) {
-    video.classList.add("UserOwnVideo");
+    video.classList.add("flip-horizontally");
+    
+    
+    
+    localVideoElement = feed.cloneNode(true);
+
+    // @ts-ignore
+    window.CLONE = cloneLocalVideo;
   }
 
   const grid = document.querySelector("#videos-grid")!;

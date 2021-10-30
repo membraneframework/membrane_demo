@@ -9,11 +9,11 @@
     <meta name="author" content="">
 
     <title>Membrane WebRTC video room demo</title>
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>"/>
   </head>
 
-  <body>
-      <main role="main">
+  <body class="bg-gray-800 h-screen">
+      <main role="main h-screen">
         <%= @inner_content %>
       </main>
   </body>

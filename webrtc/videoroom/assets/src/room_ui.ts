@@ -8,15 +8,14 @@ let localMediaStream: MediaStream;
 
 function cloneLocalVideo() {
   if (!localVideoElement) return;
-  
+
   console.log("Adding element once again...");
-  
+
   const grid = document.querySelector("#videos-grid")!;
-  const video = localVideoElement.query
+  const video = localVideoElement.query;
   grid.appendChild(localVideoElement);
   resizeVideosGrid();
 }
-
 
 export function setupDisconnectButton(fun) {
   const disconnectButton = document.getElementById(
@@ -35,7 +34,7 @@ export function attachStream(stream: MediaStream, peerId: string): void {
 
   let video = document.getElementById(videoId) as HTMLVideoElement;
   let audio = document.getElementById(audioId) as HTMLAudioElement;
-  
+
   // TODO: remove me after testing
   localMediaStream = stream;
 
@@ -82,11 +81,11 @@ export function setParticipantsList(participants: Array<string>): void {
 
 function resizeVideosGrid() {
   const grid = document.getElementById("videos-grid")!;
-  
+
   const videos = grid.children.length;
-  
+
   let videosPerRow;
-  
+
   // break points for grid layout
   if (videos < 2) {
     videosPerRow = 1;
@@ -97,7 +96,7 @@ function resizeVideosGrid() {
   } else {
     videosPerRow = 4;
   }
-  
+
   let indexFound = -1;
   let classToRemove: string | undefined = undefined;
   for (const [index, value] of grid.classList.entries()) {
@@ -107,11 +106,11 @@ function resizeVideosGrid() {
       break;
     }
   }
-  
+
   if (indexFound !== -1 && classToRemove) {
     grid.classList.remove(classToRemove);
   }
-  
+
   grid.classList.add(`grid-cols-${videosPerRow}`);
 }
 
@@ -131,9 +130,7 @@ function setupVideoFeed(peerId: string, label: string, isLocalVideo: boolean) {
 
   if (isLocalVideo) {
     video.classList.add("flip-horizontally");
-    
-    
-    
+
     localVideoElement = feed.cloneNode(true);
 
     // @ts-ignore

@@ -10,7 +10,7 @@
         <div id="videochat-error" class="VideoChatError" style="display: none;"> </div>
         <div id="videochat" class="px-4">
             <template id="video-feed-template">
-                <div name="video-feed" class=" relative">
+                <div name="video-feed" class="relative">
                     <audio></audio>
                     <video class="shadow rounded-md"></video>
                     <div name="video-label" class="absolute text-white text-shadow-lg bottom-0 left-0 p-2">Placeholder</div>

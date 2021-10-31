@@ -1,12 +1,11 @@
 {
   "license": "MIT",
   "scripts": {
-    "deploy": "NODE_ENV=production tailwindcss --postcss --minify -i css/app.css -o ../priv/static/assets/app.css",
+    "deploy": "NODE_ENV=production tailwindcss --postcss --minify -i css/app.css -o ../priv/static/css/app.css",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "alpinejs": "^3.2.2",
     "membrane_rtc_engine": "file:../deps/membrane_rtc_engine/",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",

@@ -16,6 +16,9 @@ RUN \
     opus-dev \
     clang-dev
 
+ARG VERSION
+ENV VERSION=${VERSION}
+
 # Create build workdir
 WORKDIR /app
 
@@ -35,7 +38,6 @@ RUN mix do deps.get, deps.compile
 COPY assets/package.json assets/package-lock.json ./assets/
 RUN npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
 
-COPY priv priv
 COPY assets assets
 RUN npm run --prefix ./assets deploy
 RUN mix phx.digest

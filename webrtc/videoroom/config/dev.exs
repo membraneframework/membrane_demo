@@ -7,7 +7,7 @@ config :membrane_videoroom_demo, VideoRoomWeb.Endpoint,
       {Esbuild, :install_and_run,
        [
          :default,
-         ~w(src/index.ts --outfile=../priv/static/js/app.js --sourcemap=inline --bundle --watch)
+         ~w(--sourcemap=inline --bundle --watch)
        ]},
     npx: [
       "tailwindcss",

@@ -3,15 +3,18 @@ on:
   push:
     tags: 
       - "*.*.*"
-    paths:
-      - "webrtc/videoroom_advanced"
-      - "!webrtc/videoroom_advanced/README.md"
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Declare variables
+        id: vars
+        shell: bash
+        run: |
+          echo "::set-output name=version::$(git describe --tags --always)"
 
       - name: Get tag
         id: tag
@@ -42,6 +45,7 @@ jobs:
           context: webrtc/videoroom_advanced
           file: webrtc/videoroom_advanced/Dockerfile
           push: true
+          build-args: VERSION= ${{ steps.vars.outputs.version }}
           tags: membraneframework/demo_webrtc_videoroom_advanced:${{ steps.tag.outputs.tag }}
 
       - name: Build and push latest version 
@@ -51,6 +55,7 @@ jobs:
           context: webrtc/videoroom_advanced
           file: webrtc/videoroom_advanced/Dockerfile
           push: true
+          build-args: VERSION= ${{ steps.vars.outputs.version }}
           tags: membraneframework/demo_webrtc_videoroom_advanced:latest
       
       - name: Deploy to Swarm

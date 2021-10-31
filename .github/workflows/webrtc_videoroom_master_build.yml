@@ -4,7 +4,7 @@ on:
     branches: 
       - "master"
     paths:
-      - "webrtc/videoroom"
+      - "webrtc/videoroom/**"
       - "!webrtc/videoroom/README.md"
 
   # Allows you to run this workflow manually from the Actions tab
@@ -15,6 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Declare variables
+        id: vars
+        shell: bash
+        run: |
+          echo "::set-output name=version::$(git describe --tags --always)"
 
       - name: Cache Docker layers
         uses: actions/cache@v2
@@ -41,4 +47,5 @@ jobs:
           context: webrtc/videoroom
           file: webrtc/videoroom/Dockerfile
           push: true
+          build-args: VERSION= ${{ steps.vars.outputs.version }}
           tags: membraneframework/demo_webrtc_videoroom:latest

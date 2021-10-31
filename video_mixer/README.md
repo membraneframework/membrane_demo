@@ -16,11 +16,11 @@ Video files in .h264 are merged into single .h264 file.
    
     One-liner for Ubuntu
     ```bash
-    apt install clang-format portaudio19-dev ffmpeg libavutil-dev libswresample-dev libmad0-dev
+    apt install clang-format portaudio19-dev ffmpeg libavutil-dev libswresample-dev libmad0-dev libfdk-aac-dev
     ```
     One-liner for MacOS
     ```bash
-    brew install clang-format portaudio ffmpeg libmad pkg-config
+    brew install clang-format portaudio ffmpeg libmad pkg-config fdk-aac
     ```
 1. Make sure you have Elixir installed on your machine. See: https://elixir-lang.org/install.html
 1. Fetch the required dependencies by running `mix deps.get`
@@ -41,10 +41,6 @@ alias Membrane.Demo.VideoPipeline
 {:ok, pid} = VideoPipeline.start_link({"video_red.h264", "video_green.h264"})
 VideoPipeline.play(pid)
 ```
-
-## Sample License
-
-Sample is provided under Creative Commons. Song is called Swan Song by [Paper Navy](https://papernavy.bandcamp.com/album/all-grown-up).
 
 ## Copyright and License
 

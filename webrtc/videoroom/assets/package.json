@@ -2,7 +2,8 @@
   "license": "MIT",
   "scripts": {
     "deploy": "NODE_ENV=production tailwindcss --postcss --minify -i css/app.css -o ../priv/static/assets/app.css",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "alpinejs": "^3.2.2",

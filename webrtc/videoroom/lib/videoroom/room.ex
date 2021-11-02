@@ -4,6 +4,7 @@ defmodule Videoroom.Room do
   use GenServer
 
   alias Membrane.WebRTC.EndpointBin
+  alias Membrane.RTC.Engine.Webrtc.Endpoint
   require Membrane.Logger
 
   def start(init_arg, opts) do
@@ -89,7 +90,7 @@ defmodule Videoroom.Room do
         ]
       end
 
-    bin = %EndpointBin{
+    bin = %Endpoint{
       stun_servers: state.network_options[:stun_servers] || [],
       turn_servers: state.network_options[:turn_servers] || [],
       handshake_opts: handshake_opts,

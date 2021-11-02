@@ -79,21 +79,18 @@ function resizeVideosGrid() {
     videosPerRow = 4;
   }
 
-  let indexFound = -1;
-  let classToRemove: string | undefined = undefined;
+  let classesToRemove: string[] = [];
   for (const [index, value] of grid.classList.entries()) {
-    if (value.startsWith("grid-cols")) {
-      indexFound = index;
-      classToRemove = value;
-      break;
+    if (value.includes("grid-cols")) {
+      classesToRemove.push(value);
     }
   }
 
-  if (indexFound !== -1 && classToRemove) {
-    grid.classList.remove(classToRemove);
-  }
-
-  grid.classList.add(`grid-cols-${videosPerRow}`);
+  classesToRemove.forEach(className => grid.classList.remove(className));
+  
+  // add the class to be a default for mobiles
+  grid.classList.add("grid-cols-1");
+  grid.classList.add(`md:grid-cols-${videosPerRow}`);
 }
 
 function setupVideoFeed(peerId: string, label: string, isLocalVideo: boolean) {

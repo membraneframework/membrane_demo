@@ -9,3 +9,7 @@
 .text-shadow-lg {
   text-shadow: 3px 1px 10px rgb(22, 22, 22);
 }
+
+.ratio-video {
+  aspect-ratio: 16 / 9;
+}

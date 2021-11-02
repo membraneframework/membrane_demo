@@ -1,7 +1,7 @@
 {
   "license": "MIT",
   "scripts": {
-    "deploy": "NODE_ENV=production tailwindcss --postcss --minify -i css/app.css -o ../priv/static/css/app.css",
+    "deploy": "NODE_ENV=production tailwindcss --postcss --minify -i css/app.css -o ../priv/static/assets/css/app.css",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -13,10 +13,11 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@tailwindcss/aspect-ratio": "^0.3.0",
     "autoprefixer": "^10.2.0",
     "postcss": "^8.3.5",
     "postcss-import": "^14.0.2",
-    "tailwindcss": "^2.2.4",
-    "prettier": "^2.2.1"
+    "prettier": "^2.2.1",
+    "tailwindcss": "^2.2.4"
   }
 }

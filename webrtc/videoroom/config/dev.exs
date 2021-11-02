@@ -12,7 +12,7 @@ config :membrane_videoroom_demo, VideoRoomWeb.Endpoint,
     npx: [
       "tailwindcss",
       "--input=css/app.css",
-      "--output=../priv/static/css/app.css",
+      "--output=../priv/static/assets/css/app.css",
       "--postcss",
       "--watch",
       cd: Path.expand("../assets", __DIR__)

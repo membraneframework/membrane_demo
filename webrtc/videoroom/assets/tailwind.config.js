@@ -5,14 +5,15 @@ module.exports = {
     safelist: [
       "grid",
       "grid-cols-1",
-      "grid-cols-2",
-      "grid-cols-3",
-      "grid-cols-4",
+      "md:grid-cols-1",
+      "md:grid-cols-2",
+      "md:grid-cols-3",
+      "md:grid-cols-4",
     ],
   },
   theme: {},
   variants: {
     extend: {},
   },
-  plugins: [],
+  plugins: [require('@tailwindcss/aspect-ratio')],
 };

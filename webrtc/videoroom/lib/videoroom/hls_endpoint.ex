@@ -29,13 +29,18 @@ defmodule HLS.Endpoint do
       spec: [Membrane.WebRTC.Track.t()],
       default: [],
       description: "List of initial outbound tracks"
+    ],
+    subdirectory_name: [
+      spec: String.t(),
+      description: "Name of subdirectory after hls_output"
     ]
   )
 
   def handle_init(opts) do
     state = %{
       tracks: %{},
-      stream_ids: MapSet.new()
+      stream_ids: MapSet.new(),
+      subdirectory_name: opts.subdirectory_name
     }
 
     {:ok, state}
@@ -59,9 +64,7 @@ defmodule HLS.Endpoint do
     link_builder = link_bin_input(pad)
     track = Map.get(state.tracks, track_id)
 
-    directory =
-      track.stream_id
-      |> hls_output_path()
+    directory = hls_output_path(state.subdirectory_name, track.stream_id)
 
     # remove directory if it already exists
     File.rm_rf(directory)

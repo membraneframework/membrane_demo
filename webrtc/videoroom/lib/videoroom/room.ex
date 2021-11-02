@@ -6,8 +6,8 @@ defmodule Videoroom.Room do
   alias Membrane.WebRTC.EndpointBin
   require Membrane.Logger
 
-  def start(opts) do
-    GenServer.start(__MODULE__, [], opts)
+  def start(init_arg, opts) do
+    GenServer.start(__MODULE__, init_arg, opts)
   end
 
   def start_link(opts) do
@@ -15,11 +15,11 @@ defmodule Videoroom.Room do
   end
 
   @impl true
-  def init(opts) do
-    Membrane.Logger.info("Spawning room process: #{inspect(self())}")
+  def init(room_id) do
+    Membrane.Logger.info("Spawning room proces: #{inspect(self())}")
 
-    engine_options = [
-      id: opts[:room_id],
+    sfu_options = [
+      id: room_id,
       network_options: [
         stun_servers: [
           %{server_addr: "stun.l.google.com", server_port: 19_302}
@@ -34,10 +34,12 @@ defmodule Videoroom.Room do
       payload_and_depayload_tracks?: false
     ]
 
-    {:ok, pid} = Membrane.RTC.Engine.start(engine_options, [])
+    {:ok, pid} = Membrane.RTC.Engine.start(sfu_options, [])
     send(pid, {:register, self()})
 
-    bin = %HLS.Endpoint{}
+    bin = %HLS.Endpoint{
+      subdirectory_name: room_id
+    }
 
     send(pid, {:add_endpoint, "hls", bin})
     {:ok, %{sfu_engine: pid, peer_channels: %{}, network_options: sfu_options[:network_options]}}

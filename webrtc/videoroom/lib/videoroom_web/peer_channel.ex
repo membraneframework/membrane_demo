@@ -6,7 +6,7 @@ defmodule VideoRoomWeb.PeerChannel do
   @impl true
   def join("room:" <> room_id, _params, socket) do
     case :global.whereis_name(room_id) do
-      :undefined -> Videoroom.Room.start(name: {:global, room_id})
+      :undefined -> Videoroom.Room.start(room_id, name: {:global, room_id})
       pid -> {:ok, pid}
     end
     |> case do

@@ -9,7 +9,7 @@ defmodule RtmpToHls.Application do
   def start(_type, _args) do
     children = [
       # Start the Pipeline
-      # Membrane.Demo.RtmpToHls,
+      Membrane.Demo.RtmpToHls,
       # Start the Telemetry supervisor
       RtmpToHlsWeb.Telemetry,
       # Start the PubSub system

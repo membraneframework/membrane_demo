@@ -86,8 +86,8 @@ function resizeVideosGrid() {
     }
   }
 
-  classesToRemove.forEach(className => grid.classList.remove(className));
-  
+  classesToRemove.forEach((className) => grid.classList.remove(className));
+
   // add the class to be a default for mobiles
   grid.classList.add("grid-cols-1");
   grid.classList.add(`md:grid-cols-${videosPerRow}`);

@@ -37,7 +37,7 @@ defmodule VideoRoom.MixProject do
 
   defp aliases do
     [
-      setup: ["deps.get", "cmd --cd assets npm install"],
+      setup: ["deps.get", "cmd --cd assets npm ci"],
       "assets.deploy": [
         "cmd --cd assets npm run deploy",
         "esbuild default --minify",

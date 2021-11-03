@@ -1,4 +1,4 @@
-defmodule HLS.Endpoint do
+defmodule Endpoint.HLS do
   use Membrane.Bin
   import WebRTCToHLS.Helpers
 
@@ -47,10 +47,10 @@ defmodule HLS.Endpoint do
   end
 
   @impl true
-  def handle_other({:add_tracks, tracks}, _ctx, state) do
+  def handle_other({:publish, tracks}, _ctx, state) do
     tracks_id_to_link_with_encoding = Enum.map(tracks, fn track -> {track.id, track.encoding} end)
 
-    negotiations = [notify: {:negotiation_done, tracks_id_to_link_with_encoding}]
+    negotiations = [notify: {:subscribe, tracks_id_to_link_with_encoding}]
     new_tracks = Map.new(tracks, &{&1.id, &1})
     {{:ok, negotiations}, Map.update!(state, :tracks, &Map.merge(&1, new_tracks))}
   end

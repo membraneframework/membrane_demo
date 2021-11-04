@@ -1,5 +1,3 @@
-import "../css/app.scss";
-
 import { MEDIA_CONSTRAINTS, LOCAL_PEER_ID } from "./consts";
 import {
   addVideoElement,

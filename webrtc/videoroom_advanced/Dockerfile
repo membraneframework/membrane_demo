@@ -32,18 +32,18 @@ ENV MIX_ENV=prod
 # install mix dependencies
 COPY mix.exs mix.lock ./
 COPY config config
-COPY assets/package.json assets/package-lock.json ./assets/
+COPY assets assets
 COPY priv priv
+# the lib code must be there first so the tailwindcss can properly inspect the code
+# to gather necessary classes to generate
+COPY lib lib
 
 RUN mix setup
 RUN mix deps.compile
 
 RUN mix assets.deploy
 
-RUN mix do deps.get, deps.compile
-
 # compile and build release
-COPY lib lib
 
 RUN mix do compile, release
 

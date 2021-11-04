@@ -263,7 +263,8 @@ defmodule WebRTCToHLS.Pipeline do
       link(endpoint_bin_name)
       |> via_out(Pad.ref(:output, track_id), options: [extensions: extensions])
 
-    %{children: hls_children, links: hls_links} = hls_links_and_children(link_builder, encoding)
+    %{children: hls_children, links: hls_links} =
+      hls_links_and_children(link_builder, encoding, track_id)
 
     spec = %ParentSpec{
       children: hls_children,
@@ -288,7 +289,7 @@ defmodule WebRTCToHLS.Pipeline do
 
   def handle_notification({:track_playable, pad_name}, :hls_sink, _ctx, state) do
     # notify about playable just when video becomes available
-    if pad_name == :video do
+    if pad_name != :audio do
       dispatch({:playlist_playable, self() |> pid_hash()}, state)
     end
 
@@ -526,27 +527,27 @@ defmodule WebRTCToHLS.Pipeline do
 
   defp get_outbound_tracks(_endpoints, false), do: []
 
-  defp hls_links_and_children(link_builder, encoding) do
+  defp hls_links_and_children(link_builder, encoding, track_id) do
     case encoding do
       :H264 ->
         %{
           children: %{
-            video_parser: %Membrane.H264.FFmpeg.Parser{
+            {:video_parser, track_id} => %Membrane.H264.FFmpeg.Parser{
               framerate: {30, 1},
               alignment: :au,
               attach_nalus?: true
             },
-            video_payloader: Membrane.MP4.Payloader.H264,
-            video_cmaf_muxer: %Membrane.MP4.CMAF.Muxer{
+            {:video_payloader, track_id} => Membrane.MP4.Payloader.H264,
+            {:video_cmaf_muxer, track_id} => %Membrane.MP4.CMAF.Muxer{
               segment_duration: 2 |> Membrane.Time.seconds()
             }
           },
           links: [
             link_builder
-            |> to(:video_parser)
-            |> to(:video_payloader)
-            |> to(:video_cmaf_muxer)
-            |> via_in(Pad.ref(:input, :video))
+            |> to({:video_parser, track_id})
+            |> to({:video_payloader, track_id})
+            |> to({:video_cmaf_muxer, track_id})
+            |> via_in(Pad.ref(:input, track_id))
             |> to(:hls_sink)
           ]
         }
@@ -554,19 +555,19 @@ defmodule WebRTCToHLS.Pipeline do
       :OPUS ->
         %{
           children: %{
-            opus_decoder: Membrane.Opus.Decoder,
-            aac_encoder: Membrane.AAC.FDK.Encoder,
-            aac_parser: %Membrane.AAC.Parser{out_encapsulation: :none},
-            audio_payloader: Membrane.MP4.Payloader.AAC,
-            audio_cmaf_muxer: Membrane.MP4.CMAF.Muxer
+            {:opus_decoder, track_id} => Membrane.Opus.Decoder,
+            {:aac_encoder, track_id} => Membrane.AAC.FDK.Encoder,
+            {:aac_parser, track_id} => %Membrane.AAC.Parser{out_encapsulation: :none},
+            {:audio_payloader, track_id} => Membrane.MP4.Payloader.AAC,
+            {:audio_cmaf_muxer, track_id} => Membrane.MP4.CMAF.Muxer
           },
           links: [
             link_builder
-            |> to(:opus_decoder)
-            |> to(:aac_encoder)
-            |> to(:aac_parser)
-            |> to(:audio_payloader)
-            |> to(:audio_cmaf_muxer)
+            |> to({:opus_decoder, track_id})
+            |> to({:aac_encoder, track_id})
+            |> to({:aac_parser, track_id})
+            |> to({:audio_payloader, track_id})
+            |> to({:audio_cmaf_muxer, track_id})
             |> via_in(Pad.ref(:input, :audio))
             |> to(:hls_sink)
           ]

@@ -27,7 +27,7 @@ export const AUDIO_CONSTRAINTS: MediaStreamConstraints = {
 
 export const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
   audio: false,
-  video: { width: 640, height: 360, frameRate: 24 },
+  video: { width: 1280, height: 720, frameRate: 24 },
 };
 
 export const LOCAL_PEER_ID = "local-peer";
@@ -82,7 +82,7 @@ const setup = async () => {
       },
       onJoinSuccess: () => {localStream
         .getTracks()
-        .forEach((track) => webrtc.addTrack(track, localStream));
+        .forEach((track) => webrtc.addTrack(track, localStream, {}, true));
       }
     },
   });

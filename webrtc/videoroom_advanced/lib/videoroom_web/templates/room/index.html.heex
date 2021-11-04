@@ -1,0 +1,32 @@
+<div id="room" class="flex flex-col h-screen relative" data-room-id={@room_id}>
+    <!-- mb-14 to keep disconnect with absolute value above the videos-->
+    <section class="flex flex-col max-h-screen mb-14">
+        <header class="p-4">
+            <div class="flex items-center">
+              <img src="/images/logo.png" class="hidden md:block h-8 mr-2" />
+              <h2 class="text-2xl md:text-4xl text-center font-bold text-white">Membrane WebRTC video room demo</h2>
+            </div>
+            <h3 class="text-2xl font-semibold text-white mb-2">Room: <%= @room_id %> </h3>
+            <div id="participants-list" class="text-xl font-medium text-white"></div>
+        </header>
+        <div id="videochat-error" class="VideoChatError" style="display: none;"> </div>
+        <div id="videochat" class="px-2 md:px-20 overflow-y-auto">
+            <template id="video-feed-template">
+                <div name="video-feed" class="relative bg-gray-900 shadow rounded-md overflow-hidden h-full w-full ratio-video">
+                    <audio></audio>
+                    <video class="w-full"></video>
+                    <div name="video-label" class="absolute text-white text-shadow-lg bottom-0 left-0 p-2">Placeholder</div>
+                </div>
+            </template>
+            <div class="flex flex-col justify-center items-center">
+                <div id="videos-grid" class="grid grid-cols-2 grid-flow-row gap-4 justify-items-center"></div>
+            </div>
+        </div>
+        <div class="h-20"></div>
+    </section>
+    <div id="controls", class="flex-none flex justify-center h-8 pb-2 absolute inset-x-0 bottom-2">
+        <button id="disconnect" class="text-white text-2xl font-normal hover:text-gray-400">Disconnect</button>
+    </div>
+</div>
+
+<script defer type="text/javascript" src={static_path(@conn, "/assets/js/app.js")}></script>

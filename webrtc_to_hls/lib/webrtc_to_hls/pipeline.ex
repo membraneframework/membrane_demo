@@ -287,9 +287,9 @@ defmodule WebRTCToHLS.Pipeline do
     {:ok, state}
   end
 
-  def handle_notification({:track_playable, pad_name}, :hls_sink, _ctx, state) do
+  def handle_notification({:track_playable, {content_type, _track_id}}, :hls_sink, _ctx, state) do
     # notify about playable just when video becomes available
-    if pad_name != :audio do
+    if content_type == :video do
       dispatch({:playlist_playable, self() |> pid_hash()}, state)
     end
 
@@ -547,7 +547,7 @@ defmodule WebRTCToHLS.Pipeline do
             |> to({:video_parser, track_id})
             |> to({:video_payloader, track_id})
             |> to({:video_cmaf_muxer, track_id})
-            |> via_in(Pad.ref(:input, track_id))
+            |> via_in(Pad.ref(:input, {:video, track_id}))
             |> to(:hls_sink)
           ]
         }
@@ -568,7 +568,7 @@ defmodule WebRTCToHLS.Pipeline do
             |> to({:aac_parser, track_id})
             |> to({:audio_payloader, track_id})
             |> to({:audio_cmaf_muxer, track_id})
-            |> via_in(Pad.ref(:input, :audio))
+            |> via_in(Pad.ref(:input, {:audio, track_id}))
             |> to(:hls_sink)
           ]
         }

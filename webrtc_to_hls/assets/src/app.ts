@@ -80,14 +80,14 @@ const setup = async () => {
       onSendMediaEvent: (mediaEvent: SerializedMediaEvent) => {
         webrtcChannel.push("mediaEvent", { data: mediaEvent });
       },
+      onJoinSuccess: () => {localStream
+        .getTracks()
+        .forEach((track) => webrtc.addTrack(track, localStream));
+      }
     },
   });
 
   await awaitPhoenixPush(webrtcChannel.join());
-
-  localStream
-    .getTracks()
-    .forEach((track) => webrtc.addTrack(track, localStream));
 
   webrtc.join({
     displayName: "It's me, Mario!",

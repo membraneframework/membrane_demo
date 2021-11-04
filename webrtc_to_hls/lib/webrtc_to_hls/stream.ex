@@ -50,7 +50,7 @@ defmodule WebRTCToHLS.Stream do
   end
 
   @impl true
-  def handle_info({sfu_engine, {:new_peer, peer_id, _metadata, _track_metadata}}, state) do
+  def handle_info({sfu_engine, {:new_peer, peer_id, _metadata}}, state) do
     send(sfu_engine, {:accept_new_peer, peer_id})
     {:noreply, state}
   end

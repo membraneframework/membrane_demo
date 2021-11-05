@@ -9,15 +9,15 @@
     <meta name="author" content="">
 
     <title>Membrane WebRTC video room demo</title>
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <link rel="stylesheet" href={static_path(@conn, "/assets/css/app.css")} />
   </head>
 
-  <body>
-      <main role="main">
+  <body class="bg-gray-800 h-screen relative">
+      <main role="main h-screen">
         <%= @inner_content %>
       </main>
       <div>
-        <label class="VersionLabel">Version: <%= version() %></label>
+        <label class="absolute text-white text-xl left-0 bottom-2 left-2  invisible md:visible">Version: <%= version() %></label>
       </div>
   </body>
 </html>

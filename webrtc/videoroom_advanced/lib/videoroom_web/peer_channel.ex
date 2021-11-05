@@ -5,9 +5,9 @@ defmodule VideoRoomWeb.PeerChannel do
 
   @impl true
   def join("room:" <> room_id, _params, socket) do
-    case Registry.lookup(Videoroom.Room.Registry, room_id) do
-      [{pid, _value}] -> {:ok, pid}
-      [] -> Videoroom.Room.start(name: {:via, Registry, {Videoroom.Room.Registry, room_id}})
+    case :global.whereis_name(room_id) do
+      :undefined -> Videoroom.Room.start(name: {:global, room_id})
+      pid -> {:ok, pid}
     end
     |> case do
       {:ok, room} ->

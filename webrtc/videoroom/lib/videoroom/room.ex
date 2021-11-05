@@ -19,7 +19,7 @@ defmodule Videoroom.Room do
 
   @impl true
   def init(opts) do
-    Membrane.Logger.info("Spawning room proces: #{inspect(self())}")
+    Membrane.Logger.info("Spawning room process: #{inspect(self())}")
 
     sfu_options = [
       id: opts[:room_id],
@@ -30,7 +30,8 @@ defmodule Videoroom.Room do
         turn_servers: [],
         dtls_pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
         dtls_cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
-      ]
+      ],
+      payload_and_depayload_tracks?: false
     ]
 
     {:ok, pid} = Membrane.RTC.Engine.start(sfu_options, [])

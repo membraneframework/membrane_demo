@@ -1,0 +1,211 @@
+* {
+  margin: 0px;
+  padding: 0px;
+}
+
+body {
+  line-height: 1.6;
+  font-size: 18px;
+  color: lightgray;
+  font-family: arial;
+  background-color: black;
+  margin: 0;
+}
+
+main {
+  height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+}
+
+.Index {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 20px;
+}
+
+.VideoChat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+.VideoChat video {
+  width: 100%;
+  object-fit: fill;
+}
+.VideoChat #videos-grid {
+  margin: 5px;
+}
+.VideoChat .VideoGridContainer {
+  display: flex;
+  justify-content: center;
+  overflow-y: auto;
+}
+.VideoChat .grid-1 {
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+.VideoChat .grid-1 video {
+  max-height: calc(100vh - 150px);
+  max-width: calc(100vw - 100px);
+  width: auto;
+}
+.VideoChat .grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 10px;
+  width: 65%;
+}
+
+.VideoFeed {
+  position: relative;
+  display: flex;
+  border-radius: 5px;
+  border-color: #383838;
+  border-style: solid;
+  border-width: 1px;
+  overflow: hidden;
+}
+
+.UserOwnVideo {
+  transform: rotateY(180deg);
+}
+
+.VideoLabel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  min-width: 100px;
+  padding: 0 10px;
+  z-index: 1000;
+  color: white;
+  background: linear-gradient(to bottom left, transparent 0%, black 150%);
+}
+
+.Room {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  box-sizing: border-box;
+  padding: 20px;
+}
+.Room .roomName {
+  margin-bottom: 10px;
+}
+.Room a {
+  text-decoration: none;
+  cursor: pointer;
+}
+.Room a, .Room a:visited, .Room a:active {
+  color: inherit;
+}
+.Room a:hover {
+  color: #404040;
+}
+
+.RoomForm {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  max-width: 500px;
+  width: 100%;
+}
+.RoomForm .nameLabel {
+  font-weight: 600;
+}
+.RoomForm .nameInput {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.RoomForm .submitButton {
+  position: relative;
+  display: block;
+  height: 36px;
+  width: 100%;
+  border-radius: 9px;
+  background-color: #505050;
+  border: solid 1px transparent;
+  color: #fff;
+  outline: none;
+  font-size: 18px;
+  font-weight: 300;
+  cursor: pointer;
+  transition: all 0.1s ease-in-out;
+  margin-top: 10px;
+}
+.RoomForm .submitButton:hover {
+  background-color: transparent;
+  border-color: #fff;
+  transition: all 0.1s ease-in-out;
+}
+
+.VideoChatError {
+  text-align: center;
+  padding: 10px;
+}
+
+.ControlIcon {
+  cursor: pointer;
+  margin-right: 30px;
+}
+.ControlIcon svg {
+  height: 30px;
+  width: 30px;
+}
+.ControlIcon:hover svg {
+  stroke: gray;
+}
+
+.Controls {
+  position: fixed;
+  box-sizing: border-box;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 30px;
+  background-color: black;
+}
+
+.Disconnect button {
+  position: relative;
+  display: block;
+  height: 36px;
+  width: 100%;
+  border-radius: 9px;
+  background-color: #505050;
+  border: solid 1px transparent;
+  color: #fff;
+  outline: none;
+  font-size: 18px;
+  font-weight: 300;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.VersionLabel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  padding: 10px;
+}

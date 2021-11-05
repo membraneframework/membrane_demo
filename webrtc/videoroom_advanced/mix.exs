@@ -5,7 +5,8 @@ defmodule VideoRoom.MixProject do
     [
       app: :membrane_videoroom_demo,
       version: "0.1.0",
-      elixir: "~> 1.10",
+      elixir: "~> 1.12",
+      aliases: aliases(),
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -24,14 +25,27 @@ defmodule VideoRoom.MixProject do
       {:membrane_rtc_engine,
        git: "git@github.com:membraneframework/membrane_rtc_engine.git",
        branch: "turn-api-in-rtc-engine-rewriting"},
+      {:membrane_core, github: "membraneframework/membrane_core", override: true},
+      {:esbuild, "~> 0.1", runtime: Mix.env() == :dev},
       {:plug_cowboy, "~> 2.0"},
-      {:phoenix, "~> 1.5"},
-      {:phoenix_html, "~> 2.14"},
+      {:phoenix, "~> 1.6"},
+      {:phoenix_html, "~> 3.0"},
+      {:phoenix_live_view, "~> 0.16.0"},
       {:phoenix_live_reload, "~> 1.2"},
-      {:poison, "~> 3.1"},
       {:jason, "~> 1.2"},
       {:phoenix_inline_svg, "~> 1.4"},
       {:uuid, "~> 1.1"}
+    ]
+  end
+
+  defp aliases do
+    [
+      setup: ["deps.get", "cmd --cd assets npm ci"],
+      "assets.deploy": [
+        "cmd --cd assets npm run deploy",
+        "esbuild default --minify",
+        "phx.digest"
+      ]
     ]
   end
 end

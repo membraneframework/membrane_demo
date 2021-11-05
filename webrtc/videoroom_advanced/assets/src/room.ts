@@ -1,5 +1,3 @@
-import "../css/app.scss";
-
 import { MEDIA_CONSTRAINTS, LOCAL_PEER_ID } from "./consts";
 import {
   addVideoElement,
@@ -58,7 +56,7 @@ export class Room {
           throw `Peer denied.`;
         },
         onTrackReady: ({ stream, peer, metadata }) => {
-          attachStream(stream!!, peer.id);
+          attachStream(stream!, peer.id);
         },
         onTrackAdded: (ctx) => {},
         onTrackRemoved: (ctx) => {},

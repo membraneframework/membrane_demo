@@ -15,6 +15,14 @@ defmodule Endpoint.HLS do
         spec: boolean(),
         default: true,
         description: "Enable or disable track"
+      ],
+      use_payloader?: [
+        spec: boolean(),
+        default: true,
+        description: """
+        Defines if incoming stream should be payloaded based on given encoding.
+        Otherwise the stream is assumed  be in RTP format.
+        """
       ]
     ]
   )
@@ -33,6 +41,16 @@ defmodule Endpoint.HLS do
     subdirectory_name: [
       spec: String.t(),
       description: "Name of subdirectory after hls_output"
+    ],
+    use_depayloader?: [
+      spec: boolean(),
+      default: true,
+      description: """
+      Defines if the outgoing stream should get depayloaded.
+      This option should be used as a convenience, it is not necessary as the new track notification
+      returns a depayloading filter's definition that can be attached to the output pad
+      to work the same way as with the option set to true.
+      """
     ]
   )
 
@@ -48,11 +66,11 @@ defmodule Endpoint.HLS do
 
   @impl true
   def handle_other({:publish, tracks}, _ctx, state) do
-    tracks_id_to_link_with_encoding = Enum.map(tracks, fn track -> {track.id, track.encoding} end)
+    subscriptions = Enum.map(tracks, fn track -> {track, :raw} end)
 
-    negotiations = [notify: {:subscribe, tracks_id_to_link_with_encoding}]
+    actions = [notify: {:subscribe, subscriptions}]
     new_tracks = Map.new(tracks, &{&1.id, &1})
-    {{:ok, negotiations}, Map.update!(state, :tracks, &Map.merge(&1, new_tracks))}
+    {{:ok, actions}, Map.update!(state, :tracks, &Map.merge(&1, new_tracks))}
   end
 
   def handle_notification(_notification, _element, _context, state) do

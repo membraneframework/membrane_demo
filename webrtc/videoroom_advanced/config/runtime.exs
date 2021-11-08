@@ -78,7 +78,7 @@ config :membrane_videoroom_demo,
     System.get_env("STUN_SERVERS", "64.233.163.127:19302") |> ConfigParser.parse_stun_servers(),
   turn_servers: System.get_env("TURN_SERVERS", "") |> ConfigParser.parse_turn_servers(),
   use_integrated_turn:
-    System.get_env("USE_INTEGRATED_TURN", "true") |> ConfigParser.parse_use_integrated_turn(),
+    System.get_env("USE_INTEGRATED_TURN", "false") |> ConfigParser.parse_use_integrated_turn(),
   integrated_turn_ip:
     System.get_env("INTEGRATED_TURN_IP", "127.0.0.1") |> ConfigParser.parse_integrated_turn_ip()
 

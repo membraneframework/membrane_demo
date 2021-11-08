@@ -24,10 +24,11 @@ defmodule Videoroom.Room do
     sfu_options = [
       id: opts[:room_id],
       network_options: [
-        stun_servers: [
-          %{server_addr: "stun.l.google.com", server_port: 19_302}
-        ],
-        turn_servers: [],
+        stun_servers: Application.fetch_env!(:membrane_videoroom_demo, :stun_servers),
+        turn_servers: Application.fetch_env!(:membrane_videoroom_demo, :turn_servers),
+        use_integrated_turn:
+          Application.fetch_env!(:membrane_videoroom_demo, :use_integrated_turn),
+        integrated_turn_ip: Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_ip),
         dtls_pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
         dtls_cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
       ],

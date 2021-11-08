@@ -21,8 +21,8 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      {:membrane_core, github: "membraneframework/membrane_core", override: true},
       {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
+      {:membrane_core, github: "membraneframework/membrane_core", override: true},
       {:esbuild, "~> 0.1", runtime: Mix.env() == :dev},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},

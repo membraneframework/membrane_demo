@@ -5,26 +5,7 @@ defmodule Endpoint.HLS do
   def_input_pad(:input,
     demand_unit: :buffers,
     caps: :any,
-    availability: :on_request,
-    options: [
-      encoding: [
-        spec: :OPUS | :H264,
-        description: "Track encoding"
-      ],
-      track_enabled: [
-        spec: boolean(),
-        default: true,
-        description: "Enable or disable track"
-      ],
-      use_payloader?: [
-        spec: boolean(),
-        default: true,
-        description: """
-        Defines if incoming stream should be payloaded based on given encoding.
-        Otherwise the stream is assumed  be in RTP format.
-        """
-      ]
-    ]
+    availability: :on_request
   )
 
   def_options(
@@ -65,12 +46,17 @@ defmodule Endpoint.HLS do
   end
 
   @impl true
-  def handle_other({:publish, tracks}, _ctx, state) do
-    subscriptions = Enum.map(tracks, fn track -> {track, :raw} end)
+  def handle_other({:new_tracks, tracks}, _ctx, state) do
+    subscriptions = Enum.map(tracks, fn track -> {track.id, :raw} end)
 
     actions = [notify: {:subscribe, subscriptions}]
     new_tracks = Map.new(tracks, &{&1.id, &1})
     {{:ok, actions}, Map.update!(state, :tracks, &Map.merge(&1, new_tracks))}
+  end
+
+  @impl true
+  def handle_other(_msg, _ctx, state) do
+    {:ok, state}
   end
 
   def handle_notification(_notification, _element, _context, state) do
@@ -78,7 +64,6 @@ defmodule Endpoint.HLS do
   end
 
   def handle_pad_added(Pad.ref(:input, track_id) = pad, ctx, state) do
-    options = ctx.pads[pad].options
     link_builder = link_bin_input(pad)
     track = Map.get(state.tracks, track_id)
 
@@ -88,7 +73,7 @@ defmodule Endpoint.HLS do
     File.rm_rf(directory)
     File.mkdir_p!(directory)
 
-    spec = hls_links_and_children(link_builder, options.encoding, track_id, track.stream_id)
+    spec = hls_links_and_children(link_builder, track.encoding, track_id, track.stream_id)
 
     {spec, state} =
       if MapSet.member?(state.stream_ids, track.stream_id) do

@@ -6,7 +6,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "membrane_rtc_engine": "file:~/dev/membrane_rtc_engine/",
+    "membrane_rtc_engine": "file:../deps/membrane_rtc_engine/",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",
     "query-string": "^7.0.0",

@@ -4,7 +4,7 @@ defmodule Videoroom.Room do
   use GenServer
 
   alias Membrane.WebRTC.EndpointBin
-  alias Membrane.RTC.Engine.Endpoint.Webrtc
+  alias Membrane.RTC.Engine.Endpoint.{Webrtc, HLS}
   require Membrane.Logger
 
   def start(init_arg, opts) do
@@ -38,7 +38,7 @@ defmodule Videoroom.Room do
     {:ok, pid} = Membrane.RTC.Engine.start(sfu_options, [])
     send(pid, {:register, self()})
 
-    bin = %Endpoint.HLS{
+    bin = %HLS{
       subdirectory_name: room_id
     }
 
@@ -105,6 +105,7 @@ defmodule Videoroom.Room do
     }
 
     send(sfu_engine, {:accept_new_peer, peer_id, bin, peer_node})
+
     {:noreply, state}
   end
 

@@ -1,0 +1,23 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Membrane WebRTC video room demo</title>
+    <link rel="stylesheet" href={static_path(@conn, "/assets/css/app.css")} />
+  </head>
+
+  <body class="bg-gray-800 h-screen relative">
+      <main role="main h-screen">
+        <%= @inner_content %>
+      </main>
+      <div>
+        <label class="absolute text-white text-xl left-0 bottom-2 left-2  invisible md:visible">Version: <%= version() %></label>
+      </div>
+  </body>
+</html>

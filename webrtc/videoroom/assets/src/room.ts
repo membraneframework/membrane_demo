@@ -1,5 +1,3 @@
-import "../css/app.scss";
-
 import { MEDIA_CONSTRAINTS, LOCAL_PEER_ID } from "./consts";
 import {
   addVideoElement,
@@ -42,22 +40,26 @@ export class Room {
         onSendMediaEvent: (mediaEvent: SerializedMediaEvent) => {
           this.webrtcChannel.push("mediaEvent", { data: mediaEvent });
         },
-        onTrackAdded: ({ stream, peer, metadata }) => {
-          attachStream(stream, peer.id);
-        },
         onConnectionError: setErrorMessage,
         onJoinSuccess: (peerId, peersInRoom) => {
+          this.localStream!.getTracks().forEach((track) =>
+            this.webrtc.addTrack(track, this.localStream!)
+          );
+
           this.peers = peersInRoom;
           this.peers.forEach((peer) => {
             addVideoElement(peer.id, peer.metadata.displayName, false);
           });
-
           this.updateParticipantsList();
         },
         onJoinError: (metadata) => {
           throw `Peer denied.`;
         },
-
+        onTrackReady: ({ stream, peer, metadata }) => {
+          attachStream(stream!, peer.id);
+        },
+        onTrackAdded: (ctx) => {},
+        onTrackRemoved: (ctx) => {},
         onPeerJoined: (peer) => {
           this.peers.push(peer);
           this.updateParticipantsList();
@@ -68,6 +70,7 @@ export class Room {
           removeVideoElement(peer.id);
           this.updateParticipantsList();
         },
+        onPeerUpdated: (ctx) => {},
       },
     });
 
@@ -77,12 +80,12 @@ export class Room {
   }
 
   public init = async () => {
-    await this.phoenixChannelPushResult(this.webrtcChannel.join());
-
     try {
       this.localStream = await navigator.mediaDevices.getUserMedia(
         MEDIA_CONSTRAINTS
       );
+      // @ts-ignore
+      window.stream = this.localStream;
     } catch (error) {
       console.error(error);
       setErrorMessage(
@@ -91,12 +94,10 @@ export class Room {
       throw "error";
     }
 
-    this.localStream
-      .getTracks()
-      .forEach((track) => this.webrtc.addTrack(track, this.localStream!));
-
     addVideoElement(LOCAL_PEER_ID, "Me", true);
-    attachStream(this.localStream, LOCAL_PEER_ID);
+    attachStream(this.localStream!, LOCAL_PEER_ID);
+
+    await this.phoenixChannelPushResult(this.webrtcChannel.join());
   };
 
   public join = () => {

@@ -84,8 +84,6 @@ export class Room {
       this.localStream = await navigator.mediaDevices.getUserMedia(
         MEDIA_CONSTRAINTS
       );
-      // @ts-ignore
-      window.stream = this.localStream;
     } catch (error) {
       console.error(error);
       setErrorMessage(

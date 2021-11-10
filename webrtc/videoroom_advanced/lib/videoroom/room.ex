@@ -1,4 +1,4 @@
-jjjjdefmodule Videoroom.Room do
+defmodule Videoroom.Room do
   @moduledoc false
 
   use GenServer

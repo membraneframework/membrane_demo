@@ -32,7 +32,7 @@ defmodule Videoroom.Room do
         dtls_cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
       ],
       packet_filters: %{
-        :OPUS => [{:silence_discarder, %Membrane.RTP.SilenceDiscarder{vad_id: 1}}]
+        OPUS: [silence_discarder: %Membrane.RTP.SilenceDiscarder{vad_id: 1}]
       },
       payload_and_depayload_tracks?: false
     ]

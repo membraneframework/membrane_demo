@@ -38,11 +38,11 @@ defmodule Videoroom.Room do
     {:ok, pid} = Membrane.RTC.Engine.start(sfu_options, [])
     send(pid, {:register, self()})
 
-    bin = %HLS{
+    endpoint = %HLS{
       subdirectory_name: room_id
     }
 
-    send(pid, {:add_endpoint, "hls", bin})
+    send(pid, {:add_endpoint, "hls", endpoint})
     {:ok, %{sfu_engine: pid, peer_channels: %{}, network_options: sfu_options[:network_options]}}
   end
 

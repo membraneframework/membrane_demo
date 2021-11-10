@@ -32,7 +32,7 @@ defmodule VideoRoom.MixProject do
       {:membrane_http_adaptive_stream_plugin,
        github: "membraneframework/membrane_http_adaptive_stream_plugin"},
       {:membrane_mp4_plugin, "~> 0.7.0", override: true},
-      {:membrane_aac_plugin, "~> 0.6.0"},
+      {:membrane_aac_plugin, "~> 0.8.0"},
       {:membrane_aac_format, "~> 0.3.0", override: true},
       {:membrane_aac_fdk_plugin, "~> 0.8.0"},
       {:plug_cowboy, "~> 2.0"},

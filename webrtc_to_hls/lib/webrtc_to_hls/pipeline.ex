@@ -365,29 +365,6 @@ defmodule WebRTCToHLS.Pipeline do
     {{:ok, tracks_msgs}, state}
   end
 
-  defp link_inbound_track({track_id, encoding}, tee, waiting_for_linking, ctx) do
-    reduce_children(ctx, {[], waiting_for_linking}, fn
-      {:endpoint, endpoint_id}, {new_links, waiting_for_linking} ->
-        if MapSet.member?(waiting_for_linking[endpoint_id], track_id) do
-          new_link =
-            link(tee)
-            |> via_out(:copy)
-            |> via_in(Pad.ref(:input, track_id), options: [encoding: encoding])
-            |> to({:endpoint, endpoint_id})
-
-          waiting_for_linking =
-            Map.update!(waiting_for_linking, endpoint_id, &MapSet.delete(&1, track_id))
-
-          {new_links ++ [new_link], waiting_for_linking}
-        else
-          {new_links, waiting_for_linking}
-        end
-
-      _other_child, {new_links, waiting_for_linking} ->
-        {new_links, waiting_for_linking}
-    end)
-  end
-
   defp link_outbound_tracks(tracks, endpoint_id, ctx) do
     Enum.reduce(tracks, {[], MapSet.new()}, fn
       {track_id, encoding}, {new_links, not_linked} ->
@@ -512,13 +489,6 @@ defmodule WebRTCToHLS.Pipeline do
     state = put_in(state.endpoints[config.id], endpoint)
 
     {[spec: spec], state}
-  end
-
-  defp create_inbound_tracks(relay_audio, relay_video) do
-    stream_id = Track.stream_id()
-    audio_track = if relay_audio, do: [Track.new(:audio, stream_id)], else: []
-    video_track = if relay_video, do: [Track.new(:video, stream_id)], else: []
-    audio_track ++ video_track
   end
 
   defp get_outbound_tracks(endpoints, true) do

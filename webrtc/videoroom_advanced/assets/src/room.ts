@@ -88,7 +88,7 @@ export class Room {
     } catch (error) {
       console.error(error);
       setErrorMessage(
-        "Failed to setup video room, make sure to grant camera and microphone permissions"
+        "Failed to setup video room, make sure to grant camera and microphone permissions!"
       );
       throw "error";
     }

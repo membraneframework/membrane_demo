@@ -187,6 +187,6 @@ export function setErrorMessage(
   const errorContainer = document.getElementById("videochat-error");
   if (errorContainer) {
     errorContainer.innerHTML = message;
-    errorContainer.style.display = "block";
+    errorContainer.style.display = "flex";
   }
 }

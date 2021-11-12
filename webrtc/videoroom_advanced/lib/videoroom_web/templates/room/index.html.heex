@@ -24,8 +24,16 @@
         </div>
         <div class="h-20"></div>
     </section>
-    <div id="controls", class="flex-none flex justify-center h-8 pb-2 absolute inset-x-0 bottom-2">
-        <button id="disconnect" class="text-white text-2xl font-normal hover:text-gray-400">Disconnect</button>
+    <div id="controls", class="flex-none flex justify-center h-auto p-3 absolute inset-x-0 bottom-2 rounded-md ">
+    
+        <%= for {id, svg} <- [{"mic-control","mic-line.svg"}, {"camera-control", "camera-line.svg"}, {"screensharing-control", "computer-line.svg"}] do %>
+            <button disabled id={id} class="mr-2 p-3 rounded-full transition duration-300 ease-in-out bg-gray-700 hover:bg-gray-900">
+                <img class="invert" height="26" width="26" src={static_path(@conn, "/svg/#{svg}")} />
+            </button>
+        <% end %>
+        <button id="leave-control" class="mr-2 p-3 rounded-full transition duration-300 ease-in-out bg-gray-700 hover:bg-gray-900">
+            <img class="black-to-red transform rotate-135" height="26" width="26" src={static_path(@conn, "/svg/phone-fill.svg")} />
+        </button>
     </div>
 </div>
 

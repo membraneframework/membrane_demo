@@ -6,7 +6,8 @@ import {
   setErrorMessage,
   setParticipantsList,
   attachStream,
-  setupDisconnectButton,
+  setupControls,
+  setLocalStream,
 } from "./room_ui";
 import {
   MembraneWebRTC,
@@ -99,9 +100,8 @@ export class Room {
   };
 
   public join = () => {
-    setupDisconnectButton(() => {
+    setupControls(this.localStream!, () => {
       this.leave();
-      window.location.replace("");
     });
     this.webrtc.join({ displayName: this.displayName });
   };

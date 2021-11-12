@@ -7,7 +7,6 @@ import {
   setParticipantsList,
   attachStream,
   setupControls,
-  setLocalStream,
 } from "./room_ui";
 import {
   MembraneWebRTC,
@@ -100,9 +99,11 @@ export class Room {
   };
 
   public join = () => {
-    setupControls(this.localStream!, () => {
-      this.leave();
-    });
+    const callbacks = {
+      onLeave: this.leave,
+    };
+    setupControls(this.localStream!, callbacks);
+
     this.webrtc.join({ displayName: this.displayName });
   };
 

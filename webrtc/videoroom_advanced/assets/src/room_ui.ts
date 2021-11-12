@@ -1,73 +1,89 @@
 const audioButton = document.getElementById("mic-control") as HTMLButtonElement;
-const videoButton = document.getElementById("camera-control") as HTMLButtonElement;
-const screensharingButton = document.getElementById("screensharing-control") as HTMLButtonElement;
-const leaveButton = document.getElementById("leave-control") as HTMLButtonElement;
+const videoButton = document.getElementById(
+  "camera-control"
+) as HTMLButtonElement;
+const screensharingButton = document.getElementById(
+  "screensharing-control"
+) as HTMLButtonElement;
+const leaveButton = document.getElementById(
+  "leave-control"
+) as HTMLButtonElement;
 let localStream: MediaStream | null = null;
 
-export function setupControls(newLocalStream: MediaStream, onLeave: () => void) {
+interface SetupCallbacks {
+  onLeave: () => void;
+}
+
+export function setupControls(
+  newLocalStream: MediaStream,
+  callbacks: SetupCallbacks
+) {
   localStream = newLocalStream;
   audioButton.dataset.enabled = "true";
   videoButton.dataset.enabled = "true";
-  
-  const isAudioAvailable = localStream.getAudioTracks().length > 0;
-  const isVideoAvailable = localStream.getVideoTracks().length > 0;  
 
-  audioButton.onclick=  toggleAudio;
-  audioButton.disabled = !isAudioAvailable ;
+  const isAudioAvailable = localStream.getAudioTracks().length > 0;
+  const isVideoAvailable = localStream.getVideoTracks().length > 0;
+
+  audioButton.onclick = toggleAudio;
+  audioButton.disabled = !isAudioAvailable;
   audioButton.querySelector("img")!.src = iconFor("audio", isAudioAvailable);
 
   videoButton.onclick = toggleVideo;
   videoButton.disabled = !isVideoAvailable;
   videoButton.querySelector("img")!.src = iconFor("video", isVideoAvailable);
-  
-  leaveButton.onclick = () => {
-    onLeave();
-    window.location.reload();
-  }
-}
 
-export function setLocalStream(stream: MediaStream) {
-  localStream = stream;
+  leaveButton.onclick = () => {
+    callbacks.onLeave();
+    window.location.reload();
+  };
 }
 
 function iconFor(type: "audio" | "video", enabled: boolean): string {
   if (type === "audio") {
-    return !enabled ? "/svg/mic-off-fill.svg" : "/svg/mic-line.svg";  
+    return !enabled ? "/svg/mic-off-fill.svg" : "/svg/mic-line.svg";
   } else if (type === "video") {
-    return !enabled ? "/svg/camera-off-line.svg" : "/svg/camera-line.svg";  
+    return !enabled ? "/svg/camera-off-line.svg" : "/svg/camera-line.svg";
   }
   return "";
 }
 
 function toggleAudio() {
   if (!localStream) return;
-  
+
   const icon = audioButton.querySelector("img")!;
   const enabled = audioButton.dataset.enabled === "true";
 
   icon.src = iconFor("audio", !enabled);
   audioButton.dataset.enabled = enabled ? "false" : "true";
-  
-  localStream.getAudioTracks().forEach(track => track.enabled = !track.enabled);
+
+  localStream
+    .getAudioTracks()
+    .forEach((track) => (track.enabled = !track.enabled));
 }
 
 function toggleVideo() {
   if (!localStream) return;
-  
+
   const icon = videoButton.querySelector("img")!;
   const enabled = videoButton.dataset.enabled === "true";
 
   icon.src = iconFor("video", !enabled);
   videoButton.dataset.enabled = enabled ? "false" : "true";
 
-  localStream?.getVideoTracks().forEach(track => track.enabled = !track.enabled);
+  localStream
+    ?.getVideoTracks()
+    .forEach((track) => (track.enabled = !track.enabled));
 }
 
 export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 
-function elementId(peerId: string, type: "video" | "audio" | "feed") {
+function elementId(
+  peerId: string,
+  type: "video" | "audio" | "feed" | "screensharing"
+) {
   return `${type}-${peerId}`;
 }
 

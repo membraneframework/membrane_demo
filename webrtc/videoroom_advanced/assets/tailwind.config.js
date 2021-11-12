@@ -13,12 +13,12 @@ module.exports = {
   },
   theme: {
     rotate: {
-      "135": "135deg",
-     }
+      135: "135deg",
+    },
   },
   variants: {
     extend: {
-      opacity: ['disabled'],
+      opacity: ["disabled"],
     },
   },
   plugins: [require("@tailwindcss/aspect-ratio")],

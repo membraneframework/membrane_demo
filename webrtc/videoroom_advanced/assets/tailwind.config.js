@@ -15,11 +15,17 @@ module.exports = {
     rotate: {
       135: "135deg",
     },
+    extend: {
+      invert: {
+        50: ".50",
+      },
+    },
   },
   variants: {
     extend: {
       opacity: ["disabled"],
     },
+    backgroundColor: ({ after }) => after(["disabled", "group-disabled"]),
   },
   plugins: [require("@tailwindcss/aspect-ratio")],
 };

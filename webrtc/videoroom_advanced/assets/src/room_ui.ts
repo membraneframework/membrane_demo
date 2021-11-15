@@ -8,22 +8,31 @@ const screensharingButton = document.getElementById(
 const leaveButton = document.getElementById(
   "leave-control"
 ) as HTMLButtonElement;
-let localStream: MediaStream | null = null;
+
+// set of local streams used to control local user's streams
+let localStreams: MediaStreams | null;
 
 interface SetupCallbacks {
   onLeave: () => void;
 }
 
+type MediaStreams = {
+  audioStream: MediaStream | null;
+  videoStream: MediaStream | null;
+};
+
 export function setupControls(
-  newLocalStream: MediaStream,
+  mediaStreams: MediaStreams,
   callbacks: SetupCallbacks
 ) {
-  localStream = newLocalStream;
+  localStreams = mediaStreams;
   audioButton.dataset.enabled = "true";
   videoButton.dataset.enabled = "true";
 
-  const isAudioAvailable = localStream.getAudioTracks().length > 0;
-  const isVideoAvailable = localStream.getVideoTracks().length > 0;
+  const isAudioAvailable =
+    (mediaStreams.audioStream?.getAudioTracks()?.length || 0) > 0;
+  const isVideoAvailable =
+    (mediaStreams.videoStream?.getVideoTracks()?.length || 0) > 0;
 
   audioButton.onclick = toggleAudio;
   audioButton.disabled = !isAudioAvailable;
@@ -49,7 +58,7 @@ function iconFor(type: "audio" | "video", enabled: boolean): string {
 }
 
 function toggleAudio() {
-  if (!localStream) return;
+  if (!localStreams?.audioStream) return;
 
   const icon = audioButton.querySelector("img")!;
   const enabled = audioButton.dataset.enabled === "true";
@@ -57,13 +66,13 @@ function toggleAudio() {
   icon.src = iconFor("audio", !enabled);
   audioButton.dataset.enabled = enabled ? "false" : "true";
 
-  localStream
+  localStreams.audioStream
     .getAudioTracks()
     .forEach((track) => (track.enabled = !track.enabled));
 }
 
 function toggleVideo() {
-  if (!localStream) return;
+  if (!localStreams?.videoStream) return;
 
   const icon = videoButton.querySelector("img")!;
   const enabled = videoButton.dataset.enabled === "true";
@@ -71,7 +80,7 @@ function toggleVideo() {
   icon.src = iconFor("video", !enabled);
   videoButton.dataset.enabled = enabled ? "false" : "true";
 
-  localStream
+  localStreams.videoStream
     ?.getVideoTracks()
     .forEach((track) => (track.enabled = !track.enabled));
 }
@@ -87,15 +96,17 @@ function elementId(
   return `${type}-${peerId}`;
 }
 
-export function attachStream(stream: MediaStream, peerId: string): void {
-  const videoId = elementId(peerId, "video");
+export function attachStream(peerId: string, streams: MediaStreams): void {
   const audioId = elementId(peerId, "audio");
+  const videoId = elementId(peerId, "video");
 
-  let video = document.getElementById(videoId) as HTMLVideoElement;
+  const { audioStream, videoStream } = streams;
+
   let audio = document.getElementById(audioId) as HTMLAudioElement;
+  let video = document.getElementById(videoId) as HTMLVideoElement;
 
-  video.srcObject = stream;
-  audio.srcObject = stream;
+  audio.srcObject = audioStream;
+  video.srcObject = videoStream;
 }
 
 export function addVideoElement(

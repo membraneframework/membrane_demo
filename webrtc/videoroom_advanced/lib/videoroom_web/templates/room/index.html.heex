@@ -26,8 +26,8 @@
     </section>
     <div id="controls", class="flex-none flex justify-center h-auto p-2 absolute inset-x-0 bottom-0 rounded-md ">
         <%= for {id, svg} <- [{"mic-control","mic-line.svg"}, {"camera-control", "camera-line.svg"}, {"screensharing-control", "computer-line.svg"}] do %>
-            <button disabled id={id} class="mr-2 p-3 rounded-full transition duration-300 ease-in-out bg-gray-700 hover:bg-gray-900">
-                <img class="invert" height="26" width="26" src={static_path(@conn, "/svg/#{svg}")} />
+            <button disabled id={id} class="group mr-2 p-3 rounded-full transition duration-300 ease-in-out bg-gray-700 hover:bg-gray-900 disabled:bg-gray-700 disabled:pointer-events-none">
+                <img class="invert group-disabled:invert-50" height="26" width="26" src={static_path(@conn, "/svg/#{svg}")} />
             </button>
         <% end %>
         <button id="leave-control" class="mr-2 p-3 rounded-full transition duration-300 ease-in-out bg-gray-700 hover:bg-gray-900">

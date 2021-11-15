@@ -30,7 +30,8 @@ defmodule Videoroom.Room do
         turn_servers: [],
         dtls_pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
         dtls_cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
-      ]
+      ],
+      extension_options: [vad: true]
     ]
 
     {:ok, pid} = Membrane.RTC.Engine.start(sfu_options, [])
@@ -77,6 +78,12 @@ defmodule Videoroom.Room do
   @impl true
   def handle_info({:media_event, _from, _event} = msg, state) do
     send(state.sfu_engine, msg)
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({_sfu_engine, {:vad_notification, val, peer_id}}=msg, state) do
+    for {_peer_id, pid} <- state.peer_channels, do: send(pid, msg)
     {:noreply, state}
   end
 

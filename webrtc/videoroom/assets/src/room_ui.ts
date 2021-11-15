@@ -1,3 +1,5 @@
+import { LOCAL_PEER_ID } from "./consts";
+
 export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
@@ -7,6 +9,13 @@ export function setupDisconnectButton(fun) {
     "disconnect"
   )! as HTMLButtonElement;
   disconnectButton.onclick = fun;
+}
+
+export function setupMuteButton(fun) {
+  const muteButton = document.getElementById(
+    "mute"
+  )! as HTMLButtonElement;
+  muteButton.onclick = fun
 }
 
 function elementId(peerId: string, type: "video" | "audio" | "feed") {
@@ -52,7 +61,24 @@ export function addVideoElement(
     audio.muted = true;
   }
 }
+export function handleVoiceActivation(peerId: string, wasActivated: boolean): void {
+  console.log(peerId, wasActivated);
+  const feeds = Array.from(document.querySelectorAll("div[class='VideoFeed']"));
+  console.log(feeds)
+  let feed = feeds.filter(element=>element.id==`feed-${peerId}`)[0];
+  if(!feed)
+  {
+    peerId = "feed-local-peer";
+    feed = feeds.filter(element=>element.id==peerId)[0];
+  }
+  const videoLabel = feed.querySelector(
+    "div[class='VideoLabel']"
+  ) as HTMLDivElement;
 
+  const peerName = videoLabel.dataset.peerName;
+  if(wasActivated) videoLabel.innerHTML=peerName+": is talking";
+  else videoLabel.innerHTML=peerName||'';
+}
 export function setParticipantsList(participants: Array<string>): void {
   const participantsNamesEl = document.getElementById(
     "participants-list"
@@ -79,7 +105,7 @@ function setupVideoFeed(peerId: string, label: string, isLocalVideo: boolean) {
 
   feed.id = elementId(peerId, "feed");
   videoLabel.innerText = label;
-
+  videoLabel.dataset.peerName = label;
   if (isLocalVideo) {
     video.classList.add("UserOwnVideo");
   }

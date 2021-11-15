@@ -9,6 +9,8 @@ import {
   setParticipantsList,
   attachStream,
   setupDisconnectButton,
+  setupMuteButton,
+  handleVoiceActivation
 } from "./room_ui";
 import {
   MembraneWebRTC,
@@ -27,8 +29,10 @@ export class Room {
   private socket;
   private webrtcSocketRefs: string[] = [];
   private webrtcChannel;
+  private isMuted: boolean;
 
   constructor() {
+    this.isMuted = false;
     this.socket = new Socket("/socket");
     this.socket.connect();
     this.displayName = this.parseUrl();
@@ -68,6 +72,7 @@ export class Room {
           addVideoElement(peer.id, peer.metadata.displayName, false);
         },
         onPeerLeft: (peer) => {
+          console.log("Peer id", peer.id)
           this.peers = this.peers.filter((p) => p.id !== peer.id);
           removeVideoElement(peer.id);
           this.updateParticipantsList();
@@ -78,6 +83,10 @@ export class Room {
 
     this.webrtcChannel.on("mediaEvent", (event) =>
       this.webrtc.receiveMediaEvent(event.data)
+    );
+    this.webrtcChannel.on("vadActivation", (event) => {
+      handleVoiceActivation(event.peer_id, event.val=="speech");
+    }
     );
   }
 
@@ -105,6 +114,22 @@ export class Room {
       this.leave();
       window.location.replace("");
     });
+    setupMuteButton(()=>{
+      this.isMuted=!this.isMuted;
+      const muteButton = document.getElementById(
+        "mute"
+      )! as HTMLButtonElement;
+      if(this.isMuted)
+      {
+        muteButton.innerHTML="Unmute";
+        this.localStream!.getAudioTracks()[0]!.enabled=false;
+      } 
+      else {
+        muteButton.innerHTML="Mute";
+        this.localStream!.getAudioTracks()[0]!.enabled=true;
+      }
+      
+    })
     this.webrtc.join({ displayName: this.displayName });
   };
 

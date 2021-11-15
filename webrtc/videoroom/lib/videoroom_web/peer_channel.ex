@@ -36,9 +36,18 @@ defmodule VideoRoomWeb.PeerChannel do
   end
 
   @impl true
+  def handle_info({pid, {:vad_notification, val, peer_id}}, socket) do
+    push(socket, "vadActivation", %{val: val, peer_id: peer_id})
+    {:noreply, socket}
+  end
+
+
+
+  @impl true
   def handle_info({:media_event, event}, socket) do
     push(socket, "mediaEvent", %{data: event})
 
     {:noreply, socket}
   end
+
 end

@@ -22,6 +22,11 @@
 </div>
 <div id="controls", class="Controls">
     <div class="Disconnect">
+        <button id="mute">Mute</button>
+    </div>
+
+    <div class="Disconnect">
         <button id="disconnect">Disconnect</button>
     </div>
+
 </div>

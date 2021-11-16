@@ -7,6 +7,10 @@ services:
       LETSENCRYPT_HOST: "demo-webrtc-videoroom-advanced.membraneframework.org"
       USE_INTEGRATED_TURN: "true"
       INTEGRATED_TURN_IP: "135.181.203.255"
+      INTEGRATED_TURN_PORT_RANGE: "50000-59999"
+    ports: 
+      - "50000-59999:50000-59999/tcp"
+      - "50000-59999:50000-59999/udp"
 
   nginx-proxy:
     image: jwilder/nginx-proxy:0.8.0

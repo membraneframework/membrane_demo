@@ -183,51 +183,6 @@ defmodule WebRTCToHLS.Pipeline do
     {actions, state}
   end
 
-  defp handle_media_event(
-         %{type: :update_peer_metadata, data: %{metadata: metadata}},
-         peer_id,
-         _ctx,
-         state
-       ) do
-    peer = Map.get(state.peers, peer_id)
-
-    if peer.metadata != metadata do
-      updated_peer = %{peer | metadata: metadata}
-      state = put_in(state, [:peers, peer_id], updated_peer)
-
-      MediaEvent.create_peer_updated_event(peer_id, updated_peer)
-      |> dispatch()
-
-      {[], state}
-    else
-      {[], state}
-    end
-  end
-
-  defp handle_media_event(
-         %{
-           type: :update_track_metadata,
-           data: %{track_id: track_id, track_metadata: track_metadata}
-         },
-         peer_id,
-         _ctx,
-         state
-       ) do
-    peer = Map.get(state.peers, peer_id)
-
-    if Map.get(peer.track_id_to_track_metadata, track_id) != track_metadata do
-      peer = Map.update!(peer, :track_id_to_track_metadata, &%{&1 | track_id => track_metadata})
-      state = put_in(state, [:peers, peer_id], peer)
-
-      MediaEvent.create_track_updated_event(peer_id, track_id, track_metadata)
-      |> dispatch()
-
-      {[], state}
-    else
-      {[], state}
-    end
-  end
-
   @impl true
   def handle_notification(
         {:signal, {:sdp_answer, answer, mid_to_track_id}},

@@ -2,6 +2,24 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .active-screensharing-grid {
+    @apply grid flex-3 gap-4;
+  }
+
+  .inactive-screensharing-grid {
+    @apply hidden;
+  }
+
+  .videos-grid-with-screensharing {
+    height: auto !important;
+  }
+}
+
 .flip-horizontally {
   transform: scaleX(-1);
 }

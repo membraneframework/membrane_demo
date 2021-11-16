@@ -11,15 +11,22 @@
         </header>
         <div id="videochat-error" class="flex items-center justify-center h-full px-4 text-white font-bold text-center text-4xl" style="display: none;"> </div>
         <div id="videochat" class="px-2 md:px-20 overflow-y-auto">
-            <template id="video-feed-template">
+            <template id="screensharing-template">
                 <div name="video-feed" class="relative bg-gray-900 shadow rounded-md overflow-hidden h-full w-full ratio-video">
-                    <audio></audio>
-                    <video class="w-full"></video>
+                    <video class="w-full h-full"></video>
                     <div name="video-label" class="absolute text-white text-shadow-lg bottom-0 left-0 p-2">Placeholder</div>
                 </div>
             </template>
-            <div class="flex flex-col justify-center items-center">
-                <div id="videos-grid" class="grid grid-cols-2 grid-flow-row gap-4 justify-items-center"></div>
+            <template id="video-feed-template">
+                <div name="video-feed" class="relative bg-gray-900 shadow rounded-md overflow-hidden h-full w-full ratio-video">
+                    <audio></audio>
+                    <video class="w-full h-full"></video>
+                    <div name="video-label" class="absolute text-white text-shadow-lg bottom-0 left-0 p-2">Placeholder</div>
+                </div>
+            </template>
+            <div class="flex flex-col items-center md:flex-row md:items-start justify-center h-full">
+                <div id="screensharings-grid" class="h-full mb-3 md:mr-3 md:mb-none inactive-screensharing-grid"> </div>
+                <div id="videos-grid" class="grid flex-1 grid-cols-2 grid-flow-row gap-4 justify-items-center h-full"></div>
             </div>
         </div>
         <div class="video-divider"></div>

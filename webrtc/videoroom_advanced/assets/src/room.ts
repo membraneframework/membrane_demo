@@ -2,6 +2,7 @@ import {
   LOCAL_PEER_ID,
   AUDIO_MEDIA_CONSTRAINTS,
   VIDEO_MEDIA_CONSTRAINTS,
+  SCREENSHARING_MEDIA_CONSTRAINTS,
 } from "./consts";
 import {
   addVideoElement,
@@ -11,6 +12,9 @@ import {
   setParticipantsList,
   attachStream,
   setupControls,
+  terminateScreensharing,
+  attachScreensharing,
+  detachScreensharing,
 } from "./room_ui";
 import {
   MembraneWebRTC,
@@ -25,6 +29,9 @@ export class Room {
   private displayName: string;
   private localAudioStream: MediaStream | null = null;
   private localVideoStream: MediaStream | null = null;
+  private localScreensharing: MediaStream | null = null;
+  private localScreensharingTrackId: string | null = null;
+
   private webrtc: MembraneWebRTC;
 
   private socket;
@@ -69,10 +76,23 @@ export class Room {
           throw `Peer denied.`;
         },
         onTrackReady: ({ stream, peer, metadata }) => {
-          attachStream(peer.id, { audioStream: stream, videoStream: stream });
+          console.log("Track Ready", stream, peer, metadata);
+          if (metadata.type === "screensharing") {
+            attachScreensharing(
+              peer.id,
+              `(${peer.metadata.displayName}) Screen`,
+              stream!
+            );
+          } else {
+            attachStream(peer.id, { audioStream: stream, videoStream: stream });
+          }
         },
         onTrackAdded: (ctx) => {},
-        onTrackRemoved: (ctx) => {},
+        onTrackRemoved: (ctx) => {
+          if (ctx.metadata.type === "screensharing") {
+            detachScreensharing(ctx.peer.id);
+          }
+        },
         onPeerJoined: (peer) => {
           this.peers.push(peer);
           this.updateParticipantsList();
@@ -122,6 +142,44 @@ export class Room {
   public join = () => {
     const callbacks = {
       onLeave: this.leave,
+      onScreensharingStart: async () => {
+        if (this.localScreensharing) return;
+
+        this.localScreensharing = await navigator.mediaDevices.getDisplayMedia(
+          SCREENSHARING_MEDIA_CONSTRAINTS
+        );
+
+        this.localScreensharingTrackId = this.webrtc.addTrack(
+          this.localScreensharing.getVideoTracks()[0],
+          this.localScreensharing,
+          { type: "screensharing" }
+        );
+
+        // listen for screensharing stop via browser controls instead of ui buttons
+        this.localScreensharing.getVideoTracks().forEach((track) => {
+          track.onended = () => {
+            this.webrtc.removeTrack(this.localScreensharingTrackId!);
+            this.localScreensharing = null;
+            terminateScreensharing();
+            detachScreensharing(LOCAL_PEER_ID);
+          };
+        });
+
+        attachScreensharing(
+          LOCAL_PEER_ID,
+          "(Me) Screen",
+          this.localScreensharing
+        );
+      },
+      onScreensharingEnd: async () => {
+        if (!this.localScreensharing) return;
+
+        this.localScreensharing.getTracks().forEach((track) => track.stop());
+        this.localScreensharing = null;
+
+        this.webrtc.removeTrack(this.localScreensharingTrackId!);
+        detachScreensharing(LOCAL_PEER_ID);
+      },
     };
     setupControls(
       {

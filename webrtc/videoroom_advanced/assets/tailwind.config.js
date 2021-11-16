@@ -9,11 +9,19 @@ module.exports = {
       "md:grid-cols-2",
       "md:grid-cols-3",
       "md:grid-cols-4",
+      "animate-pulse",
+      "active-screensharing-grid",
+      "inactive-screensharing-grid",
+      "videos-grid-with-screensharing",
     ],
   },
   theme: {
     rotate: {
       135: "135deg",
+    },
+    flex: {
+      3: "3",
+      1: "1",
     },
     extend: {
       invert: {

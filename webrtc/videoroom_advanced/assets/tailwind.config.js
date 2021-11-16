@@ -17,6 +17,7 @@ module.exports = {
   },
   theme: {
     rotate: {
+      45: "45deg",
       135: "135deg",
     },
     flex: {

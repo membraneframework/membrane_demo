@@ -32,9 +32,13 @@
         <div class="video-divider"></div>
     </section>
     <div id="controls", class="flex-none flex justify-center h-auto p-2 absolute inset-x-0 bottom-0 rounded-md ">
-        <%= for {id, svg} <- [{"mic-control","mic-line.svg"}, {"camera-control", "camera-line.svg"}, {"screensharing-control", "computer-line.svg"}] do %>
-            <button disabled id={id} class="group mr-2 p-3 rounded-full transition duration-300 ease-in-out bg-gray-700 hover:bg-gray-900 disabled:bg-gray-700 disabled:pointer-events-none">
+        <%= for {id, svg, hover} <- [{"mic-control","mic-line.svg", "Mute or unmute the microphone"}, {"camera-control", "camera-line.svg", "Turn on/off the camera"}, {"screensharing-control", "computer-line.svg", "Start or stop the screensharing"}] do %>
+            <button disabled id={id} class="group relative flex justify-center items-center z-10 mr-2 p-3 rounded-full transition duration-300 ease-in-out bg-gray-700 hover:bg-gray-900 disabled:bg-gray-700 disabled:pointer-events-none">
                 <img class="invert group-disabled:invert-50" height="26" width="26" src={static_path(@conn, "/svg/#{svg}")} />
+                <div class="transition-all duration-500 absolute bottom-0 flex flex-col opacity-0 items-center invisible mb-14 group-hover:visible group-hover:opacity-80">
+                  <span class="relative z-50 w-32 p-2 text-xs leading-none rounded-md text-white whitespace-no-wrap bg-black shadow-lg"><%= hover %></span>
+                  <div class="w-3 h-3 -mt-2 rotate-45 bg-black"></div>
+                </div>
             </button>
         <% end %>
         <button id="leave-control" class="mr-2 p-3 rounded-full transition duration-300 ease-in-out bg-gray-700 hover:bg-gray-900">

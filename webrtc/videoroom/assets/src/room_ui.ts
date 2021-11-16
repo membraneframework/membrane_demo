@@ -24,20 +24,10 @@ export function attachStream(stream: MediaStream, peerId: string): void {
   audio.srcObject = stream;
 }
 
-export function changeVideo(peerId: string, streams: MediaStream[]) {
-  const videoId = elementId(peerId, "video");
-  let video = document.getElementById(videoId) as HTMLVideoElement;
-  const stream = video.srcObject;
-  let index = streams.indexOf(stream as MediaStream);
-  index = index == -1 ? 0 : (index + 1) % streams.length;
-  video.srcObject = streams[index];
-}
-
 export function addVideoElement(
   peerId: string,
   label: string,
-  isLocalVideo: boolean,
-  peerIdToStreams: Map<string, MediaStream[]> = new Map()
+  isLocalVideo: boolean
 ): void {
   const videoId = elementId(peerId, "video");
   const audioId = elementId(peerId, "audio");
@@ -61,13 +51,6 @@ export function addVideoElement(
   if (isLocalVideo) {
     audio.muted = true;
   }
-
-  video.onclick = (event) => {
-    if (peerIdToStreams.has(peerId)) {
-      const streams = peerIdToStreams.get(peerId)!.filter(stream => stream.getVideoTracks().length != 0);
-      changeVideo(peerId, streams);
-    }
-  };
 }
 
 export function setParticipantsList(participants: Array<string>): void {

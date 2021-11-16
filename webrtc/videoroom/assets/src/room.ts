@@ -6,13 +6,13 @@ import {
   setErrorMessage,
   setParticipantsList,
   attachStream,
-  setupDisconnectButton
+  setupDisconnectButton,
 } from "./room_ui";
 import {
   MembraneWebRTC,
   Peer,
   SerializedMediaEvent,
-} from "membrane_sfu";
+} from "membrane_rtc_engine";
 import { Push, Socket } from "phoenix";
 import { parse } from "query-string";
 
@@ -25,18 +25,6 @@ export class Room {
   private socket;
   private webrtcSocketRefs: string[] = [];
   private webrtcChannel;
-  private peerIdToStreams: Map<string, MediaStream[]> = new Map();
-  private screenShareTrack: MediaStreamTrack | null = null;
-  private screenShareTrackId: string | null = null;
-  private tracks: MediaStreamTrack[] = []
-  private videoTrackId: string | null = null
-
-  // 1. Screen share with removing old track
-  // 2. Replace track
-  // 3. Update peerMetadata
-  // 4. Update track metadata
-  private version = 4
-
 
   constructor() {
     this.socket = new Socket("/socket");
@@ -55,7 +43,7 @@ export class Room {
         onConnectionError: setErrorMessage,
         onJoinSuccess: (peerId, peersInRoom) => {
           this.localStream!.getTracks().forEach((track) =>
-            this.webrtc.addTrack(track, this.localStream!)
+            this.webrtc.addTrack(track, this.localStream!, {})
           );
 
           this.peers = peersInRoom;
@@ -70,20 +58,20 @@ export class Room {
         onTrackReady: ({ stream, peer, metadata }) => {
           attachStream(stream!, peer.id);
         },
-        onTrackAdded: (ctx) => { },
-        onTrackRemoved: (ctx) => { },
+        onTrackAdded: (ctx) => {},
+        onTrackRemoved: (ctx) => {},
         onPeerJoined: (peer) => {
           this.peers.push(peer);
           this.updateParticipantsList();
           addVideoElement(peer.id, peer.metadata.displayName, false);
         },
         onPeerLeft: (peer) => {
-          console.log("Peer left")
+          console.log("Peer left");
           this.peers = this.peers.filter((p) => p.id !== peer.id);
           removeVideoElement(peer.id);
           this.updateParticipantsList();
         },
-        onPeerUpdated: (ctx) => { },
+        onPeerUpdated: (ctx) => {},
       },
     });
 

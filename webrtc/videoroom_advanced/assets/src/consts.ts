@@ -11,8 +11,6 @@ export const VIDEO_MEDIA_CONSTRAINTS: MediaStreamConstraints = {
 export const SCREENSHARING_MEDIA_CONSTRAINTS: DisplayMediaStreamConstraints = {
   video: {
     frameRate: { ideal: 20, max: 25 },
-    width: 720,
-    height: 480,
   },
 };
 

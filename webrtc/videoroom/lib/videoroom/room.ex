@@ -82,7 +82,7 @@ defmodule Videoroom.Room do
   end
 
   @impl true
-  def handle_info({_sfu_engine, {:vad_notification, val, peer_id}}=msg, state) do
+  def handle_info({_sfu_engine, {:vad_notification, val, peer_id}} = msg, state) do
     for {_peer_id, pid} <- state.peer_channels, do: send(pid, msg)
     {:noreply, state}
   end

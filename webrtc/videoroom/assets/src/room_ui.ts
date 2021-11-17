@@ -12,10 +12,8 @@ export function setupDisconnectButton(fun) {
 }
 
 export function setupMuteButton(fun) {
-  const muteButton = document.getElementById(
-    "mute"
-  )! as HTMLButtonElement;
-  muteButton.onclick = fun
+  const muteButton = document.getElementById("mute")! as HTMLButtonElement;
+  muteButton.onclick = fun;
 }
 
 function elementId(peerId: string, type: "video" | "audio" | "feed") {
@@ -61,23 +59,25 @@ export function addVideoElement(
     audio.muted = true;
   }
 }
-export function handleVoiceActivation(peerId: string, wasActivated: boolean): void {
+export function handleVoiceActivation(
+  peerId: string,
+  wasActivated: boolean
+): void {
   console.log(peerId, wasActivated);
   const feeds = Array.from(document.querySelectorAll("div[class='VideoFeed']"));
-  console.log(feeds)
-  let feed = feeds.filter(element=>element.id==`feed-${peerId}`)[0];
-  if(!feed)
-  {
+  console.log(feeds);
+  let feed = feeds.filter((element) => element.id == `feed-${peerId}`)[0];
+  if (!feed) {
     peerId = "feed-local-peer";
-    feed = feeds.filter(element=>element.id==peerId)[0];
+    feed = feeds.filter((element) => element.id == peerId)[0];
   }
   const videoLabel = feed.querySelector(
     "div[class='VideoLabel']"
   ) as HTMLDivElement;
 
   const peerName = videoLabel.dataset.peerName;
-  if(wasActivated) videoLabel.innerHTML=peerName+": is talking";
-  else videoLabel.innerHTML=peerName||'';
+  if (wasActivated) videoLabel.innerHTML = peerName + ": is talking";
+  else videoLabel.innerHTML = peerName || "";
 }
 export function setParticipantsList(participants: Array<string>): void {
   const participantsNamesEl = document.getElementById(

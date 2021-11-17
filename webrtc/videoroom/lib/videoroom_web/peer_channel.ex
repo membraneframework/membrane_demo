@@ -41,13 +41,10 @@ defmodule VideoRoomWeb.PeerChannel do
     {:noreply, socket}
   end
 
-
-
   @impl true
   def handle_info({:media_event, event}, socket) do
     push(socket, "mediaEvent", %{data: event})
 
     {:noreply, socket}
   end
-
 end

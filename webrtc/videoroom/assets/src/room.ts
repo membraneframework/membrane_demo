@@ -10,7 +10,7 @@ import {
   attachStream,
   setupDisconnectButton,
   setupMuteButton,
-  handleVoiceActivation
+  handleVoiceActivation,
 } from "./room_ui";
 import {
   MembraneWebRTC,
@@ -72,7 +72,7 @@ export class Room {
           addVideoElement(peer.id, peer.metadata.displayName, false);
         },
         onPeerLeft: (peer) => {
-          console.log("Peer id", peer.id)
+          console.log("Peer id", peer.id);
           this.peers = this.peers.filter((p) => p.id !== peer.id);
           removeVideoElement(peer.id);
           this.updateParticipantsList();
@@ -85,9 +85,8 @@ export class Room {
       this.webrtc.receiveMediaEvent(event.data)
     );
     this.webrtcChannel.on("vadActivation", (event) => {
-      handleVoiceActivation(event.peer_id, event.val=="speech");
-    }
-    );
+      handleVoiceActivation(event.peer_id, event.val == "speech");
+    });
   }
 
   public init = async () => {
@@ -114,22 +113,17 @@ export class Room {
       this.leave();
       window.location.replace("");
     });
-    setupMuteButton(()=>{
-      this.isMuted=!this.isMuted;
-      const muteButton = document.getElementById(
-        "mute"
-      )! as HTMLButtonElement;
-      if(this.isMuted)
-      {
-        muteButton.innerHTML="Unmute";
-        this.localStream!.getAudioTracks()[0]!.enabled=false;
-      } 
-      else {
-        muteButton.innerHTML="Mute";
-        this.localStream!.getAudioTracks()[0]!.enabled=true;
+    setupMuteButton(() => {
+      this.isMuted = !this.isMuted;
+      const muteButton = document.getElementById("mute")! as HTMLButtonElement;
+      if (this.isMuted) {
+        muteButton.innerHTML = "Unmute";
+        this.localStream!.getAudioTracks()[0]!.enabled = false;
+      } else {
+        muteButton.innerHTML = "Mute";
+        this.localStream!.getAudioTracks()[0]!.enabled = true;
       }
-      
-    })
+    });
     this.webrtc.join({ displayName: this.displayName });
   };
 

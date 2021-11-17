@@ -129,3 +129,8 @@ config :membrane_videoroom_demo, VideoRoomWeb.Endpoint, [
   {:url, [host: host]},
   {protocol, args}
 ]
+
+config :opentelemetry, :processors,
+  otel_batch_processor: %{
+    exporter: {:otel_exporter_stdout, []}
+  }

@@ -242,7 +242,7 @@ defmodule WebRTCToHLS.Pipeline do
     {:ok, state}
   end
 
-  def handle_notification({:track_playable, {content_type, _track_id}}, :hls_sink, _ctx, state) do
+  def handle_notification({:track_playable, {content_type, _track_id}}, :hls_bin, _ctx, state) do
     # notify about playable just when video becomes available
     if content_type == :video do
       dispatch({:playlist_playable, self() |> pid_hash()}, state)
@@ -252,11 +252,15 @@ defmodule WebRTCToHLS.Pipeline do
   end
 
   # the peer has left, ignore the notification as the pipeline is closing on its own
-  def handle_notification({:end_of_stream, :input}, :aac_encoder, _ctx, state) do
+  def handle_notification({:end_of_stream, :input}, {:aac_encoder, _}, _ctx, state) do
     {:ok, state}
   end
 
-  def handle_notification({:cleanup, fun}, :hls_sink, _ctx, state) do
+  def handle_notification(:end_of_stream, :hls_bin, _ctx, state) do
+    {:ok, state}
+  end
+
+  def handle_notification({:cleanup, fun}, :hls_bin, _ctx, state) do
     fun.()
     {:ok, state}
   end
@@ -424,7 +428,7 @@ defmodule WebRTCToHLS.Pipeline do
         handshake_opts: handshake_opts,
         log_metadata: [peer_id: config.id]
       },
-      hls_sink: %Membrane.HTTPAdaptiveStream.Sink{
+      hls_bin: %Membrane.HTTPAdaptiveStream.SinkBin{
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
         target_window_duration: 20 |> Membrane.Time.seconds(),
         target_segment_duration: 2 |> Membrane.Time.seconds(),
@@ -470,10 +474,10 @@ defmodule WebRTCToHLS.Pipeline do
           links: [
             link_builder
             |> to({:video_parser, track_id})
-            |> to({:video_payloader, track_id})
-            |> to({:video_cmaf_muxer, track_id})
-            |> via_in(Pad.ref(:input, {:video, track_id}))
-            |> to(:hls_sink)
+            # |> to({:video_payloader, track_id})
+            # |> to({:video_cmaf_muxer, track_id})
+            |> via_in(Pad.ref(:input, {:video, track_id}), options: [encoding: :H264])
+            |> to(:hls_bin)
           ]
         }
 
@@ -491,10 +495,10 @@ defmodule WebRTCToHLS.Pipeline do
             |> to({:opus_decoder, track_id})
             |> to({:aac_encoder, track_id})
             |> to({:aac_parser, track_id})
-            |> to({:audio_payloader, track_id})
-            |> to({:audio_cmaf_muxer, track_id})
-            |> via_in(Pad.ref(:input, {:audio, track_id}))
-            |> to(:hls_sink)
+            # |> to({:audio_payloader, track_id})
+            # |> to({:audio_cmaf_muxer, track_id})
+            |> via_in(Pad.ref(:input, {:audio, track_id}), options: [encoding: :AAC])
+            |> to(:hls_bin)
           ]
         }
     end

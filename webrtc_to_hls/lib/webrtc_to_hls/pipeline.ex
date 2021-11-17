@@ -465,17 +465,11 @@ defmodule WebRTCToHLS.Pipeline do
               framerate: {30, 1},
               alignment: :au,
               attach_nalus?: true
-            },
-            {:video_payloader, track_id} => Membrane.MP4.Payloader.H264,
-            {:video_cmaf_muxer, track_id} => %Membrane.MP4.CMAF.Muxer{
-              segment_duration: 2 |> Membrane.Time.seconds()
             }
           },
           links: [
             link_builder
             |> to({:video_parser, track_id})
-            # |> to({:video_payloader, track_id})
-            # |> to({:video_cmaf_muxer, track_id})
             |> via_in(Pad.ref(:input, {:video, track_id}), options: [encoding: :H264])
             |> to(:hls_bin)
           ]
@@ -486,17 +480,13 @@ defmodule WebRTCToHLS.Pipeline do
           children: %{
             {:opus_decoder, track_id} => Membrane.Opus.Decoder,
             {:aac_encoder, track_id} => Membrane.AAC.FDK.Encoder,
-            {:aac_parser, track_id} => %Membrane.AAC.Parser{out_encapsulation: :none},
-            {:audio_payloader, track_id} => Membrane.MP4.Payloader.AAC,
-            {:audio_cmaf_muxer, track_id} => Membrane.MP4.CMAF.Muxer
+            {:aac_parser, track_id} => %Membrane.AAC.Parser{out_encapsulation: :none}
           },
           links: [
             link_builder
             |> to({:opus_decoder, track_id})
             |> to({:aac_encoder, track_id})
             |> to({:aac_parser, track_id})
-            # |> to({:audio_payloader, track_id})
-            # |> to({:audio_cmaf_muxer, track_id})
             |> via_in(Pad.ref(:input, {:audio, track_id}), options: [encoding: :AAC])
             |> to(:hls_bin)
           ]

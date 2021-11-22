@@ -28,30 +28,25 @@ defmodule Videoroom.Room do
     turn_mock_ip = Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_ip)
     turn_ip = if @mix_env == :prod, do: {0, 0, 0, 0}, else: turn_mock_ip
 
-    sfu_options = [
-      id: room_id,
-      network_options: [
-        stun_servers: Application.fetch_env!(:membrane_videoroom_demo, :stun_servers),
-        turn_servers: Application.fetch_env!(:membrane_videoroom_demo, :turn_servers),
-        integrated_turn_options: [
-          use_integrated_turn:
-            Application.fetch_env!(:membrane_videoroom_demo, :use_integrated_turn),
-          ip: turn_ip,
-          mock_ip: turn_mock_ip,
-          ports_range:
-            Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_port_range)
-        ],
-        dtls_pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
-        dtls_cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
-      ],
-      packet_filters: %{
-        OPUS: [silence_discarder: %Membrane.RTP.SilenceDiscarder{vad_id: 1}]
-      },
-      payload_and_depayload_tracks?: false
+    rtc_engine_options = [
+      id: room_id
     ]
 
-    {:ok, pid} = Membrane.RTC.Engine.start(sfu_options, [])
-    send(pid, {:register, self()})
+    network_options = [
+      stun_servers: Application.fetch_env!(:membrane_videoroom_demo, :stun_servers),
+      turn_servers: Application.fetch_env!(:membrane_videoroom_demo, :turn_servers),
+      integrated_turn_options: [
+        use_integrated_turn:
+          Application.fetch_env!(:membrane_videoroom_demo, :use_integrated_turn),
+        ip: turn_ip,
+        mock_ip: turn_mock_ip,
+        ports_range: Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_port_range)
+      ],
+      dtls_pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
+      dtls_cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
+    ]
+
+    {:ok, pid} = Membrane.RTC.Engine.start(rtc_engine_options, [])
     Engine.register(pid, self())
 
     endpoint = %HLS{
@@ -60,8 +55,7 @@ defmodule Videoroom.Room do
 
     Engine.add_endpoint(pid, "hls", endpoint)
 
-    {:ok,
-     %{rtc_engine: pid, peer_channels: %{}, network_options: rtc_engine_options[:network_options]}}
+    {:ok, %{rtc_engine: pid, peer_channels: %{}, network_options: network_options}}
   end
 
   @impl true

@@ -36,7 +36,7 @@ defmodule Videoroom.Room do
     ]
 
     {:ok, pid} = Membrane.RTC.Engine.start(rtc_engine_options, [])
-    send(pid, {:register, self()})
+    Engine.register(pid, self())
 
     {:ok,
      %{rtc_engine: pid, peer_channels: %{}, network_options: rtc_engine_options[:network_options]}}

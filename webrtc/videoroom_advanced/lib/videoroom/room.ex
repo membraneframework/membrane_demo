@@ -52,9 +52,10 @@ defmodule Videoroom.Room do
 
     {:ok, pid} = Membrane.RTC.Engine.start(sfu_options, [])
     send(pid, {:register, self()})
+    Engine.register(pid, self())
 
     endpoint = %HLS{
-      subdirectory_name: Path.expand("./hls_output")
+      output_directory: Path.expand("./hls_output")
     }
 
     Engine.add_endpoint(pid, "hls", endpoint)

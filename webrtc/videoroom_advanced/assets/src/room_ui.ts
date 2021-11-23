@@ -96,23 +96,23 @@ function toggleVideo() {
     .forEach((track) => (track.enabled = !track.enabled));
 }
 
-function toggleScreensharing(
-  onStart: () => Promise<void>,
-  onEnd: () => Promise<void>
+export function toggleScreensharing(
+  onStart: (() => Promise<void>) | null,
+  onEnd: (() => Promise<void>) | null
 ) {
   return async () => {
     try {
       if (state.isLocalScreensharingOn) {
-        await onEnd();
+        if (onEnd !== null) await onEnd();
         screensharingButton.classList.remove("animate-pulse");
       } else {
-        await onStart();
+        if (onStart !== null) await onStart();
         screensharingButton.classList.add("animate-pulse");
       }
 
       state.isLocalScreensharingOn = !state.isLocalScreensharingOn;
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 }

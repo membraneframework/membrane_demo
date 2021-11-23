@@ -15,6 +15,7 @@ import {
   terminateScreensharing,
   attachScreensharing,
   detachScreensharing,
+  toggleScreensharing,
 } from "./room_ui";
 import {
   MembraneWebRTC,
@@ -139,47 +140,49 @@ export class Room {
   };
 
   public join = () => {
+    const onScreensharingEnd = async () => {
+      if (!this.localScreensharing) return;
+
+      this.localScreensharing.getTracks().forEach((track) => track.stop());
+      this.localScreensharing = null;
+
+      this.webrtc.removeTrack(this.localScreensharingTrackId!);
+      detachScreensharing(LOCAL_PEER_ID);
+    };
+
+    const onScreensharingStart = async () => {
+      if (this.localScreensharing) return;
+
+      this.localScreensharing = await navigator.mediaDevices.getDisplayMedia(
+        SCREENSHARING_MEDIA_CONSTRAINTS
+      );
+
+      this.localScreensharingTrackId = this.webrtc.addTrack(
+        this.localScreensharing.getVideoTracks()[0],
+        this.localScreensharing,
+        { type: "screensharing" }
+      );
+
+      // listen for screensharing stop via browser controls instead of ui buttons
+      this.localScreensharing.getVideoTracks().forEach((track) => {
+        track.onended = () => {
+          toggleScreensharing(null, onScreensharingEnd)();
+        };
+      });
+
+      attachScreensharing(
+        LOCAL_PEER_ID,
+        "(Me) Screen",
+        this.localScreensharing
+      );
+    };
+
     const callbacks = {
       onLeave: this.leave,
-      onScreensharingStart: async () => {
-        if (this.localScreensharing) return;
-
-        this.localScreensharing = await navigator.mediaDevices.getDisplayMedia(
-          SCREENSHARING_MEDIA_CONSTRAINTS
-        );
-
-        this.localScreensharingTrackId = this.webrtc.addTrack(
-          this.localScreensharing.getVideoTracks()[0],
-          this.localScreensharing,
-          { type: "screensharing" }
-        );
-
-        // listen for screensharing stop via browser controls instead of ui buttons
-        this.localScreensharing.getVideoTracks().forEach((track) => {
-          track.onended = () => {
-            this.webrtc.removeTrack(this.localScreensharingTrackId!);
-            this.localScreensharing = null;
-            terminateScreensharing();
-            detachScreensharing(LOCAL_PEER_ID);
-          };
-        });
-
-        attachScreensharing(
-          LOCAL_PEER_ID,
-          "(Me) Screen",
-          this.localScreensharing
-        );
-      },
-      onScreensharingEnd: async () => {
-        if (!this.localScreensharing) return;
-
-        this.localScreensharing.getTracks().forEach((track) => track.stop());
-        this.localScreensharing = null;
-
-        this.webrtc.removeTrack(this.localScreensharingTrackId!);
-        detachScreensharing(LOCAL_PEER_ID);
-      },
+      onScreensharingStart,
+      onScreensharingEnd,
     };
+
     setupControls(
       {
         audioStream: this.localAudioStream,

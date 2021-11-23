@@ -1,6 +1,6 @@
 <div id="room" class="flex flex-col h-screen relative" data-room-id={@room_id}>
     <!-- mb-14 to keep disconnect with absolute value above the videos-->
-    <section class="flex flex-col max-h-screen mb-14">
+    <section class="flex flex-col h-screen mb-14">
         <header class="p-4">
             <div class="flex items-center">
               <img src="/images/logo.png" class="hidden md:block h-8 mr-2" />
@@ -9,23 +9,41 @@
             <h3 class="text-2xl font-semibold text-white mb-2">Room: <%= @room_id %> </h3>
             <div id="participants-list" class="text-xl font-medium text-white"></div>
         </header>
-        <div id="videochat-error" class="VideoChatError" style="display: none;"> </div>
+        <div id="videochat-error" class="flex items-center justify-center h-full px-4 text-white font-bold text-center text-4xl" style="display: none;"> </div>
         <div id="videochat" class="px-2 md:px-20 overflow-y-auto">
-            <template id="video-feed-template">
+            <template id="screensharing-template">
                 <div name="video-feed" class="relative bg-gray-900 shadow rounded-md overflow-hidden h-full w-full ratio-video">
-                    <audio></audio>
-                    <video class="w-full"></video>
+                    <video class="w-full h-full"></video>
                     <div name="video-label" class="absolute text-white text-shadow-lg bottom-0 left-0 p-2">Placeholder</div>
                 </div>
             </template>
-            <div class="flex flex-col justify-center items-center">
-                <div id="videos-grid" class="grid grid-cols-2 grid-flow-row gap-4 justify-items-center"></div>
+            <template id="video-feed-template">
+                <div name="video-feed" class="relative bg-gray-900 shadow rounded-md overflow-hidden h-full w-full ratio-video">
+                    <audio></audio>
+                    <video class="w-full h-full"></video>
+                    <div name="video-label" class="absolute text-white text-shadow-lg bottom-0 left-0 p-2">Placeholder</div>
+                </div>
+            </template>
+            <div class="flex flex-col items-center md:flex-row md:items-start justify-center h-full">
+                <div id="screensharings-grid" class="h-full mb-3 md:mr-3 md:mb-none inactive-screensharing-grid"> </div>
+                <div id="videos-grid" class="grid flex-1 grid-cols-2 grid-flow-row gap-4 justify-items-center h-full"></div>
             </div>
         </div>
-        <div class="h-20"></div>
+        <div class="video-divider"></div>
     </section>
-    <div id="controls", class="flex-none flex justify-center h-8 pb-2 absolute inset-x-0 bottom-2">
-        <button id="disconnect" class="text-white text-2xl font-normal hover:text-gray-400">Disconnect</button>
+    <div id="controls", class="flex-none flex justify-center h-auto p-2 absolute inset-x-0 bottom-0 rounded-md ">
+        <%= for {id, svg, hover} <- [{"mic-control","mic-line.svg", "Mute or unmute the microphone"}, {"camera-control", "camera-line.svg", "Turn on/off the camera"}, {"screensharing-control", "computer-line.svg", "Start or stop the screensharing"}] do %>
+            <button disabled id={id} class="group relative flex justify-center items-center z-10 mr-2 p-3 rounded-full transition duration-300 ease-in-out bg-gray-700 hover:bg-gray-900 disabled:bg-gray-700 disabled:pointer-events-none">
+                <img class="invert group-disabled:invert-50" height="26" width="26" src={static_path(@conn, "/svg/#{svg}")} />
+                <div class="transition-all duration-500 absolute bottom-0 flex flex-col opacity-0 items-center invisible mb-14 group-hover:visible group-hover:opacity-80">
+                  <span class="relative z-50 w-32 p-2 text-xs leading-none rounded-md text-white whitespace-no-wrap bg-black shadow-lg"><%= hover %></span>
+                  <div class="w-3 h-3 -mt-2 rotate-45 bg-black"></div>
+                </div>
+            </button>
+        <% end %>
+        <button id="leave-control" class="mr-2 p-3 rounded-full transition duration-300 ease-in-out bg-gray-700 hover:bg-gray-900">
+            <img class="black-to-red transform rotate-135" height="26" width="26" src={static_path(@conn, "/svg/phone-fill.svg")} />
+        </button>
     </div>
 </div>
 

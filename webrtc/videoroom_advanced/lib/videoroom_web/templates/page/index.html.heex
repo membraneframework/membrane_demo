@@ -30,3 +30,15 @@
       </div>
   </form>
 </div>
+
+<script>
+  // when form gets submitted save the display name to local storage so it is available on refresh
+  document.getElementById("form").addEventListener("submit", () => {
+    const displayName = document.querySelector("[name='display_name").value;
+    localStorage.setItem("displayName", displayName);
+    document.getElementById("form").submit();
+  });
+
+  // load the display name from local storage
+  document.querySelector("[name='display_name").value = localStorage.getItem("displayName") || "";
+</script>

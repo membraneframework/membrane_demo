@@ -2,6 +2,24 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .active-screensharing-grid {
+    @apply grid flex-3 gap-4;
+  }
+
+  .inactive-screensharing-grid {
+    @apply hidden;
+  }
+
+  .videos-grid-with-screensharing {
+    height: auto !important;
+  }
+}
+
 .flip-horizontally {
   transform: scaleX(-1);
 }
@@ -12,4 +30,14 @@
 
 .ratio-video {
   aspect-ratio: 16 / 9;
+}
+
+.video-divider {
+  height: 70px;
+  min-height: 70px;
+}
+
+.black-to-red {
+  filter: invert(17%) sepia(81%) saturate(3321%) hue-rotate(352deg)
+    brightness(96%) contrast(99%);
 }

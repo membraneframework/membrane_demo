@@ -1,4 +1,9 @@
-import { MEDIA_CONSTRAINTS, LOCAL_PEER_ID } from "./consts";
+import {
+  LOCAL_PEER_ID,
+  AUDIO_MEDIA_CONSTRAINTS,
+  VIDEO_MEDIA_CONSTRAINTS,
+  SCREENSHARING_MEDIA_CONSTRAINTS,
+} from "./consts";
 import {
   addVideoElement,
   getRoomId,
@@ -6,7 +11,11 @@ import {
   setErrorMessage,
   setParticipantsList,
   attachStream,
-  setupDisconnectButton,
+  setupControls,
+  terminateScreensharing,
+  attachScreensharing,
+  detachScreensharing,
+  toggleScreensharing,
 } from "./room_ui";
 import {
   MembraneWebRTC,
@@ -19,7 +28,11 @@ import { parse } from "query-string";
 export class Room {
   private peers: Peer[] = [];
   private displayName: string;
-  private localStream: MediaStream | undefined;
+  private localAudioStream: MediaStream | null = null;
+  private localVideoStream: MediaStream | null = null;
+  private localScreensharing: MediaStream | null = null;
+  private localScreensharingTrackId: string | null = null;
+
   private webrtc: MembraneWebRTC;
 
   private socket;
@@ -42,9 +55,17 @@ export class Room {
         },
         onConnectionError: setErrorMessage,
         onJoinSuccess: (peerId, peersInRoom) => {
-          this.localStream!.getTracks().forEach((track) =>
-            this.webrtc.addTrack(track, this.localStream!)
-          );
+          this.localAudioStream
+            ?.getTracks()
+            .forEach((track) =>
+              this.webrtc.addTrack(track, this.localAudioStream!)
+            );
+
+          this.localVideoStream
+            ?.getTracks()
+            .forEach((track) =>
+              this.webrtc.addTrack(track, this.localVideoStream!)
+            );
 
           this.peers = peersInRoom;
           this.peers.forEach((peer) => {
@@ -56,10 +77,22 @@ export class Room {
           throw `Peer denied.`;
         },
         onTrackReady: ({ stream, peer, metadata }) => {
-          attachStream(stream!, peer.id);
+          if (metadata.type === "screensharing") {
+            attachScreensharing(
+              peer.id,
+              `(${peer.metadata.displayName}) Screen`,
+              stream!
+            );
+          } else {
+            attachStream(peer.id, { audioStream: stream, videoStream: stream });
+          }
         },
         onTrackAdded: (ctx) => {},
-        onTrackRemoved: (ctx) => {},
+        onTrackRemoved: (ctx) => {
+          if (ctx.metadata.type === "screensharing") {
+            detachScreensharing(ctx.peer.id);
+          }
+        },
         onPeerJoined: (peer) => {
           this.peers.push(peer);
           this.updateParticipantsList();
@@ -74,35 +107,90 @@ export class Room {
       },
     });
 
-    this.webrtcChannel.on("mediaEvent", (event) =>
+    this.webrtcChannel.on("mediaEvent", (event: any) =>
       this.webrtc.receiveMediaEvent(event.data)
     );
   }
 
   public init = async () => {
     try {
-      this.localStream = await navigator.mediaDevices.getUserMedia(
-        MEDIA_CONSTRAINTS
+      this.localAudioStream = await navigator.mediaDevices.getUserMedia(
+        AUDIO_MEDIA_CONSTRAINTS
       );
     } catch (error) {
-      console.error(error);
-      setErrorMessage(
-        "Failed to setup video room, make sure to grant camera and microphone permissions"
+      console.error("Error while getting local audio stream", error);
+    }
+
+    try {
+      this.localVideoStream = await navigator.mediaDevices.getUserMedia(
+        VIDEO_MEDIA_CONSTRAINTS
       );
-      throw "error";
+    } catch (error) {
+      console.error("Error while getting local video stream", error);
     }
 
     addVideoElement(LOCAL_PEER_ID, "Me", true);
-    attachStream(this.localStream!, LOCAL_PEER_ID);
+
+    attachStream(LOCAL_PEER_ID, {
+      audioStream: this.localAudioStream,
+      videoStream: this.localVideoStream,
+    });
 
     await this.phoenixChannelPushResult(this.webrtcChannel.join());
   };
 
   public join = () => {
-    setupDisconnectButton(() => {
-      this.leave();
-      window.location.replace("");
-    });
+    const onScreensharingEnd = async () => {
+      if (!this.localScreensharing) return;
+
+      this.localScreensharing.getTracks().forEach((track) => track.stop());
+      this.localScreensharing = null;
+
+      this.webrtc.removeTrack(this.localScreensharingTrackId!);
+      detachScreensharing(LOCAL_PEER_ID);
+    };
+
+    const onScreensharingStart = async () => {
+      if (this.localScreensharing) return;
+
+      this.localScreensharing = await navigator.mediaDevices.getDisplayMedia(
+        SCREENSHARING_MEDIA_CONSTRAINTS
+      );
+
+      this.localScreensharingTrackId = this.webrtc.addTrack(
+        this.localScreensharing.getVideoTracks()[0],
+        this.localScreensharing,
+        { type: "screensharing" }
+      );
+
+      // listen for screensharing stop via browser controls instead of ui buttons
+      this.localScreensharing.getVideoTracks().forEach((track) => {
+        track.onended = () => {
+          toggleScreensharing(null, onScreensharingEnd)();
+        };
+      });
+
+      attachScreensharing(
+        LOCAL_PEER_ID,
+        "(Me) Screen",
+        this.localScreensharing
+      );
+    };
+
+    const callbacks = {
+      onLeave: this.leave,
+      onScreensharingStart,
+      onScreensharingEnd,
+    };
+
+    setupControls(
+      {
+        audioStream: this.localAudioStream,
+        videoStream: this.localVideoStream,
+      },
+      callbacks
+    );
+
     this.webrtc.join({ displayName: this.displayName });
   };
 

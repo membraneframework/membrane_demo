@@ -115,7 +115,7 @@ defmodule Videoroom.Room do
       end
     }
 
-    Engine.accept_peer(rtc_engine, peer_id, endpoint)
+    Engine.accept_peer(rtc_engine, peer_id, endpoint, peer_node)
     {:noreply, state}
   end
 

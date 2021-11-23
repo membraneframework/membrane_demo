@@ -5,8 +5,7 @@ services:
     environment:
       VIRTUAL_HOST: "demo-webrtc-videoroom-advanced.membraneframework.org"
       LETSENCRYPT_HOST: "demo-webrtc-videoroom-advanced.membraneframework.org"
-      USE_INTEGRATED_TURN: "true"
-      INTEGRATED_TURN_IP: "135.181.203.255"
+      USE_INTEGRATED_TURN: "false"
 
   nginx-proxy:
     image: jwilder/nginx-proxy:0.8.0

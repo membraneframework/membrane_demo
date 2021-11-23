@@ -76,7 +76,6 @@ export class Room {
           throw `Peer denied.`;
         },
         onTrackReady: ({ stream, peer, metadata }) => {
-          console.log("Track Ready", stream, peer, metadata);
           if (metadata.type === "screensharing") {
             attachScreensharing(
               peer.id,

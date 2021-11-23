@@ -3,8 +3,8 @@ services:
   videoroom_advanced:
     image: membraneframework/demo_webrtc_videoroom_advanced:latest
     environment:
-      VIRTUAL_HOST: "demo-webrtc-videoroom-advanced.membraneframework.org"
-      LETSENCRYPT_HOST: "demo-webrtc-videoroom-advanced.membraneframework.org"
+      VIRTUAL_HOST: "videoroom.membraneframework.org"
+      LETSENCRYPT_HOST: "videoroom.membraneframework.org"
       USE_INTEGRATED_TURN: "false"
 
   nginx-proxy:

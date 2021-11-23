@@ -11,9 +11,21 @@ module.exports = {
       "md:grid-cols-4",
     ],
   },
-  theme: {},
+  theme: {
+    rotate: {
+      135: "135deg",
+    },
+    extend: {
+      invert: {
+        50: ".50",
+      },
+    },
+  },
   variants: {
-    extend: {},
+    extend: {
+      opacity: ["disabled"],
+    },
+    backgroundColor: ({ after }) => after(["disabled", "group-disabled"]),
   },
   plugins: [require("@tailwindcss/aspect-ratio")],
 };

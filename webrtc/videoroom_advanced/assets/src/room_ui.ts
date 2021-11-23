@@ -1,27 +1,112 @@
+const audioButton = document.getElementById("mic-control") as HTMLButtonElement;
+const videoButton = document.getElementById(
+  "camera-control"
+) as HTMLButtonElement;
+const screensharingButton = document.getElementById(
+  "screensharing-control"
+) as HTMLButtonElement;
+const leaveButton = document.getElementById(
+  "leave-control"
+) as HTMLButtonElement;
+
+// set of local streams used to control local user's streams
+let localStreams: MediaStreams | null;
+
+interface SetupCallbacks {
+  onLeave: () => void;
+}
+
+type MediaStreams = {
+  audioStream: MediaStream | null;
+  videoStream: MediaStream | null;
+};
+
+export function setupControls(
+  mediaStreams: MediaStreams,
+  callbacks: SetupCallbacks
+) {
+  localStreams = mediaStreams;
+  audioButton.dataset.enabled = "true";
+  videoButton.dataset.enabled = "true";
+
+  const isAudioAvailable =
+    (mediaStreams.audioStream?.getAudioTracks()?.length || 0) > 0;
+  const isVideoAvailable =
+    (mediaStreams.videoStream?.getVideoTracks()?.length || 0) > 0;
+
+  audioButton.onclick = toggleAudio;
+  audioButton.disabled = !isAudioAvailable;
+  audioButton.querySelector("img")!.src = iconFor("audio", isAudioAvailable);
+
+  videoButton.onclick = toggleVideo;
+  videoButton.disabled = !isVideoAvailable;
+  videoButton.querySelector("img")!.src = iconFor("video", isVideoAvailable);
+
+  leaveButton.onclick = () => {
+    callbacks.onLeave();
+    window.location.reload();
+  };
+}
+
+function iconFor(type: "audio" | "video", enabled: boolean): string {
+  if (type === "audio") {
+    return !enabled ? "/svg/mic-off-fill.svg" : "/svg/mic-line.svg";
+  } else if (type === "video") {
+    return !enabled ? "/svg/camera-off-line.svg" : "/svg/camera-line.svg";
+  }
+  return "";
+}
+
+function toggleAudio() {
+  if (!localStreams?.audioStream) return;
+
+  const icon = audioButton.querySelector("img")!;
+  const enabled = audioButton.dataset.enabled === "true";
+
+  icon.src = iconFor("audio", !enabled);
+  audioButton.dataset.enabled = enabled ? "false" : "true";
+
+  localStreams.audioStream
+    .getAudioTracks()
+    .forEach((track) => (track.enabled = !track.enabled));
+}
+
+function toggleVideo() {
+  if (!localStreams?.videoStream) return;
+
+  const icon = videoButton.querySelector("img")!;
+  const enabled = videoButton.dataset.enabled === "true";
+
+  icon.src = iconFor("video", !enabled);
+  videoButton.dataset.enabled = enabled ? "false" : "true";
+
+  localStreams.videoStream
+    ?.getVideoTracks()
+    .forEach((track) => (track.enabled = !track.enabled));
+}
+
 export function getRoomId(): string {
   return document.getElementById("room")!.dataset.roomId!;
 }
 
-export function setupDisconnectButton(fun) {
-  const disconnectButton = document.getElementById(
-    "disconnect"
-  )! as HTMLButtonElement;
-  disconnectButton.onclick = fun;
-}
-
-function elementId(peerId: string, type: "video" | "audio" | "feed") {
+function elementId(
+  peerId: string,
+  type: "video" | "audio" | "feed" | "screensharing"
+) {
   return `${type}-${peerId}`;
 }
 
-export function attachStream(stream: MediaStream, peerId: string): void {
-  const videoId = elementId(peerId, "video");
+export function attachStream(peerId: string, streams: MediaStreams): void {
   const audioId = elementId(peerId, "audio");
+  const videoId = elementId(peerId, "video");
 
-  let video = document.getElementById(videoId) as HTMLVideoElement;
+  const { audioStream, videoStream } = streams;
+
   let audio = document.getElementById(audioId) as HTMLAudioElement;
+  let video = document.getElementById(videoId) as HTMLVideoElement;
 
-  video.srcObject = stream;
-  audio.srcObject = stream;
+  audio.srcObject = audioStream;
+  video.srcObject = videoStream;
 }
 
 export function addVideoElement(
@@ -129,6 +214,6 @@ export function setErrorMessage(
   const errorContainer = document.getElementById("videochat-error");
   if (errorContainer) {
     errorContainer.innerHTML = message;
-    errorContainer.style.display = "block";
+    errorContainer.style.display = "flex";
   }
 }

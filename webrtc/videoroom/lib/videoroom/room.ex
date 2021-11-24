@@ -48,6 +48,7 @@ defmodule Videoroom.Room do
   @impl true
   def handle_info({_rtc_engine, {:rtc_media_event, :broadcast, event}}, state) do
     for {_peer_id, pid} <- state.peer_channels, do: send(pid, {:media_event, event})
+
     {:noreply, state}
   end
 
@@ -83,6 +84,7 @@ defmodule Videoroom.Room do
       end
 
     endpoint = %WebRTC{
+      owner: self(),
       stun_servers: state.network_options[:stun_servers] || [],
       turn_servers: state.network_options[:turn_servers] || [],
       handshake_opts: handshake_opts,
@@ -96,7 +98,13 @@ defmodule Videoroom.Room do
       end
     }
 
-    Engine.accept_peer(rtc_engine, peer_id, endpoint, peer_node)
+    Engine.accept_peer(rtc_engine, peer_id)
+
+    :ok =
+      Engine.add_endpoint(rtc_engine, endpoint,
+        peer_id: peer_id,
+        node: peer_node
+      )
 
     {:noreply, state}
   end
@@ -108,7 +116,7 @@ defmodule Videoroom.Room do
 
   @impl true
   def handle_info({:media_event, _from, _event} = msg, state) do
-    send(state.rtc_engine, msg)
+    Engine.receive_media_event(state.rtc_engine, msg)
     {:noreply, state}
   end
 

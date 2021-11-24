@@ -53,7 +53,7 @@ defmodule Videoroom.Room do
       output_directory: Path.expand("./hls_output")
     }
 
-    Engine.add_endpoint(pid, "hls", endpoint)
+    Engine.add_endpoint(pid, endpoint, endpoint_id: "hls", node: node())
 
     {:ok, %{rtc_engine: pid, peer_channels: %{}, network_options: network_options}}
   end
@@ -68,6 +68,7 @@ defmodule Videoroom.Room do
   @impl true
   def handle_info({_rtc_engine, {:rtc_media_event, :broadcast, event}}, state) do
     for {_peer_id, pid} <- state.peer_channels, do: send(pid, {:media_event, event})
+
     {:noreply, state}
   end
 
@@ -102,6 +103,7 @@ defmodule Videoroom.Room do
       end
 
     endpoint = %WebRTC{
+      owner: self(),
       stun_servers: state.network_options[:stun_servers] || [],
       turn_servers: state.network_options[:turn_servers] || [],
       handshake_opts: handshake_opts,
@@ -115,7 +117,9 @@ defmodule Videoroom.Room do
       end
     }
 
-    Engine.accept_peer(rtc_engine, peer_id, endpoint, peer_node)
+    Engine.accept_peer(rtc_engine, peer_id)
+    Engine.add_endpoint(rtc_engine, endpoint, peer_id: peer_id, node: peer_node)
+
     {:noreply, state}
   end
 
@@ -126,7 +130,7 @@ defmodule Videoroom.Room do
 
   @impl true
   def handle_info({:media_event, _from, _event} = msg, state) do
-    send(state.sfu_engine, msg)
+    Engine.receive_media_event(state.rtc_engine, msg)
     {:noreply, state}
   end
 
@@ -136,7 +140,7 @@ defmodule Videoroom.Room do
       state.peer_channels
       |> Enum.find(fn {_peer_id, peer_channel_pid} -> peer_channel_pid == pid end)
 
-    send(state.sfu_engine, {:remove_peer, peer_id})
+    Engine.send_remove_peer(state.rtc_engine, peer_id)
     {_elem, state} = pop_in(state, [:peer_channels, peer_id])
     {:noreply, state}
   end

@@ -24,9 +24,8 @@ defmodule VideoRoom.MixProject do
       {:membrane_core, github: "membraneframework/membrane_core", override: true},
       {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
       {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
-      {:membrane_webrtc_plugin,
-       github: "membraneframework/membrane_webrtc_plugin", override: true},
-      {:ex_sdp, github: "membraneframework/ex_sdp", override: true},
+      {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin"},
+      {:ex_libnice, github: "membraneframework/ex_libnice", branch: "error-msg", override: true},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},
@@ -35,11 +34,18 @@ defmodule VideoRoom.MixProject do
       {:jason, "~> 1.2"},
       {:phoenix_inline_svg, "~> 1.4"},
       {:uuid, "~> 1.1"},
+      
       # Otel
       {:opentelemetry, "~> 1.0.0-rc.3", override: true},
       {:opentelemetry_api, "~> 1.0.0-rc.3.2", override: true},
       {:opentelemetry_exporter, "~> 1.0.0-rc.3"},
-      {:opentelemetry_zipkin, "~> 0.4.0"}
+      {:opentelemetry_zipkin, "~> 0.4.0"},
+      
+      # Benchmarks
+      {:beamchmark, "~> 0.1.0", only: :benchmark},
+      {:stampede, github: "geometerio/stampede-elixir", only: :benchmark},
+      {:httpoison, "~> 1.8", only: :benchmark},
+      {:poison, "~> 5.0.0", only: :benchmark}
     ]
   end
 

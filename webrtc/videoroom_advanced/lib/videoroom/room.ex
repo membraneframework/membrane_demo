@@ -103,14 +103,7 @@ defmodule Videoroom.Room do
       turn_servers: state.network_options[:turn_servers] || [],
       integrated_turn_options: state.network_options[:integrated_turn_options],
       handshake_opts: handshake_opts,
-      log_metadata: [peer_id: peer_id],
-      filter_codecs: fn {rtp, fmtp} ->
-        case rtp.encoding do
-          "opus" -> true
-          "H264" -> fmtp.profile_level_id === 0x42E01F
-          _unsupported_codec -> false
-        end
-      end
+      log_metadata: [peer_id: peer_id]
     }
 
     Engine.accept_peer(rtc_engine, peer_id)

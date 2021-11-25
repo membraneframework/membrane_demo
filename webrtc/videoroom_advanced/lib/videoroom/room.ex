@@ -5,6 +5,8 @@ defmodule Videoroom.Room do
 
   require Membrane.Logger
 
+  @mix_env Mix.env()
+
   def start(opts) do
     GenServer.start(__MODULE__, [], opts)
   end
@@ -21,6 +23,9 @@ defmodule Videoroom.Room do
   def init(opts) do
     Membrane.Logger.info("Spawning room process: #{inspect(self())}")
 
+    prepared_ip = Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_ip)
+    ip = if @mix_env == :prod, do: {0, 0, 0, 0}, else: prepared_ip
+
     sfu_options = [
       id: opts[:room_id],
       network_options: [
@@ -29,7 +34,8 @@ defmodule Videoroom.Room do
         integrated_turn_options: %{
           use_integrated_turn:
             Application.fetch_env!(:membrane_videoroom_demo, :use_integrated_turn),
-          ip: Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_ip),
+          ip: ip,
+          prepared_ip: prepared_ip,
           ports_range: Application.fetch_env!(:membrane_videoroom_demo, :turn_ports_range)
         },
         dtls_pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),

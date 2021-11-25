@@ -23,6 +23,9 @@ defmodule VideoRoom.MixProject do
     [
       {:membrane_core, github: "membraneframework/membrane_core", override: true},
       {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
+      {:membrane_webrtc_plugin, github:  "membraneframework/membrane_webrtc_plugin", branch: "outbound-rtcp", override: true},
+      {:membrane_rtp_plugin, github:  "membraneframework/membrane_rtp_plugin", branch: "outband-rtcp", override: true},
+      {:ex_sdp, github: "membraneframework/ex_sdp", override: true},
       {:esbuild, "~> 0.1", runtime: Mix.env() == :dev},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},

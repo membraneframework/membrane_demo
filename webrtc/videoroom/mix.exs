@@ -35,7 +35,11 @@ defmodule VideoRoom.MixProject do
       {:phoenix_live_reload, "~> 1.2"},
       {:jason, "~> 1.2"},
       {:phoenix_inline_svg, "~> 1.4"},
-      {:uuid, "~> 1.1"}
+      {:uuid, "~> 1.1"},
+      {:ex_sdp, github: "membraneframework/ex_sdp", override: true},
+      {:stampede, github: "geometerio/stampede-elixir"},
+      #{:beamchmark, path: "~/Repos/beamchmark"}
+      {:beamchmark, github: "membraneframework/beamchmark", branch: :dev}
     ]
   end
 

@@ -1,4 +1,4 @@
 import { Room } from "./room";
 
-let room = new Room();
+const room = new Room();
 room.join();

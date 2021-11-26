@@ -79,18 +79,17 @@ export class Room {
     );
   }
 
-  public join = () => {
-    this.init()
-      .then(() => {
-        setupDisconnectButton(() => {
-          this.leave();
-          window.location.replace("");
-        });
-        this.webrtc.join({ displayName: this.displayName });
-      })
-      .catch((error) => {
-        console.error("Error during room's initialization:", error);
+  public join = async () => {
+    try {
+      await this.init();
+      setupDisconnectButton(() => {
+        this.leave();
+        window.location.replace("");
       });
+      this.webrtc.join({ displayName: this.displayName });
+    } catch (error) {
+      console.error("Error while joining to the room:", error);
+    }
   };
 
   private init = async () => {

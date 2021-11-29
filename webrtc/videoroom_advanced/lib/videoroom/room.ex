@@ -25,7 +25,6 @@ defmodule Videoroom.Room do
 
     prepared_ip = Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_ip)
     ip = if @mix_env == :prod, do: {0, 0, 0, 0}, else: prepared_ip
-
     sfu_options = [
       id: opts[:room_id],
       network_options: [

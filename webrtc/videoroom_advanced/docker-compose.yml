@@ -3,14 +3,14 @@ services:
   videoroom_advanced:
     image: membraneframework/demo_webrtc_videoroom_advanced:latest
     environment:
-      VIRTUAL_HOST: "videoroom.membraneframework.org"
-      LETSENCRYPT_HOST: "videoroom.membraneframework.org"
+      VIRTUAL_HOST: "sandbox-webrtc-videoroom-advanced.membraneframework.org"
+      LETSENCRYPT_HOST: "sandbox-webrtc-videoroom-advanced.membraneframework.org"
       USE_INTEGRATED_TURN: "true"
-      INTEGRATED_TURN_IP: "135.181.203.255"
+      INTEGRATED_TURN_IP: "95.217.133.165"
       INTEGRATED_TURN_PORT_RANGE: "50000-59999"
     ports: 
-      - "135.181.203.255:50000-59999:50000-59999/tcp"
-      - "135.181.203.255:50000-59999:50000-59999/udp"
+      - "95.217.133.165:50000-59999:50000-59999/tcp"
+      - "95.217.133.165:50000-59999:50000-59999/udp"
 
   nginx-proxy:
     image: jwilder/nginx-proxy:0.8.0

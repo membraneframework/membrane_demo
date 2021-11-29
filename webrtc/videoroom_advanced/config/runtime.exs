@@ -74,8 +74,8 @@ defmodule ConfigParser do
 
   def parse_integrated_turn_port_range(range) do
     with [str1, str2] <- String.split(range, "-"),
-         from when from >= 0 and from <= 65_535 <- String.to_integer(str1),
-         to when to >= 0 and to <= 65_535 and from <= to <- String.to_integer(str2) do
+         from when from in 0..65_535 <- String.to_integer(str1),
+         to when to in from..65_535 and from <= to <- String.to_integer(str2) do
       {from, to}
     else
       _else ->

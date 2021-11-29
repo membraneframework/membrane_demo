@@ -7,10 +7,10 @@ services:
       LETSENCRYPT_HOST: "videoroom.membraneframework.org"
       USE_INTEGRATED_TURN: "true"
       INTEGRATED_TURN_IP: "95.217.133.165"
-      INTEGRATED_TURN_PORT_RANGE: "50000-59999"
+      INTEGRATED_TURN_PORT_RANGE: "59500-59999"
     ports: 
-      - "50000-59999:50000-59999/tcp"
-      - "50000-59999:50000-59999/udp"
+      - "59500-59999:59500-59999/tcp"
+      - "59500-59999:59500-59999/udp"
 
   nginx-proxy:
     image: jwilder/nginx-proxy:0.8.0

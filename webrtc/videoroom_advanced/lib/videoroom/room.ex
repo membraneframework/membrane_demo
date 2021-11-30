@@ -23,8 +23,8 @@ defmodule Videoroom.Room do
   def init(opts) do
     Membrane.Logger.info("Spawning room process: #{inspect(self())}")
 
-    prepared_ip = Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_ip)
-    ip = if @mix_env == :prod, do: {0, 0, 0, 0}, else: prepared_ip
+    turn_mock_ip = Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_ip)
+    turn_ip = if @mix_env == :prod, do: {0, 0, 0, 0}, else: turn_mock_ip
 
     sfu_options = [
       id: opts[:room_id],
@@ -34,8 +34,8 @@ defmodule Videoroom.Room do
         integrated_turn_options: %{
           use_integrated_turn:
             Application.fetch_env!(:membrane_videoroom_demo, :use_integrated_turn),
-          ip: ip,
-          prepared_ip: prepared_ip,
+          ip: turn_ip,
+          mock_ip: turn_mock_ip,
           ports_range: Application.fetch_env!(:membrane_videoroom_demo, :turn_ports_range)
         },
         dtls_pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),

@@ -79,7 +79,20 @@ export class Room {
     );
   }
 
-  public init = async () => {
+  public join = async () => {
+    try {
+      await this.init();
+      setupDisconnectButton(() => {
+        this.leave();
+        window.location.replace("");
+      });
+      this.webrtc.join({ displayName: this.displayName });
+    } catch (error) {
+      console.error("Error while joining to the room:", error);
+    }
+  };
+
+  private init = async () => {
     try {
       this.localStream = await navigator.mediaDevices.getUserMedia(
         MEDIA_CONSTRAINTS
@@ -96,14 +109,6 @@ export class Room {
     attachStream(this.localStream!, LOCAL_PEER_ID);
 
     await this.phoenixChannelPushResult(this.webrtcChannel.join());
-  };
-
-  public join = () => {
-    setupDisconnectButton(() => {
-      this.leave();
-      window.location.replace("");
-    });
-    this.webrtc.join({ displayName: this.displayName });
   };
 
   private leave = () => {

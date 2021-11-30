@@ -54,7 +54,7 @@ jobs:
       - name: Change Docker-Compose address before deployment
         id: sed_it_again
         run: sed -i -e "6,9 s/videoroom/sandbox-videoroom/" webrtc/videoroom_advanced/docker-compose.yml
-        
+
       - name: Deploy to Swarm
         id: deploy
         uses: sagebind/docker-swarm-deploy-action@v2

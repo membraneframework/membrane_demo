@@ -22,11 +22,10 @@ defmodule VideoRoom.MixProject do
   defp deps do
     [
       {:membrane_core, github: "membraneframework/membrane_core", override: true},
-      # {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
-      {:membrane_rtc_engine, path: "~/dev/membrane_rtc_engine"},
-      # {:membrane_webrtc_plugin,github: "membraneframework/membrane_webrtc_plugin", branch: "otel", override: true},
-      {:membrane_webrtc_plugin, path: "~/dev/membrane_webrtc_plugin", override: true},
-      {:esbuild, "~> 0.1", runtime: Mix.env() == :dev},
+      {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
+      {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
+      {:membrane_webrtc_plugin,
+       github: "membraneframework/membrane_webrtc_plugin", branch: "otel", override: true},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},

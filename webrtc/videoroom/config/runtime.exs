@@ -5,9 +5,6 @@ config :membrane_videoroom_demo, VideoRoomWeb.Endpoint, [
   {:http, [otp_app: :membrane_videoroom_demo, port: System.get_env("SERVER_PORT") || 4000]}
 ]
 
-# You can also supply opentelemetry resources using environment variables, eg.:
-# OTEL_RESOURCE_ATTRIBUTES=service.name=name,service.namespace=namespace
-
 otel_state = :local
 
 config :opentelemetry, :resource,

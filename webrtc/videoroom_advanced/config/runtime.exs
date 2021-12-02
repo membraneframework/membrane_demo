@@ -71,6 +71,21 @@ defmodule ConfigParser do
       {:error, :einval} -> addr
     end
   end
+
+  def parse_integrated_turn_port_range(range) do
+    with [str1, str2] <- String.split(range, "-"),
+         from when from in 0..65_535 <- String.to_integer(str1),
+         to when to in from..65_535 and from <= to <- String.to_integer(str2) do
+      {from, to}
+    else
+      _else ->
+        raise("""
+        Bad INTEGRATED_TURN_PORT_RANGE enviroment variable value. Expected "from-to", where `from` and `to` \
+        are numbers between 0 and 65535 and `from` is not bigger than `to`, got: \
+        #{inspect(range)}
+        """)
+    end
+  end
 end
 
 config :membrane_videoroom_demo,
@@ -80,7 +95,10 @@ config :membrane_videoroom_demo,
   use_integrated_turn:
     System.get_env("USE_INTEGRATED_TURN", "false") |> ConfigParser.parse_use_integrated_turn(),
   integrated_turn_ip:
-    System.get_env("INTEGRATED_TURN_IP", "127.0.0.1") |> ConfigParser.parse_integrated_turn_ip()
+    System.get_env("INTEGRATED_TURN_IP", "127.0.0.1") |> ConfigParser.parse_integrated_turn_ip(),
+  integrated_turn_port_range:
+    System.get_env("INTEGRATED_TURN_PORT_RANGE", "50000-59999")
+    |> ConfigParser.parse_integrated_turn_port_range()
 
 protocol = if System.get_env("USE_TLS") == "true", do: :https, else: :http
 

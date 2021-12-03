@@ -21,12 +21,16 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      {:membrane_core,
-       github: "membraneframework/membrane_core", branch: "auto-demand", override: true},
+      {
+        :membrane_core,
+        #  github: "membraneframework/membrane_core", branch: "auto-demand", override: true},
+        path: "../../../membrane_core", override: true
+      },
       {:membrane_rtc_engine,
        github: "membraneframework/membrane_rtc_engine", branch: "auto-demand"},
       {:membrane_funnel_plugin,
        github: "membraneframework/membrane_funnel_plugin", branch: "auto-demand", override: true},
+      {:ex_sdp, "~> 0.6.0", override: true},
       {:esbuild, "~> 0.1", runtime: Mix.env() == :dev},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},

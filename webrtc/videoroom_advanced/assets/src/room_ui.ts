@@ -274,9 +274,9 @@ function replaceGridLayoutStyles(grid: HTMLElement, videosPerRow: number) {
 }
 
 function setupVideoFeed(peerId: string, label: string, isLocalVideo: boolean) {
-  const copy = (document.querySelector(
-    "#video-feed-template"
-  ) as HTMLTemplateElement).content.cloneNode(true) as Element;
+  const copy = (
+    document.querySelector("#video-feed-template") as HTMLTemplateElement
+  ).content.cloneNode(true) as Element;
   const feed = copy.querySelector("div[name='video-feed']") as HTMLDivElement;
   const audio = feed.querySelector("audio") as HTMLAudioElement;
   const video = feed.querySelector("video") as HTMLVideoElement;
@@ -299,9 +299,9 @@ function setupVideoFeed(peerId: string, label: string, isLocalVideo: boolean) {
 }
 
 function setupScreensharing(peerId: string, label: string) {
-  const copy = (document.querySelector(
-    "#screensharing-template"
-  ) as HTMLTemplateElement).content.cloneNode(true) as Element;
+  const copy = (
+    document.querySelector("#screensharing-template") as HTMLTemplateElement
+  ).content.cloneNode(true) as Element;
   const feed = copy.querySelector("div[name='video-feed']") as HTMLDivElement;
   const video = feed.querySelector("video") as HTMLVideoElement;
   const videoLabel = feed.querySelector(

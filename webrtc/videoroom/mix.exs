@@ -29,7 +29,6 @@ defmodule VideoRoom.MixProject do
        github: "membraneframework/membrane_webrtc_plugin",
        branch: "modular_rtc_engine",
        override: true},
-      {:ex_sdp, github: "membraneframework/ex_sdp", override: true},
       {:membrane_http_adaptive_stream_plugin,
        github: "membraneframework/membrane_http_adaptive_stream_plugin"},
       {:membrane_mp4_plugin, "~> 0.9.0", override: true},

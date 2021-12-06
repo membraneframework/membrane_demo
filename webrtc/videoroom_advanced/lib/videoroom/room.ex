@@ -3,7 +3,7 @@ defmodule Videoroom.Room do
 
   use GenServer
 
-  alias Membrane.RTC.Engine.Endpoint.{WebRTC, HLS}
+  alias Membrane.RTC.Engine.Endpoint.WebRTC
   alias Membrane.RTC.Engine
   require Membrane.Logger
 
@@ -48,12 +48,6 @@ defmodule Videoroom.Room do
 
     {:ok, pid} = Membrane.RTC.Engine.start(rtc_engine_options, [])
     Engine.register(pid, self())
-
-    endpoint = %HLS{
-      output_directory: Path.expand("./hls_output")
-    }
-
-    Engine.add_endpoint(pid, endpoint, endpoint_id: "hls", node: node())
 
     {:ok, %{rtc_engine: pid, peer_channels: %{}, network_options: network_options}}
   end
@@ -103,6 +97,7 @@ defmodule Videoroom.Room do
       end
 
     endpoint = %WebRTC{
+      ice_name: peer_id,
       owner: self(),
       stun_servers: state.network_options[:stun_servers] || [],
       turn_servers: state.network_options[:turn_servers] || [],

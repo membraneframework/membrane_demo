@@ -84,6 +84,8 @@ defmodule Videoroom.Room do
       end
 
     endpoint = %WebRTC{
+      ice_name: peer_id,
+      extensions: %{},
       owner: self(),
       stun_servers: state.network_options[:stun_servers] || [],
       turn_servers: state.network_options[:turn_servers] || [],

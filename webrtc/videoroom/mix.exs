@@ -23,7 +23,7 @@ defmodule VideoRoom.MixProject do
     [
       {:membrane_core, github: "membraneframework/membrane_core", override: true},
       {:esbuild, "~> 0.1", runtime: Mix.env() == :dev},
-      {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
+      {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine", branch: "optional"},
       {:membrane_webrtc_plugin,
        github: "membraneframework/membrane_webrtc_plugin", override: true},
       {:plug_cowboy, "~> 2.0"},
@@ -34,13 +34,7 @@ defmodule VideoRoom.MixProject do
       {:poison, "~> 3.1"},
       {:jason, "~> 1.2"},
       {:phoenix_inline_svg, "~> 1.4"},
-      {:uuid, "~> 1.1"},
-      {:membrane_http_adaptive_stream_plugin,
-       github: "membraneframework/membrane_http_adaptive_stream_plugin"},
-      {:membrane_mp4_plugin, "~> 0.9.0", override: true},
-      {:membrane_aac_plugin, "~> 0.8.0"},
-      {:membrane_aac_format, "~> 0.3.0", override: true},
-      {:membrane_aac_fdk_plugin, "~> 0.8.0"}
+      {:uuid, "~> 1.1"}
     ]
   end
 

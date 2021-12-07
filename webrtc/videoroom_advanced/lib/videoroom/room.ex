@@ -101,6 +101,7 @@ defmodule Videoroom.Room do
       owner: self(),
       stun_servers: state.network_options[:stun_servers] || [],
       turn_servers: state.network_options[:turn_servers] || [],
+      integrated_turn_options: state.network_options[:integrated_turn_options],
       handshake_opts: handshake_opts,
       log_metadata: [peer_id: peer_id],
       filter_codecs: fn {rtp, fmtp} ->

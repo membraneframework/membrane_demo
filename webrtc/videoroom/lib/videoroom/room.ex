@@ -3,7 +3,7 @@ defmodule Videoroom.Room do
 
   use GenServer
 
-  alias Membrane.RTC.Engine.Endpoint.{WebRTC, HLS}
+  alias Membrane.RTC.Engine.Endpoint.WebRTC
   alias Membrane.RTC.Engine
   require Membrane.Logger
 

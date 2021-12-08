@@ -7,7 +7,6 @@ defmodule Videoroom.Room do
   alias Membrane.RTC.Engine.Message
   alias Membrane.RTC.Engine.Endpoint.WebRTC
   require Membrane.Logger
-  alias Membrane.WebRTC.Extension.{Mid, Rid}
 
   def start(init_arg, opts) do
     GenServer.start(__MODULE__, init_arg, opts)
@@ -94,7 +93,6 @@ defmodule Videoroom.Room do
       turn_servers: state.network_options[:turn_servers] || [],
       handshake_opts: handshake_opts,
       log_metadata: [peer_id: peer_id],
-      webrtc_extensions: [Mid, Rid],
       filter_codecs: fn {rtp, fmtp} ->
         case rtp.encoding do
           "opus" -> true

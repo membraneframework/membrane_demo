@@ -20,7 +20,6 @@ defmodule WebRTCToHLS.MixProject do
 
   defp deps do
     [
-      {:membrane_common_c, "~> 0.9.0", override: true},
       {:membrane_core, github: "membraneframework/membrane_core", override: true},
       {:membrane_rtc_engine,
        github: "membraneframework/membrane_rtc_engine", branch: "simulcast"},
@@ -35,13 +34,15 @@ defmodule WebRTCToHLS.MixProject do
       {:poison, "~> 3.1"},
       {:jason, "~> 1.2"},
       {:membrane_file_plugin, "~> 0.5.0"},
+      # HLS_Endpoint deps
       {:membrane_http_adaptive_stream_plugin,
-       github: "membraneframework/membrane_http_adaptive_stream_plugin"},
-      {:membrane_mp4_plugin, "~> 0.9.0"},
-      {:membrane_opus_plugin, "~> 0.7.0"},
-      {:membrane_aac_plugin, "~> 0.8.0"},
+       github: "membraneframework/membrane_http_adaptive_stream_plugin", override: true},
+      {:membrane_mp4_plugin, "~> 0.9.0", override: true},
+      {:membrane_h264_ffmpeg_plugin, "~> 0.14.0", override: true},
+      {:membrane_aac_plugin, "~> 0.8.0", override: true},
+      {:membrane_opus_plugin, "~> 0.8.0", override: true},
       {:membrane_aac_format, "~> 0.3.0", override: true},
-      {:membrane_aac_fdk_plugin, "~> 0.8.0"}
+      {:membrane_aac_fdk_plugin, "~> 0.9.0", override: true}
     ]
   end
 end

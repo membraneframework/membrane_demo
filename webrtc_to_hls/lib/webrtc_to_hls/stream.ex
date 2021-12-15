@@ -7,6 +7,7 @@ defmodule WebRTCToHLS.Stream do
   alias Membrane.RTC.Engine.Endpoint.{WebRTC, HLS}
   alias Membrane.RTC.Engine
   alias Membrane.WebRTC.Extension.{Mid, Rid}
+  alias WebRTCToHLS.StorageCleanup
 
   def start(channel_pid) do
     GenServer.start(__MODULE__, [channel_pid])
@@ -28,11 +29,28 @@ defmodule WebRTCToHLS.Stream do
 
     Engine.register(pid, self())
 
-    endpoint = %HLS{}
+    StorageCleanup.clean_unused_directories()
+
+    endpoint = %HLS{
+      owner: self(),
+      output_directory:
+        Application.fetch_env!(:membrane_webrtc_to_hls_demo, :hls_output_mount_path)
+    }
 
     :ok = Engine.add_endpoint(pid, endpoint, endpoint_id: "hls", node: node())
 
     {:ok, %{rtc_engine: pid, channel_pid: channel_pid}}
+  end
+
+  @impl true
+  def handle_info({:playlist_playable, :audio, _playlist_idl}, state) do
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:playlist_playable, :video, playlist_idl}, state) do
+    send(state.channel_pid, {:playlist_playable, playlist_idl})
+    {:noreply, state}
   end
 
   @impl true
@@ -108,12 +126,6 @@ defmodule WebRTCToHLS.Stream do
   @impl true
   def handle_info({:media_event, _from, _event} = msg, state) do
     send(state.rtc_engine, msg)
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_info({_rtc_engine, {:playlist_playable, _playlist_idl} = msg}, state) do
-    send(state.channel_pid, msg)
     {:noreply, state}
   end
 

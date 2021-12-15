@@ -130,7 +130,7 @@ config :membrane_videoroom_demo, VideoRoomWeb.Endpoint, [
   {protocol, args}
 ]
 
-otel_state = :local
+otel_state = :zipkin
 
 config :opentelemetry, :resource,
   service: [
@@ -154,6 +154,13 @@ exporter =
            {"x-honeycomb-dataset", "experiments"},
            {"x-honeycomb-team", System.get_env("HONEYCOMB")}
          ]
+       }}
+
+    :zipkin ->
+      {:opentelemetry_zipkin,
+       %{
+         address: ["http://localhost:9411/api/v2/spans"],
+         local_endpoint: %{service_name: "VideoRoom"}
        }}
 
     true ->

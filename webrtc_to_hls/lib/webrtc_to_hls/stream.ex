@@ -130,8 +130,14 @@ defmodule WebRTCToHLS.Stream do
   end
 
   @impl true
+  def handle_info({:cleanup, _clean_function, stream_id}, state) do
+    StorageCleanup.remove_directory(stream_id)
+    {:stop, :normal, state}
+  end
+
+  @impl true
   def handle_info({:DOWN, _ref, :process, pid, _reason}, %{channel_pid: pid} = state) do
     Membrane.Pipeline.stop_and_terminate(state.rtc_engine)
-    {:stop, :normal, state}
+    {:noreply, state}
   end
 end

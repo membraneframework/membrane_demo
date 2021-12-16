@@ -1,7 +1,11 @@
 defmodule WebRTCToHLS.StorageCleanup do
   alias WebRTCToHLS.Helpers
 
-  @spec clean_unused_directories() :: none()
+  @spec remove_directory(directory_name :: String.t()) :: [binary()]
+  def remove_directory(directory_name),
+    do: directory_name |> Helpers.hls_output_path() |> File.rm_rf!()
+
+  @spec clean_unused_directories() :: :ok
   def clean_unused_directories() do
     all_paths = list_storage_directories() |> MapSet.new()
 

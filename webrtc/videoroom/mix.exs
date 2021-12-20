@@ -23,7 +23,7 @@ defmodule VideoRoom.MixProject do
     [
       {:membrane_core, github: "membraneframework/membrane_core", override: true},
       {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
-      {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
+      {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine", branch: "otel"},
       {:membrane_webrtc_plugin,
        github: "membraneframework/membrane_webrtc_plugin", branch: "otel", override: true},
       {:ex_sdp, github: "membraneframework/ex_sdp", override: true},

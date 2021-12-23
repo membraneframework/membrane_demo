@@ -3,8 +3,9 @@ defmodule Videoroom.Room do
 
   use GenServer
 
-  alias Membrane.RTC.Engine.Endpoint.WebRTC
   alias Membrane.RTC.Engine
+  alias Membrane.RTC.Engine.Message
+  alias Membrane.RTC.Engine.Endpoint.WebRTC
   require Membrane.Logger
 
   def start(init_arg, opts) do
@@ -46,25 +47,25 @@ defmodule Videoroom.Room do
   end
 
   @impl true
-  def handle_info({_rtc_engine, {:rtc_media_event, :broadcast, event}}, state) do
-    for {_peer_id, pid} <- state.peer_channels, do: send(pid, {:media_event, event})
+  def handle_info(%Message.MediaEvent{to: :broadcast, data: data}, state) do
+    for {_peer_id, pid} <- state.peer_channels, do: send(pid, {:media_event, data})
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({_rtc_engine, {:rtc_media_event, to, event}}, state) do
+  def handle_info(%Message.MediaEvent{to: to, data: data}, state) do
     if state.peer_channels[to] != nil do
-      send(state.peer_channels[to], {:media_event, event})
+      send(state.peer_channels[to], {:media_event, data})
     end
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({rtc_engine, {:new_peer, peer_id, _metadata}}, state) do
+  def handle_info(%Message.NewPeer{rtc_engine: rtc_engine, peer: peer}, state) do
     # get node the peer with peer_id is running on
-    peer_channel_pid = Map.get(state.peer_channels, peer_id)
+    peer_channel_pid = Map.get(state.peer_channels, peer.id)
     peer_node = node(peer_channel_pid)
 
     handshake_opts =
@@ -84,27 +85,20 @@ defmodule Videoroom.Room do
       end
 
     endpoint = %WebRTC{
-      ice_name: peer_id,
+      ice_name: peer.id,
       extensions: %{},
       owner: self(),
       stun_servers: state.network_options[:stun_servers] || [],
       turn_servers: state.network_options[:turn_servers] || [],
       handshake_opts: handshake_opts,
-      log_metadata: [peer_id: peer_id],
-      filter_codecs: fn {rtp, fmtp} ->
-        case rtp.encoding do
-          "opus" -> true
-          "H264" -> fmtp.profile_level_id === 0x42E01F
-          _unsupported_codec -> false
-        end
-      end
+      log_metadata: [peer_id: peer.id]
     }
 
-    Engine.accept_peer(rtc_engine, peer_id)
+    Engine.accept_peer(rtc_engine, peer.id)
 
     :ok =
       Engine.add_endpoint(rtc_engine, endpoint,
-        peer_id: peer_id,
+        peer_id: peer.id,
         node: peer_node
       )
 
@@ -112,7 +106,8 @@ defmodule Videoroom.Room do
   end
 
   @impl true
-  def handle_info({_rtc_engine, {:peer_left, _peer_id}}, state) do
+  def handle_info(%Message.PeerLeft{peer: peer}, state) do
+    Membrane.Logger.info("Peer #{inspect(peer.id)} left RTC Engine")
     {:noreply, state}
   end
 
@@ -128,7 +123,7 @@ defmodule Videoroom.Room do
       state.peer_channels
       |> Enum.find(fn {_peer_id, peer_channel_pid} -> peer_channel_pid == pid end)
 
-    send(state.rtc_engine, {:remove_peer, peer_id})
+    Engine.remove_peer(state.rtc_engine, peer_id)
     {_elem, state} = pop_in(state, [:peer_channels, peer_id])
     {:noreply, state}
   end

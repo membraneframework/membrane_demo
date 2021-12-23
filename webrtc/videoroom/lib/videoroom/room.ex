@@ -64,6 +64,7 @@ defmodule Videoroom.Room do
 
   @impl true
   def handle_info(%Message.NewPeer{rtc_engine: rtc_engine, peer: peer}, state) do
+    Membrane.Logger.info("New peer: #{inspect(peer)}. Accepting.")
     # get node the peer with peer_id is running on
     peer_channel_pid = Map.get(state.peer_channels, peer.id)
     peer_node = node(peer_channel_pid)

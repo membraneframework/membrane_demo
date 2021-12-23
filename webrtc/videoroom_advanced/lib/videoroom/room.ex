@@ -78,6 +78,7 @@ defmodule Videoroom.Room do
 
   @impl true
   def handle_info(%Message.NewPeer{rtc_engine: rtc_engine, peer: peer}, state) do
+    Membrane.Logger.info("New peer: #{inspect(peer)}. Accepting.")
     peer_channel_pid = Map.get(state.peer_channels, peer.id)
     peer_node = node(peer_channel_pid)
 
@@ -108,7 +109,7 @@ defmodule Videoroom.Room do
     }
 
     Engine.accept_peer(rtc_engine, peer.id)
-    Engine.add_endpoint(rtc_engine, endpoint, peer_id: peer.id, node: peer_node)
+    :ok = Engine.add_endpoint(rtc_engine, endpoint, peer_id: peer.id, node: peer_node)
 
     {:noreply, state}
   end

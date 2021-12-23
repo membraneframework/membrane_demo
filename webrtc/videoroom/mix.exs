@@ -27,6 +27,7 @@ defmodule VideoRoom.MixProject do
       {:membrane_webrtc_plugin,
        github: "membraneframework/membrane_webrtc_plugin", override: true},
       {:ex_sdp, github: "membraneframework/ex_sdp", override: true},
+      {:ex_libnice, "~> 0.7.0", override: true},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},

@@ -25,7 +25,7 @@ defmodule VideoRoom.MixProject do
       {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
       {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
       {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin"},
-      {:ex_libnice, github: "membraneframework/ex_libnice", branch: "error-msg", override: true},
+      {:ex_libnice, "~> 0.7.0", override: true},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},

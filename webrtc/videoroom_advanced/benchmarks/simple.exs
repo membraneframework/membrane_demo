@@ -29,27 +29,27 @@ defmodule SimpleScenario do
     browsers = floor(@peers / @peers_per_browser)
     remaining_peers = rem(@peers, @peers_per_browser)
 
-    if browsers >= 1 do
-      for _browser <- 0..(browsers - 1), into: [] do
-        task = Task.async(fn -> Stampede.start({SimpleMustang, mustang_options}, options) end)
-        Process.sleep(@browser_delay)
-        task
-      end
-      |> then(fn tasks ->
-        # if there are any remaining peers create for them separate browser
-        if remaining_peers != 0 do
-          options = %{options | count: remaining_peers}
-
-          tasks ++
-            [Task.async(fn -> Stampede.start({SimpleMustang, mustang_options}, options) end)]
-        else
-          tasks
-        end
-      end)
-      |> Task.await_many(:infinity)
-    else
+    if browsers < 1 do
       raise("Bad browsers number: #{inspect(browsers)}. It has to be at least 1.")
     end
+
+    for _browser <- 0..(browsers - 1), into: [] do
+      task = Task.async(fn -> Stampede.start({SimpleMustang, mustang_options}, options) end)
+      Process.sleep(@browser_delay)
+      task
+    end
+    |> then(fn tasks ->
+      # if there are any remaining peers create for them separate browser
+      if remaining_peers != 0 do
+        options = %{options | count: remaining_peers}
+
+        tasks ++
+          [Task.async(fn -> Stampede.start({SimpleMustang, mustang_options}, options) end)]
+      else
+        tasks
+      end
+    end)
+    |> Task.await_many(:infinity)
   end
 end
 

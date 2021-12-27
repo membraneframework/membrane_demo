@@ -21,8 +21,7 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      {:membrane_core, github: "membraneframework/membrane_core", override: true},
-      {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
+      {:membrane_core, "~> 0.8.0", override: true},
       {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
       {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin"},
       {:ex_libnice, "~> 0.7.0", override: true},
@@ -34,6 +33,7 @@ defmodule VideoRoom.MixProject do
       {:jason, "~> 1.2"},
       {:phoenix_inline_svg, "~> 1.4"},
       {:uuid, "~> 1.1"},
+      {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
 
       # Otel
       {:opentelemetry, "~> 1.0.0-rc.3", override: true},

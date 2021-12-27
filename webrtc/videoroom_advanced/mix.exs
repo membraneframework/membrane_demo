@@ -34,13 +34,13 @@ defmodule VideoRoom.MixProject do
       {:jason, "~> 1.2"},
       {:phoenix_inline_svg, "~> 1.4"},
       {:uuid, "~> 1.1"},
-      
+
       # Otel
       {:opentelemetry, "~> 1.0.0-rc.3", override: true},
       {:opentelemetry_api, "~> 1.0.0-rc.3.2", override: true},
       {:opentelemetry_exporter, "~> 1.0.0-rc.3"},
       {:opentelemetry_zipkin, "~> 0.4.0"},
-      
+
       # Benchmarks
       {:beamchmark, "~> 0.1.0", only: :benchmark},
       {:stampede, github: "geometerio/stampede-elixir", only: :benchmark},

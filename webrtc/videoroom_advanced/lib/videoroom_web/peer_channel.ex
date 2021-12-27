@@ -31,7 +31,7 @@ defmodule VideoRoomWeb.PeerChannel do
     peer_id = "#{UUID.uuid4()}"
     # TODO handle crash of room?
     Process.monitor(room_pid)
-    Videoroom.Room.add_peer_channel(room_pid, self(), peer_id)
+    send(room_pid, {:add_peer_channel, self(), peer_id})
 
     {:ok,
      Phoenix.Socket.assign(socket, %{room_id: room_id, room_pid: room_pid, peer_id: peer_id})}

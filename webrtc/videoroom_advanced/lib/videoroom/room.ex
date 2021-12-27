@@ -17,10 +17,6 @@ defmodule Videoroom.Room do
     GenServer.start_link(__MODULE__, [], opts)
   end
 
-  def add_peer_channel(room, peer_channel_pid, peer_id) do
-    GenServer.call(room, {:add_peer_channel, peer_channel_pid, peer_id})
-  end
-
   @impl true
   def init(room_id) do
     Membrane.Logger.info("Spawning room process: #{inspect(self())}")
@@ -53,10 +49,10 @@ defmodule Videoroom.Room do
   end
 
   @impl true
-  def handle_call({:add_peer_channel, peer_channel_pid, peer_id}, _from, state) do
+  def handle_info({:add_peer_channel, peer_channel_pid, peer_id}, state) do
     state = put_in(state, [:peer_channels, peer_id], peer_channel_pid)
     Process.monitor(peer_channel_pid)
-    {:reply, :ok, state}
+    {:noreply, state}
   end
 
   @impl true

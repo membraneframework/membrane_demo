@@ -66,7 +66,6 @@ export class Room {
           addVideoElement(peer.id, peer.metadata.displayName, false);
         },
         onPeerLeft: (peer) => {
-          console.log("Peer left");
           this.peers = this.peers.filter((p) => p.id !== peer.id);
           removeVideoElement(peer.id);
           this.updateParticipantsList();

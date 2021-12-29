@@ -25,7 +25,6 @@ defmodule VideoRoom.MixProject do
       {:membrane_webrtc_plugin, "~> 0.2.0"},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},
-      {:telemetry, "~> 0.4.0", override: true},
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_view, "~> 0.16.0"},
       {:phoenix_live_reload, "~> 1.2"},

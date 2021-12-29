@@ -2,6 +2,7 @@
 *.iml
 priv/certs/*.pem
 priv/static/assets
+priv/static/js
 
 # The directory Mix will write compiled artifacts to.
 /_build/

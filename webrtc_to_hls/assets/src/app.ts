@@ -98,7 +98,6 @@ const setup = async () => {
     webrtc.receiveMediaEvent(event.data)
   );
   webrtcChannel.on("playlistPlayable", ({ playlistId }) => {
-    console.log("HLS playlist has become playable: ", playlistId);
     setPlayerInfo(playlistId);
   });
 };

@@ -6,6 +6,7 @@ defmodule WebRTCToHLS.Stream do
   require Membrane.Logger
   alias Membrane.RTC.Engine.Endpoint.{WebRTC, HLS}
   alias Membrane.RTC.Engine
+  alias Membrane.RTC.Engine.Message
   alias Membrane.WebRTC.Extension.{Mid, Rid}
   alias WebRTCToHLS.StorageCleanup
 
@@ -29,12 +30,11 @@ defmodule WebRTCToHLS.Stream do
 
     Engine.register(pid, self())
 
-    StorageCleanup.clean_unused_directories()
-
     endpoint = %HLS{
       owner: self(),
       output_directory:
-        Application.fetch_env!(:membrane_webrtc_to_hls_demo, :hls_output_mount_path)
+        Application.fetch_env!(:membrane_webrtc_to_hls_demo, :hls_output_mount_path),
+      framerate: 24
     }
 
     :ok = Engine.add_endpoint(pid, endpoint, endpoint_id: "hls", node: node())
@@ -54,20 +54,13 @@ defmodule WebRTCToHLS.Stream do
   end
 
   @impl true
-  def handle_info({_rtc_engine, {:rtc_media_event, :broadcast, event}}, state) do
-    # just a single channel broadcast?
-    send(state.channel_pid, {:media_event, event})
+  def handle_info(%Message.MediaEvent{to: _, data: data}, state) do
+    send(state.channel_pid, {:media_event, data})
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({_rtc_engine, {:rtc_media_event, _to, event}}, state) do
-    send(state.channel_pid, {:media_event, event})
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_info({rtc_engine, {:new_peer, peer_id, _metadata}}, state) do
+  def handle_info(%Message.NewPeer{rtc_engine: rtc_engine, peer: peer}, state) do
     network_options = [
       stun_servers: [
         %{server_addr: "stun.l.google.com", server_port: 19_302}
@@ -94,13 +87,13 @@ defmodule WebRTCToHLS.Stream do
       end
 
     endpoint = %WebRTC{
-      ice_name: peer_id,
+      ice_name: peer.id,
       extensions: %{},
       owner: self(),
       stun_servers: network_options[:stun_servers] || [],
       turn_servers: network_options[:turn_servers] || [],
       handshake_opts: handshake_opts,
-      log_metadata: [peer_id: peer_id],
+      log_metadata: [peer_id: peer.id],
       webrtc_extensions: [Mid, Rid],
       filter_codecs: fn {rtp, fmtp} ->
         case rtp.encoding do
@@ -111,21 +104,21 @@ defmodule WebRTCToHLS.Stream do
       end
     }
 
-    Engine.accept_peer(rtc_engine, peer_id)
+    Engine.accept_peer(rtc_engine, peer.id)
 
-    :ok = Engine.add_endpoint(rtc_engine, endpoint, peer_id: peer_id, node: node())
+    :ok = Engine.add_endpoint(rtc_engine, endpoint, peer_id: peer.id, node: node())
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({_rtc_engine, {:peer_left, _peer_id}}, state) do
+  def handle_info(%Message.PeerLeft{peer: _peer}, state) do
     {:noreply, state}
   end
 
   @impl true
   def handle_info({:media_event, _from, _event} = msg, state) do
-    send(state.rtc_engine, msg)
+    Engine.receive_media_event(state.rtc_engine, msg)
     {:noreply, state}
   end
 

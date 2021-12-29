@@ -4,8 +4,6 @@ config :membrane_webrtc_to_hls_demo, hls_output_mount_path: "output"
 
 config :phoenix, :json_library, Jason
 
-config :ex_libnice, impl: NIF
-
 config :membrane_webrtc_to_hls_demo, WebRTCToHLSWeb.Endpoint,
   pubsub_server: WebRTCToHLS.PubSub,
   http: [

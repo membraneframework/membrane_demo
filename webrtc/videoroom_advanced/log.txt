@@ -1,0 +1,8 @@
+==> membrane_caps_video_h264
+Compiling 1 file (.ex)
+Generated membrane_caps_video_h264 app
+==> ex_sdp
+Compiling 22 files (.ex)
+
+BREAK: (a)bort (A)bort with dump (c)ontinue (p)roc info (i)nfo
+       (l)oaded (v)ersion (k)ill (D)b-tables (d)istribution

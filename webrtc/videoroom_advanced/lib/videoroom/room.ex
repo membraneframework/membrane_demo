@@ -3,8 +3,9 @@ defmodule Videoroom.Room do
 
   use GenServer
 
-  alias Membrane.RTC.Engine.Endpoint.WebRTC
   alias Membrane.RTC.Engine
+  alias Membrane.RTC.Engine.Message
+  alias Membrane.RTC.Engine.Endpoint.WebRTC
   require Membrane.Logger
 
   @mix_env Mix.env()
@@ -56,24 +57,25 @@ defmodule Videoroom.Room do
   end
 
   @impl true
-  def handle_info({_rtc_engine, {:rtc_media_event, :broadcast, event}}, state) do
-    for {_peer_id, pid} <- state.peer_channels, do: send(pid, {:media_event, event})
+  def handle_info(%Message.MediaEvent{to: :broadcast, data: data}, state) do
+    for {_peer_id, pid} <- state.peer_channels, do: send(pid, {:media_event, data})
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({_rtc_engine, {:rtc_media_event, to, event}}, state) do
+  def handle_info(%Message.MediaEvent{to: to, data: data}, state) do
     if state.peer_channels[to] != nil do
-      send(state.peer_channels[to], {:media_event, event})
+      send(state.peer_channels[to], {:media_event, data})
     end
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({rtc_engine, {:new_peer, peer_id, _metadata}}, state) do
-    peer_channel_pid = Map.get(state.peer_channels, peer_id)
+  def handle_info(%Message.NewPeer{rtc_engine: rtc_engine, peer: peer}, state) do
+    Membrane.Logger.info("New peer: #{inspect(peer)}. Accepting.")
+    peer_channel_pid = Map.get(state.peer_channels, peer.id)
     peer_node = node(peer_channel_pid)
 
     handshake_opts =
@@ -93,23 +95,24 @@ defmodule Videoroom.Room do
       end
 
     endpoint = %WebRTC{
-      ice_name: peer_id,
+      ice_name: peer.id,
       owner: self(),
       stun_servers: state.network_options[:stun_servers] || [],
       turn_servers: state.network_options[:turn_servers] || [],
       integrated_turn_options: state.network_options[:integrated_turn_options],
       handshake_opts: handshake_opts,
-      log_metadata: [peer_id: peer_id]
+      log_metadata: [peer_id: peer.id]
     }
 
-    Engine.accept_peer(rtc_engine, peer_id)
-    Engine.add_endpoint(rtc_engine, endpoint, peer_id: peer_id, node: peer_node)
+    Engine.accept_peer(rtc_engine, peer.id)
+    :ok = Engine.add_endpoint(rtc_engine, endpoint, peer_id: peer.id, node: peer_node)
 
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({_sfu_engine, {:peer_left, _peer_id}}, state) do
+  def handle_info(%Message.PeerLeft{peer: peer}, state) do
+    Membrane.Logger.info("Peer #{inspect(peer.id)} left RTC Engine")
     {:noreply, state}
   end
 
@@ -125,7 +128,7 @@ defmodule Videoroom.Room do
       state.peer_channels
       |> Enum.find(fn {_peer_id, peer_channel_pid} -> peer_channel_pid == pid end)
 
-    Engine.send_remove_peer(state.rtc_engine, peer_id)
+    Engine.remove_peer(state.rtc_engine, peer_id)
     {_elem, state} = pop_in(state, [:peer_channels, peer_id])
     {:noreply, state}
   end

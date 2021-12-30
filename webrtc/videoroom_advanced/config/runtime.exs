@@ -130,7 +130,7 @@ config :membrane_videoroom_demo, VideoRoomWeb.Endpoint, [
   {protocol, args}
 ]
 
-otel_state = :zipkin
+otel_state = :purge
 
 config :opentelemetry, :resource,
   service: [
@@ -138,8 +138,6 @@ config :opentelemetry, :resource,
     namespace: "membrane"
   ],
   tracer: :otel_tracer_default
-
-config :opentelemetry, text_map_propagators: [:baggage, :tracer_context]
 
 exporter =
   case otel_state do
@@ -163,7 +161,7 @@ exporter =
          local_endpoint: %{service_name: "VideoRoom"}
        }}
 
-    true ->
+    _ ->
       {}
   end
 

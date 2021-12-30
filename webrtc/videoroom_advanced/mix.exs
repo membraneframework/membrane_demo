@@ -37,7 +37,13 @@ defmodule VideoRoom.MixProject do
       {:opentelemetry, "~> 0.6.0", override: true},
       {:opentelemetry_api, "~> 0.6.0", override: true},
       {:opentelemetry_exporter, "~> 0.6.0"},
-      {:opentelemetry_zipkin, "~> 0.4.0"}
+      {:opentelemetry_zipkin, "~> 0.4.0"},
+
+      # Benchmarks
+      {:beamchmark, "~> 0.1.0", only: :benchmark},
+      {:stampede, github: "geometerio/stampede-elixir", only: :benchmark},
+      {:httpoison, "~> 1.8", only: :benchmark},
+      {:poison, "~> 5.0.0", only: :benchmark}
     ]
   end
 

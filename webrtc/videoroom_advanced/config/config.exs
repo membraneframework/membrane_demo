@@ -1,5 +1,7 @@
 import Config
 
+config :membrane_videoroom_demo, hls_output_mount_path: "output"
+
 config :phoenix, :json_library, Jason
 
 config :esbuild,

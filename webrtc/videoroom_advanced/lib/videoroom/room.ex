@@ -5,7 +5,7 @@ defmodule Videoroom.Room do
 
   alias Membrane.RTC.Engine
   alias Membrane.RTC.Engine.Message
-  alias Membrane.RTC.Engine.Endpoint.WebRTC
+  alias Membrane.RTC.Engine.Endpoint.{HLS, WebRTC}
   require Membrane.Logger
 
   @mix_env Mix.env()
@@ -45,6 +45,14 @@ defmodule Videoroom.Room do
 
     {:ok, pid} = Membrane.RTC.Engine.start(rtc_engine_options, [])
     Engine.register(pid, self())
+
+    hls_endpoint = %HLS{
+      owner: self(),
+      output_directory:
+        Application.fetch_env!(:membrane_videoroom_demo, :hls_output_mount_path),
+      framerate: 24
+    }
+    :ok = Engine.add_endpoint(pid, hls_endpoint, endpoint_id: "hls")
 
     {:ok, %{rtc_engine: pid, peer_channels: %{}, network_options: network_options}}
   end
@@ -101,7 +109,14 @@ defmodule Videoroom.Room do
       turn_servers: state.network_options[:turn_servers] || [],
       integrated_turn_options: state.network_options[:integrated_turn_options],
       handshake_opts: handshake_opts,
-      log_metadata: [peer_id: peer.id]
+      log_metadata: [peer_id: peer.id],
+      filter_codecs: fn {rtp, fmtp} ->
+        case rtp.encoding do
+          "opus" -> true
+          "H264" -> fmtp.profile_level_id === 0x42E01F
+          _unsupported_codec -> false
+        end
+      end
     }
 
     Engine.accept_peer(rtc_engine, peer.id)
@@ -130,6 +145,12 @@ defmodule Videoroom.Room do
 
     Engine.remove_peer(state.rtc_engine, peer_id)
     {_elem, state} = pop_in(state, [:peer_channels, peer_id])
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(msg, state) do
+    Membrane.Logger.warn("Unknown notificatin: #{inspect(msg)}")
     {:noreply, state}
   end
 end

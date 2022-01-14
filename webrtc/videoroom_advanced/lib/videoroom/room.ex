@@ -36,8 +36,12 @@ defmodule Videoroom.Room do
       integrated_turn_options: [
         ip: turn_ip,
         mock_ip: turn_mock_ip,
-        ports_range: Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_port_range)
+        ports_range:
+          Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_port_range),
+        cert_file: Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_cert_file)
       ],
+      integrated_turn_domain:
+        Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_domain),
       dtls_pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
       dtls_cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
     ]
@@ -100,6 +104,7 @@ defmodule Videoroom.Room do
       turn_servers: state.network_options[:turn_servers] || [],
       use_integrated_turn: state.network_options[:use_integrated_turn],
       integrated_turn_options: state.network_options[:integrated_turn_options],
+      integrated_turn_domain: state.network_options[:integrated_turn_domain],
       handshake_opts: handshake_opts,
       log_metadata: [peer_id: peer.id]
     }

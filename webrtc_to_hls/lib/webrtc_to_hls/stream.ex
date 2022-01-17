@@ -34,7 +34,7 @@ defmodule WebRTCToHLS.Stream do
       owner: self(),
       output_directory:
         Application.fetch_env!(:membrane_webrtc_to_hls_demo, :hls_output_mount_path),
-      framerate: 24
+      framerate: {24, 1}
     }
 
     :ok = Engine.add_endpoint(pid, endpoint, endpoint_id: "hls", node: node())

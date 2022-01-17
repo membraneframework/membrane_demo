@@ -23,14 +23,19 @@ defmodule VideoRoom.MixProject do
     [
       {
         :membrane_rtc_engine,
-        #  github: "membraneframework/membrane_rtc_engine",
-        #  branch: "removing-libnice"},
-        path: "/Users/feliks/membrane/membrane_rtc_engine"
+        github: "membraneframework/membrane_rtc_engine", branch: "implement-tls-turn"
       },
       {
         :membrane_webrtc_plugin,
-        #  github: "membraneframework/membrane_webrtc_plugin", branch: "removing-libnice"
-        path: "/Users/feliks/membrane/membrane_webrtc_plugin", override: true
+        github: "membraneframework/membrane_webrtc_plugin",
+        branch: "removing-libnice",
+        override: true
+      },
+      {
+        :membrane_ice_plugin,
+        github: "membraneframework/membrane_turn_plugin",
+        branch: "implement-tls-turn",
+        override: true
       },
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},

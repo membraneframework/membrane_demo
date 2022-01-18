@@ -99,7 +99,8 @@ config :membrane_videoroom_demo,
   integrated_turn_port_range:
     System.get_env("INTEGRATED_TURN_PORT_RANGE", "50000-59999")
     |> ConfigParser.parse_integrated_turn_port_range(),
-  integrated_turn_cert_file: System.get_env("INTEGRATED_TURN_CERT_FILE"),
+  integrated_turn_pkey: System.get_env("INTEGRATED_TURN_PKEY"),
+  integrated_turn_cert: System.get_env("INTEGRATED_TURN_CERT"),
   integrated_turn_domain: System.get_env("VIRTUAL_HOST")
 
 protocol = if System.get_env("USE_TLS") == "true", do: :https, else: :http

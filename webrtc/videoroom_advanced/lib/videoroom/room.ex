@@ -36,6 +36,12 @@ defmodule Videoroom.Room do
       id: room_id
     ]
 
+    turn_cert_file =
+      case Application.fetch_env(:membrane_videoroom_demo, :integrated_turn_certfile) do
+        {:ok, val} -> val
+        :error -> nil
+      end
+
     network_options = [
       stun_servers: Application.fetch_env!(:membrane_videoroom_demo, :stun_servers),
       turn_servers: Application.fetch_env!(:membrane_videoroom_demo, :turn_servers),
@@ -45,7 +51,7 @@ defmodule Videoroom.Room do
         mock_ip: turn_mock_ip,
         ports_range:
           Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_port_range),
-        cert_file: VideoRoom.Application.get_cert_file_path()
+        cert_file: turn_cert_file
       ],
       integrated_turn_domain:
         Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_domain),

@@ -21,16 +21,8 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      {
-        :membrane_rtc_engine,
-        github: "membraneframework/membrane_rtc_engine", branch: "removing-libnice"
-      },
-      {
-        :membrane_webrtc_plugin,
-        github: "membraneframework/membrane_webrtc_plugin",
-        branch: "removing-libnice",
-        override: true
-      },
+      {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
+      {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin"},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},

@@ -43,7 +43,7 @@ export class Room {
         onConnectionError: setErrorMessage,
         onJoinSuccess: (peerId, peersInRoom) => {
           this.localStream!.getTracks().forEach((track) =>
-            this.webrtc.addTrack(track, this.localStream!)
+            this.webrtc.addTrack(track, this.localStream!, {})
           );
 
           this.peers = peersInRoom;
@@ -74,7 +74,7 @@ export class Room {
       },
     });
 
-    this.webrtcChannel.on("mediaEvent", (event) =>
+    this.webrtcChannel.on("mediaEvent", (event: any) =>
       this.webrtc.receiveMediaEvent(event.data)
     );
   }

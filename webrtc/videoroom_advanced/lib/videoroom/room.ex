@@ -32,9 +32,8 @@ defmodule Videoroom.Room do
     network_options = [
       stun_servers: Application.fetch_env!(:membrane_videoroom_demo, :stun_servers),
       turn_servers: Application.fetch_env!(:membrane_videoroom_demo, :turn_servers),
+      use_integrated_turn: Application.fetch_env!(:membrane_videoroom_demo, :use_integrated_turn),
       integrated_turn_options: [
-        use_integrated_turn:
-          Application.fetch_env!(:membrane_videoroom_demo, :use_integrated_turn),
         ip: turn_ip,
         mock_ip: turn_mock_ip,
         ports_range: Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_port_range)
@@ -99,6 +98,7 @@ defmodule Videoroom.Room do
       owner: self(),
       stun_servers: state.network_options[:stun_servers] || [],
       turn_servers: state.network_options[:turn_servers] || [],
+      use_integrated_turn: state.network_options[:use_integrated_turn],
       integrated_turn_options: state.network_options[:integrated_turn_options],
       handshake_opts: handshake_opts,
       log_metadata: [peer_id: peer.id]

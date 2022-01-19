@@ -25,12 +25,7 @@ defmodule VideoRoom.MixProject do
         :membrane_rtc_engine,
         github: "membraneframework/membrane_rtc_engine", branch: "implement-tls-turn"
       },
-      {
-        :membrane_webrtc_plugin,
-        github: "membraneframework/membrane_webrtc_plugin",
-        branch: "removing-libnice",
-        override: true
-      },
+      {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin"},
       {
         :membrane_ice_plugin,
         github: "membraneframework/membrane_turn_plugin",

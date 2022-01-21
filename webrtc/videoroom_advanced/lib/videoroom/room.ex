@@ -64,10 +64,12 @@ defmodule Videoroom.Room do
     ]
 
     if use_integrated_turn do
-      TURNManager.ensure_tcp_turn_launched(integrated_turn_options)
+      tcp_turn_port = Application.get_env(:membrane_videoroom_demo, :integrated_tcp_turn_port)
+      TURNManager.ensure_tcp_turn_launched(integrated_turn_options, port: tcp_turn_port)
 
       if turn_cert_file do
-        TURNManager.ensure_tls_turn_launched(integrated_turn_options)
+        tls_turn_port = Application.get_env(:membrane_videoroom_demo, :integrated_tls_turn_port)
+        TURNManager.ensure_tls_turn_launched(integrated_turn_options, port: tls_turn_port)
       end
     end
 

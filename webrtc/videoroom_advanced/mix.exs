@@ -21,8 +21,11 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      {:membrane_rtc_engine, "~> 0.1.0"},
-      {:membrane_webrtc_plugin, "~> 0.2.0"},
+      {:membrane_core, "~> 0.9.0", override: true},
+      # {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
+      {:membrane_rtc_engine, path: "~/Repos/membrane_rtc_engine"},
+      #       {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin", override: true},
+      {:membrane_webrtc_plugin, path: "~/Repos/membrane_webrtc_plugin", override: true},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},

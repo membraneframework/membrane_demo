@@ -17,11 +17,33 @@
                     <div name="video-label" class="absolute text-white text-shadow-lg bottom-0 left-0 p-2">Placeholder</div>
                 </div>
             </template>
+            <template id="local-video-feed-template">
+                <div name="video-feed" class="relative bg-gray-900 shadow rounded-md overflow-hidden h-full w-full ratio-video">
+                    <audio></audio>
+                    <video class="w-full h-full"></video>
+                    <div name="video-label" class="absolute text-white text-shadow-lg bottom-0 left-0 p-2">Placeholder</div>
+                    <div class="absolute text-green-700/100 text-shadow-lg bg-white bottom-0 right-0 p-2", style="color: green, font-size: 20px">
+                        <label>Encodings to send</label>
+                        <ul name="video-encoding-list">
+                            <li><input type="checkbox" name="h" checked="true"> High</li>
+                            <li><input type="checkbox" name="l" checked="true"> Low</li>
+                        </ul>
+                    </div>
+                </div>
+            </template>
             <template id="video-feed-template">
                 <div name="video-feed" class="relative bg-gray-900 shadow rounded-md overflow-hidden h-full w-full ratio-video">
                     <audio></audio>
                     <video class="w-full h-full"></video>
                     <div name="video-label" class="absolute text-white text-shadow-lg bottom-0 left-0 p-2">Placeholder</div>
+                    <div name="video-encoding", class="absolute text-green-700/100 text-shadow-lg bg-white top-0 right-0 p-2", style="color: green, font-size: 20px">High</div>
+                    <div class="absolute text-green-700/100 text-shadow-lg bg-white bottom-0 right-0 p-2", style="color: green, font-size: 20px">
+                        <label>Encoding to receive</label>
+                        <select name="video-encoding-select">
+                            <option value="h">High</option>
+                            <option value="l">Low</option>
+                        </select>
+                    </div>
                 </div>
             </template>
             <div class="flex flex-col items-center md:flex-row md:items-start justify-center h-full">

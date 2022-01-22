@@ -5,7 +5,7 @@ export const AUDIO_MEDIA_CONSTRAINTS: MediaStreamConstraints = {
 
 export const VIDEO_MEDIA_CONSTRAINTS: MediaStreamConstraints = {
   audio: false,
-  video: { width: 640, height: 360, frameRate: 24 },
+  video: { width: 1280, height: 720, frameRate: 24 },
 };
 
 export const SCREENSHARING_MEDIA_CONSTRAINTS: DisplayMediaStreamConstraints = {

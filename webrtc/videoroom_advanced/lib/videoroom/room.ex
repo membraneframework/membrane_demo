@@ -6,6 +6,7 @@ defmodule Videoroom.Room do
   alias Membrane.RTC.Engine
   alias Membrane.RTC.Engine.Message
   alias Membrane.RTC.Engine.Endpoint.WebRTC
+  alias Membrane.WebRTC.Extension.{Mid, Rid, TWCC}
   require Membrane.Logger
 
   @mix_env Mix.env()
@@ -101,7 +102,10 @@ defmodule Videoroom.Room do
       turn_servers: state.network_options[:turn_servers] || [],
       integrated_turn_options: state.network_options[:integrated_turn_options],
       handshake_opts: handshake_opts,
-      log_metadata: [peer_id: peer.id]
+      log_metadata: [peer_id: peer.id],
+
+      # webrtc_extensions: [Mid, Rid],
+      webrtc_extensions: [Mid, Rid, TWCC]
     }
 
     Engine.accept_peer(rtc_engine, peer.id)

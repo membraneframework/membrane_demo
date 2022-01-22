@@ -16,20 +16,24 @@ import {
   attachScreensharing,
   detachScreensharing,
   toggleScreensharing,
+  updateEncoding,
 } from "./room_ui";
 import {
   MembraneWebRTC,
   Peer,
   SerializedMediaEvent,
+  TrackContext,
 } from "membrane_rtc_engine";
 import { Push, Socket } from "phoenix";
 import { parse } from "query-string";
 
 export class Room {
   private peers: Peer[] = [];
+  private tracks: Map<string, TrackContext[]> = new Map();
   private displayName: string;
   private localAudioStream: MediaStream | null = null;
   private localVideoStream: MediaStream | null = null;
+  private localVideoTrackId: string | null = null;
   private localScreensharing: MediaStream | null = null;
   private localScreensharingTrackId: string | null = null;
 
@@ -61,42 +65,59 @@ export class Room {
               this.webrtc.addTrack(track, this.localAudioStream!)
             );
 
-          this.localVideoStream
-            ?.getTracks()
-            .forEach((track) =>
-              this.webrtc.addTrack(track, this.localVideoStream!)
+          this.localVideoStream?.getTracks().forEach((track) => {
+            this.localVideoTrackId = this.webrtc.addTrack(
+              track,
+              this.localVideoStream!,
+              {},
+              true
             );
+          });
 
           this.peers = peersInRoom;
           this.peers.forEach((peer) => {
-            addVideoElement(peer.id, peer.metadata.displayName, false);
+            addVideoElement(peer.id, peer.metadata.displayName, false, {
+              onLocalSelectEncoding: null,
+              onSelectEncoding: this.onSelectEncoding,
+            });
+            this.tracks.set(peer.id, []);
           });
           this.updateParticipantsList();
         },
         onJoinError: (metadata) => {
           throw `Peer denied.`;
         },
-        onTrackReady: ({ stream, peer, metadata }) => {
-          if (metadata.type === "screensharing") {
+        onTrackReady: (ctx) => {
+          if (ctx.metadata && ctx.metadata.type === "screensharing") {
             attachScreensharing(
-              peer.id,
-              `(${peer.metadata.displayName}) Screen`,
-              stream!
+              ctx.peer.id,
+              `(${ctx.peer.metadata.displayName}) Screen`,
+              ctx.stream!
             );
           } else {
-            attachStream(peer.id, { audioStream: stream, videoStream: stream });
+            attachStream(ctx.peer.id, {
+              audioStream: ctx.stream,
+              videoStream: ctx.stream,
+            });
           }
+          this.tracks.get(ctx.peer.id)?.push(ctx);
         },
         onTrackAdded: (ctx) => {},
         onTrackRemoved: (ctx) => {
           if (ctx.metadata.type === "screensharing") {
             detachScreensharing(ctx.peer.id);
           }
+          this.tracks
+            .get(ctx.peer.id)
+            ?.filter((track) => track.trackId == ctx.trackId);
         },
         onPeerJoined: (peer) => {
           this.peers.push(peer);
           this.updateParticipantsList();
-          addVideoElement(peer.id, peer.metadata.displayName, false);
+          addVideoElement(peer.id, peer.metadata.displayName, false, {
+            onLocalSelectEncoding: null,
+            onSelectEncoding: this.onSelectEncoding,
+          });
         },
         onPeerLeft: (peer) => {
           this.peers = this.peers.filter((p) => p.id !== peer.id);
@@ -104,6 +125,13 @@ export class Room {
           this.updateParticipantsList();
         },
         onPeerUpdated: (ctx) => {},
+        onTrackEncodingChanged: (
+          peerId: string,
+          trackId: string,
+          encoding: string
+        ) => {
+          updateEncoding(peerId, encoding);
+        },
       },
     });
 
@@ -129,7 +157,10 @@ export class Room {
       console.error("Error while getting local video stream", error);
     }
 
-    addVideoElement(LOCAL_PEER_ID, "Me", true);
+    addVideoElement(LOCAL_PEER_ID, "Me", true, {
+      onLocalSelectEncoding: this.onLocalSelectEncoding,
+      onSelectEncoding: null,
+    });
 
     attachStream(LOCAL_PEER_ID, {
       audioStream: this.localAudioStream,
@@ -192,6 +223,30 @@ export class Room {
     );
 
     this.webrtc.join({ displayName: this.displayName });
+  };
+
+  private onLocalSelectEncoding = (
+    trackType: string,
+    encoding: string,
+    selected: boolean
+  ): void => {
+    if (trackType == "video") {
+      if (selected) {
+        this.webrtc.enableTrackEncoding(this.localVideoTrackId!, encoding);
+      } else {
+        this.webrtc.disableTrackEncoding(this.localVideoTrackId!, encoding);
+      }
+    }
+  };
+
+  private onSelectEncoding = (peerId: string, encoding: string): void => {
+    const trackId = this.tracks
+      .get(peerId)
+      ?.filter(
+        (track) =>
+          track.metadata.type != "screensharing" && track.track!.kind == "video"
+      )[0].trackId!;
+    this.webrtc.selectTrackEncoding(peerId, trackId, encoding);
   };
 
   private leave = () => {

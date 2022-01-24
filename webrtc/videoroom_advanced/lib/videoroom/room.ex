@@ -15,13 +15,6 @@ defmodule Videoroom.Room do
     GenServer.start(__MODULE__, init_arg, opts)
   end
 
-  @spec start_link([
-          {:debug, [:log | :statistics | :trace | {any, any}]}
-          | {:hibernate_after, :infinity | non_neg_integer}
-          | {:name, atom | {:global, any} | {:via, atom, any}}
-          | {:spawn_opt, [:link | :monitor | {any, any}]}
-          | {:timeout, :infinity | non_neg_integer}
-        ]) :: :ignore | {:error, any} | {:ok, pid}
   def start_link(opts) do
     GenServer.start_link(__MODULE__, [], opts)
   end
@@ -40,7 +33,7 @@ defmodule Videoroom.Room do
     use_integrated_turn = Application.fetch_env!(:membrane_videoroom_demo, :use_integrated_turn)
 
     turn_cert_file =
-      case Application.fetch_env(:membrane_videoroom_demo, :integrated_turn_certfile) do
+      case Application.fetch_env(:membrane_videoroom_demo, :integrated_turn_cert_pkey) do
         {:ok, val} -> val
         :error -> nil
       end

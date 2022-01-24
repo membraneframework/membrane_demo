@@ -4,12 +4,12 @@ defmodule VideoRoom.Application do
 
   require Membrane.Logger
 
-  @cert_file_path "priv/tls_cert.pem"
+  @cert_file_path "priv/integrated_turn_cert.pem"
 
   @impl true
   def start(_type, _args) do
     config_common_dtls_key_cert()
-    create_turn_cert_file()
+    create_integrated_turn_cert_file()
 
     children = [
       VideoRoomWeb.Endpoint,
@@ -27,34 +27,24 @@ defmodule VideoRoom.Application do
     :ok
   end
 
-  @spec get_cert_file_path() :: binary()
-  def get_cert_file_path(), do: @cert_file_path
+  defp create_integrated_turn_cert_file() do
+    cert_path = Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_cert)
+    pkey_path = Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_pkey)
 
-  defp create_turn_cert_file() do
-    try do
-      cert_path = Application.fetch_env!(:membrane_videoroom_demo, :tls_turn_cert)
-      pkey_path = Application.fetch_env!(:membrane_videoroom_demo, :tls_turn_pkey)
+    if cert_path != nil and pkey_path != nil do
+      cert = File.read!(cert_path)
+      pkey = File.read!(pkey_path)
 
-      if cert_path != nil and pkey_path != nil do
-        cert = File.read!(cert_path)
-        pkey = File.read!(pkey_path)
+      File.touch!(@cert_file_path)
+      File.chmod!(@cert_file_path, 0o600)
+      File.write!(@cert_file_path, "#{cert}\n#{pkey}")
 
-        File.touch!(@cert_file_path)
-        File.chmod!(@cert_file_path, 0o600)
-        File.write!(@cert_file_path, "#{cert}\n#{pkey}")
-
-        Application.put_env(:membrane_videoroom_demo, :integrated_turn_certfile, @cert_file_path)
-      else
-        Membrane.Logger.info(
-          "Path to TLS cert or private key was not provided. TLS TURN will not run"
-        )
-      end
-    rescue
-      File.Error ->
-        Membrane.Logger.error(
-          "Error occured while reading certificates for TLS TURN, so it will not run. \
-          Ensure, that paths to TLS certificate and private key are correct."
-        )
+      Application.put_env(:membrane_videoroom_demo, :integrated_turn_cert_pkey, @cert_file_path)
+    else
+      Membrane.Logger.warn("""
+      Integrated TURN certificate or private key path not specified.
+      Integrated TURN will not handle TLS connections.
+      """)
     end
   end
 

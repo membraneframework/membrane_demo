@@ -1,6 +1,7 @@
 .idea/
 *.iml
 priv/certs/*.pem
+priv/integrated_turn_cert.pem
 priv/static/assets
 
 # The directory Mix will write compiled artifacts to.

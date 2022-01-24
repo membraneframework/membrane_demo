@@ -41,7 +41,7 @@ defmodule VideoRoom.Application do
 
       Application.put_env(:membrane_videoroom_demo, :integrated_turn_cert_pkey, @cert_file_path)
     else
-      Membrane.Logger.warning("""
+      Membrane.Logger.warn("""
       Integrated TURN certificate or private key path not specified.
       Integrated TURN will not handle TLS connections.
       """)

@@ -121,12 +121,30 @@ export class Room {
       console.error("Error while getting local audio stream", error);
     }
 
-    try {
-      this.localVideoStream = await navigator.mediaDevices.getUserMedia(
-        VIDEO_MEDIA_CONSTRAINTS
-      );
-    } catch (error) {
-      console.error("Error while getting local video stream", error);
+    const mediaDevices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = mediaDevices.filter(
+      (device) => device.kind === "videoinput"
+    );
+
+    for (const device of videoDevices) {
+      const video = VIDEO_MEDIA_CONSTRAINTS.video as MediaTrackConstraints;
+      const constraints = {
+        video: {
+          deviceId: { exact: device.deviceId },
+          ...video,
+        },
+        ...VIDEO_MEDIA_CONSTRAINTS,
+      };
+
+      try {
+        this.localVideoStream = await navigator.mediaDevices.getUserMedia(
+          constraints
+        );
+
+        break;
+      } catch (error) {
+        console.error("Error while getting local video stream", error);
+      }
     }
 
     addVideoElement(LOCAL_PEER_ID, "Me", true);

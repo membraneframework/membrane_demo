@@ -73,6 +73,15 @@ docker run -p 4000:4000 --env-file .env membrane_videoroom_advanced
 
 Then go to <http://localhost:4000/>.
 
+### To run with OpenTelemetry
+
+By default OpenTelemetry is turn off. You can turn it on by going `config/runtime.exs` and change `otel_state` to one of four possible values:
+
+* :purge - default value, OpenTelemetry is turned off
+* :local - OpenTelemetry traces will be printed on stdout
+* :zipkin - OpenTelemetry traces are send to zipkin. You can change the url on which traces are sent in `config/runtime.exs`. To setup zipkin you can run this command `docker run -d -p 9411:9411 openzipkin/zipkin`.
+* :honeycomb - OpenTelemetry traces are send to Honeycomb. You have to specify "x-honeycomb-team", which is API KEY for this service.
+
 ## Copyright and License
 
 Copyright 2020, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)

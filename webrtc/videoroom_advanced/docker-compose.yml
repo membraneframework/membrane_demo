@@ -5,13 +5,14 @@ services:
     environment:
       VIRTUAL_HOST: "videoroom.membraneframework.org"
       LETSENCRYPT_HOST: "videoroom.membraneframework.org"
-      USE_INTEGRATED_TURN: "false"
-      INTEGRATED_TURN_IP: "135.181.203.255"
-      INTEGRATED_TURN_PORT_RANGE: "50000-50500"
-      INTEGRATED_TCP_TURN_PORT: "50500"
+      USE_INTEGRATED_TURN: "true"
+      INTEGRATED_TURN_IP: "95.217.133.165"
+      INTEGRATED_TURN_PORT_RANGE: "50000-50100"
+      INTEGRATED_TCP_TURN_PORT: "50100"
     ports: 
-      - "50000-50500:50000-50500/tcp"
-      - "50000-50500:50000-50500/udp"
+      - "50000-50100:50000-50100/tcp"
+      - "50000-50100:50000-50100/udp"
+
       
   nginx-proxy:
     image: jwilder/nginx-proxy:0.8.0

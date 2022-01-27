@@ -21,7 +21,8 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
+      {:membrane_rtc_engine,
+       github: "membraneframework/membrane_rtc_engine", branch: "candidate-port-registry"},
       {:membrane_webrtc_plugin,
        github: "membraneframework/membrane_webrtc_plugin",
        branch: "candidate-port-registry",

@@ -21,16 +21,17 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      {:membrane_core, "~> 0.8.1", override: true},
-
+      # {:membrane_core, "~> 0.8.1", override: true},
+      {:membrane_core,
+       github: "membraneframework/membrane_core", branch: "no-static-unlink", override: true},
       {:membrane_rtc_engine,
-       github: "membraneframework/membrane_rtc_engine", branch: "candidate-port-registry"},
+       github: "membraneframework/membrane_rtc_engine", branch: "clock_rate_fix"},
       {:membrane_webrtc_plugin,
        github: "membraneframework/membrane_webrtc_plugin",
-       branch: "candidate-port-registry",
+       branch: "clock_rate_fix",
        override: true},
       {:membrane_ice_plugin,
-       github: "membraneframework/membrane_turn_plugin", branch: "sandbox-debug", override: true},
+       github: "membraneframework/membrane_turn_plugin", branch: "clock_rate_fix", override: true},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},

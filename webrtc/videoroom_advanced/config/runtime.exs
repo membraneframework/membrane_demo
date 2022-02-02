@@ -179,7 +179,7 @@ exporter =
     :zipkin ->
       {:opentelemetry_zipkin,
        %{
-         address: ["http://m2.membrane.work:9411/api/v2/spans"],
+         address: ["http://localhost:9411/api/v2/spans"],
          local_endpoint: %{service_name: "VideoRoom"}
        }}
 

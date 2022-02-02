@@ -12,6 +12,7 @@ services:
     ports: 
       - "50000-50100:50000-50100/tcp"
       - "50000-50100:50000-50100/udp"
+
       
   nginx-proxy:
     image: jwilder/nginx-proxy:0.8.0

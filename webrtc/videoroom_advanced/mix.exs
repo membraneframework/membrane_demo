@@ -24,7 +24,7 @@ defmodule VideoRoom.MixProject do
       # {:membrane_core, "~> 0.8.1", override: true},
       # {:membrane_core, github: "membraneframework/membrane_core", override: true},
       {:membrane_core,
-       github: "membraneframework/membrane_core", branch: "no-static-unlink", override: true},
+       github: "membraneframework/membrane_core", branch: "no-linking-timeout", override: true},
 
 
       {:membrane_rtc_engine,

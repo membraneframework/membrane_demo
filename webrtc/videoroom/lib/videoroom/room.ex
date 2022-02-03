@@ -6,6 +6,7 @@ defmodule Videoroom.Room do
   alias Membrane.RTC.Engine
   alias Membrane.RTC.Engine.Message
   alias Membrane.RTC.Engine.Endpoint.WebRTC
+  alias Membrane.WebRTC.Extension.{Rid, Mid, VAD, TWCC}
   require Membrane.Logger
 
   def start(init_arg, opts) do
@@ -88,6 +89,7 @@ defmodule Videoroom.Room do
     endpoint = %WebRTC{
       ice_name: peer.id,
       extensions: %{},
+      webrtc_extensions: [TWCC],
       owner: self(),
       stun_servers: state.network_options[:stun_servers] || [],
       turn_servers: state.network_options[:turn_servers] || [],
@@ -115,6 +117,11 @@ defmodule Videoroom.Room do
   @impl true
   def handle_info({:media_event, _from, _event} = msg, state) do
     Engine.receive_media_event(state.rtc_engine, msg)
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:vad_notification, _speech_or_silence, _endpoint}, state) do
     {:noreply, state}
   end
 

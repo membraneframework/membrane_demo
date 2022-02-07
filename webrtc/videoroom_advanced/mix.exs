@@ -25,8 +25,6 @@ defmodule VideoRoom.MixProject do
       # {:membrane_core, github: "membraneframework/membrane_core", override: true},
       {:membrane_core,
        github: "membraneframework/membrane_core", branch: "no-linking-timeout", override: true},
-
-
       {:membrane_rtc_engine,
        github: "membraneframework/membrane_rtc_engine", branch: "candidate-port-registry"},
       {:membrane_webrtc_plugin,

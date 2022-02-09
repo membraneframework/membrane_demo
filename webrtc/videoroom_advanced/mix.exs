@@ -31,8 +31,17 @@ defmodule VideoRoom.MixProject do
        github: "membraneframework/membrane_webrtc_plugin",
        branch: "sandbox-debug",
        override: true},
-      {:membrane_ice_plugin,
+       {:membrane_ice_plugin,
        github: "membraneframework/membrane_turn_plugin", branch: "sandbox-debug", override: true},
+
+      #  {:membrane_ice_plugin, path: "/Users/feliks/membrane/membrane_ice_plugin", override: true},
+
+
+      #  {:ex_libnice, path: "/Users/feliks/membrane/ex_libnice", override: true},
+      #  {:membrane_libnice_plugin, path: "/Users/feliks/membrane/membrane_libnice_plugin", override: true},
+      #  {:membrane_webrtc_plugin, path: "/Users/feliks/membrane/membrane_webrtc_plugin", override: true},
+
+
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},

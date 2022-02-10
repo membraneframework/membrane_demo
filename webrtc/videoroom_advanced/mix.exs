@@ -21,28 +21,15 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      # {:membrane_core, "~> 0.8.1", override: true},
-      # {:membrane_core, github: "membraneframework/membrane_core", override: true},
       {:membrane_core,
        github: "membraneframework/membrane_core", branch: "no-linking-timeout", override: true},
       {:membrane_rtc_engine,
        github: "membraneframework/membrane_rtc_engine", branch: "sandbox-debug"},
       {:membrane_webrtc_plugin,
-       github: "membraneframework/membrane_webrtc_plugin",
-       branch: "sandbox-debug",
-       override: true},
-       {:membrane_ice_plugin,
+       github: "membraneframework/membrane_webrtc_plugin", branch: "sandbox-debug", override: true},
+      {:membrane_ice_plugin,
        github: "membraneframework/membrane_turn_plugin", branch: "sandbox-debug", override: true},
-
-      #  {:membrane_ice_plugin, path: "/Users/feliks/membrane/membrane_ice_plugin", override: true},
-
-
-      #  {:ex_libnice, path: "/Users/feliks/membrane/ex_libnice", override: true},
-      #  {:membrane_libnice_plugin, path: "/Users/feliks/membrane/membrane_libnice_plugin", override: true},
-      #  {:membrane_webrtc_plugin, path: "/Users/feliks/membrane/membrane_webrtc_plugin", override: true},
-
-
-      {:plug_cowboy, "~> 2.0"},
+      {:plug_cowboy, "~> 2.5.2"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_view, "~> 0.16.0"},
@@ -51,6 +38,7 @@ defmodule VideoRoom.MixProject do
       {:phoenix_inline_svg, "~> 1.4"},
       {:uuid, "~> 1.1"},
       {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
+      {:cowlib, "~> 2.11.0", override: true},
 
       # Otel
       {:opentelemetry, "~> 0.6.0", override: true},

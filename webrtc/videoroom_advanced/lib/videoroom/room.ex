@@ -8,6 +8,7 @@ defmodule Videoroom.Room do
   alias Membrane.RTC.Engine.Endpoint.WebRTC
   alias Membrane.ICE.TURNManager
   require Membrane.Logger
+  require OpenTelemetry.Tracer, as: Tracer
 
   @mix_env Mix.env()
 
@@ -26,8 +27,11 @@ defmodule Videoroom.Room do
     turn_mock_ip = Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_ip)
     turn_ip = if @mix_env == :prod, do: {0, 0, 0, 0}, else: turn_mock_ip
 
+    trace_ctx = create_context("room:#{room_id}")
+
     rtc_engine_options = [
-      id: room_id
+      id: room_id,
+      trace_ctx: trace_ctx
     ]
 
     use_integrated_turn = Application.fetch_env!(:membrane_videoroom_demo, :use_integrated_turn)
@@ -69,7 +73,13 @@ defmodule Videoroom.Room do
     {:ok, pid} = Membrane.RTC.Engine.start(rtc_engine_options, [])
     Engine.register(pid, self())
 
-    {:ok, %{rtc_engine: pid, peer_channels: %{}, network_options: network_options}}
+    {:ok,
+     %{
+       rtc_engine: pid,
+       peer_channels: %{},
+       network_options: network_options,
+       trace_ctx: trace_ctx
+     }}
   end
 
   @impl true
@@ -126,7 +136,8 @@ defmodule Videoroom.Room do
       integrated_turn_options: state.network_options[:integrated_turn_options],
       integrated_turn_domain: state.network_options[:integrated_turn_domain],
       handshake_opts: handshake_opts,
-      log_metadata: [peer_id: peer.id]
+      log_metadata: [peer_id: peer.id],
+      trace_context: state.trace_ctx
     }
 
     Engine.accept_peer(rtc_engine, peer.id)
@@ -156,5 +167,22 @@ defmodule Videoroom.Room do
     Engine.remove_peer(state.rtc_engine, peer_id)
     {_elem, state} = pop_in(state, [:peer_channels, peer_id])
     {:noreply, state}
+  end
+
+  defp create_context(name) do
+    metadata = [
+      {:"library.language", :erlang},
+      {:"library.name", :membrane_rtc_engine},
+      {:"library.version", "server:#{Application.spec(:membrane_rtc_engine, :vsn)}"}
+    ]
+
+    root_span = Tracer.start_span(name)
+    parent_ctx = Tracer.set_current_span(root_span)
+    otel_ctx = OpenTelemetry.Ctx.attach(parent_ctx)
+    OpenTelemetry.Span.set_attributes(root_span, metadata)
+    OpenTelemetry.Span.end_span(root_span)
+    OpenTelemetry.Ctx.attach(otel_ctx)
+
+    otel_ctx
   end
 end

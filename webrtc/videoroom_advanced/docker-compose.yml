@@ -5,7 +5,7 @@ services:
     environment:
       VIRTUAL_HOST: "videoroom.membraneframework.org"
       LETSENCRYPT_HOST: "videoroom.membraneframework.org"
-      USE_INTEGRATED_TURN: "false"
+      USE_INTEGRATED_TURN: "true"
       INTEGRATED_TURN_IP: "135.181.203.255"
       INTEGRATED_TURN_PORT_RANGE: "50000-50500"
       INTEGRATED_TCP_TURN_PORT: "50500"

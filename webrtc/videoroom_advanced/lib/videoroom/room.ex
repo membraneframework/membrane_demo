@@ -6,6 +6,7 @@ defmodule Videoroom.Room do
   alias Membrane.RTC.Engine
   alias Membrane.RTC.Engine.Message
   alias Membrane.RTC.Engine.Endpoint.WebRTC
+  alias Membrane.ICE.TURNManager
   require Membrane.Logger
   require OpenTelemetry.Tracer, as: Tracer
 
@@ -33,28 +34,41 @@ defmodule Videoroom.Room do
       trace_ctx: trace_ctx
     ]
 
+    use_integrated_turn = Application.fetch_env!(:membrane_videoroom_demo, :use_integrated_turn)
+
     turn_cert_file =
       case Application.fetch_env(:membrane_videoroom_demo, :integrated_turn_cert_pkey) do
         {:ok, val} -> val
         :error -> nil
       end
 
+    integrated_turn_options = [
+      ip: turn_ip,
+      mock_ip: turn_mock_ip,
+      ports_range: Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_port_range),
+      cert_file: turn_cert_file
+    ]
+
     network_options = [
       stun_servers: Application.fetch_env!(:membrane_videoroom_demo, :stun_servers),
       turn_servers: Application.fetch_env!(:membrane_videoroom_demo, :turn_servers),
-      use_integrated_turn: Application.fetch_env!(:membrane_videoroom_demo, :use_integrated_turn),
-      integrated_turn_options: [
-        ip: turn_ip,
-        mock_ip: turn_mock_ip,
-        ports_range:
-          Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_port_range),
-        cert_file: turn_cert_file
-      ],
+      use_integrated_turn: use_integrated_turn,
+      integrated_turn_options: integrated_turn_options,
       integrated_turn_domain:
         Application.fetch_env!(:membrane_videoroom_demo, :integrated_turn_domain),
       dtls_pkey: Application.get_env(:membrane_videoroom_demo, :dtls_pkey),
       dtls_cert: Application.get_env(:membrane_videoroom_demo, :dtls_cert)
     ]
+
+    if use_integrated_turn do
+      tcp_turn_port = Application.get_env(:membrane_videoroom_demo, :integrated_tcp_turn_port)
+      TURNManager.ensure_tcp_turn_launched(integrated_turn_options, port: tcp_turn_port)
+
+      if turn_cert_file do
+        tls_turn_port = Application.get_env(:membrane_videoroom_demo, :integrated_tls_turn_port)
+        TURNManager.ensure_tls_turn_launched(integrated_turn_options, port: tls_turn_port)
+      end
+    end
 
     {:ok, pid} = Membrane.RTC.Engine.start(rtc_engine_options, [])
     Engine.register(pid, self())

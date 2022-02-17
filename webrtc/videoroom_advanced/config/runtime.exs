@@ -86,6 +86,19 @@ defmodule ConfigParser do
         """)
     end
   end
+
+  def parse_port_number(nil, _var_name), do: nil
+
+  def parse_port_number(var_value, var_name) do
+    with {port, _sufix} when port in 1..65535 <- Integer.parse(var_value) do
+      port
+    else
+      _var ->
+        raise(
+          "Bad #{var_name} enviroment variable value. Expected valid port number, got: #{inspect(var_value)}"
+        )
+    end
+  end
 end
 
 config :membrane_videoroom_demo,
@@ -99,6 +112,12 @@ config :membrane_videoroom_demo,
   integrated_turn_port_range:
     System.get_env("INTEGRATED_TURN_PORT_RANGE", "50000-59999")
     |> ConfigParser.parse_integrated_turn_port_range(),
+  integrated_tcp_turn_port:
+    System.get_env("INTEGRATED_TCP_TURN_PORT")
+    |> ConfigParser.parse_port_number("INTEGRATED_TCP_TURN_PORT"),
+  integrated_tls_turn_port:
+    System.get_env("INTEGRATED_TLS_TURN_PORT")
+    |> ConfigParser.parse_port_number("INTEGRATED_TLS_TURN_PORT"),
   integrated_turn_pkey: System.get_env("INTEGRATED_TURN_PKEY"),
   integrated_turn_cert: System.get_env("INTEGRATED_TURN_CERT"),
   integrated_turn_domain: System.get_env("VIRTUAL_HOST")

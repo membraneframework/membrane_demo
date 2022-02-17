@@ -23,7 +23,7 @@ defmodule VideoRoom.MixProject do
     [
       {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
       {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin"},
-      {:plug_cowboy, "~> 2.0"},
+      {:plug_cowboy, "~> 2.5.2"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_view, "~> 0.16.0"},
@@ -32,6 +32,7 @@ defmodule VideoRoom.MixProject do
       {:phoenix_inline_svg, "~> 1.4"},
       {:uuid, "~> 1.1"},
       {:esbuild, "~> 0.4", runtime: Mix.env() == :dev},
+      {:cowlib, "~> 2.11.0", override: true},
 
       # Otel
       {:opentelemetry, "~> 0.6.0", override: true},

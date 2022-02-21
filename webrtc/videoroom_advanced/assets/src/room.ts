@@ -129,11 +129,11 @@ export class Room {
     for (const device of videoDevices) {
       const video = VIDEO_MEDIA_CONSTRAINTS.video as MediaTrackConstraints;
       const constraints = {
-        video: {
-          deviceId: { exact: device.deviceId },
-          ...video,
-        },
         ...VIDEO_MEDIA_CONSTRAINTS,
+        video: {
+          ...video,
+          deviceId: { exact: device.deviceId },
+        },
       };
 
       try {

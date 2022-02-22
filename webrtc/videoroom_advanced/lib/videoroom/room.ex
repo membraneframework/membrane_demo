@@ -161,17 +161,13 @@ defmodule Videoroom.Room do
 
   @impl true
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
-    if pid == state.rtc_engine do
-      {:stop, :normal, state}
-    else
-      {peer_id, _peer_channel_id} =
-        state.peer_channels
-        |> Enum.find(fn {_peer_id, peer_channel_pid} -> peer_channel_pid == pid end)
+    {peer_id, _peer_channel_id} =
+      state.peer_channels
+      |> Enum.find(fn {_peer_id, peer_channel_pid} -> peer_channel_pid == pid end)
 
-      Engine.remove_peer(state.rtc_engine, peer_id)
-      {_elem, state} = pop_in(state, [:peer_channels, peer_id])
-      {:noreply, state}
-    end
+    Engine.remove_peer(state.rtc_engine, peer_id)
+    {_elem, state} = pop_in(state, [:peer_channels, peer_id])
+    {:noreply, state}
   end
 
   @impl true

@@ -53,7 +53,7 @@ defmodule VideoRoomWeb.PeerChannel do
 
   @impl true
   def handle_info(
-        {:DOWN, _ref, :process, pid, _reason},
+        {:DOWN, _ref, :process, _pid, _reason},
         socket
       ) do
     {:stop, :normal, socket}

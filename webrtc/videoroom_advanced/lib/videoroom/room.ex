@@ -144,20 +144,6 @@ defmodule Videoroom.Room do
     Engine.accept_peer(rtc_engine, peer.id)
     :ok = Engine.add_endpoint(rtc_engine, endpoint, peer_id: peer.id, node: peer_node)
 
-    counter = Map.get(state, :counter, 0)
-
-    if counter == 2 do
-      Process.send_after(self(), :end_engine, 15_000)
-    end
-
-    state = Map.put(state, :counter, counter + 1)
-
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_info(:end_engine, state) do
-    Engine.stop_and_terminate(state.rtc_engine)
     {:noreply, state}
   end
 

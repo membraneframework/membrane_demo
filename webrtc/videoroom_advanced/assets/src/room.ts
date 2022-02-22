@@ -44,8 +44,14 @@ export class Room {
     this.socket.connect();
     this.displayName = this.parseUrl();
     this.webrtcChannel = this.socket.channel(`room:${getRoomId()}`);
-    this.webrtcChannel.onError(() => this.leave());
-    this.webrtcChannel.onClose(() => this.leave());
+    this.webrtcChannel.onError(() => {
+      this.socketOff();
+      window.location.reload();
+    });
+    this.webrtcChannel.onClose(() => {
+      this.socketOff();
+      window.location.reload();
+    });
 
     this.webrtcSocketRefs.push(this.socket.onError(this.leave));
     this.webrtcSocketRefs.push(this.socket.onClose(this.leave));
@@ -216,6 +222,11 @@ export class Room {
 
   private leave = () => {
     this.webrtc.leave();
+    this.webrtcChannel.leave();
+    this.socketOff();
+  };
+
+  private socketOff = () => {
     this.socket.off(this.webrtcSocketRefs);
     while (this.webrtcSocketRefs.length > 0) {
       this.webrtcSocketRefs.pop();

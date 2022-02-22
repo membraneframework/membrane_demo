@@ -67,8 +67,8 @@ export class Room {
         onTrackReady: ({ stream, peer, metadata }) => {
           attachStream(stream!, peer.id);
         },
-        onTrackAdded: (ctx) => { },
-        onTrackRemoved: (ctx) => { },
+        onTrackAdded: (ctx) => {},
+        onTrackRemoved: (ctx) => {},
         onPeerJoined: (peer) => {
           this.peers.push(peer);
           this.updateParticipantsList();
@@ -79,7 +79,7 @@ export class Room {
           removeVideoElement(peer.id);
           this.updateParticipantsList();
         },
-        onPeerUpdated: (ctx) => { },
+        onPeerUpdated: (ctx) => {},
       },
     });
 

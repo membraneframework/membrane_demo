@@ -72,7 +72,6 @@ defmodule Videoroom.Room do
 
     {:ok, pid} = Membrane.RTC.Engine.start(rtc_engine_options, [])
     Engine.register(pid, self())
-    Process.monitor(pid)
 
     {:ok,
      %{
@@ -167,11 +166,6 @@ defmodule Videoroom.Room do
 
     Engine.remove_peer(state.rtc_engine, peer_id)
     {_elem, state} = pop_in(state, [:peer_channels, peer_id])
-    {:noreply, state}
-  end
-
-  @impl true
-  def handle_info(_msg, state) do
     {:noreply, state}
   end
 

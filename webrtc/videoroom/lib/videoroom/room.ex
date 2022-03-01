@@ -35,6 +35,7 @@ defmodule Videoroom.Room do
 
     {:ok, pid} = Membrane.RTC.Engine.start(rtc_engine_options, [])
     Engine.register(pid, self())
+    Process.monitor(pid)
 
     {:ok, %{rtc_engine: pid, peer_channels: %{}, network_options: network_options}}
   end
@@ -120,12 +121,16 @@ defmodule Videoroom.Room do
 
   @impl true
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
-    {peer_id, _peer_channel_id} =
-      state.peer_channels
-      |> Enum.find(fn {_peer_id, peer_channel_pid} -> peer_channel_pid == pid end)
+    if pid == state.rtc_engine do
+      {:stop, :normal, state}
+    else
+      {peer_id, _peer_channel_id} =
+        state.peer_channels
+        |> Enum.find(fn {_peer_id, peer_channel_pid} -> peer_channel_pid == pid end)
 
-    Engine.remove_peer(state.rtc_engine, peer_id)
-    {_elem, state} = pop_in(state, [:peer_channels, peer_id])
-    {:noreply, state}
+      Engine.remove_peer(state.rtc_engine, peer_id)
+      {_elem, state} = pop_in(state, [:peer_channels, peer_id])
+      {:noreply, state}
+    end
   end
 end

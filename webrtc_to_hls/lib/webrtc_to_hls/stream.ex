@@ -31,6 +31,7 @@ defmodule WebRTCToHLS.Stream do
     Engine.register(pid, self())
 
     endpoint = %HLS{
+      rtc_engine: pid,
       owner: self(),
       output_directory:
         Application.fetch_env!(:membrane_webrtc_to_hls_demo, :hls_output_mount_path),
@@ -87,6 +88,7 @@ defmodule WebRTCToHLS.Stream do
       end
 
     endpoint = %WebRTC{
+      rtc_engine: rtc_engine,
       ice_name: peer.id,
       extensions: %{},
       owner: self(),

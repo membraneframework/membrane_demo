@@ -20,6 +20,7 @@ defmodule WebRTCToHLS.MixProject do
 
   defp deps do
     [
+      {:membrane_core, "~> 0.9.0", override: true},
       {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
       {:membrane_webrtc_plugin,
        github: "membraneframework/membrane_webrtc_plugin", override: true},

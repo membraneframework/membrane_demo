@@ -5,6 +5,7 @@
   "scripts": {
     "deploy": "webpack --mode production",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "watch": "webpack --mode development --watch"
   },
   "dependencies": {

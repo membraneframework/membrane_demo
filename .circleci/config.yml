@@ -41,3 +41,9 @@ jobs:
       - run: cd webrtc/videoroom && mix format --check-formatted
       - run: cd webrtc/videoroom/assets && npm install
       - run: cd webrtc/videoroom/assets && npm run format:check
+      - run: cd webrtc_to_hls/ && mix deps.get
+      - run: cd webrtc_to_hls/ && mix deps.compile --all
+      - run: cd webrtc_to_hls/ && mix do compile
+      - run: cd webrtc_to_hls/ && mix format --check-formatted
+      - run: cd webrtc_to_hls//assets && npm install
+      - run: cd webrtc_to_hls/assets && npm run format:check

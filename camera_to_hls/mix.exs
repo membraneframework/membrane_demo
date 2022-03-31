@@ -32,5 +32,5 @@ defmodule Membrane.Demo.CameraToHls.MixProject do
       {:membrane_mp4_plugin, "~> 0.11.0"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.5.0"}
     ]
-end
+  end
 end

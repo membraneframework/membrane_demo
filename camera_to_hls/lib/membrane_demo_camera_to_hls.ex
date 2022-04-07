@@ -1,11 +1,7 @@
 defmodule Membrane.Demo.CameraToHls do
   @moduledoc """
-  This is an entry moudle for the demo.
-
-  It will start accepting RTP streams for payload types 96, 127 that should
-  contain multimedia in the format of H264 and AAC, respectively. Pipeline will
-  then transform RTP streams to HLS video and audio
-  streams.
+  This is an entry moudle for the demo
+  which starts the CameraToHls Pipeline
   """
 
   use Application

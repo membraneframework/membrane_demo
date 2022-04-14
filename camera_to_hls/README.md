@@ -7,6 +7,7 @@ This project demonstrates capturing camera video and converting it to HLS stream
 You must have following packages installed on your system:
 
 - ffmpeg 4.\*
+- openssl
 
 ### If using MACOS and `homebrew`:
 
@@ -22,9 +23,9 @@ Run the project with:
 mix run --no-halt
 ```
 
-HLS header and segment files will be created in `output` directory along with playlist files.
+CMAF header and segment files will be created in `output` directory along with HLS playlist files.
 
-To play the HLS stream you need to serve the content of `output` dir, e.g. by running:
+To play the HLS stream you can just serve the content of `output` dir via regular HTTP server, e.g. by running:
 
 ```bash
 python3 -m http.server 8000
@@ -38,7 +39,7 @@ ffplay http://localhost:8000/output/index.m3u8
 
 Moreover you can open the url http://localhost:8000/stream in your browser and enjoy the video from your camera :)
 
-_You would be asked to grant access to your camera, and after that you can enjoy the video from your camera_
+_You can be asked to grant access to your camera, as some operation systems require that_
 
 <!-- ## Technical Explanation -->
 <!-- TODO -->

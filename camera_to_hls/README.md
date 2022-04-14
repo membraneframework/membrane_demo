@@ -39,7 +39,7 @@ ffplay http://localhost:8000/output/index.m3u8
 
 Moreover you can open the url http://localhost:8000/stream in your browser and enjoy the video from your camera :)
 
-_You can be asked to grant access to your camera, as some operation systems require that_
+_You might be asked to grant access to your camera, as some operating systems require that_
 
 <!-- ## Technical Explanation -->
 <!-- TODO -->

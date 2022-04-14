@@ -8,8 +8,8 @@ defmodule Membrane.Demo.CameraToHls.Pipeline do
       source: Membrane.CameraCapture,
       # Converts pixel format to I420 (this is still a raw video, but different format)
       converter: %Membrane.FFmpeg.SWScale.PixelFormatConverter{format: :I420},
-      # Takes raw I420 frames and encodes it into H264.
-      # baseline profile tells encoder not to generate
+      # Takes raw video in I420 pixel format and encodes it into H264.
+      # Baseline profile tells encoder not to generate
       # B-frames because browser scan't render them properly
       encoder: %Membrane.H264.FFmpeg.Encoder{profile: :baseline},
       # Creates caps, generates metadata and timestamps the stream based on it

@@ -41,9 +41,6 @@ Moreover you can open the url http://localhost:8000/stream in your browser and e
 
 _You might be asked to grant access to your camera, as some operating systems require that_
 
-<!-- ## Technical Explanation -->
-<!-- TODO -->
-
 ## Copyright and License
 
 Copyright 2022, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)

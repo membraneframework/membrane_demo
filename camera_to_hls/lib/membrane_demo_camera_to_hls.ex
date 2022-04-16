@@ -1,6 +1,6 @@
 defmodule Membrane.Demo.CameraToHls do
   @moduledoc """
-  This is an entry moudle for the demo
+  This is an entry module for the demo
   which starts the CameraToHls Pipeline
   """
 

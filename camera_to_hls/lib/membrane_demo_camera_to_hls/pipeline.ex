@@ -19,16 +19,20 @@ defmodule Membrane.Demo.CameraToHls.Pipeline do
         alignment: :au,
         attach_nalus?: true
       },
+
+      # Below element is a combination of:
+      #  - Membrane.MP4.Payloader.H264
+      #  - Membrane.MP4.Muxer.CMAF
+      #  - Membrane.HTTPAdaptiveStream.Sink
+
       # Generates caps for mp4
       # H264 is converted from Annex B form to length prefixed form.
-      # Also, it payloads the H264 so that it can be injected into MP4
-      video_payloader: Membrane.MP4.Payloader.H264,
-      # There we perform CMAF muxing
-      # Simply put it generates segments (containers without header) of specified length
-      # Which than can be used in HLS to transport data in chunks
-      video_cmaf_muxer: Membrane.MP4.Muxer.CMAF,
-      # HTTPAdaptiveStream.Sink is responsible for generating playlists (according to HLS specification in this case) and persisting them in the storage location along side segments and headers
-      hls: %Membrane.HTTPAdaptiveStream.Sink{
+      # Payloads the H264 so that it can be injected into MP4
+      # Performs CMAF muxing
+      # Generates segments (containers without header) of specified length
+      # # Which than can be used in HLS to transport data in chunks
+      # Generating playlists (according to HLS specification in this case) and persisting them in the storage location along side segments and headers
+      hls_sink: %Membrane.HTTPAdaptiveStream.SinkBin{
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
         storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: "output"}
       }
@@ -39,9 +43,10 @@ defmodule Membrane.Demo.CameraToHls.Pipeline do
       |> to(:converter)
       |> to(:encoder)
       |> to(:video_nal_parser)
-      |> to(:video_payloader)
-      |> to(:video_cmaf_muxer)
-      |> to(:hls)
+      |> via_in(:input,
+        options: [encoding: :H264, track_name: "My first track"]
+      )
+      |> to(:hls_sink)
     ]
 
     {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}

@@ -16,7 +16,9 @@ defmodule Membrane.Demo.CameraToHls.Pipeline do
       # Also, we generate the timestamps based on the framerate specified
       video_nal_parser: %Membrane.H264.FFmpeg.Parser{
         framerate: {30, 1},
+        # guarantees that we will transport one frame per NAL
         alignment: :au,
+        # H.264 video can be organized into Network Abstraction Layer Units (NALU) that help transporting it with optimal performance
         attach_nalus?: true
       },
 

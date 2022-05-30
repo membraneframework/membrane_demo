@@ -47,11 +47,9 @@ defmodule RtmpToHls.MixProject do
       {:plug_cowboy, "~> 2.5"},
 
       ## Membrane deps
-      {:membrane_core, "~> 0.7"},
-      {:membrane_rtmp_plugin, "~> 0.1"},
-      {:membrane_http_adaptive_stream_plugin,
-       github: "membraneframework/membrane_http_adaptive_stream_plugin",
-       branch: "discontinue-all-tracks"}
+      {:membrane_core, "~> 0.10"},
+      {:membrane_rtmp_plugin, "~> 0.4"},
+      {:membrane_http_adaptive_stream_plugin, "~> 0.7"}
     ]
   end
 

@@ -5,7 +5,7 @@ defmodule Membrane.Demo.RtmpToHls do
   def handle_init(_opts) do
     spec = %ParentSpec{
       children: %{
-        src: %Membrane.RTMP.Bin{port: 9009},
+        src: %Membrane.RTMP.SourceBin{port: 9009},
         sink: %Membrane.HTTPAdaptiveStream.SinkBin{
           manifest_module: Membrane.HTTPAdaptiveStream.HLS,
           target_window_duration: 20 |> Membrane.Time.seconds(),

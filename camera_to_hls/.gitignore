@@ -1,8 +1,4 @@
-.idea/
-*.iml
-priv/certs/*.pem
-priv/static/assets
-priv/static/js
+/output/
 
 # The directory Mix will write compiled artifacts to.
 /_build/
@@ -26,9 +22,5 @@ erl_crash.dump
 *.ez
 
 # Ignore package tarball (built via "mix hex.build").
-videoroom-*.tar
-
-.elixir_ls
-
-node_modules
+membrane_demo_rtp_to_hls-*.tar
 

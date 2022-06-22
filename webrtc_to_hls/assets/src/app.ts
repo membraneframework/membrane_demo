@@ -1,6 +1,6 @@
 import "../css/app.scss";
 
-import { MembraneWebRTC, SerializedMediaEvent } from "membrane_rfc_engine";
+import { MembraneWebRTC, SerializedMediaEvent } from "membrane_rtc_engine";
 import { Push, Socket } from "phoenix";
 import { setErrorMessage, setPlayerInfo, setPreview } from "./ui";
 
@@ -80,14 +80,15 @@ const setup = async () => {
       onSendMediaEvent: (mediaEvent: SerializedMediaEvent) => {
         webrtcChannel.push("mediaEvent", { data: mediaEvent });
       },
+      onJoinSuccess: () => {
+        localStream
+          .getTracks()
+          .forEach((track) => webrtc.addTrack(track, localStream, {}, true));
+      },
     },
   });
 
   await awaitPhoenixPush(webrtcChannel.join());
-
-  localStream
-    .getTracks()
-    .forEach((track) => webrtc.addTrack(track, localStream));
 
   webrtc.join({
     displayName: "It's me, Mario!",
@@ -97,7 +98,6 @@ const setup = async () => {
     webrtc.receiveMediaEvent(event.data)
   );
   webrtcChannel.on("playlistPlayable", ({ playlistId }) => {
-    console.log("HLS playlist has become playable: ", playlistId);
     setPlayerInfo(playlistId);
   });
 };

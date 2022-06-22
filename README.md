@@ -8,7 +8,7 @@ In the subdirectories of this repository you can find some examples of using the
 - [simple_element](https://github.com/membraneframework/membrane_demo/tree/master/simple_element) - creating a simple element
 - [rtp](https://github.com/membraneframework/membrane_demo/tree/master/rtp) - sending and receiving RTP/SRTP stream
 - [rtp_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtp_to_hls) - receiving RTP stream and broadcasting it via HLS
-- [webrtc](https://github.com/membraneframework/membrane_demo/tree/master/webrtc) - setting up a WebRTC videoconference with [Membrane WebRTC signaling server](https://github.com/membraneframework/webrtc-server)
+- [webrtc](https://github.com/membraneframework/membrane_demo/tree/master/webrtc) - setting up a WebRTC videoconference with [Membrane RTC Engine](https://github.com/membraneframework/membrane_rtc_engine)
 
 ## Copyright and License
 

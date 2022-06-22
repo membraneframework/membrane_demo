@@ -1,17 +1,20 @@
-name: WebRTC Videoroom - Tag Build and Deploy
+name: WebRTC Videoroom - Tag Build
 on:
   push:
     tags: 
       - "*.*.*"
-    paths:
-      - "webrtc/videoroom"
-      - "!webrtc/videoroom/README.md"
 
 jobs:
-  build_and_deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Declare variables
+        id: vars
+        shell: bash
+        run: |
+          echo "::set-output name=version::$(git describe --tags --always)"
 
       - name: Get tag
         id: tag
@@ -42,6 +45,7 @@ jobs:
           context: webrtc/videoroom
           file: webrtc/videoroom/Dockerfile
           push: true
+          build-args: VERSION= ${{ steps.vars.outputs.version }}
           tags: membraneframework/demo_webrtc_videoroom:${{ steps.tag.outputs.tag }}
 
       - name: Build and push latest version 
@@ -51,16 +55,5 @@ jobs:
           context: webrtc/videoroom
           file: webrtc/videoroom/Dockerfile
           push: true
-          tags: membraneframework/demo_webrtc_videoroom:latest
-      
-      - name: Deploy to Swarm
-        id: deploy
-        uses: sagebind/docker-swarm-deploy-action@v2
-        with:
-          remote_host: ${{ secrets.DEMO_SWARM_MANAGER }}
-          ssh_private_key: ${{ secrets.SSH_PRIV_KEY }}
-          ssh_public_key: ${{ secrets.SSH_SERVER_PUBLIC_KEY}}
-          args: stack deploy --compose-file webrtc/videoroom/docker-compose.yml videoroom
-
-
-          
+          build-args: VERSION= ${{ steps.vars.outputs.version }}
+          tags: membraneframework/demo_webrtc_videoroom:latest          

@@ -1,5 +1,3 @@
-import "../css/app.scss";
-
 import { MEDIA_CONSTRAINTS, LOCAL_PEER_ID } from "./consts";
 import {
   addVideoElement,
@@ -34,6 +32,15 @@ export class Room {
     this.displayName = this.parseUrl();
     this.webrtcChannel = this.socket.channel(`room:${getRoomId()}`);
 
+    this.webrtcChannel.onError(() => {
+      this.socketOff();
+      window.location.reload();
+    });
+    this.webrtcChannel.onClose(() => {
+      this.socketOff();
+      window.location.reload();
+    });
+
     this.webrtcSocketRefs.push(this.socket.onError(this.leave));
     this.webrtcSocketRefs.push(this.socket.onClose(this.leave));
 
@@ -42,22 +49,26 @@ export class Room {
         onSendMediaEvent: (mediaEvent: SerializedMediaEvent) => {
           this.webrtcChannel.push("mediaEvent", { data: mediaEvent });
         },
-        onTrackAdded: ({ stream, peer, metadata }) => {
-          attachStream(stream, peer.id);
-        },
         onConnectionError: setErrorMessage,
         onJoinSuccess: (peerId, peersInRoom) => {
+          this.localStream!.getTracks().forEach((track) =>
+            this.webrtc.addTrack(track, this.localStream!, {})
+          );
+
           this.peers = peersInRoom;
           this.peers.forEach((peer) => {
             addVideoElement(peer.id, peer.metadata.displayName, false);
           });
-
           this.updateParticipantsList();
         },
         onJoinError: (metadata) => {
           throw `Peer denied.`;
         },
-
+        onTrackReady: ({ stream, peer, metadata }) => {
+          attachStream(stream!, peer.id);
+        },
+        onTrackAdded: (ctx) => {},
+        onTrackRemoved: (ctx) => {},
         onPeerJoined: (peer) => {
           this.peers.push(peer);
           this.updateParticipantsList();
@@ -68,17 +79,29 @@ export class Room {
           removeVideoElement(peer.id);
           this.updateParticipantsList();
         },
+        onPeerUpdated: (ctx) => {},
       },
     });
 
-    this.webrtcChannel.on("mediaEvent", (event) =>
+    this.webrtcChannel.on("mediaEvent", (event: any) =>
       this.webrtc.receiveMediaEvent(event.data)
     );
   }
 
-  public init = async () => {
-    await this.phoenixChannelPushResult(this.webrtcChannel.join());
+  public join = async () => {
+    try {
+      await this.init();
+      setupDisconnectButton(() => {
+        this.leave();
+        window.location.replace("");
+      });
+      this.webrtc.join({ displayName: this.displayName });
+    } catch (error) {
+      console.error("Error while joining to the room:", error);
+    }
+  };
 
+  private init = async () => {
     try {
       this.localStream = await navigator.mediaDevices.getUserMedia(
         MEDIA_CONSTRAINTS
@@ -91,25 +114,19 @@ export class Room {
       throw "error";
     }
 
-    this.localStream
-      .getTracks()
-      .forEach((track) => this.webrtc.addTrack(track, this.localStream!));
-
     addVideoElement(LOCAL_PEER_ID, "Me", true);
-    attachStream(this.localStream, LOCAL_PEER_ID);
-  };
+    attachStream(this.localStream!, LOCAL_PEER_ID);
 
-  public join = () => {
-    setupDisconnectButton(() => {
-      this.leave();
-      window.location.replace("");
-    });
-    this.webrtc.join({ displayName: this.displayName });
+    await this.phoenixChannelPushResult(this.webrtcChannel.join());
   };
 
   private leave = () => {
     this.webrtc.leave();
     this.webrtcChannel.leave();
+    this.socketOff();
+  };
+
+  private socketOff = () => {
     this.socket.off(this.webrtcSocketRefs);
     while (this.webrtcSocketRefs.length > 0) {
       this.webrtcSocketRefs.pop();

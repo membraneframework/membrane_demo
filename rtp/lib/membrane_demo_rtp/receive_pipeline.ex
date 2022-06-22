@@ -11,8 +11,7 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
       children: [
         video_src: %Membrane.Element.UDP.Source{
           local_port_no: video_port,
-          local_address: {127, 0, 0, 1},
-          remote_address: 
+          local_address: {127, 0, 0, 1}
         },
         audio_src: %Membrane.Element.UDP.Source{
           local_port_no: audio_port,

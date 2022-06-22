@@ -48,8 +48,8 @@ defmodule RtmpToHls.MixProject do
 
       ## Membrane deps
       {:membrane_core, "~> 0.10"},
-      {:membrane_rtmp_plugin, "~> 0.4"},
-      {:membrane_http_adaptive_stream_plugin, "~> 0.7"}
+      {:membrane_rtmp_plugin, "~> 0.6"},
+      {:membrane_http_adaptive_stream_plugin, "~> 0.8"},
     ]
   end
 

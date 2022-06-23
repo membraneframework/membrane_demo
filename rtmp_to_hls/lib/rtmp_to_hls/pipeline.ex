@@ -26,19 +26,13 @@ defmodule Membrane.Demo.RtmpToHls do
       ]
     }
 
-    {{:ok, spec: spec}, %{}}
+    {{:ok, spec: spec, playback: :playing}, %{}}
   end
 
   def child_spec(_opts) do
     %{
       id: __MODULE__,
-      start: {__MODULE__, :start_and_play, []}
+      start: {__MODULE__, :start_link, [nil]}
     }
-  end
-
-  def start_and_play() do
-    {:ok, pid} = start_link(nil)
-    play(pid)
-    {:ok, pid}
   end
 end

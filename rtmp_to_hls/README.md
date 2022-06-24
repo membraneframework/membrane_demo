@@ -49,7 +49,7 @@ Once you have OBS installed, you can perform the following steps:
 5. Finally, you can go back to the main windows and start streaming with the `Start Streaming` button.
    
 Below you can see how to set the appropriate settings (step 2), 3) and 4) from the list of steps above):
-![OBS settings](doc_assets/OBS_settings.webm)
+![OBS settings](doc_assets/OBS_settings.webp)
 
 ## Copyright and License
 

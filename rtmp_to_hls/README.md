@@ -49,7 +49,7 @@ Once you have OBS installed, you can perform the following steps:
 3. Go to the `Stream` tab and set the value in the `Server` field to: `rtmp://localhost:9009` (the address where the server is waiting for the stream)
 4. Finally, you can go back to the main windows and start streaming with the `Start Streaming` button.
    
-Below you can see how to set the appropriate settings (step 2), 3) and 4) from the list of steps above):
+Below you can see how to set the appropriate settings (step 2) and 3) from the list of steps above):
 ![OBS settings](doc_assets/OBS_settings.webp)
 
 ## Copyright and License

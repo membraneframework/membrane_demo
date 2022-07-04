@@ -54,8 +54,6 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
     port = set_port()
     output_path = get_output_path(id, token)
 
-    Logger.debug("ConnectionManager_#{id}: init, #{output_path}")
-
     {:connect, :init,
      %ConnectionStatus{
        status: :error,

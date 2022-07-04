@@ -38,9 +38,11 @@ Finally, you can start the phoenix server:
 mix phx.server
 ```
 
-The server will be waiting for RTMP stream on `localhost:9009`, and the client of the application will be available on `localhost:4000`.
-### Running OBS
-Here is an example on how to generate RTMP stream. It uses [OBS](https://obsproject.com).
+The server will be waiting for an RTMP stream on `localhost:9009`, and the client of the application will be available on `localhost:4000`.
+
+### Exemplary stream generation with OBS
+You can send RTMP stream onto `localhost:9009` with your favorite streaming tool. However, below we present how to generate an RTMP stream with
+[OBS](https://obsproject.com).
 Once you have OBS installed, you can perform the following steps:
 1. Open the OBS application
 2. Open the `Settings` windows

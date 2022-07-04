@@ -9,7 +9,7 @@ The streamer sents multimedia with the use of RTMP as it is protocol supported b
 ## Architecture of the solution
 
 The system is devided into two parts:
-* the server, responsible for receiving RTMP stream, converting it into HLS and then publishing the created files as a HTTP server,
+* the server, responsible for receiving RTMP stream, converting it into HLS and then publishing the created files with a HTTP server,
 * the client, responsible for playing the incoming HLS stream.
 
 ### Server
@@ -19,7 +19,7 @@ The internal architecture of the server is presented below:
 
 
 ### Client
-Client is just a simple javascript application, the [HLS.js](https://github.com/video-dev/hls.js/) web player.
+Client is just a simple javascript application using the [HLS.js](https://github.com/video-dev/hls.js/) web player.
 
 ## How to run the demo?
 In order to run the demo, clone the membrane_demo repository and checkout to the demo directory:

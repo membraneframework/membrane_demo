@@ -47,8 +47,7 @@ Once you have OBS installed, you can perform the following steps:
 1. Open the OBS application
 2. Open the `Settings` windows
 3. Go to the `Stream` tab and set the value in the `Server` field to: `rtmp://localhost:9009` (the address where the server is waiting for the stream)
-4. Optionally you can go to the `Output` tab, under the `Stream` tab, set the `Output mode` to `Advanced`, and change the h264 `Profile` to the desired one 
-5. Finally, you can go back to the main windows and start streaming with the `Start Streaming` button.
+4. Finally, you can go back to the main windows and start streaming with the `Start Streaming` button.
    
 Below you can see how to set the appropriate settings (step 2), 3) and 4) from the list of steps above):
 ![OBS settings](doc_assets/OBS_settings.webp)

@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  hls_proxy_api:
+    build:
+      context: ./hls_proxy_api
+    environment:
+      - UDP_PORT_RANGE=20000-20020
+      - PLAYER_BASE_URL=95.217.182.18:8000
+      - CONVERTER_BASE_URL=http://95.217.182.18:4000
+      - SERVER_BASE_URL=http://95.217.182.18:8080
+      - OUTPUT_PATH=/app/output
+    ports:
+      - "20000-20020:20000-20020/udp"
+    depends_on:
+      - hls_proxy_server
+    volumes:
+      - output:/app/output
+  hls_proxy_server:
+    build:
+      context: ./hls_proxy_server
+    environment:
+      - PLAYER_BASE_URL=http://95.217.182.18:8000
+    ports:
+      - 8080:80
+    volumes:
+      - output:/hls_output
+  hls_proxy_player:
+    build:
+      context: ./hls_proxy_player
+    environment:
+      - SERVER_BASE_URL=http://95.217.182.18:8080
+    ports:
+      - 8000:80
+volumes:
+  output:

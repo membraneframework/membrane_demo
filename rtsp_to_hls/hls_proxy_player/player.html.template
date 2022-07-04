@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <title>HLS Proxy player</title>
+  </head>
+
+  <body style="margin:0">
+      <main role="main">
+        <video controls id="video" style="width:100%;height:auto" muted="muted"></video>
+        <script>
+          console.log(Hls.isSupported());
+
+          if (Hls.isSupported()) {
+            var video = document.getElementById('video');
+            var hls = new Hls({ autoStartLoad: false });
+            // bind them together
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MEDIA_ATTACHED, function () {
+              console.log('video and hls.js are now bound together !');
+              hls.loadSource('${SERVER_BASE_URL}/stream_path/index.m3u8');
+              hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
+                console.log(
+                  'manifest loaded, found ' + data.levels.length + ' quality level'
+                );
+                var timeout;
+                video.onplay = function() {
+                  hls.startLoad()
+                  timeout = setTimeout(function(){ video.pause() }, 120000);
+                }
+                video.onpause = function() {
+                  hls.stopLoad()
+                  clearTimeout(timeout);
+                }
+                video.play();
+              });
+            });
+            hls.on(Hls.Events.ERROR, function (event, data) {
+              console.error(data)
+            });
+          }
+        </script>
+      </main>
+    </div>
+  </body>
+</html>

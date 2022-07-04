@@ -1,5 +1,7 @@
 defmodule HlsProxyApi.Connection.ConnectionStarter do
-  @moduledoc false
+  @moduledoc """
+  A module responsible for initializing the RTSP connection.
+  """
   use Task
 
   require Logger

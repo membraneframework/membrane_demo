@@ -1,5 +1,7 @@
 defmodule HlsProxyApi.Connection.RtspKeepAlive do
-  @moduledoc false
+  @moduledoc """
+  This module is responsible for maintaining the RTSP connection.
+  """
   use GenServer
 
   require Logger

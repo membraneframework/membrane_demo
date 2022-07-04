@@ -1,5 +1,7 @@
 defmodule HlsProxyApi.Pipelines.RtpToHls do
-  @moduledoc false
+  @moduledoc """
+  The pipeline, which converts the RTP stream to HLS.
+  """
   use Membrane.Pipeline
 
   require Logger
@@ -13,9 +15,6 @@ defmodule HlsProxyApi.Pipelines.RtpToHls do
       },
       rtp: %Membrane.RTP.SessionBin{
         fmt_mapping: %{96 => {:H264, 90_000}}
-        # depayloaders: %{
-        #   :H264 => Membrane.RTP.H264.Depayloader
-        # }
       },
       hls: %Membrane.HTTPAdaptiveStream.Sink{
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
@@ -28,7 +27,6 @@ defmodule HlsProxyApi.Pipelines.RtpToHls do
 
     links = [
       link(:app_source)
-      # |> via_in(Pad.ref(:input, make_ref()), buffer: [fail_size: 300])
       |> via_in(Pad.ref(:rtp_input, make_ref()))
       |> to(:rtp)
     ]

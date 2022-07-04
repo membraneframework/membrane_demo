@@ -2,6 +2,10 @@
 
 This project demonstrates receiving RTSP stream and converting it to HLS stream.
 
+## Prerequisites
+
+In order to run this demo you have to run it on a machine with a publicly visible ip address, with a `docker-compose` installed.
+
 ## Components
 The project consists of 3 parts:
 
@@ -21,7 +25,7 @@ You can then run the demo:
 docker-compose up
 ```
 
-After a few seconds you will be able to view the sample stream by going to `PLAYER_BASE_URL` in your browser.
+After a few seconds you will be able to view the sample stream by going to `PLAYER_BASE_URL` in the browser.
 
 ## Copyright and License
 

@@ -4,12 +4,12 @@ This demo is an application which is capable of receiving RTMP stream, convertin
 ## Possible use cases
 The application presented in this demo could be used in the following scenario.
 There is one person, so called "streamer", and multiple "viewers", who want to see the stream of multimedia sent by the streamer.
-The streamer sents multimedia with the use of RTMP as it is protocol supported by the streamer's streaming tool (i.e. OBS). Such a RTMP stream is then converted into HLS and published by the HTTP server, which is capable of handling many HTTP requests. The viewers can then play the multimedia stream by downloading the files from the server with the use of HTTP. Such a solution scales well since the streamer do not need to have a direct connection with each of the viewers.
+The streamer sends multimedia using RTMP, a protocol supported by popular streaming software (i.e. OBS). Such a RTMP stream is then converted into HLS and published by the HTTP server, which is capable of handling many HTTP requests. The viewers can then play the multimedia stream by downloading the files from the server with the use of HTTP. Such a solution scales well because the streamer doesn't have a direct connection with any of the viewers.
 
 ## Architecture of the solution
 
 The system is devided into two parts:
-* the server, responsible for receiving RTMP stream, converting it into HLS and then publishing the created files as a HTTP server,
+* the server, responsible for receiving RTMP stream, converting it into HLS and then publishing the created files with a HTTP server,
 * the client, responsible for playing the incoming HLS stream.
 
 ### Server
@@ -19,7 +19,7 @@ The internal architecture of the server is presented below:
 
 
 ### Client
-Client is just a simple javascript application, the [HLS.js](https://github.com/video-dev/hls.js/) web player.
+Client is just a simple javascript application using the [HLS.js](https://github.com/video-dev/hls.js/) web player.
 
 ## How to run the demo?
 In order to run the demo, clone the membrane_demo repository and checkout to the demo directory:

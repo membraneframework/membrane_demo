@@ -59,6 +59,4 @@ ENTRYPOINT [ "./docker-entrypoint.sh" ]
 
 COPY --from=build /app/_build/prod/rel/hls_proxy_api ./
 
-# ENV HOME=/app
-
 CMD ["bin/hls_proxy_api", "start"]

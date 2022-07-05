@@ -7,7 +7,7 @@ defmodule HlsProxyApi.MixProject do
       version: "0.1.0",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:gettext] ++ Mix.compilers(),
+      compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       dialyzer: dialyzer()
@@ -32,7 +32,6 @@ defmodule HlsProxyApi.MixProject do
       {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
       {:credo, ">= 0.0.0", only: :dev, runtime: false},
       {:connection, "~> 1.1"},
-      {:gettext, "~> 0.11"},
       {:membrane_rtsp, "~> 0.3"},
       {:membrane_udp_plugin, "~> 0.8"},
       {:membrane_rtp_plugin, "~> 0.14"},

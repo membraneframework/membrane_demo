@@ -6,8 +6,8 @@ services:
       context: ./hls_proxy_api
     environment:
       - UDP_PORT_RANGE=20000-20004
-      - PLAYER_BASE_URL=http://${MACHINE_IP}:8000
-      - SERVER_BASE_URL=http://${MACHINE_IP}:8080
+      - PLAYER_BASE_URL=http://${PUBLIC_IP}:8000
+      - SERVER_BASE_URL=http://${PUBLIC_IP}:8080
       - OUTPUT_PATH=/app/output
     ports:
       - "20000-20004:20000-20004/udp"
@@ -19,7 +19,7 @@ services:
     build:
       context: ./hls_proxy_server
     environment:
-      - PLAYER_BASE_URL=http://${MACHINE_IP}:8000
+      - PLAYER_BASE_URL=http://${PUBLIC_IP}:8000
     ports:
       - 8080:80
     volumes:
@@ -28,7 +28,7 @@ services:
     build:
       context: ./hls_proxy_player
     environment:
-      - SERVER_BASE_URL=http://${MACHINE_IP}:8080
+      - SERVER_BASE_URL=http://${PUBLIC_IP}:8080
     ports:
       - 8000:80
 volumes:

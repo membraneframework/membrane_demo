@@ -16,7 +16,7 @@ The project consists of 3 parts:
 ## Running the demo
 
 You can use `docker-compose` to set up all containers.
-You need to set `SERVER_BASE_URL` and `PLAYER_BASE_URL` ENV vars to be in the `.env` file.
+You need to set `PUBLIC_IP` environment variable in the `.env` file.
 
 The ip should be the public ip address of your machine.
 
@@ -25,7 +25,7 @@ You can then run the demo:
 docker-compose up
 ```
 
-After a few seconds you will be able to view the sample stream by going to `PLAYER_BASE_URL` in the browser.
+After a few seconds you will be able to view the sample stream by going to `PUBLIC_IP:8000` in the browser.
 
 ## Copyright and License
 

@@ -253,8 +253,8 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
     Logger.debug("ConnectionManager_#{connection_status.stream.id}: Setting up RTSP description")
 
     case RTSP.describe(rtsp_session) do
-      {:ok, %{status: 200} = response} ->
-        attributes = get_video_attributes(response)
+      {:ok, %{status: 200, body: %{media: sdp_media}}} ->
+        attributes = get_video_attributes(sdp_media)
 
         get_sps_pps(attributes)
         |> Keyword.put(:control, attributes["control"])
@@ -383,7 +383,7 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
     |> then(fn list -> [[:sps, :pps], list] |> List.zip() end)
   end
 
-  defp get_video_attributes(%{body: %{media: sdp_media}}) do
+  defp get_video_attributes(sdp_media) do
     video_protocol = sdp_media |> Enum.find(fn elem -> elem.type == :video end)
 
     Map.fetch!(video_protocol, :attributes)

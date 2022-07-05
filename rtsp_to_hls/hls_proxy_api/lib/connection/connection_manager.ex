@@ -14,7 +14,7 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
   defmodule ConnectionStatus do
     @moduledoc false
     @type t :: %__MODULE__{
-            status: :ok | :error,
+            status: :ok | :not_connected,
             stream: %HlsProxyApi.Streams.Stream{},
             rtsp_session: pid(),
             pipeline: pid(),
@@ -56,7 +56,7 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
 
     {:connect, :init,
      %ConnectionStatus{
-       status: :error,
+       status: :not_connected,
        stream: stream,
        pipeline_options: [
          port: port,
@@ -123,7 +123,7 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
 
     connection_status = %{
       connection_status
-      | status: :error,
+      | status: :not_connected,
         pipeline: nil,
         rtsp_session: nil,
         keep_alive: nil

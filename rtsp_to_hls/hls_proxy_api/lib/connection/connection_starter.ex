@@ -9,6 +9,8 @@ defmodule HlsProxyApi.Connection.ConnectionStarter do
   alias HlsProxyApi.Connection.ConnectionSupervisor
   alias HlsProxyApi.Streams.Stream
 
+  @rtsp_stream_url "rtsp://rtsp.membrane.work:554/testsrc.264"
+
   @spec start_link(Keyword.t()) :: {:ok, pid()}
   def start_link(_args) do
     Task.start_link(__MODULE__, :run, [])
@@ -23,9 +25,8 @@ defmodule HlsProxyApi.Connection.ConnectionStarter do
     ConnectionSupervisor.start_stream(
       ConnectionSupervisor,
       %Stream{
-        id: "stream",
-        stream_url: "rtsp://rtsp.membrane.work:554/testsrc.264",
-        token: "path"
+        stream_url: @rtsp_stream_url,
+        path: Application.fetch_env!(:hls_proxy_api, :hls_path)
       }
     )
   end

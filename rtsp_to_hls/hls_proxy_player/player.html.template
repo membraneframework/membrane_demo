@@ -14,7 +14,7 @@
       <main role="main">
         <video controls id="video" style="width:100%;height:auto" muted="muted"></video>
         <script>
-          console.log(Hls.isSupported());
+          console.log(Hls.isSupported() ? 'HLS is supported' : 'HLS is not supported');
 
           if (Hls.isSupported()) {
             var video = document.getElementById('video');
@@ -23,7 +23,7 @@
             hls.attachMedia(video);
             hls.on(Hls.Events.MEDIA_ATTACHED, function () {
               console.log('video and hls.js are now bound together !');
-              hls.loadSource('${SERVER_BASE_URL}/stream_path/index.m3u8');
+              hls.loadSource('${SERVER_BASE_URL}/${HLS_PATH}/index.m3u8');
               hls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
                 console.log(
                   'manifest loaded, found ' + data.levels.length + ' quality level'

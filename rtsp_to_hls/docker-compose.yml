@@ -9,6 +9,7 @@ services:
       - PLAYER_BASE_URL=http://${PUBLIC_IP}:8000
       - SERVER_BASE_URL=http://${PUBLIC_IP}:8080
       - OUTPUT_PATH=/app/output
+      - HLS_PATH=stream
     ports:
       - "20000-20004:20000-20004/udp"
     depends_on:
@@ -29,6 +30,7 @@ services:
       context: ./hls_proxy_player
     environment:
       - SERVER_BASE_URL=http://${PUBLIC_IP}:8080
+      - HLS_PATH=stream
     ports:
       - 8000:80
 volumes:

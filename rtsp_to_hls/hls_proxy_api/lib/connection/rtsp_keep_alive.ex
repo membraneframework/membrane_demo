@@ -17,14 +17,14 @@ defmodule HlsProxyApi.Connection.RtspKeepAlive do
 
   @impl true
   def init(session) do
-    Process.send_after(self(), :ping, @keep_alive_interva)
+    Process.send_after(self(), :ping, @keep_alive_interval)
     {:ok, session}
   end
 
   @impl true
   def handle_info(:ping, session) do
     with {:ok, %RTSP.Response{status: 200}} <- RTSP.get_parameter(session) do
-      Process.send_after(self(), :ping, @keep_alive_interva)
+      Process.send_after(self(), :ping, @keep_alive_interval)
       {:noreply, session}
     else
       error ->

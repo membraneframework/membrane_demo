@@ -13,11 +13,11 @@ defmodule HlsProxyApi.Connection.ConnectionSupervisor do
   end
 
   @spec start_stream(__MODULE__, Stream.t()) :: Supervisor.on_start_child()
-  def start_stream(supervisor, %Stream{id: id} = stream) do
-    Logger.debug("ConnectionSupervisor: Starting stream #{id}")
+  def start_stream(supervisor, %Stream{stream_url: stream_url} = stream) do
+    Logger.debug("ConnectionSupervisor: Starting stream #{stream_url}")
 
     DynamicSupervisor.start_child(supervisor, %{
-      id: "ConnectionManager_#{id}",
+      id: "ConnectionManager",
       start: {ConnectionManager, :start_link, [stream]},
       restart: :transient
     })

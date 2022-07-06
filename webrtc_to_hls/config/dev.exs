@@ -1,25 +1,32 @@
 import Config
 
 config :membrane_webrtc_to_hls_demo, WebRTCToHLSWeb.Endpoint,
-  url: [host: "localhost"],
-  http: [
-    port: 4000
-  ],
+  code_reloader: true,
   watchers: [
-    node: [
-      "node_modules/webpack/bin/webpack.js",
-      "--mode",
-      "development",
-      "--watch-stdin",
+    esbuild:
+      {Esbuild, :install_and_run,
+       [
+         :default,
+         ~w(--sourcemap=inline --bundle --watch)
+       ]},
+    npx: [
+      "tailwindcss",
+      "--input=css/app.css",
+      "--output=../priv/static/assets/css/app.css",
+      "--postcss",
+      "--watch",
       cd: Path.expand("../assets", __DIR__)
     ]
-  ],
-  code_reloader: true,
+  ]
+
+config :membrane_webrtc_to_hls_demo, WebRTCToHLSWeb.Endpoint,
   live_reload: [
-    dirs: [
-      "priv/static",
-      "lib/videoroom_web/controllers",
-      "lib/videoroom_web/views",
-      "lib/videoroom_web/templates"
+    patterns: [
+      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
+      ~r"priv/gettext/.*(po)$",
+      ~r"lib/WebRTCToHLS_web/(live|views)/.*(ex)$",
+      ~r"lib/WebRTCToHLS_web/templates/.*(eex)$"
     ]
   ]
+
+config :logger, level: :info

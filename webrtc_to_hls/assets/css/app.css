@@ -19,55 +19,54 @@ h3 {
   flex-direction: column;
   align-items: center;
   padding: 60px 40px 40px 40px;
+}
 
-  a {
-    text-decoration: none;
-    cursor: pointer;
+.Index a {
+  text-decoration: none;
+  cursor: pointer;
+}
 
-    &,
-    &:visited,
-    &:active {
-      color: inherit;
-    }
+.Index :visited,
+.Index :active {
+  color: inherit;
+}
 
-    &:hover {
-      color: #404040;
-    }
-  }
+.Index :hover {
+  color: #404040;
 }
 
 .Preview {
   display: flex;
   justify-content: center;
   align-items: center;
+}
 
-  video {
-    max-width: 100%;
-    border-radius: 5px;
-  }
+.Preview video {
+  max-width: 100%;
+  border-radius: 5px;
 }
 
 .PlayerInfo {
   display: flex;
   justify-content: center;
   flex-direction: column;
+}
 
-  a {
-    text-align: center;
-    margin-bottom: 20px;
-  }
+.PlayerInfo a {
+  text-align: center;
+  margin-bottom: 20px;
+}
 
-  span {
-    text-align: center;
-  }
+.PlayerInfo span {
+  text-align: center;
 }
 
 .Player {
   width: 80%;
+}
 
-  video {
-    outline: none;
-  }
+.Player video {
+  outline: none;
 }
 
 .Control {

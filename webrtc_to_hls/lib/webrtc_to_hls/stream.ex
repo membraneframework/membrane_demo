@@ -79,7 +79,7 @@ defmodule WebRTCToHLS.Stream do
       rtc_engine: pid,
       owner: self(),
       output_directory:
-        Application.fetch_env!(:membrane_webrtc_to_hls_demo, :hls_output_mount_path)
+        Application.fetch_env!(:membrane_webrtc_to_hls_demo, :hls_output_mount_path),
       target_window_duration: :infinity
     }
 

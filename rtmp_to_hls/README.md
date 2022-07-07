@@ -1,15 +1,15 @@
 # RTMP to HLS 
-This demo is an application which is capable of receiving RTMP stream, converting it to HLS and publishing via HTTP server, so that it can be played with a web player.
+This demo is an application that is capable of receiving RTMP stream, converting it to HLS, and publishing via an HTTP server so that it can be played with a web player.
 
 ## Possible use cases
 The application presented in this demo could be used in the following scenario.
-There is one person, so called "streamer", and multiple "viewers", who want to see the stream of multimedia sent by the streamer.
-The streamer sends multimedia using RTMP, a protocol supported by popular streaming software (i.e. OBS). Such a RTMP stream is then converted into HLS and published by the HTTP server, which is capable of handling many HTTP requests. The viewers can then play the multimedia stream by downloading the files from the server with the use of HTTP. Such a solution scales well because the streamer doesn't have a direct connection with any of the viewers.
+There is one person, the so-called "streamer", and multiple "viewers", who want to see the stream of multimedia sent by the streamer.
+The streamer sends multimedia using RTMP, a protocol supported by popular streaming software (i.e. OBS). Such an RTMP stream is then converted into HLS and published by the HTTP server, which is capable of handling many HTTP requests. The viewers can then play the multimedia delivered with HTTP. Such a solution scales well because the streamer doesn't have a direct connection with any of the viewers.
 
 ## Architecture of the solution
 
-The system is devided into two parts:
-* the server, responsible for receiving RTMP stream, converting it into HLS and then publishing the created files with a HTTP server,
+The system is divided into two parts:
+* the server, is responsible for receiving the RTMP stream, converting it into HLS, and then publishing the created files with an HTTP server,
 * the client, responsible for playing the incoming HLS stream.
 
 ### Server
@@ -19,10 +19,10 @@ The internal architecture of the server is presented below:
 
 
 ### Client
-Client is just a simple javascript application using the [HLS.js](https://github.com/video-dev/hls.js/) web player.
+The client is just a simple javascript application using the [HLS.js](https://github.com/video-dev/hls.js/) web player.
 
 ## How to run the demo?
-In order to run the demo, clone the membrane_demo repository and checkout to the demo directory:
+To run the demo, clone the membrane_demo repository and checkout to the demo directory:
 ```
 git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/rtmp_to_hls
@@ -47,8 +47,8 @@ Once you have OBS installed, you can perform the following steps:
 1. Open the OBS application
 2. Open the `Settings` windows
 3. Go to the `Stream` tab and set the value in the `Server` field to: `rtmp://localhost:9009` (the address where the server is waiting for the stream)
-4. Finally, you can go back to the main windows and start streaming with the `Start Streaming` button.
-   
+4. Finally, you can go back to the main window and start streaming with the `Start Streaming` button.
+ 
 Below you can see how to set the appropriate settings (step 2) and 3) from the list of steps above):
 ![OBS settings](doc_assets/OBS_settings.webp)
 

@@ -79,7 +79,8 @@ defmodule WebRTCToHLS.Stream do
       rtc_engine: pid,
       owner: self(),
       output_directory:
-        Application.fetch_env!(:membrane_webrtc_to_hls_demo, :hls_output_mount_path)
+        Application.fetch_env!(:membrane_webrtc_to_hls_demo, :hls_output_mount_path),
+      target_window_duration: :infinity
     }
 
     :ok = Engine.add_endpoint(pid, endpoint)
@@ -210,7 +211,7 @@ defmodule WebRTCToHLS.Stream do
 
   defp create_context(name) do
     metadata = [
-      {:"library.language", :erlang},
+      {:"library.language", :elixir},
       {:"library.name", :membrane_rtc_engine},
       {:"library.version", "server:#{Application.spec(:membrane_rtc_engine, :vsn)}"}
     ]

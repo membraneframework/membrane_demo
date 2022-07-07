@@ -17,8 +17,7 @@ defmodule WebRTCToHLS.Application do
     children = [
       {Reporter, [metrics: Membrane.RTC.Engine.Metrics.metrics(), name: WebRTCToHLSReporter]},
       WebRTCToHLSWeb.Endpoint,
-      {Phoenix.PubSub, name: WebRTCToHLS.PubSub},
-      {Registry, keys: :duplicate, name: WebRTCToHLS.Room.Registry}
+      {Phoenix.PubSub, name: WebRTCToHLS.PubSub}
     ]
 
     StorageCleanup.clean_unused_directories()

@@ -21,12 +21,12 @@ defmodule WebRTCToHLS.MixProject do
 
   defp deps do
     [
-      {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
+      {:membrane_rtc_engine, "~> 0.5.0"},
       {:plug_cowboy, "~> 2.5.2"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_view, "~> 0.16.0"},
-      {:phoenix_live_reload, "~> 1.2"},
+      {:phoenix_live_reload, "~> 1.3"},
       {:jason, "~> 1.2"},
       {:phoenix_inline_svg, "~> 1.4"},
       {:uuid, "~> 1.1"},

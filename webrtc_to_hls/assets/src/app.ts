@@ -1,16 +1,11 @@
-import "../css/app.scss";
-
-import { MembraneWebRTC, SerializedMediaEvent } from "membrane_rtc_engine";
+import {
+  MembraneWebRTC,
+  Peer,
+  SerializedMediaEvent,
+  TrackContext,
+} from "@membraneframework/membrane-webrtc-js";
 import { Push, Socket } from "phoenix";
 import { setErrorMessage, setPlayerInfo, setPreview } from "./ui";
-
-declare global {
-  interface MediaDevices {
-    getDisplayMedia: (
-      constraints: MediaStreamConstraints
-    ) => Promise<MediaStream>;
-  }
-}
 
 const awaitPhoenixPush = async (push: Push): Promise<any> => {
   return new Promise((resolve, reject) => {
@@ -27,12 +22,12 @@ export const AUDIO_CONSTRAINTS: MediaStreamConstraints = {
 
 export const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
   audio: false,
-  video: { width: 640, height: 360, frameRate: 24 },
+  video: { width: 1280, height: 720, frameRate: 24 },
 };
 
 export const LOCAL_PEER_ID = "local-peer";
 
-const setup = async () => {
+export const setup = async () => {
   const socket = new Socket("/socket");
   socket.connect();
 
@@ -55,9 +50,10 @@ const setup = async () => {
     localVideoStream = await navigator.mediaDevices.getUserMedia(
       VIDEO_CONSTRAINTS
     );
-    localVideoStream
-      .getTracks()
-      .forEach((track) => localStream.addTrack(track));
+    localVideoStream.getTracks().forEach((track) => {
+      localStream.addTrack(track);
+      console.log(track);
+    });
   } catch (error) {
     console.error("Couldn't get camera permission:", error);
   }
@@ -83,7 +79,7 @@ const setup = async () => {
       onJoinSuccess: () => {
         localStream
           .getTracks()
-          .forEach((track) => webrtc.addTrack(track, localStream, {}, true));
+          .forEach((track) => webrtc.addTrack(track, localStream, {}));
       },
     },
   });
@@ -101,5 +97,3 @@ const setup = async () => {
     setPlayerInfo(playlistId);
   });
 };
-
-setup();

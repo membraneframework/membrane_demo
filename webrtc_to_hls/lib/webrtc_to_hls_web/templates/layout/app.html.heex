@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -9,13 +8,12 @@
     <meta name="author" content="">
 
     <title>Membrane WebRTC to HLS demo</title>
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <link rel="stylesheet" href={static_path(@conn, "/assets/css/app.css")} >
   </head>
 
   <body>
       <main role="main">
         <%= @inner_content %>
       </main>
-    </div>
   </body>
 </html>

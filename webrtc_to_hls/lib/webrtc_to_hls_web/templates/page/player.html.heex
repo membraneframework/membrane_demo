@@ -2,7 +2,6 @@
 <video id="player" controls autoplay class="Player"></video>
 <script>
   var video = document.getElementById('player');
-
   var videoSrc = window.location.origin + `/video/${'<%= @prefix %>'}/index.m3u8`;
   if (Hls.isSupported()) {
     var hls = new Hls();

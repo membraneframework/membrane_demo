@@ -11,7 +11,7 @@ defmodule WebRTCToHLSWeb.Endpoint do
     from: :membrane_webrtc_to_hls_demo,
     brotli: true,
     gzip: true,
-    only: ~w(css html js robots.txt favicon.ico)
+    only: ~w(assets images html svg robots.txt favicon.ico)
   )
 
   if code_reloading? do
@@ -24,7 +24,8 @@ defmodule WebRTCToHLSWeb.Endpoint do
     parsers: [
       :urlencoded,
       :multipart,
-      :json
+      :json,
+      Absinthe.Plug.Parser
     ],
     pass: ["*/*"],
     json_decoder: Phoenix.json_library()

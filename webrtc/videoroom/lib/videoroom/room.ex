@@ -91,8 +91,8 @@ defmodule Videoroom.Room do
       ice_name: peer.id,
       extensions: %{},
       owner: self(),
-      stun_servers: state.network_options[:stun_servers] || [],
-      turn_servers: state.network_options[:turn_servers] || [],
+      integrated_turn_domain: "localhost",
+      integrated_turn_options: [ip: {127, 0, 0, 1}],
       handshake_opts: handshake_opts,
       log_metadata: [peer_id: peer.id]
     }

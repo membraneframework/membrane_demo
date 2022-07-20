@@ -8,8 +8,7 @@ defmodule HlsProxyApi.Application do
   def start(_type, _args) do
     children = [
       {Registry, keys: :unique, name: HlsProxyApi.Registry},
-      HlsProxyApi.Connection.ConnectionSupervisor,
-      HlsProxyApi.Connection.ConnectionStarter
+      HlsProxyApi.Connection.ConnectionSupervisor
     ]
 
     Logger.debug("Application is starting")

@@ -1,31 +1,40 @@
 defmodule HlsProxyApi.Connection.ConnectionSupervisor do
   @moduledoc false
-  use DynamicSupervisor
+  use Supervisor
 
   require Logger
 
   alias HlsProxyApi.Connection.ConnectionManager
   alias HlsProxyApi.Streams.Stream
 
+  @rtsp_stream_url "rtsp://rtsp.membrane.work:554/testsrc.264"
+
   @spec start_link(Keyword.t()) :: Supervisor.on_start()
   def start_link(_args) do
-    DynamicSupervisor.start_link(__MODULE__, [], name: __MODULE__)
-  end
-
-  @spec start_stream(__MODULE__, Stream.t()) :: Supervisor.on_start_child()
-  def start_stream(supervisor, %Stream{stream_url: stream_url} = stream) do
-    Logger.debug("ConnectionSupervisor: Starting stream #{stream_url}")
-
-    DynamicSupervisor.start_child(supervisor, %{
-      id: "ConnectionManager",
-      start: {ConnectionManager, :start_link, [stream]},
-      restart: :transient
-    })
+    Supervisor.start_link(
+      __MODULE__,
+      %Stream{
+        stream_url: @rtsp_stream_url,
+        path: Application.fetch_env!(:hls_proxy_api, :hls_path)
+      },
+      name: __MODULE__
+    )
   end
 
   @impl true
-  def init(_args) do
+  def init(stream) do
     Logger.debug("ConnectionSupervisor: Initializing")
-    DynamicSupervisor.init(strategy: :one_for_one)
+
+    File.rm_rf(Application.fetch_env!(:hls_proxy_api, :output_dir))
+
+    children = [
+      %{
+        id: "ConnectionManager",
+        start: {ConnectionManager, :start_link, [stream]},
+        restart: :transient
+      }
+    ]
+
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end

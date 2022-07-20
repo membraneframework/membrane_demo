@@ -5,7 +5,7 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
   require Logger
 
   alias HlsProxyApi.Pipelines.RtpToHls
-  alias HlsProxyApi.Streams.Stream
+  alias HlsProxyApi.Stream
   alias Membrane.RTSP
 
   @delay 15_000
@@ -15,7 +15,7 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
     @moduledoc false
     @type t :: %__MODULE__{
             status: :ok | :not_connected,
-            stream: %HlsProxyApi.Streams.Stream{},
+            stream: %HlsProxyApi.Stream{},
             rtsp_session: pid(),
             pipeline: pid(),
             keep_alive: pid(),

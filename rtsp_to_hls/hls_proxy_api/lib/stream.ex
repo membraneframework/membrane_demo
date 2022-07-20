@@ -1,4 +1,4 @@
-defmodule HlsProxyApi.Streams.Stream do
+defmodule HlsProxyApi.Stream do
   @moduledoc false
 
   defstruct [:path, :stream_url]

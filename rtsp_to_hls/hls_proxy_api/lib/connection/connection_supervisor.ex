@@ -5,7 +5,7 @@ defmodule HlsProxyApi.Connection.ConnectionSupervisor do
   require Logger
 
   alias HlsProxyApi.Connection.ConnectionManager
-  alias HlsProxyApi.Streams.Stream
+  alias HlsProxyApi.Stream
 
   @rtsp_stream_url "rtsp://rtsp.membrane.work:554/testsrc.264"
 

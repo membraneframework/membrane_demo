@@ -4,7 +4,6 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
 
   require Logger
 
-  alias HlsProxyApi.Connection.{PortAgent, RtspKeepAlive}
   alias HlsProxyApi.Pipelines.RtpToHls
   alias HlsProxyApi.Streams.Stream
   alias Membrane.RTSP
@@ -49,7 +48,8 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
   @impl true
   def init(%Stream{path: path} = stream) do
     Logger.debug("ConnectionManager: Initializing")
-    port = set_port()
+
+    port = System.get_env("UDP_PORT") |> String.to_integer()
     output_path = get_output_path(path)
 
     {:connect, :init,
@@ -129,7 +129,6 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
 
     case message do
       :close ->
-        PortAgent.remove(pipeline_options[:port])
         {:stop, :shutdown, connection_status}
 
       :reload ->
@@ -257,24 +256,6 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
       _result ->
         {:error, :getting_rtsp_description_failed}
     end
-  end
-
-  defp set_port() do
-    [start_range, end_range] =
-      System.get_env("UDP_PORT_RANGE")
-      |> String.split("-", parts: 2)
-      |> Enum.map(&String.to_integer/1)
-
-    Range.new(start_range, end_range, 2)
-    |> Enum.reduce_while(nil, fn port, _acc ->
-      case PortAgent.set_port(port) do
-        :ok ->
-          {:halt, port}
-
-        _error ->
-          {:cont, nil}
-      end
-    end)
   end
 
   defp setup_rtsp_connection(

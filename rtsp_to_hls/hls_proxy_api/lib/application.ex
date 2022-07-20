@@ -8,7 +8,6 @@ defmodule HlsProxyApi.Application do
   def start(_type, _args) do
     children = [
       {Registry, keys: :unique, name: HlsProxyApi.Registry},
-      HlsProxyApi.Connection.PortAgent,
       HlsProxyApi.Connection.ConnectionSupervisor,
       HlsProxyApi.Connection.ConnectionStarter
     ]

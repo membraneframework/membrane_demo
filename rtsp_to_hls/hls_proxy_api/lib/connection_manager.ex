@@ -4,7 +4,6 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
 
   require Logger
 
-  alias Membrane.Demo.RtspToHls.Stream
   alias Membrane.RTSP
 
   @delay 15_000
@@ -14,7 +13,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     @moduledoc false
     @type t :: %__MODULE__{
             status: :ok | :not_connected,
-            stream: %Stream{},
+            stream_url: binary(),
             rtsp_session: pid(),
             pipeline: pid(),
             keep_alive: pid(),
@@ -23,7 +22,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
 
     @enforce_keys [
       :status,
-      :stream,
+      :stream_url,
       :pipeline,
       :pipeline_options
     ]
@@ -45,21 +44,20 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
   end
 
   @impl true
-  def init(stream: %Stream{path: path} = stream, pipeline: pipeline) do
-    Logger.debug("ConnectionManager: init, args: #{inspect(stream)}")
-
+  def init(stream_url: stream_url, pipeline: pipeline) do
     Logger.debug("ConnectionManager: Initializing")
 
     port = System.get_env("UDP_PORT") |> String.to_integer()
-    output_path = get_output_path(path)
 
     {:connect, :init,
      %ConnectionStatus{
        status: :not_connected,
-       stream: stream,
+       stream_url: stream_url,
        pipeline_options: [
          port: port,
-         output_path: output_path
+         sps: nil,
+         pps: nil,
+         control: nil
        ],
        pipeline: pipeline
      }}
@@ -68,9 +66,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
   @impl true
   def connect(
         _info,
-        %ConnectionStatus{
-          stream: stream
-        } = connection_status
+        %ConnectionStatus{} = connection_status
       ) do
     Logger.debug("ConnectionManager: Connecting")
 
@@ -107,9 +103,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
   @impl true
   def disconnect(
         message,
-        %ConnectionStatus{
-          stream: stream
-        } = connection_status
+        %ConnectionStatus{} = connection_status
       ) do
     Logger.debug("ConnectionManager: Disconnecting: #{message}")
 
@@ -206,7 +200,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
 
   defp start_rtsp_session(%ConnectionStatus{
          rtsp_session: rtsp_session,
-         stream: %Stream{stream_url: stream_url}
+         stream_url: stream_url
        }) do
     if is_nil(rtsp_session) do
       case RTSP.start(stream_url) do
@@ -261,11 +255,6 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
 
         {:error, :setting_up_sdp_connection_failed}
     end
-  end
-
-  defp get_output_path(hls_path) do
-    directory_path = Application.fetch_env!(:hls_proxy_api, :output_dir)
-    Path.join(directory_path, hls_path)
   end
 
   defp play(%ConnectionStatus{rtsp_session: rtsp_session, pipeline: pipeline}) do

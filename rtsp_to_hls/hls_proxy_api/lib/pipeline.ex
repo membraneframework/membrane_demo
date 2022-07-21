@@ -6,7 +6,7 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
 
   require Logger
 
-  alias Membrane.Demo.RtspToHls.{ConnectionManager, Stream}
+  alias Membrane.Demo.RtspToHls.ConnectionManager
 
   @rtsp_stream_url "rtsp://rtsp.membrane.work:554/testsrc.264"
 
@@ -22,10 +22,7 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
           {ConnectionManager, :start_link,
            [
              [
-               stream: %Stream{
-                 stream_url: @rtsp_stream_url,
-                 path: Application.fetch_env!(:hls_proxy_api, :hls_path)
-               },
+               stream_url: options[:stream_url],
                pipeline: self()
              ]
            ]},
@@ -38,19 +35,7 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
       name: Membrane.Demo.RtspToHls.Supervisor
     )
 
-    # Supervisor.start_link(
-    #   __MODULE__,
-    #   [
-    #     stream: %Stream{
-    #       stream_url: @rtsp_stream_url,
-    #       path: Application.fetch_env!(:hls_proxy_api, :hls_path)
-    #     },
-    #     pipeline: self()
-    #   ],
-    #   name: __MODULE__
-    # )
-
-    {:ok, %{video: nil}}
+    {:ok, %{video: nil, output_path: options[:output_path]}}
   end
 
   @impl true
@@ -69,7 +54,7 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
         target_window_duration: 10 |> Membrane.Time.seconds(),
         storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{
-          directory: options[:output_path]
+          directory: state[:output_path]
         }
       }
     }

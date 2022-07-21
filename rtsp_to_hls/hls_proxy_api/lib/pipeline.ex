@@ -1,4 +1,4 @@
-defmodule HlsProxyApi.Pipelines.RtpToHls do
+defmodule Membrane.Demo.RtspToHls.Pipeline do
   @moduledoc """
   The pipeline, which converts the RTP stream to HLS.
   """
@@ -6,19 +6,49 @@ defmodule HlsProxyApi.Pipelines.RtpToHls do
 
   require Logger
 
+  alias Membrane.Demo.RtspToHls.{ConnectionManager, Stream}
+
+  @rtsp_stream_url "rtsp://rtsp.membrane.work:554/testsrc.264"
+
   @impl true
   def handle_init(options) do
     Logger.debug("Source handle_init options: #{inspect(options)}")
 
     connection_children = [
-      {Registry, keys: :unique, name: HlsProxyApi.Registry},
-      {HlsProxyApi.Connection.ConnectionSupervisor, pipeline: self()}
+      {Registry, keys: :unique, name: Membrane.Demo.RtspToHls.Registry},
+      %{
+        id: "ConnectionManager",
+        start:
+          {ConnectionManager, :start_link,
+           [
+             [
+               stream: %Stream{
+                 stream_url: @rtsp_stream_url,
+                 path: Application.fetch_env!(:hls_proxy_api, :hls_path)
+               },
+               pipeline: self()
+             ]
+           ]},
+        restart: :transient
+      }
     ]
 
     Supervisor.start_link(connection_children,
       strategy: :one_for_one,
-      name: HlsProxyApi.Supervisor
+      name: Membrane.Demo.RtspToHls.Supervisor
     )
+
+    # Supervisor.start_link(
+    #   __MODULE__,
+    #   [
+    #     stream: %Stream{
+    #       stream_url: @rtsp_stream_url,
+    #       path: Application.fetch_env!(:hls_proxy_api, :hls_path)
+    #     },
+    #     pipeline: self()
+    #   ],
+    #   name: __MODULE__
+    # )
 
     {:ok, %{video: nil}}
   end

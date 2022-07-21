@@ -1,4 +1,4 @@
-defmodule HlsProxyApi.Stream do
+defmodule Membrane.Demo.RtspToHls.Stream do
   @moduledoc false
 
   defstruct [:path, :stream_url]

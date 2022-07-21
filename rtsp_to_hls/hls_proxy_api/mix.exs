@@ -1,4 +1,4 @@
-defmodule HlsProxyApi.MixProject do
+defmodule Membrane.Demo.RtspToHls.MixProject do
   use Mix.Project
 
   def project do
@@ -17,7 +17,7 @@ defmodule HlsProxyApi.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {HlsProxyApi.Application, []},
+      mod: {Membrane.Demo.RtspToHls.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end

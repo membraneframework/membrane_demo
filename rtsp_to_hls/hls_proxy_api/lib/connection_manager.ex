@@ -1,10 +1,10 @@
-defmodule HlsProxyApi.Connection.ConnectionManager do
+defmodule Membrane.Demo.RtspToHls.ConnectionManager do
   @moduledoc false
   use Connection
 
   require Logger
 
-  alias HlsProxyApi.Stream
+  alias Membrane.Demo.RtspToHls.Stream
   alias Membrane.RTSP
 
   @delay 15_000
@@ -14,7 +14,7 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
     @moduledoc false
     @type t :: %__MODULE__{
             status: :ok | :not_connected,
-            stream: %HlsProxyApi.Stream{},
+            stream: %Stream{},
             rtsp_session: pid(),
             pipeline: pid(),
             keep_alive: pid(),
@@ -24,13 +24,13 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
     @enforce_keys [
       :status,
       :stream,
+      :pipeline,
       :pipeline_options
     ]
 
     defstruct @enforce_keys ++
                 [
                   :rtsp_session,
-                  :pipeline,
                   :keep_alive
                 ]
   end
@@ -40,7 +40,7 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
     Logger.debug("ConnectionManager: start_link, args: #{inspect(args)}")
 
     Connection.start_link(__MODULE__, args,
-      name: {:via, Registry, {HlsProxyApi.Registry, "ConnectionManager"}}
+      name: {:via, Registry, {Membrane.Demo.RtspToHls.Registry, "ConnectionManager"}}
     )
   end
 

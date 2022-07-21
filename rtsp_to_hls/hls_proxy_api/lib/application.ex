@@ -1,11 +1,10 @@
-defmodule HlsProxyApi.Application do
+defmodule Membrane.Demo.RtspToHls.Application do
   @moduledoc false
   use Application
 
   require Logger
 
-  alias HlsProxyApi.Pipelines.RtpToHls
-  alias HlsProxyApi.Stream
+  alias Membrane.Demo.RtspToHls.{Pipeline, Stream}
 
   @rtsp_stream_url "rtsp://rtsp.membrane.work:554/testsrc.264"
 
@@ -25,7 +24,7 @@ defmodule HlsProxyApi.Application do
 
     prepare_directory(pipeline_options[:output_path])
 
-    {:ok, pid} = RtpToHls.start_link(pipeline_options)
+    {:ok, pid} = Pipeline.start_link(pipeline_options)
     Membrane.Pipeline.play(pid)
 
     {:ok, pid}

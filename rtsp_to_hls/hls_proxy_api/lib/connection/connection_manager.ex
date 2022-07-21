@@ -4,7 +4,6 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
 
   require Logger
 
-  alias HlsProxyApi.Pipelines.RtpToHls
   alias HlsProxyApi.Stream
   alias Membrane.RTSP
 
@@ -36,17 +35,19 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
                 ]
   end
 
-  @spec start_link(Stream.t()) :: GenServer.on_start()
-  def start_link(stream) do
-    Logger.debug("ConnectionManager: start_link")
+  @spec start_link(Keyword.t()) :: GenServer.on_start()
+  def start_link(args) do
+    Logger.debug("ConnectionManager: start_link, args: #{inspect(args)}")
 
-    Connection.start_link(__MODULE__, stream,
+    Connection.start_link(__MODULE__, args,
       name: {:via, Registry, {HlsProxyApi.Registry, "ConnectionManager"}}
     )
   end
 
   @impl true
-  def init(%Stream{path: path} = stream) do
+  def init(stream: %Stream{path: path} = stream, pipeline: pipeline) do
+    Logger.debug("ConnectionManager: init, args: #{inspect(stream)}")
+
     Logger.debug("ConnectionManager: Initializing")
 
     port = System.get_env("UDP_PORT") |> String.to_integer()
@@ -59,7 +60,8 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
        pipeline_options: [
          port: port,
          output_path: output_path
-       ]
+       ],
+       pipeline: pipeline
      }}
   end
 
@@ -67,11 +69,9 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
   def connect(
         _info,
         %ConnectionStatus{
-          pipeline_options: pipeline_options,
           stream: stream
         } = connection_status
       ) do
-    stream
     Logger.debug("ConnectionManager: Connecting")
 
     rtsp_session = start_rtsp_session(connection_status)
@@ -82,8 +82,6 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
     else
       with {:ok, connection_status} <- get_rtsp_description(connection_status),
            :ok <- setup_rtsp_connection(connection_status),
-           :ok <- prepare_directory(pipeline_options[:output_path]),
-           {:ok, connection_status} <- start_pipeline(connection_status),
            {:ok, connection_status} <- start_keep_alive(connection_status),
            :ok <- play(connection_status) do
         connection_status = %{connection_status | status: :ok}
@@ -94,6 +92,8 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
           Membrane Pipeline: #{inspect(connection_status.pipeline)},
           RTSP keep alive: #{inspect(connection_status.keep_alive)}
         """)
+
+        send(connection_status.pipeline, {:pipeline_options, connection_status.pipeline_options})
 
         {:ok, connection_status}
       else
@@ -108,21 +108,16 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
   def disconnect(
         message,
         %ConnectionStatus{
-          stream: stream,
-          pipeline_options: pipeline_options
+          stream: stream
         } = connection_status
       ) do
-    stream
     Logger.debug("ConnectionManager: Disconnecting: #{message}")
 
     kill_children(connection_status)
 
-    File.rm_rf(pipeline_options[:output_path])
-
     connection_status = %{
       connection_status
       | status: :not_connected,
-        pipeline: nil,
         rtsp_session: nil,
         keep_alive: nil
     }
@@ -141,13 +136,9 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
   end
 
   defp kill_children(%ConnectionStatus{
-         pipeline: pipeline,
          keep_alive: keep_alive,
          rtsp_session: rtsp_session
        }) do
-    if !is_nil(pipeline) and Process.alive?(pipeline),
-      do: Membrane.Pipeline.terminate(pipeline)
-
     if !is_nil(keep_alive) and Process.alive?(keep_alive), do: GenServer.stop(keep_alive, :normal)
 
     if !is_nil(rtsp_session) and Process.alive?(rtsp_session), do: RTSP.close(rtsp_session)
@@ -173,7 +164,6 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
         {:DOWN, _ref, :process, pid, reason},
         %ConnectionStatus{
           rtsp_session: rtsp_session,
-          pipeline: pipeline,
           keep_alive: keep_alive
         } = connection_status
       )
@@ -183,16 +173,12 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
     Logger.warn(~s"""
     ConnectionManager processes:
       RTSP session: #{inspect(rtsp_session)},
-      Membrane Pipeline: #{inspect(pipeline)},
       RTSP keep alive: #{inspect(keep_alive)}
     """)
 
     case pid do
       ^rtsp_session ->
         Logger.error("ConnectionManager: RTSP session crashed")
-
-      ^pipeline ->
-        Logger.error("ConnectionManager: Pipeline crashed")
 
       ^keep_alive ->
         Logger.error("ConnectionManager: Keep_alive process crashed")
@@ -258,12 +244,10 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
     end
   end
 
-  defp setup_rtsp_connection(
-         %ConnectionStatus{
-           rtsp_session: rtsp_session,
-           pipeline_options: pipeline_options
-         } = connection_status
-       ) do
+  defp setup_rtsp_connection(%ConnectionStatus{
+         rtsp_session: rtsp_session,
+         pipeline_options: pipeline_options
+       }) do
     Logger.debug("ConnectionManager: Setting up RTSP connection")
 
     case RTSP.setup(rtsp_session, "/#{pipeline_options[:control]}", [
@@ -284,31 +268,12 @@ defmodule HlsProxyApi.Connection.ConnectionManager do
     Path.join(directory_path, hls_path)
   end
 
-  defp prepare_directory(output_path) do
-    File.mkdir_p(output_path)
-  end
-
-  defp start_pipeline(%ConnectionStatus{pipeline_options: pipeline_options} = connection_status) do
-    Logger.debug("ConnectionManager: Starting Pipeline")
-
-    case RtpToHls.start(pipeline_options) do
-      {:ok, pipeline} ->
-        Process.monitor(pipeline)
-        {:ok, %{connection_status | pipeline: pipeline}}
-
-      on_start ->
-        Logger.debug("ConnectionManager: Starting Pipeline failed: #{inspect(on_start)}")
-
-        {:error, :starting_pipeline_failed}
-    end
-  end
-
-  defp play(%ConnectionStatus{rtsp_session: rtsp_session, pipeline: pipeline} = connection_status) do
+  defp play(%ConnectionStatus{rtsp_session: rtsp_session, pipeline: pipeline}) do
     Logger.debug("ConnectionManager: Setting RTSP on play mode")
 
     case RTSP.play(rtsp_session) do
       {:ok, %{status: 200}} ->
-        Membrane.Pipeline.play(pipeline)
+        :ok
 
       _result ->
         {:error, :play_rtsp_failed}

@@ -8,6 +8,25 @@ defmodule HlsProxyApi.Pipelines.RtpToHls do
 
   @impl true
   def handle_init(options) do
+    Logger.debug("Source handle_init options: #{inspect(options)}")
+
+    connection_children = [
+      {Registry, keys: :unique, name: HlsProxyApi.Registry},
+      {HlsProxyApi.Connection.ConnectionSupervisor, pipeline: self()}
+    ]
+
+    Supervisor.start_link(connection_children,
+      strategy: :one_for_one,
+      name: HlsProxyApi.Supervisor
+    )
+
+    {:ok, %{video: nil}}
+  end
+
+  @impl true
+  def handle_other({:pipeline_options, options}, _ctx, state) do
+    Logger.debug("Source received pipeline options: #{inspect(options)}")
+
     children = %{
       app_source: %Membrane.UDP.Source{
         local_port_no: options[:port],
@@ -32,11 +51,13 @@ defmodule HlsProxyApi.Pipelines.RtpToHls do
     ]
 
     spec = %ParentSpec{children: children, links: links}
-    {{:ok, spec: spec}, %{video: %{sps: options[:sps], pps: options[:pps]}}}
+    {{:ok, spec: spec}, %{state | video: %{sps: options[:sps], pps: options[:pps]}}}
   end
 
   @impl true
   def handle_notification({:new_rtp_stream, ssrc, 96, _extensions}, :rtp, _ctx, state) do
+    Logger.debug(":new_rtp_stream")
+
     children = %{
       video_nal_parser: %Membrane.H264.FFmpeg.Parser{
         sps: state.video.sps,

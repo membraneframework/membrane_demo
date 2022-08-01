@@ -51,12 +51,6 @@ RUN \
 
 WORKDIR /app
 
-COPY docker-entrypoint.sh ./docker-entrypoint.sh
-
-RUN chmod +x docker-entrypoint.sh
-
-ENTRYPOINT [ "./docker-entrypoint.sh" ]
-
 COPY --from=build /app/_build/prod/rel/hls_proxy_api ./
 
 CMD ["bin/hls_proxy_api", "start"]

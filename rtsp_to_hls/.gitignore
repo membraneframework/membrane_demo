@@ -1,44 +1,26 @@
-### macOS ###
-# General
-.DS_Store
-.AppleDouble
-.LSOverride
+# The directory Mix will write compiled artifacts to.
+/_build/
 
-# Icon must end with two \r
-Icon
+# If you run "mix test --cover", coverage assets end up here.
+/cover/
 
+# The directory Mix downloads your dependencies sources to.
+/deps/
 
-# Thumbnails
-._*
+# Where third-party dependencies like ExDoc output generated docs.
+/doc/
 
-# Files that might appear in the root of a volume
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
+# Ignore .fetch files in case you like to edit your project deps locally.
+/.fetch
 
-# Directories potentially created on remote AFP share
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
+# If the VM crashes, it generates a dump, let's ignore it too.
+erl_crash.dump
 
-### VisualStudioCode ###
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-*.code-workspace
+# Also ignore archive artifacts (built via "mix archive.build").
+*.ez
 
-# Local History for Visual Studio Code
-.history/
+# Ignore package tarball (built via "mix hex.build").
+hls_proxy_api-*.tar
 
-### VisualStudioCode Patch ###
-# Ignore all local history of files
-.history
-.ionide
+# Temporary files, for example, from tests.
+/tmp/

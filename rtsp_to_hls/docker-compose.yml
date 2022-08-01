@@ -25,13 +25,5 @@ services:
       - 8080:80
     volumes:
       - output:/hls_output
-  hls_proxy_player:
-    build:
-      context: ./hls_proxy_player
-    environment:
-      - SERVER_BASE_URL=http://${PUBLIC_IP}:8080
-      - HLS_PATH=stream
-    ports:
-      - 8000:80
 volumes:
   output:

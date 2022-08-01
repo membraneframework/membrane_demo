@@ -44,10 +44,8 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
   end
 
   @impl true
-  def init(stream_url: stream_url, pipeline: pipeline) do
+  def init(stream_url: stream_url, port: port, pipeline: pipeline) do
     Logger.debug("ConnectionManager: Initializing")
-
-    port = System.get_env("UDP_PORT") |> String.to_integer()
 
     {:connect, :init,
      %ConnectionStatus{

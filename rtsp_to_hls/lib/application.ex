@@ -7,14 +7,16 @@ defmodule Membrane.Demo.RtspToHls.Application do
   alias Membrane.Demo.RtspToHls.Pipeline
 
   @rtsp_stream_url "rtsp://rtsp.membrane.work:554/testsrc.264"
+  @output_path "hls_output"
+  @rtp_port 20000
 
   @impl true
   def start(_type, _args) do
     Logger.debug("Application is starting")
 
     pipeline_options = [
-      port: System.get_env("UDP_PORT") |> String.to_integer(),
-      output_path: get_output_path(),
+      port: @rtp_port,
+      output_path: @output_path,
       stream_url: @rtsp_stream_url
     ]
 
@@ -24,12 +26,6 @@ defmodule Membrane.Demo.RtspToHls.Application do
     Membrane.Pipeline.play(pid)
 
     {:ok, pid}
-  end
-
-  defp get_output_path() do
-    directory_path = Application.fetch_env!(:hls_proxy_api, :output_dir)
-    hls_path = Application.fetch_env!(:hls_proxy_api, :hls_path)
-    Path.join(directory_path, hls_path)
   end
 
   defp prepare_directory(output_path) do

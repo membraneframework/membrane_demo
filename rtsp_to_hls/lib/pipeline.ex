@@ -23,6 +23,7 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
            [
              [
                stream_url: options[:stream_url],
+               port: options[:port],
                pipeline: self()
              ]
            ]},

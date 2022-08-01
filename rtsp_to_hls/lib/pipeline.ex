@@ -8,8 +8,6 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
 
   alias Membrane.Demo.RtspToHls.ConnectionManager
 
-  @rtsp_stream_url "rtsp://rtsp.membrane.work:554/testsrc.264"
-
   @impl true
   def handle_init(options) do
     Logger.debug("Source handle_init options: #{inspect(options)}")

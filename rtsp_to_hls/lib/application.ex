@@ -3,7 +3,6 @@ defmodule Membrane.Demo.RtspToHls.Application do
   use Application
 
   require Logger
-
   alias Membrane.Demo.RtspToHls.Pipeline
 
   @rtsp_stream_url "rtsp://rtsp.membrane.work:554/testsrc.264"

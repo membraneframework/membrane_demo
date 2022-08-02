@@ -4,28 +4,33 @@ This project demonstrates receiving RTSP stream and converting it to HLS stream.
 
 ## Prerequisites
 
-In order to run this demo you have to run it on a machine with a publicly visible ip address, with a `docker-compose` installed.
+In order to run this demo you have to run it on a machine with a publicly visible ip address.
 
 ## Components
-The project consists of 3 parts:
+The project consists of 2 parts:
 
-* Converter - Given RTSP stream uses `Membrane.RTSP` plugin to set-up RTP to HLS pipeline.
-* Server - Nginx-based application to serve HLS related static files.
-* Player - Nginx-based application to serve HTML with player working with `hls.js`
+- The pipeline, which converts the RTP stream to HLS
+- Connection Manager, which is started by the pipeline and is responsible for establishing RTSP connection
 
 ## Running the demo
 
-You can use `docker-compose` to set up all containers.
-You need to set `PUBLIC_IP` environment variable in the `.env` file.
+You can start the pipeline by running:
 
-The ip should be the public ip address of your machine.
-
-You can then run the demo:
 ```console
-docker-compose up
+mix run --no-halt
 ```
 
-After a few seconds you will be able to view the sample stream by going to `PUBLIC_IP:8000` in the browser.
+After a moment the pipeline will start generating HLS output files. In order to watch the stream we need to serve those files, e.g. by using python http server:
+
+```console
+python3 -m http.server 8000
+```
+
+You can then play the stream using [ffmpeg](https://www.ffmpeg.org/)
+
+```console
+ffplay http://YOUR_SERVER_IP/hls_output/index.m3u8
+```
 
 ## Copyright and License
 

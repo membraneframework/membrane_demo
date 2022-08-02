@@ -38,9 +38,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
   def start_link(args) do
     Logger.debug("ConnectionManager: start_link, args: #{inspect(args)}")
 
-    Connection.start_link(__MODULE__, args,
-      name: {:via, Registry, {Membrane.Demo.RtspToHls.Registry, "ConnectionManager"}}
-    )
+    Connection.start_link(__MODULE__, args, name: ConnectionManager)
   end
 
   @impl true
@@ -87,7 +85,10 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
           RTSP keep alive: #{inspect(connection_status.keep_alive)}
         """)
 
-        send(connection_status.pipeline, {:pipeline_options, connection_status.pipeline_options})
+        send(
+          connection_status.pipeline,
+          {:rtsp_setup_complete, connection_status.pipeline_options}
+        )
 
         {:ok, connection_status}
       else

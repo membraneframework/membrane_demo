@@ -24,3 +24,8 @@ hls_proxy_api-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# HLS files
+*.m3u8
+*.m4s
+*.mp4

@@ -13,21 +13,18 @@ defmodule Membrane.Demo.RtspToHls.Application do
   def start(_type, _args) do
     Logger.debug("Application is starting")
 
+    # Create directory for hls output files
+    File.mkdir_p(@output_path)
+
     pipeline_options = [
       port: @rtp_port,
       output_path: @output_path,
       stream_url: @rtsp_stream_url
     ]
 
-    prepare_directory(pipeline_options[:output_path])
-
     {:ok, pid} = Pipeline.start_link(pipeline_options)
     Membrane.Pipeline.play(pid)
 
     {:ok, pid}
-  end
-
-  defp prepare_directory(output_path) do
-    File.mkdir_p(output_path)
   end
 end

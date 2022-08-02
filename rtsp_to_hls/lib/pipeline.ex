@@ -12,8 +12,7 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
   def handle_init(options) do
     Logger.debug("Source handle_init options: #{inspect(options)}")
 
-    connection_children = [
-      {Registry, keys: :unique, name: Membrane.Demo.RtspToHls.Registry},
+    connection_manager_spec = [
       %{
         id: "ConnectionManager",
         start:
@@ -29,21 +28,21 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
       }
     ]
 
-    Supervisor.start_link(connection_children,
+    Supervisor.start_link(connection_manager_spec,
       strategy: :one_for_one,
       name: Membrane.Demo.RtspToHls.Supervisor
     )
 
-    {:ok, %{video: nil, output_path: options[:output_path]}}
+    {:ok, %{video: nil, port: options[:port], output_path: options[:output_path]}}
   end
 
   @impl true
-  def handle_other({:pipeline_options, options}, _ctx, state) do
+  def handle_other({:rtsp_setup_complete, options}, _ctx, state) do
     Logger.debug("Source received pipeline options: #{inspect(options)}")
 
     children = %{
       app_source: %Membrane.UDP.Source{
-        local_port_no: options[:port],
+        local_port_no: state[:port],
         recv_buffer_size: 500_000
       },
       rtp: %Membrane.RTP.SessionBin{
@@ -51,7 +50,8 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
       },
       hls: %Membrane.HTTPAdaptiveStream.Sink{
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
-        target_window_duration: 10 |> Membrane.Time.seconds(),
+        target_window_duration: 120 |> Membrane.Time.seconds(),
+        target_segment_duration: 4 |> Membrane.Time.seconds(),
         storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{
           directory: state[:output_path]
         }

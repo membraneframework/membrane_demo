@@ -12,7 +12,6 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
   defmodule ConnectionStatus do
     @moduledoc false
     @type t :: %__MODULE__{
-            status: :ok | :not_connected,
             stream_url: binary(),
             rtsp_session: pid(),
             pipeline: pid(),
@@ -21,7 +20,6 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
           }
 
     @enforce_keys [
-      :status,
       :stream_url,
       :pipeline,
       :pipeline_options
@@ -47,7 +45,6 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
 
     {:connect, :init,
      %ConnectionStatus{
-       status: :not_connected,
        stream_url: stream_url,
        pipeline_options: [
          port: port,
@@ -60,10 +57,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
   end
 
   @impl true
-  def connect(
-        _info,
-        %ConnectionStatus{} = connection_status
-      ) do
+  def connect(_info, %ConnectionStatus{} = connection_status) do
     Logger.debug("ConnectionManager: Connecting")
 
     rtsp_session = start_rtsp_session(connection_status)
@@ -76,8 +70,6 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
            :ok <- setup_rtsp_connection(connection_status),
            {:ok, connection_status} <- start_keep_alive(connection_status),
            :ok <- play(connection_status) do
-        connection_status = %{connection_status | status: :ok}
-
         Logger.warn(~s"""
         ConnectionManager processes:
           RTSP session: #{inspect(connection_status.rtsp_session)},
@@ -100,25 +92,18 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
   end
 
   @impl true
-  def disconnect(
-        message,
-        %ConnectionStatus{} = connection_status
-      ) do
+  def disconnect(message, %ConnectionStatus{} = connection_status) do
     Logger.debug("ConnectionManager: Disconnecting: #{message}")
 
     kill_children(connection_status)
 
     connection_status = %{
       connection_status
-      | status: :not_connected,
-        rtsp_session: nil,
+      | rtsp_session: nil,
         keep_alive: nil
     }
 
     case message do
-      :close ->
-        {:stop, :shutdown, connection_status}
-
       :reload ->
         {:connect, :reload, connection_status}
 
@@ -128,28 +113,10 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     end
   end
 
-  defp kill_children(%ConnectionStatus{
-         keep_alive: keep_alive,
-         rtsp_session: rtsp_session
-       }) do
+  defp kill_children(%ConnectionStatus{keep_alive: keep_alive, rtsp_session: rtsp_session}) do
     if !is_nil(keep_alive) and Process.alive?(keep_alive), do: GenServer.stop(keep_alive, :normal)
 
     if !is_nil(rtsp_session) and Process.alive?(rtsp_session), do: RTSP.close(rtsp_session)
-  end
-
-  @impl true
-  def handle_call(:close, _from, connection_status) do
-    {:disconnect, :close, connection_status}
-  end
-
-  @impl true
-  def handle_call({:reload, new_connection_status}, _from, connection_status) do
-    {:disconnect, :reload, Map.merge(connection_status, new_connection_status)}
-  end
-
-  @impl true
-  def handle_call(:status, _from, %{status: status} = connection_status) do
-    {:reply, status, connection_status}
   end
 
   @impl true
@@ -184,10 +151,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
   end
 
   @impl true
-  def handle_info(
-        {:DOWN, _ref, :process, _pid, reason},
-        connection_status
-      )
+  def handle_info({:DOWN, _ref, :process, _pid, reason}, connection_status)
       when reason == :normal do
     {:noreply, connection_status}
   end
@@ -197,10 +161,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     {:disconnect, {:error, reason}, connection_status}
   end
 
-  defp start_rtsp_session(%ConnectionStatus{
-         rtsp_session: rtsp_session,
-         stream_url: stream_url
-       }) do
+  defp start_rtsp_session(%ConnectionStatus{rtsp_session: rtsp_session, stream_url: stream_url}) do
     if is_nil(rtsp_session) do
       case RTSP.start(stream_url) do
         {:ok, session} ->

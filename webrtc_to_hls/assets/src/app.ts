@@ -28,7 +28,7 @@ export const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
 export const LOCAL_PEER_ID = "local-peer";
 
 export const setup = async () => {
-  const webrtcSocketRefs: string[] = [];
+  const callbacksRefs: string[] = [];
   const socket = new Socket("/socket");
   socket.connect();
 
@@ -63,9 +63,9 @@ export const setup = async () => {
   const webrtcChannel = socket.channel("stream");
 
   const socketOff = () => {
-    socket.off(webrtcSocketRefs);
-    while (webrtcSocketRefs.length > 0) {
-      webrtcSocketRefs.pop();
+    socket.off(callbacksRefs);
+    while (callbacksRefs.length > 0) {
+      callbacksRefs.pop();
     }
   };
 
@@ -89,8 +89,8 @@ export const setup = async () => {
     leave();
   };
 
-  webrtcSocketRefs.push(socket.onError(leave));
-  webrtcSocketRefs.push(socket.onClose(leave));
+  callbacksRefs.push(socket.onError(leave));
+  callbacksRefs.push(socket.onClose(leave));
 
   const webrtc = new MembraneWebRTC({
     callbacks: {

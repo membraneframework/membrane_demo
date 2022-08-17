@@ -96,12 +96,12 @@ defmodule WebRTCToHLS.Stream do
   end
 
   @impl true
-  def handle_info({:playlist_playable, :audio, _playlist_idl}, state) do
+  def handle_info({:playlist_playable, :audio, _playlist_idl, _peer_id}, state) do
     {:noreply, state}
   end
 
   @impl true
-  def handle_info({:playlist_playable, :video, playlist_idl}, state) do
+  def handle_info({:playlist_playable, :video, playlist_idl, _peer_id}, state) do
     send(state.channel_pid, {:playlist_playable, playlist_idl})
     {:noreply, state}
   end

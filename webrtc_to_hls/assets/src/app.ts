@@ -28,6 +28,7 @@ export const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
 export const LOCAL_PEER_ID = "local-peer";
 
 export const setup = async () => {
+  const callbacksRefs: string[] = [];
   const socket = new Socket("/socket");
   socket.connect();
 
@@ -52,7 +53,6 @@ export const setup = async () => {
     );
     localVideoStream.getTracks().forEach((track) => {
       localStream.addTrack(track);
-      console.log(track);
     });
   } catch (error) {
     console.error("Couldn't get camera permission:", error);
@@ -62,14 +62,35 @@ export const setup = async () => {
 
   const webrtcChannel = socket.channel("stream");
 
-  const onError = (error: any) => {
-    setErrorMessage(error);
-
-    webrtc.leave();
-    webrtcChannel.leave();
+  const socketOff = () => {
+    socket.off(callbacksRefs);
+    while (callbacksRefs.length > 0) {
+      callbacksRefs.pop();
+    }
   };
 
-  webrtcChannel.onError(onError);
+  const leave = () => {
+    webrtc.leave();
+    webrtcChannel.leave();
+    socketOff();
+  };
+
+  webrtcChannel.onError((error: any) => {
+    setErrorMessage(error);
+    socketOff();
+    window.location.reload();
+  });
+  webrtcChannel.onClose(() => {
+    socketOff();
+    window.location.reload();
+  });
+
+  window.onbeforeunload = (event) => {
+    leave();
+  };
+
+  callbacksRefs.push(socket.onError(leave));
+  callbacksRefs.push(socket.onClose(leave));
 
   const webrtc = new MembraneWebRTC({
     callbacks: {

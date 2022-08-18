@@ -66,6 +66,10 @@ erl_crash.dump
 *.ez
 *.beam
 
+## Private files ##
+/priv
+!/priv/certs/.gitkeep
+
 ### Elixir Patch ###
 ### Linux ###
 *~

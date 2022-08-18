@@ -25,22 +25,22 @@ jobs:
       - run: cd rtp_to_hls && mix deps.compile --all
       - run: cd rtp_to_hls && mix format --check-formatted
       - run: cd rtp_to_hls && mix test
-      - run: cd webrtc/auth && openssl req -newkey rsa:2048 -nodes -keyout priv/certs/key.pem -x509 -days 365 -out priv/certs/certificate.pem -subj "/C=US" 
-      - run: cd webrtc/auth && mix deps.get
-      - run: cd webrtc/auth && mix deps.compile --all
-      - run: cd webrtc/auth && mix format --check-formatted
-      - run: cd webrtc/auth && mix test
-      - run: cd webrtc/simple && openssl req -newkey rsa:2048 -nodes -keyout priv/certs/key.pem -x509 -days 365 -out priv/certs/certificate.pem -subj "/C=US" 
-      - run: cd webrtc/simple && mix deps.get
-      - run: cd webrtc/simple && mix deps.compile --all
-      - run: cd webrtc/simple && mix format --check-formatted
-      - run: cd webrtc/simple && mix test
-      - run: cd webrtc/videoroom && mix deps.get
-      - run: cd webrtc/videoroom && mix deps.compile --all
-      - run: cd webrtc/videoroom && mix do compile
-      - run: cd webrtc/videoroom && mix format --check-formatted
-      - run: cd webrtc/videoroom/assets && npm install
-      - run: cd webrtc/videoroom/assets && npm run format:check
+      - run: cd webrtc_authentication && openssl req -newkey rsa:2048 -nodes -keyout priv/certs/key.pem -x509 -days 365 -out priv/certs/certificate.pem -subj "/C=US" 
+      - run: cd webrtc_authentication && mix deps.get
+      - run: cd webrtc_authentication && mix deps.compile --all
+      - run: cd webrtc_authentication && mix format --check-formatted
+      - run: cd webrtc_authentication && mix test
+      - run: cd webrtc_simple && openssl req -newkey rsa:2048 -nodes -keyout priv/certs/key.pem -x509 -days 365 -out priv/certs/certificate.pem -subj "/C=US" 
+      - run: cd webrtc_simple && mix deps.get
+      - run: cd webrtc_simple && mix deps.compile --all
+      - run: cd webrtc_simple && mix format --check-formatted
+      - run: cd webrtc_simple && mix test
+      - run: cd webrtc_videoroom && mix deps.get
+      - run: cd webrtc_videoroom && mix deps.compile --all
+      - run: cd webrtc_videoroom && mix do compile
+      - run: cd webrtc_videoroom && mix format --check-formatted
+      - run: cd webrtc_videoroom/assets && npm install
+      - run: cd webrtc_videoroom/assets && npm run format:check
       - run: cd webrtc_to_hls/ && mix deps.get
       - run: cd webrtc_to_hls/ && mix deps.compile --all
       - run: cd webrtc_to_hls/ && mix do compile

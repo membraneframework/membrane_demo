@@ -14,6 +14,15 @@ The project consists of 2 parts:
 
 ## Running the demo
 
+You can configure the parameters for the converter in the `Application` module:
+##### lib/application.ex
+```elixir
+@rtsp_stream_url "rtsp://rtsp.membrane.work:554/testsrc.264"
+@output_path "hls_output"
+@rtp_port 20000
+```
+By default we use our sample RTSP stream at rtsp.membrane.work.
+
 You can start the pipeline by running:
 
 ```console

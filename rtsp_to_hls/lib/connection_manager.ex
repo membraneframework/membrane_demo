@@ -161,20 +161,20 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     {:disconnect, {:error, reason}, connection_status}
   end
 
-  defp start_rtsp_session(%ConnectionStatus{rtsp_session: rtsp_session, stream_url: stream_url}) do
-    if is_nil(rtsp_session) do
-      case RTSP.start(stream_url) do
-        {:ok, session} ->
-          Process.monitor(session)
-          session
+  defp start_rtsp_session(%ConnectionStatus{rtsp_session: nil, stream_url: stream_url}) do
+    case RTSP.start(stream_url) do
+      {:ok, session} ->
+        Process.monitor(session)
+        session
 
-        {:error, error} ->
-          Logger.warn("ConnectionManager: Starting RTSP session failed - #{inspect(error)}")
-          nil
-      end
-    else
-      rtsp_session
+      {:error, error} ->
+        Logger.warn("ConnectionManager: Starting RTSP session failed - #{inspect(error)}")
+        nil
     end
+  end
+
+  defp start_rtsp_session(%ConnectionStatus{rtsp_session: rtsp_session}) do
+    rtsp_session
   end
 
   defp get_rtsp_description(%ConnectionStatus{rtsp_session: rtsp_session} = connection_status) do

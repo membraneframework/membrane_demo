@@ -19,8 +19,8 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
           {ConnectionManager, :start_link,
            [
              [
-               stream_url: options[:stream_url],
-               port: options[:port],
+               stream_url: options.stream_url,
+               port: options.port,
                pipeline: self()
              ]
            ]},
@@ -33,7 +33,7 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
       name: Membrane.Demo.RtspToHls.Supervisor
     )
 
-    {:ok, %{video: nil, port: options[:port], output_path: options[:output_path]}}
+    {:ok, %{video: nil, port: options.port, output_path: options.output_path}}
   end
 
   @impl true

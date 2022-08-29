@@ -29,14 +29,14 @@ defmodule Example.Auth do
 
   defp deps do
     [
-      {:argon2_elixir, "~> 2.0"},
-      {:guardian, "~> 2.0"},
-      {:ecto_sql, "~> 3.0"},
+      {:argon2_elixir, "~> 3.0"},
+      {:guardian, "~> 2.2"},
+      {:ecto_sql, "~> 3.8"},
       {:postgrex, ">= 0.0.0"},
-      {:membrane_webrtc_server, "~> 0.1.0"},
+      {:membrane_webrtc_server, "~> 0.1"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false},
-      {:plug, "~> 1.7"},
+      {:plug, "~> 1.13"},
       {:plug_cowboy, "~> 2.0"}
     ]
   end

@@ -7,7 +7,7 @@ defmodule RtmpToHls.MixProject do
       version: "0.1.0",
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:gettext] ++ Mix.compilers(),
+      compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -48,7 +48,9 @@ defmodule RtmpToHls.MixProject do
 
       ## Membrane deps
       {:membrane_core, "~> 0.10"},
-      {:membrane_rtmp_plugin, "~> 0.6"},
+      {:membrane_rtmp_plugin,
+       git: "https://github.com/membraneframework/membrane_rtmp_plugin.git",
+       branch: "rtmp_testing_pipeline"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.8.0"}
     ]
   end

@@ -5,11 +5,32 @@ defmodule RtmpToHls.Application do
 
   use Application
 
+  @port 1935
+  @local_ip {127, 0, 0, 1}
+
   @impl true
   def start(_type, _args) do
+    tcp_server_options = [
+      port: @port,
+      tcp_options: [
+        :binary,
+        packet: :raw,
+        active: false,
+        reuseaddr: true,
+        ip: @local_ip
+      ],
+      serve_fn: fn socket ->
+        Membrane.Demo.RtmpToHls.start_link(socket: socket)
+      end
+    ]
+
     children = [
-      # Start the Pipeline
-      Membrane.Demo.RtmpToHls,
+      # Start the Tcp Server
+      # Membrane.Demo.RtmpToHls,
+      %{
+        id: Membrane.RTMP.Source.TcpServer,
+        start: {Membrane.RTMP.Source.TcpServer, :start_link, [tcp_server_options]}
+      },
       # Start the Telemetry supervisor
       RtmpToHlsWeb.Telemetry,
       # Start the PubSub system

@@ -16,11 +16,13 @@ defmodule Membrane.Demo.RTP.SendPipeline do
     spec = %ParentSpec{
       children: [
         video_src: %Membrane.Hackney.Source{
-          location: "https://membraneframework.github.io/static/samples/ffmpeg-testsrc.h264"
+          location: "https://membraneframework.github.io/static/samples/ffmpeg-testsrc.h264",
+          hackney_opts: [follow_redirect: true]
         },
         video_parser: %Membrane.H264.FFmpeg.Parser{framerate: {30, 1}, alignment: :nal},
         audio_src: %Membrane.Hackney.Source{
-          location: "https://membraneframework.github.io/static/samples/beep.opus"
+          location: "https://membraneframework.github.io/static/samples/beep.opus",
+          hackney_opts: [follow_redirect: true]
         },
         audio_parser: Membrane.Opus.Parser,
         rtp: %RTP.SessionBin{

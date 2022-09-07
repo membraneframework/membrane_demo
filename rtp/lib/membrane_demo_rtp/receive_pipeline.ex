@@ -9,11 +9,11 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
 
     spec = %ParentSpec{
       children: [
-        video_src: %Membrane.Element.UDP.Source{
+        video_src: %Membrane.UDP.Source{
           local_port_no: video_port,
           local_address: {127, 0, 0, 1}
         },
-        audio_src: %Membrane.Element.UDP.Source{
+        audio_src: %Membrane.UDP.Source{
           local_port_no: audio_port,
           local_address: {127, 0, 0, 1}
         },

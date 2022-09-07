@@ -35,12 +35,12 @@ defmodule Membrane.Demo.RTP.SendPipeline do
           ]
         },
         video_realtimer: Membrane.Realtimer,
-        video_sink: %Membrane.Element.UDP.Sink{
+        video_sink: %Membrane.UDP.Sink{
           destination_port_no: video_port,
           destination_address: {127, 0, 0, 1}
         },
         audio_realtimer: Membrane.Realtimer,
-        audio_sink: %Membrane.Element.UDP.Sink{
+        audio_sink: %Membrane.UDP.Sink{
           destination_port_no: audio_port,
           destination_address: {127, 0, 0, 1}
         }
@@ -48,14 +48,16 @@ defmodule Membrane.Demo.RTP.SendPipeline do
       links: [
         link(:video_src)
         |> to(:video_parser)
-        |> via_in(Pad.ref(:input, video_ssrc))
+        # |> via_in(Pad.ref(:input, video_ssrc))
+        |> via_in(Pad.ref(:input, video_ssrc), options: [payloader: Membrane.RTP.H264.Payloader])
         |> to(:rtp)
         |> via_out(Pad.ref(:rtp_output, video_ssrc), options: [encoding: :H264])
         |> to(:video_realtimer)
         |> to(:video_sink),
+        #
         link(:audio_src)
         |> to(:audio_parser)
-        |> via_in(Pad.ref(:input, audio_ssrc))
+        |> via_in(Pad.ref(:input, audio_ssrc), options: [payloader: Membrane.RTP.Opus.Payloader])
         |> to(:rtp)
         |> via_out(Pad.ref(:rtp_output, audio_ssrc), options: [encoding: :OPUS])
         |> to(:audio_realtimer)

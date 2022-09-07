@@ -24,7 +24,11 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
               ssrc: :any_inbound,
               key: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
             }
-          ]
+          ],
+          fmt_mapping: %{
+            96 => {:H264, 90_000},
+            120 => {:OPUS, 48_000}
+          }
         }
       ],
       links: [
@@ -38,6 +42,7 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
 
   @impl true
   def handle_notification({:new_rtp_stream, ssrc, 96}, :rtp, _ctx, state) do
+    IO.inspect({:new_rtp_stream, ssrc, :video}, label: "new rtp stream")
     state = Map.put(state, :video, ssrc)
     actions = handle_stream(state)
     {{:ok, actions}, state}
@@ -45,6 +50,7 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
 
   @impl true
   def handle_notification({:new_rtp_stream, ssrc, 120}, :rtp, _ctx, state) do
+    IO.inspect({:new_rtp_stream, ssrc, :audio}, label: "new rtp stream")
     state = Map.put(state, :audio, ssrc)
     actions = handle_stream(state)
     {{:ok, actions}, state}

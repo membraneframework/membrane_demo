@@ -1,4 +1,6 @@
-/output/
+# HLS output
+/output/*
+!/output/.gitkeep
 
 # The directory Mix will write compiled artifacts to.
 /_build/

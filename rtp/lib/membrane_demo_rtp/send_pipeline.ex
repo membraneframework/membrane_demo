@@ -20,9 +20,12 @@ defmodule Membrane.Demo.RTP.SendPipeline do
           hackney_opts: [follow_redirect: true]
         },
         video_parser: %Membrane.H264.FFmpeg.Parser{framerate: {30, 1}, alignment: :nal},
-        audio_src: %Membrane.Hackney.Source{
-          location: "https://membraneframework.github.io/static/samples/beep.opus",
-          hackney_opts: [follow_redirect: true]
+        # audio_src: %Membrane.Hackney.Source{
+        #   location: "https://membraneframework.github.io/static/samples/beep.opus",
+        #   hackney_opts: [follow_redirect: true]
+        # },
+        audio_src: %Membrane.File.Source{
+          location: "test/sample4.opus"
         },
         audio_parser: Membrane.Opus.Parser,
         rtp: %RTP.SessionBin{
@@ -48,7 +51,6 @@ defmodule Membrane.Demo.RTP.SendPipeline do
       links: [
         link(:video_src)
         |> to(:video_parser)
-        # |> via_in(Pad.ref(:input, video_ssrc))
         |> via_in(Pad.ref(:input, video_ssrc), options: [payloader: Membrane.RTP.H264.Payloader])
         |> to(:rtp)
         |> via_out(Pad.ref(:rtp_output, video_ssrc), options: [encoding: :H264])

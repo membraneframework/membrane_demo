@@ -41,7 +41,7 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
   end
 
   @impl true
-  def handle_notification({:new_rtp_stream, ssrc, 96}, :rtp, _ctx, state) do
+  def handle_notification({:new_rtp_stream, ssrc, 96, _extensions}, :rtp, _ctx, state) do
     IO.inspect({:new_rtp_stream, ssrc, :video}, label: "new rtp stream")
     state = Map.put(state, :video, ssrc)
     actions = handle_stream(state)
@@ -49,7 +49,7 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
   end
 
   @impl true
-  def handle_notification({:new_rtp_stream, ssrc, 120}, :rtp, _ctx, state) do
+  def handle_notification({:new_rtp_stream, ssrc, 120, _extensions}, :rtp, _ctx, state) do
     IO.inspect({:new_rtp_stream, ssrc, :audio}, label: "new rtp stream")
     state = Map.put(state, :audio, ssrc)
     actions = handle_stream(state)
@@ -57,7 +57,12 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
   end
 
   @impl true
-  def handle_notification({:new_rtp_stream, _ssrc, encoding_name}, :rtp, _ctx, _state) do
+  def handle_notification(
+        {:new_rtp_stream, _ssrc, encoding_name, _extensions},
+        :rtp,
+        _ctx,
+        _state
+      ) do
     raise "Unsupported encoding: #{inspect(encoding_name)}"
   end
 
@@ -77,14 +82,19 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
       },
       links: [
         link(:rtp)
-        |> via_out(Pad.ref(:output, audio_ssrc))
-        |> to(:audio_decoder)
-        |> to(:audio_player),
-        link(:rtp)
-        |> via_out(Pad.ref(:output, video_ssrc))
+        |> via_out(Pad.ref(:output, video_ssrc),
+          options: [depayloader: Membrane.RTP.H264.Depayloader]
+        )
         |> to(:video_parser)
         |> to(:video_decoder)
         |> to(:video_player)
+        #
+        # link(:rtp)
+        # |> via_out(Pad.ref(:output, audio_ssrc),
+        #   options: [depayloader: Membrane.RTP.Opus.Depayloader]
+        # )
+        # |> to(:audio_decoder)
+        # |> to(:audio_player)
       ],
       stream_sync: :sinks
     }

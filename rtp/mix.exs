@@ -33,6 +33,7 @@ defmodule Membrane.Demo.RTP.MixProject do
       {:membrane_sdl_plugin, "~> 0.14"},
       {:membrane_portaudio_plugin, "~> 0.13"},
       {:membrane_hackney_plugin, "~> 0.8"},
+      {:membrane_file_plugin, "~> 0.12.0"},
       {:ex_libsrtp, "~> 0.4"},
       {:membrane_realtimer_plugin, "~> 0.5"}
     ]

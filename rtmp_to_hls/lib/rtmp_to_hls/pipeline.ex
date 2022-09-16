@@ -1,13 +1,15 @@
 defmodule Membrane.Demo.RtmpToHls do
   use Membrane.Pipeline
 
+  alias Membrane.RTMP.SourceBin
+
   @impl true
   def handle_init(socket: socket) do
     IO.inspect("pipeline handle_init")
 
     spec = %ParentSpec{
       children: %{
-        src: %Membrane.RTMP.SourceBin{socket: socket},
+        src: %SourceBin{socket: socket},
         sink: %Membrane.HTTPAdaptiveStream.SinkBin{
           manifest_module: Membrane.HTTPAdaptiveStream.HLS,
           target_window_duration: 20 |> Membrane.Time.seconds(),
@@ -31,16 +33,14 @@ defmodule Membrane.Demo.RtmpToHls do
     {{:ok, spec: spec, playback: :playing}, %{socket: socket}}
   end
 
-  # def child_spec(_opts) do
-  #   %{
-  #     id: __MODULE__,
-  #     start: {__MODULE__, :start_link, [nil]}
-  #   }
-  # end
-
   @impl true
-  def handle_notification({:rtmp_source_initialized, source}, :src, _ctx, state) do
-    send(self(), {:rtmp_source_initialized, source})
+  def handle_notification(
+        {:rtmp_source_initialized, _socket, _source} = notification,
+        :src,
+        _ctx,
+        state
+      ) do
+    send(self(), notification)
 
     {:ok, state}
   end
@@ -53,13 +53,13 @@ defmodule Membrane.Demo.RtmpToHls do
   end
 
   @impl true
-  def handle_other({:rtmp_source_initialized, source}, _ctx, state) do
-    case :gen_tcp.controlling_process(state.socket, source) do
+  def handle_other({:rtmp_source_initialized, socket, source} = notification, _ctx, state) do
+    case SourceBin.pass_control(socket, source) do
       :ok ->
         :ok
 
       {:error, :not_owner} ->
-        Process.send_after(self(), {:rtmp_source_initialized, source}, 200)
+        Process.send_after(self(), notification, 200)
     end
 
     {:ok, state}

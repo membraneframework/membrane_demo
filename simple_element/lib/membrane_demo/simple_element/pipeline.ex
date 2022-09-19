@@ -12,8 +12,8 @@ defmodule Membrane.Demo.SimpleElement.Pipeline do
       file: %File.Source{location: path_to_mp3},
       decoder: MAD.Decoder,
       converter: %FFmpeg.SWResample.Converter{
-        output_caps: %Membrane.Caps.Audio.Raw{
-          format: :s16le,
+        output_caps: %Membrane.RawAudio{
+          sample_format: :s16le,
           sample_rate: 48000,
           channels: 2
         }
@@ -32,7 +32,7 @@ defmodule Membrane.Demo.SimpleElement.Pipeline do
       |> to(:sink)
     ]
 
-    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
+    {{:ok, spec: %ParentSpec{children: children, links: links}, playback: :playing}, %{}}
   end
 
   @impl true

@@ -72,7 +72,6 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     links = [
       link(:rtp)
       |> via_out(Pad.ref(:output, ssrc), options: [depayloader: Membrane.RTP.AAC.Depayloader])
-      # |> to(:audio_filler)
       |> to(:audio_payloader)
       |> to(:audio_cmaf_muxer)
       |> via_in(:input)
@@ -83,7 +82,7 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     {{:ok, spec: spec}, state}
   end
 
-  def handle_notification({:new_rtp_stream, ssrc, _}, :rtp, _ctx, state) do
+  def handle_notification({:new_rtp_stream, ssrc, _payload_type, _ext}, :rtp, _ctx, state) do
     Logger.warn("Unsupported stream connected")
 
     children = [

@@ -11,13 +11,14 @@ defmodule Membrane.Demo.RtpToHls do
   use Application
   alias Membrane.Demo.RtpToHls.Pipeline
 
-  @port 5000
+  @ports %{
+    video_port: 5000,
+    audio_port: 5002
+  }
 
   @impl true
   def start(_type, _args) do
-    {:ok, pid} = Pipeline.start_link(@port)
-    Membrane.Pipeline.play(pid)
-
+    {:ok, pid} = Pipeline.start_link(@ports)
     {:ok, pid}
   end
 end

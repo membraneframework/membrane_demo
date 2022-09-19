@@ -31,8 +31,8 @@ defmodule Membrane.Demo.SimplePipeline do
       decoder: Membrane.MP3.MAD.Decoder,
       # Convert Raw :s24le to Raw :s16le
       converter: %Membrane.FFmpeg.SWResample.Converter{
-        output_caps: %Membrane.Caps.Audio.Raw{
-          format: :s16le,
+        output_caps: %Membrane.RawAudio{
+          sample_format: :s16le,
           sample_rate: 48000,
           channels: 2
         }
@@ -46,6 +46,6 @@ defmodule Membrane.Demo.SimplePipeline do
       link(:file) |> to(:decoder) |> to(:converter) |> to(:portaudio)
     ]
 
-    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
+    {{:ok, spec: %ParentSpec{children: children, links: links}, playback: :playing}, %{}}
   end
 end

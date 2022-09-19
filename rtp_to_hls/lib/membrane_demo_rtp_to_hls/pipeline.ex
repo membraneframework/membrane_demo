@@ -4,14 +4,10 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
   require Logger
 
   @impl true
-  def handle_init(%{video_port: video_port, audio_port: audio_port}) do
+  def handle_init(port) do
     children = %{
-      video_source: %Membrane.UDP.Source{
-        local_port_no: video_port,
-        recv_buffer_size: 500_000
-      },
-      audio_source: %Membrane.UDP.Source{
-        local_port_no: audio_port,
+      app_source: %Membrane.UDP.Source{
+        local_port_no: port,
         recv_buffer_size: 500_000
       },
       rtp: Membrane.RTP.SessionBin,
@@ -23,11 +19,8 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     }
 
     links = [
-      link(:video_source)
-      |> via_in(Pad.ref(:rtp_input, :video))
-      |> to(:rtp),
-      link(:audio_source)
-      |> via_in(Pad.ref(:rtp_input, :audio))
+      link(:app_source)
+      |> via_in(Pad.ref(:rtp_input, make_ref()))
       |> to(:rtp)
     ]
 

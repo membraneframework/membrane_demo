@@ -37,7 +37,7 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
       ]
     }
 
-    {{:ok, spec: spec}, %{}}
+    {{:ok, spec: spec, playback: :playing}, %{}}
   end
 
   @impl true
@@ -87,14 +87,14 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
         )
         |> to(:video_parser)
         |> to(:video_decoder)
-        |> to(:video_player)
+        |> to(:video_player),
         #
-        # link(:rtp)
-        # |> via_out(Pad.ref(:output, audio_ssrc),
-        #   options: [depayloader: Membrane.RTP.Opus.Depayloader]
-        # )
-        # |> to(:audio_decoder)
-        # |> to(:audio_player)
+        link(:rtp)
+        |> via_out(Pad.ref(:output, audio_ssrc),
+          options: [depayloader: Membrane.RTP.Opus.Depayloader]
+        )
+        |> to(:audio_decoder)
+        |> to(:audio_player)
       ],
       stream_sync: :sinks
     }

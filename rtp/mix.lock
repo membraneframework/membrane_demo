@@ -1,6 +1,6 @@
 %{
   "bimap": {:hex, :bimap, "1.1.1", "783a5f31423ffd608040985de1fc9bc17bd73c813fe79f3b3576ff574ad81d1c", [:mix], [], "hexpm", "861b630d470934ad4c5063ed795f865409473c41d80d9b897ae07f11049045ab"},
-  "bunch": {:hex, :bunch, "1.3.1", "f8fe80042f9eb474ef2801ae2c9372f9b13d11e7053265dcfc24b9d912e3750b", [:mix], [], "hexpm", "00e21b16ff9bb698b728a01a2fc4b3bf7fc0e87c4bb9c6e4a442324aa8c5e567"},
+  "bunch": {:hex, :bunch, "1.3.2", "9a3647e8bf8859482206c554d907b13d60aa8e40a3b82057a34bf71c0e23a0ae", [:mix], [], "hexpm", "dd89f2df6e6284c06cf9c44be5aae622f2a5a0804098167a0cb5370542c8c22b"},
   "bunch_native": {:hex, :bunch_native, "0.5.0", "8ac1536789a597599c10b652e0b526d8833348c19e4739a0759a2bedfd924e63", [:mix], [{:bundlex, "~> 1.0", [hex: :bundlex, repo: "hexpm", optional: false]}], "hexpm", "24190c760e32b23b36edeb2dc4852515c7c5b3b8675b1a864e0715bdd1c8f80d"},
   "bundlex": {:hex, :bundlex, "1.0.0", "358c26a6c027359c6935dcd0716b68736b7604599d376c4e1ac17c6618ef6771", [:mix], [{:bunch, "~> 1.0", [hex: :bunch, repo: "hexpm", optional: false]}, {:qex, "~> 0.5", [hex: :qex, repo: "hexpm", optional: false]}, {:secure_random, "~> 0.5", [hex: :secure_random, repo: "hexpm", optional: false]}], "hexpm", "09b4a0c597a31e6e7ce8e103b94f19539bb2279f5966a3d6d46dcd32a5b6fd44"},
   "certifi": {:hex, :certifi, "2.9.0", "6f2a475689dd47f19fb74334859d460a2dc4e3252a3324bd2111b8f0429e7e21", [:rebar3], [], "hexpm", "266da46bdb06d6c6d35fde799bcb28d36d985d424ad7c08b5bb48f5b5cdd4641"},

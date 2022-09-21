@@ -20,12 +20,15 @@ defmodule Membrane.Demo.RTP.SendPipeline do
           hackney_opts: [follow_redirect: true]
         },
         video_parser: %Membrane.H264.FFmpeg.Parser{framerate: {30, 1}, alignment: :nal},
-        # audio_src: %Membrane.Hackney.Source{
-        #   location: "https://membraneframework.github.io/static/samples/beep.opus",
-        #   hackney_opts: [follow_redirect: true]
-        # },
         audio_src: %Membrane.File.Source{
-          location: "test/sample4.opus"
+          location: "test/audio.raw"
+        },
+        audio_encoder: %Membrane.Opus.Encoder{
+          input_caps: %Membrane.RawAudio{
+            sample_format: :s16le,
+            channels: 2,
+            sample_rate: 48000
+          }
         },
         audio_parser: Membrane.Opus.Parser,
         rtp: %RTP.SessionBin{
@@ -58,6 +61,7 @@ defmodule Membrane.Demo.RTP.SendPipeline do
         |> to(:video_sink),
         #
         link(:audio_src)
+        |> to(:audio_encoder)
         |> to(:audio_parser)
         |> via_in(Pad.ref(:input, audio_ssrc), options: [payloader: Membrane.RTP.Opus.Payloader])
         |> to(:rtp)
@@ -67,6 +71,6 @@ defmodule Membrane.Demo.RTP.SendPipeline do
       ]
     }
 
-    {{:ok, spec: spec}, %{}}
+    {{:ok, spec: spec, playback: :playing}, %{}}
   end
 end

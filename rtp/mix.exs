@@ -7,7 +7,7 @@ defmodule Membrane.Demo.RTP.MixProject do
     [
       app: :membrane_demo_rtp,
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]

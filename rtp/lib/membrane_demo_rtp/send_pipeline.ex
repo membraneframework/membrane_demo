@@ -10,7 +10,8 @@ defmodule Membrane.Demo.RTP.SendPipeline do
       audio_port: audio_port,
       video_port: video_port,
       audio_ssrc: audio_ssrc,
-      video_ssrc: video_ssrc
+      video_ssrc: video_ssrc,
+      audio_file: audio_file
     } = opts
 
     spec = %ParentSpec{
@@ -21,7 +22,7 @@ defmodule Membrane.Demo.RTP.SendPipeline do
         },
         video_parser: %Membrane.H264.FFmpeg.Parser{framerate: {30, 1}, alignment: :nal},
         audio_src: %Membrane.File.Source{
-          location: "test/audio.raw"
+          location: audio_file
         },
         audio_encoder: %Membrane.Opus.Encoder{
           input_caps: %Membrane.RawAudio{

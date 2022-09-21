@@ -42,7 +42,6 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
 
   @impl true
   def handle_notification({:new_rtp_stream, ssrc, 96, _extensions}, :rtp, _ctx, state) do
-    IO.inspect({:new_rtp_stream, ssrc, :video}, label: "new rtp stream")
     state = Map.put(state, :video, ssrc)
     actions = handle_stream(state)
     {{:ok, actions}, state}
@@ -50,7 +49,6 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
 
   @impl true
   def handle_notification({:new_rtp_stream, ssrc, 120, _extensions}, :rtp, _ctx, state) do
-    IO.inspect({:new_rtp_stream, ssrc, :audio}, label: "new rtp stream")
     state = Map.put(state, :audio, ssrc)
     actions = handle_stream(state)
     {{:ok, actions}, state}
@@ -67,7 +65,7 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
   end
 
   @impl true
-  def handle_notification(_, _, _ctx, state) do
+  def handle_notification(_notification, _child, _ctx, state) do
     {:ok, state}
   end
 

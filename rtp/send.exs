@@ -6,6 +6,5 @@ alias Membrane.Demo.RTP.SendPipeline
     video_port: 5000,
     video_ssrc: 1234,
     audio_port: 5002,
-    audio_ssrc: 1236,
-    audio_file: "audio.raw"
+    audio_ssrc: 1236
   })

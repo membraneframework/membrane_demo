@@ -10,28 +10,22 @@ defmodule Membrane.Demo.RTP.SendPipeline do
       audio_port: audio_port,
       video_port: video_port,
       audio_ssrc: audio_ssrc,
-      video_ssrc: video_ssrc,
-      audio_file: audio_file
+      video_ssrc: video_ssrc
     } = opts
 
     spec = %ParentSpec{
       children: [
-        video_src: %Membrane.Hackney.Source{
-          location: "https://membraneframework.github.io/static/samples/ffmpeg-testsrc.h264",
-          hackney_opts: [follow_redirect: true]
+        video_src: %Membrane.File.Source{
+          location: "samples/video.h264"
         },
         video_parser: %Membrane.H264.FFmpeg.Parser{framerate: {30, 1}, alignment: :nal},
         audio_src: %Membrane.File.Source{
-          location: audio_file
+          location: "samples/audio.opus"
         },
-        audio_encoder: %Membrane.Opus.Encoder{
-          input_caps: %Membrane.RawAudio{
-            sample_format: :s16le,
-            channels: 2,
-            sample_rate: 48000
-          }
+        audio_parser: %Membrane.Opus.Parser{
+          input_delimitted?: true,
+          delimitation: :undelimit
         },
-        audio_parser: Membrane.Opus.Parser,
         rtp: %RTP.SessionBin{
           secure?: secure?,
           srtp_policies: [
@@ -62,7 +56,6 @@ defmodule Membrane.Demo.RTP.SendPipeline do
         |> to(:video_sink),
         #
         link(:audio_src)
-        |> to(:audio_encoder)
         |> to(:audio_parser)
         |> via_in(Pad.ref(:input, audio_ssrc), options: [payloader: Membrane.RTP.Opus.Payloader])
         |> to(:rtp)

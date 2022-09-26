@@ -1,19 +1,19 @@
 defmodule Membrane.Demo.RTP.ReceivePipeline do
   use Membrane.Pipeline
 
-  alias Membrane.RTP
+  alias Membrane.{H264, Opus, RTP, UDP}
 
   @impl true
   def handle_init(opts) do
-    %{secure?: secure?, audio_port: audio_port, video_port: video_port} = opts
+    %{audio_port: audio_port, video_port: video_port, secure?: secure?, srtp_key: srtp_key} = opts
 
     spec = %ParentSpec{
       children: [
-        video_src: %Membrane.UDP.Source{
+        video_src: %UDP.Source{
           local_port_no: video_port,
           local_address: {127, 0, 0, 1}
         },
-        audio_src: %Membrane.UDP.Source{
+        audio_src: %UDP.Source{
           local_port_no: audio_port,
           local_address: {127, 0, 0, 1}
         },
@@ -22,7 +22,7 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
           srtp_policies: [
             %ExLibSRTP.Policy{
               ssrc: :any_inbound,
-              key: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              key: srtp_key
             }
           ],
           fmt_mapping: %{
@@ -72,16 +72,16 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
   defp handle_stream(%{audio: audio_ssrc, video: video_ssrc}) do
     spec = %ParentSpec{
       children: %{
-        audio_decoder: Membrane.Opus.Decoder,
+        audio_decoder: Opus.Decoder,
         audio_player: Membrane.PortAudio.Sink,
-        video_parser: %Membrane.H264.FFmpeg.Parser{framerate: {30, 1}},
-        video_decoder: Membrane.H264.FFmpeg.Decoder,
+        video_parser: %H264.FFmpeg.Parser{framerate: {30, 1}},
+        video_decoder: H264.FFmpeg.Decoder,
         video_player: Membrane.SDL.Player
       },
       links: [
         link(:rtp)
         |> via_out(Pad.ref(:output, video_ssrc),
-          options: [depayloader: Membrane.RTP.H264.Depayloader]
+          options: [depayloader: RTP.H264.Depayloader]
         )
         |> to(:video_parser)
         |> to(:video_decoder)
@@ -89,7 +89,7 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
         #
         link(:rtp)
         |> via_out(Pad.ref(:output, audio_ssrc),
-          options: [depayloader: Membrane.RTP.Opus.Depayloader]
+          options: [depayloader: RTP.Opus.Depayloader]
         )
         |> to(:audio_decoder)
         |> to(:audio_player)

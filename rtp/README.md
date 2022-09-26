@@ -13,6 +13,15 @@ You have to have installed the following packages on your system:
 * SDL 2
 * PortAudio
 
+One-liner for Ubuntu
+```bash
+apt install ffmpeg portaudio19-dev libsdl2-dev
+```
+One-liner for MacOS
+```bash
+brew install ffmpeg portaudio  sdl2
+```
+
 ## Run the demo
 
 To run this project, type
@@ -29,7 +38,19 @@ mix run --no-halt send.exs
 
 You should be able to see an SDL player showing an example video.
 
-The stream can also be sent with GStreamer:
+The sender pipeline (run with `send.exs`) takes sample audio and video files 
+and sends them with RTP.
+The receiving pipeline depayloads the audio and video streams and plays them.
+
+If you wish to stream using SRTP, add `--secure` flag when running both `receive.exs` and `send.exs`.
+
+Alternatively, the stream can be sent using [gstreamer](https://gstreamer.freedesktop.org/). In this case, only start the receiving pipeline:
+
+```bash
+mix run --no-halt receive.exs
+```
+
+and launch gstreamer:
 
 ```bash
 gst-launch-1.0 -v audiotestsrc ! audio/x-raw,rate=48000,channels=2 ! opusenc ! rtpopuspay pt=120 ! udpsink host=127.0.0.1 port=5002\

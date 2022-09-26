@@ -1,7 +1,6 @@
 # Membrane simple element demo
 
-This demo shows how to create a simple element and plug it into a pipeline.
-The pipeline is taken from the `simple_pipeline` demo.
+This demo shows how to create a simple Membrane element and plug it into a pipeline.
 
 ## Prerequisites
 
@@ -24,15 +23,24 @@ The pipeline is taken from the `simple_pipeline` demo.
 1. Make sure you have Elixir installed on your machine. See: https://elixir-lang.org/install.html
 1. Fetch the required dependencies by running `mix deps.get`
 
-### How to run
+## Run the demo
 
 To start the demo pipeline run `mix run --no-halt run.exs` or type the following commands into an IEx shell (started by `iex -S mix`):
 
 ```elixir
 alias Membrane.Demo.SimpleElement.Pipeline
 {:ok, pid} = Pipeline.start_link("sample.mp3")
-Pipeline.play(pid)
 ```
+
+You should hear the audio sample playing and see the number of buffers processed being periodically printed to the console.
+
+## How it works
+
+The pipeline takes sample mp3 file, decodes it and plays the audio.
+The simple `counter` element is responsible for counting the number of buffers
+passing through it and periodically prints the number of buffers processed to the console.
+
+The element is plugged in just before the audio player element in the pipeline.
 
 ## Sample License
 

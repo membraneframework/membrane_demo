@@ -1,7 +1,11 @@
 defmodule Membrane.Demo.RTP.ReceivePipeline do
   use Membrane.Pipeline
 
+  require Logger
+
   alias Membrane.{H264, Opus, RTP, UDP}
+
+  @local_ip {127, 0, 0, 1}
 
   @impl true
   def handle_init(opts) do
@@ -11,11 +15,11 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
       children: [
         video_src: %UDP.Source{
           local_port_no: video_port,
-          local_address: {127, 0, 0, 1}
+          local_address: @local_ip
         },
         audio_src: %UDP.Source{
           local_port_no: audio_port,
-          local_address: {127, 0, 0, 1}
+          local_address: @local_ip
         },
         rtp: %RTP.SessionBin{
           secure?: secure?,
@@ -65,7 +69,14 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
   end
 
   @impl true
-  def handle_notification(_notification, _child, _ctx, state) do
+  def handle_notification({:connection_info, @local_ip, _port}, :audio_src, _ctx, state) do
+    Logger.info("Audio UDP source connected.")
+    {:ok, state}
+  end
+
+  @impl true
+  def handle_notification({:connection_info, @local_ip, _port}, :video_src, _ctx, state) do
+    Logger.info("Video UDP source connected.")
     {:ok, state}
   end
 

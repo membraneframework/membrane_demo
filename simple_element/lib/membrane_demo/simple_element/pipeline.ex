@@ -37,7 +37,6 @@ defmodule Membrane.Demo.SimpleElement.Pipeline do
 
   @impl true
   def handle_notification(notification, _from, _ctx, state) do
-    IO.inspect(notification)
     {:ok, state}
   end
 end

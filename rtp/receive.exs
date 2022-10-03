@@ -1,7 +1,9 @@
 alias Membrane.Demo.RTP.ReceivePipeline
-{:ok, pid} = ReceivePipeline.start_link(%{
-    secure?: "--secure" in System.argv(),
+
+{:ok, _pid} =
+  ReceivePipeline.start_link(%{
     video_port: 5000,
-    audio_port: 5002
+    audio_port: 5002,
+    secure?: "--secure" in System.argv(),
+    srtp_key: String.duplicate("a", 30)
   })
-ReceivePipeline.play(pid)

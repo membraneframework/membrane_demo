@@ -13,30 +13,48 @@ You have to have installed the following packages on your system:
 * SDL 2
 * PortAudio
 
+One-liner for Ubuntu:
+```bash
+apt install ffmpeg portaudio19-dev libsdl2-dev
+```
+One-liner for MacOS:
+```bash
+brew install ffmpeg portaudio sdl2
+```
+
+Then, install mix dependencies:
+
+```bash
+mix deps.get
+```
+
 ## Run the demo
 
-To run this project, type
+* Open a terminal in the project directory
+* Type `mix run --no-halt receive.exs`
+* Open another terminal in the project directory
+* Type: `mix run --no-halt send.exs`
+
+You should be able to see an SDL player showing an example video.
+
+The sender pipeline (run with `send.exs`) takes sample audio and video files 
+and sends them with RTP.
+The receiving pipeline (run with `receive.exs`) depayloads the audio and video streams and plays them.
+
+
+If you wish to stream using SRTP, add `--secure` flag when running both `receive.exs` and `send.exs`.
+
+Alternatively, the stream can be sent using [gstreamer](https://gstreamer.freedesktop.org/). In this case, you only need to start the receiving pipeline:
 
 ```bash
 mix run --no-halt receive.exs
 ```
 
-and in another terminal
+and launch gstreamer:
 
 ```bash
-mix run --no-halt send.exs
-```
-
-You should be able to see an SDL player showing an example video.
-
-The stream can also be sent with GStreamer:
-
-```bash
-# For audio
-gst-launch-1.0 -v audiotestsrc ! lamemp3enc ! rtpmpapay pt=127 ! udpsink host=127.0.0.1 port=5000
-
-# For video
-gst-launch-1.0 -v videotestsrc ! video/x-raw,format=I420 ! x264enc ! rtph264pay pt=96 ! udpsink host=127.0.0.1 port=5000
+gst-launch-1.0 -v audiotestsrc ! audio/x-raw,rate=48000,channels=2 ! opusenc ! rtpopuspay pt=120 ! udpsink host=127.0.0.1 port=5002\
+    videotestsrc ! video/x-raw,format=I420 ! x264enc key-int-max=10 tune=zerolatency ! rtph264pay pt=96 ! udpsink host=127.0.0.1 port=5000
 ```
 
 ## Copyright and License

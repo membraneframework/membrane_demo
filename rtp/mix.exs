@@ -7,7 +7,7 @@ defmodule Membrane.Demo.RTP.MixProject do
     [
       app: :membrane_demo_rtp,
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -23,18 +23,18 @@ defmodule Membrane.Demo.RTP.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:membrane_core, "~> 0.6.1"},
-      {:membrane_rtp_plugin, "~> 0.5.0"},
-      {:membrane_element_udp, "~> 0.4.0"},
-      {:membrane_h264_ffmpeg_plugin, "~> 0.7.0"},
-      {:membrane_rtp_h264_plugin, "~> 0.4.0"},
-      {:membrane_opus_plugin, "~> 0.2.1"},
-      {:membrane_rtp_opus_plugin, "~> 0.2.0"},
-      {:membrane_sdl_plugin, "~> 0.5.0"},
-      {:membrane_portaudio_plugin, "~> 0.5.1"},
-      {:membrane_hackney_plugin, "~> 0.4.0"},
-      {:ex_libsrtp, "~> 0.1.0"},
-      {:membrane_realtimer_plugin, "~> 0.1.0"}
+      {:membrane_core, "~> 0.10"},
+      {:membrane_rtp_plugin, "~> 0.14"},
+      {:membrane_udp_plugin, "~> 0.8"},
+      {:membrane_h264_ffmpeg_plugin, "~> 0.21"},
+      {:membrane_rtp_h264_plugin, "~> 0.13"},
+      {:membrane_opus_plugin, "~> 0.15"},
+      {:membrane_rtp_opus_plugin, "~> 0.6"},
+      {:membrane_sdl_plugin, "~> 0.14"},
+      {:membrane_portaudio_plugin, "~> 0.13"},
+      {:membrane_file_plugin, "~> 0.12.0"},
+      {:ex_libsrtp, "~> 0.4"},
+      {:membrane_realtimer_plugin, "~> 0.5"}
     ]
   end
 end

@@ -23,11 +23,7 @@ defmodule Membrane.Demo.RTP.SendPipeline do
         audio_src: %File.Source{
           location: "samples/audio.opus"
         },
-        audio_parser: %Opus.Parser{
-          input_delimitted?: true,
-          delimitation: :undelimit
-        },
-        audio_parser: %Membrane.Opus.Parser{input_delimitted?: true, delimitation: :undelimit},
+        audio_parser: %Opus.Parser{input_delimitted?: true, delimitation: :undelimit},
         rtp: %RTP.SessionBin{
           secure?: secure?,
           srtp_policies: [

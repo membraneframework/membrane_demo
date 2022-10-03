@@ -27,6 +27,7 @@ defmodule Membrane.Demo.RTP.SendPipeline do
           input_delimitted?: true,
           delimitation: :undelimit
         },
+        audio_parser: %Membrane.Opus.Parser{input_delimitted?: true, delimitation: :undelimit},
         rtp: %RTP.SessionBin{
           secure?: secure?,
           srtp_policies: [

@@ -1,6 +1,8 @@
 defmodule Membrane.Demo.RTP.ReceivePipeline do
   use Membrane.Pipeline
 
+  require Logger
+
   alias Membrane.{H264, Opus, RTP, UDP}
 
   @impl true
@@ -65,7 +67,14 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
   end
 
   @impl true
-  def handle_notification(_notification, _child, _ctx, state) do
+  def handle_notification({:connection_info, {127, 0, 0, 1}, _port}, :audio_src, _ctx, state) do
+    Logger.info("Audio UDP source connected.")
+    {:ok, state}
+  end
+
+  @impl true
+  def handle_notification({:connection_info, {127, 0, 0, 1}, _port}, :video_src, _ctx, state) do
+    Logger.info("Video UDP source connected.")
     {:ok, state}
   end
 

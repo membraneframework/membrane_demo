@@ -1,4 +1,4 @@
-FROM elixir:1.12.2-alpine AS build
+FROM elixir:1.14.1-alpine AS build
 
 # install build dependencies
 RUN \
@@ -32,23 +32,22 @@ ENV MIX_ENV=prod
 # install mix dependencies
 COPY mix.exs mix.lock ./
 COPY config config
+COPY priv priv
+COPY assets assets
+COPY lib lib
+
 RUN mix do deps.get, deps.compile
 
 # build assets
-COPY assets/package.json assets/package-lock.json ./assets/
 RUN npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
 
-COPY assets assets
 RUN npm run --prefix ./assets deploy
 RUN mix phx.digest
-
-# compile and build release
-COPY lib lib
 
 RUN mix do compile, release
 
 # prepare release image
-FROM alpine:3.13 AS app
+FROM alpine:3.16 AS app
 
 # install runtime dependencies
 RUN \

@@ -1,13 +1,13 @@
 import Config
 
 defmodule ConfigParser do
-  def parse_listen_ip(ip) do
+  def parse_external_ip(ip) do
     with {:ok, parsed_ip} <- ip |> to_charlist() |> :inet.parse_address() do
       parsed_ip
     else
       _ ->
         raise("""
-        Bad LISTEN_IP format. Expected IPv4, got: \
+        Bad EXTERNAL_IP format. Expected IPv4, got: \
         #{inspect(ip)}
         """)
     end
@@ -30,7 +30,7 @@ defmodule ConfigParser do
 end
 
 config :membrane_videoroom_demo,
-  listen_ip: System.get_env("LISTEN_IP", "127.0.0.1") |> ConfigParser.parse_listen_ip(),
+  external_ip: System.get_env("EXTERNAL_IP", "127.0.0.1") |> ConfigParser.parse_external_ip(),
   port_range:
     System.get_env("PORT_RANGE", "50000-59999")
     |> ConfigParser.parse_port_range()

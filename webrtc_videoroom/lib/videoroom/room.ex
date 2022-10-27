@@ -22,11 +22,11 @@ defmodule Videoroom.Room do
   def init(room_id) do
     Membrane.Logger.info("Spawning room proces: #{inspect(self())}")
 
-    # when running via docker we want to listen at 0.0.0.0
-    # but our packets still need valid IP address in their
-    # headers. We store it under `mock_ip`.
-    mock_ip = Application.fetch_env!(:membrane_videoroom_demo, :listen_ip)
-    listen_ip = if @mix_env == :prod, do: {0, 0, 0, 0}, else: mock_ip
+    # When running via docker without using host network we
+    # have to listen at 0.0.0.0 but our packets still need
+    # valid IP address in their headers. We store it under `mock_ip`.
+    mock_ip = Application.fetch_env!(:membrane_videoroom_demo, :external_ip)
+    external_ip = if @mix_env == :prod, do: {0, 0, 0, 0}, else: mock_ip
     port_range = Application.fetch_env!(:membrane_videoroom_demo, :port_range)
 
     rtc_engine_options = [
@@ -34,7 +34,7 @@ defmodule Videoroom.Room do
     ]
 
     integrated_turn_options = [
-      ip: listen_ip,
+      ip: external_ip,
       mock_ip: mock_ip,
       ports_range: port_range
     ]

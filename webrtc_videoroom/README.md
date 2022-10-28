@@ -49,8 +49,11 @@ docker run -p 4000:4000 membraneframework/demo_webrtc_videoroom:latest
 Or build and run docker image from source:
 ```bash
 docker build  -t membrane_videoroom .
-docker run -p 4000:4000 membrane_videoroom 
+docker run -p 50000-50050:50000-50050/udp -p 4000:4000/tcp -e PORT_RANGE=50000-50050 -e EXTERNAL_IP=<IPv4 address> -e membrane_videoroom
 ```
+
+where:
+* `EXTERNAL_IP` - your local IPv4 address (not to be confused with loopback)
 
 Then go to <http://localhost:4000/>.
 

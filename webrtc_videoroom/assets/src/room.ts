@@ -12,7 +12,7 @@ import {
   MembraneWebRTC,
   Peer,
   SerializedMediaEvent,
-} from "membrane_rtc_engine";
+} from "@membraneframework/membrane-webrtc-js";
 import { Push, Socket } from "phoenix";
 import { parse } from "query-string";
 

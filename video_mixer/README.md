@@ -44,6 +44,10 @@ VideoPipeline.play(pid)
 
 Mixed video and audio are saved in the `output.h264` and `output.aac` files, accordingly.
 
+## FAQ
+
+Feel free to ask questions on our [Discord server](https://discord.gg/2AzVhZTf).
+
 ## Copyright and License
 
 Copyright 2021, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)

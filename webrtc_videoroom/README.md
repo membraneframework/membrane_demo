@@ -49,7 +49,7 @@ docker run -p 4000:4000 membraneframework/demo_webrtc_videoroom:latest
 Or build and run docker image from source:
 ```bash
 docker build  -t membrane_videoroom .
-docker run -p 50000-50050:50000-50050/udp -p 4000:4000/tcp -e PORT_RANGE=50000-50050 -e EXTERNAL_IP=<IPv4 address> -e membrane_videoroom
+docker run -p 50000-50050:50000-50050/udp -p 4000:4000/tcp -e PORT_RANGE=50000-50050 -e EXTERNAL_IP=<IPv4 address> membrane_videoroom
 ```
 
 where:
@@ -64,13 +64,13 @@ Videoroom demo does not automatically start a cluster, but you can check the dis
 Open two terminals. On the first run:
 
 ```bash
-$ SERVER_PORT=4001 iex --sname one -S mix phx.server
+SERVER_PORT=4001 iex --sname one -S mix phx.server
 ```
 
 On the second, run:
 
 ```bash
-$ SERVER_PORT=4002 iex --sname two -S mix phx.server
+SERVER_PORT=4002 iex --sname two -S mix phx.server
 ```
 
 This will start two videoroom instances, one running on port `4001` on node `one@{your-local-hostname}`

@@ -48,8 +48,7 @@ defmodule RtmpToHls.MixProject do
 
       ## Membrane deps
       {:membrane_core, "~> 0.10"},
-      {:membrane_rtmp_plugin,
-       git: "https://github.com/membraneframework/membrane_rtmp_plugin.git", branch: "pure_elixir"},
+      {:membrane_rtmp_plugin, "~> 0.9.1"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.8.0"}
     ]
   end

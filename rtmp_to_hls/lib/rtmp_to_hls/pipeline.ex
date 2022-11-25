@@ -5,14 +5,12 @@ defmodule Membrane.Demo.RtmpToHls do
 
   @impl true
   def handle_init(socket: socket) do
-    IO.inspect("pipeline handle_init")
-
     spec = %ParentSpec{
       children: %{
         src: %SourceBin{socket: socket},
         sink: %Membrane.HTTPAdaptiveStream.SinkBin{
           manifest_module: Membrane.HTTPAdaptiveStream.HLS,
-          target_window_duration: 20 |> Membrane.Time.seconds(),
+          target_window_duration: :infinity,
           muxer_segment_duration: 8 |> Membrane.Time.seconds(),
           persist?: false,
           storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: "output"}
@@ -35,25 +33,22 @@ defmodule Membrane.Demo.RtmpToHls do
 
   @impl true
   def handle_notification(
-        {:rtmp_source_initialized, _socket, _source} = notification,
+        {:socket_control_needed, _socket, _source} = notification,
         :src,
         _ctx,
         state
       ) do
     send(self(), notification)
-
     {:ok, state}
   end
 
   @impl true
-  def handle_notification(notification, child, _ctx, state) do
-    IO.inspect(notification, label: "pipeline notification")
-    IO.inspect(child, label: "from child")
+  def handle_notification(_notification, _child, _ctx, state) do
     {:ok, state}
   end
 
   @impl true
-  def handle_other({:rtmp_source_initialized, socket, source} = notification, _ctx, state) do
+  def handle_other({:socket_control_needed, socket, source} = notification, _ctx, state) do
     case SourceBin.pass_control(socket, source) do
       :ok ->
         :ok

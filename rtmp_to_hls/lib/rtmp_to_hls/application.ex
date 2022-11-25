@@ -7,7 +7,7 @@ defmodule RtmpToHls.Application do
 
   alias Membrane.RTMP.Source.TcpServer
 
-  @port 1935
+  @port 9006
   @local_ip {127, 0, 0, 1}
 
   @impl true

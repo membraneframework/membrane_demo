@@ -9,6 +9,12 @@ jobs:
 
     steps:
       - checkout
+      - run: cd webrtc_videoroom && mix deps.update --all && mix deps.get
+      - run: cd webrtc_videoroom && mix deps.compile --all
+      - run: cd webrtc_videoroom && mix do compile
+      - run: cd webrtc_videoroom && mix format --check-formatted
+      - run: cd webrtc_videoroom/assets && npm install
+      - run: cd webrtc_videoroom/assets && npm run format:check
       - run: cd simple_pipeline && mix deps.get
       - run: cd simple_pipeline && mix deps.compile --all
       - run: cd simple_pipeline && mix format --check-formatted
@@ -35,12 +41,6 @@ jobs:
       - run: cd webrtc_simple && mix deps.compile --all
       - run: cd webrtc_simple && mix format --check-formatted
       - run: cd webrtc_simple && mix test
-      - run: cd webrtc_videoroom && mix deps.update --all && mix deps.get
-      - run: cd webrtc_videoroom && mix deps.compile --all
-      - run: cd webrtc_videoroom && mix do compile
-      - run: cd webrtc_videoroom && mix format --check-formatted
-      - run: cd webrtc_videoroom/assets && npm install
-      - run: cd webrtc_videoroom/assets && npm run format:check
       - run: cd webrtc_to_hls/ && mix deps.get
       - run: cd webrtc_to_hls/ && mix deps.compile --all
       - run: cd webrtc_to_hls/ && mix do compile

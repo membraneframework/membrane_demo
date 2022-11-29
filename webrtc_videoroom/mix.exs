@@ -5,7 +5,7 @@ defmodule VideoRoom.MixProject do
     [
       app: :membrane_videoroom_demo,
       version: "0.1.0",
-      elixir: "~> 1.12",
+      elixir: "~> 1.13",
       aliases: aliases(),
       start_permanent: Mix.env() == :prod,
       deps: deps()

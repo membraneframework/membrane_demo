@@ -31,8 +31,10 @@ npm ci --prefix=assets
 In order to run, type:
 
 ```
-mix phx.server 
+EXTERNAL_IP=<IPv4 address> mix phx.server 
 ```
+where:
+* `EXTERNAL_IP` - your local IPv4 address (not to be confused with loopback)
 
 Then go to <http://localhost:4000/>.
 

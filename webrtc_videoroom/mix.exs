@@ -5,7 +5,7 @@ defmodule VideoRoom.MixProject do
     [
       app: :membrane_videoroom_demo,
       version: "0.1.0",
-      elixir: "~> 1.12",
+      elixir: "~> 1.13",
       aliases: aliases(),
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -21,7 +21,7 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      {:membrane_rtc_engine, "~> 0.6.0"},
+      {:membrane_rtc_engine, "~> 0.7.0"},
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},

@@ -2,7 +2,7 @@ version: 2.0
 jobs:
   build:
     docker:
-      - image: membrane/membrane:latest
+      - image: membraneframeworklabs/docker_membrane:latest
     environment:
       MIX_ENV: test
     working_directory: '~/app'

@@ -36,6 +36,8 @@ EXTERNAL_IP=<IPv4 address> mix phx.server
 where:
 * `EXTERNAL_IP` - your local IPv4 address (not to be confused with loopback)
 
+[Instructions on how to find your IPv4 address](https://github.com/membraneframework/membrane_videoroom#launching-of-the-application-1)
+
 Then go to <http://localhost:4000/>.
 
 ## Run with docker
@@ -56,6 +58,8 @@ docker run -p 50000-50050:50000-50050/udp -p 4000:4000/tcp -e PORT_RANGE=50000-5
 
 where:
 * `EXTERNAL_IP` - your local IPv4 address (not to be confused with loopback)
+
+[Instructions on how to find your IPv4 address](https://github.com/membraneframework/membrane_videoroom#launching-of-the-application-1)
 
 Then go to <http://localhost:4000/>.
 

@@ -28,7 +28,7 @@ In order to run, type:
 mix phx.server
 ```
 
-Then, go to <https://localhost:8443/>.
+Then, go to <https://localhost:4000/>.
 
 ## Copyright and License
 

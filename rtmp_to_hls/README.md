@@ -16,12 +16,25 @@ The system is divided into two parts:
 The internal architecture of the server is presented below:
 ![Server scheme](doc_assets/RTMP_to_HLS_pipeline.png)
 
-
-
 ### Client
 The client is just a simple javascript application using the [HLS.js](https://github.com/video-dev/hls.js/) web player.
 
-## How to run the demo?
+## Prerequisites
+In order to successfully build and install the plugin, you need to have ffmpeg == 4.4 installed on your system. 
+Below there are some one-liner commands that will allow you to install that dependency on the desired OS.
+### Ubuntu:
+```
+apt install ffmpeg=4.4
+```
+
+### MacOS:
+```
+brew install ffmpeg@4.4
+```
+
+Furthermore, make sure you have Elixir installed on your machine. For installation details, see: https://elixir-lang.org/install.html
+
+## Running the demo
 To run the demo, clone the membrane_demo repository and checkout to the demo directory:
 ```
 git clone https://github.com/membraneframework/membrane_demo

@@ -33,3 +33,6 @@ npm-debug.log
 /assets/node_modules/
 
 /output
+
+# MacOS 
+.DS_Store

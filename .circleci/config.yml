@@ -34,16 +34,17 @@ jobs:
     working_directory: '~/app'
     steps:
       - checkout
-      # - build_test:
-      #     demo: camera_to_hls
+      - run: cd camera_to_hls && mix deps.get
+      - run: cd camera_to_hls && mix deps.compile --all
+      - run: cd camera_to_hls && mix format --check-formatted
       - build_test:
           demo: rtmp_to_hls
       - build_test:
           demo: rtp
       - build_test:
           demo: rtp_to_hls
-      - build_test:
-          demo: rtsp_to_hls
+      # - build_test:
+      #     demo: rtsp_to_hls
       - build_test:
           demo: simple_element
       - build_test:

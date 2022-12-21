@@ -17,7 +17,7 @@ The internal architecture of an application is presented below:
 1. In order to run this demo you have to run it on a machine with a publicly visible ip address.
 
 2. Make sure you have [ffmpeg](https://www.ffmpeg.org/) installed on your machine - you are going to
-use it to play the stream.
+use it to play the stream. We advise to use ffmpeg 5.0 or newer.
 
 Ubuntu
 ```console

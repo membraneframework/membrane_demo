@@ -1,4 +1,30 @@
-version: 2.0
+version: 2.1
+commands:
+  build_test:
+    parameters:
+      demo:
+        default: "rtp"
+        type: string
+    steps:
+      - run: cd "<<parameters.demo>>" && mix deps.get
+      - run: cd "<<parameters.demo>>" && mix deps.compile --all
+      - run: cd "<<parameters.demo>>" && mix format --check-formatted
+      - run: cd "<<parameters.demo>>" && mix test
+  npm_install:
+    parameters:
+      demo:
+        default: "rtp"
+        type: string
+    steps:
+      - run: cd <<parameters.demo>>/assets && npm install
+      - run: cd <<parameters.demo>>/assets && npm run format:check
+  prepare_openssl:
+    parameters:
+      demo:
+        default: "rtp"
+        type: string
+    steps:
+      - run: cd <<parameters.demo>> && openssl req -newkey rsa:2048 -nodes -keyout priv/certs/key.pem -x509 -days 365 -out priv/certs/certificate.pem -subj "/C=US"
 jobs:
   build:
     docker:
@@ -6,44 +32,37 @@ jobs:
     environment:
       MIX_ENV: test
     working_directory: '~/app'
-
     steps:
       - checkout
-      - run: cd simple_pipeline && mix deps.get
-      - run: cd simple_pipeline && mix deps.compile --all
-      - run: cd simple_pipeline && mix format --check-formatted
-      - run: cd simple_pipeline && mix test
-      - run: cd simple_element && mix deps.get
-      - run: cd simple_element && mix deps.compile --all
-      - run: cd simple_element && mix format --check-formatted
-      - run: cd simple_element && mix test
-      - run: cd rtp && mix deps.get
-      - run: cd rtp && mix deps.compile --all
-      - run: cd rtp && mix format --check-formatted
-      - run: cd rtp && mix test
-      - run: cd rtp_to_hls && mix deps.get
-      - run: cd rtp_to_hls && mix deps.compile --all
-      - run: cd rtp_to_hls && mix format --check-formatted
-      - run: cd rtp_to_hls && mix test
-      - run: cd webrtc_authentication && openssl req -newkey rsa:2048 -nodes -keyout priv/certs/key.pem -x509 -days 365 -out priv/certs/certificate.pem -subj "/C=US" 
-      - run: cd webrtc_authentication && mix deps.get
-      - run: cd webrtc_authentication && mix deps.compile --all
-      - run: cd webrtc_authentication && mix format --check-formatted
-      - run: cd webrtc_authentication && mix test
-      - run: cd webrtc_simple && openssl req -newkey rsa:2048 -nodes -keyout priv/certs/key.pem -x509 -days 365 -out priv/certs/certificate.pem -subj "/C=US" 
-      - run: cd webrtc_simple && mix deps.get
-      - run: cd webrtc_simple && mix deps.compile --all
-      - run: cd webrtc_simple && mix format --check-formatted
-      - run: cd webrtc_simple && mix test
-      - run: cd webrtc_videoroom && mix deps.get
-      - run: cd webrtc_videoroom && mix deps.compile --all
-      - run: cd webrtc_videoroom && mix do compile
-      - run: cd webrtc_videoroom && mix format --check-formatted
-      - run: cd webrtc_videoroom/assets && npm install
-      - run: cd webrtc_videoroom/assets && npm run format:check
-      - run: cd webrtc_to_hls/ && mix deps.get
-      - run: cd webrtc_to_hls/ && mix deps.compile --all
-      - run: cd webrtc_to_hls/ && mix do compile
-      - run: cd webrtc_to_hls/ && mix format --check-formatted
-      - run: cd webrtc_to_hls//assets && npm install
-      - run: cd webrtc_to_hls/assets && npm run format:check
+      # - build_test:
+      #     demo: camera_to_hls
+      - build_test:
+          demo: rtmp_to_hls
+      - build_test:
+          demo: rtp
+      - build_test:
+          demo: rtp_to_hls
+      - build_test:
+          demo: rtsp_to_hls
+      - build_test:
+          demo: simple_element
+      - build_test:
+          demo: simple_pipeline
+      - build_test:
+          demo: video_mixer
+      - prepare_openssl:
+          demo: webrtc_authentication
+      - build_test:
+          demo: webrtc_authentication
+      - prepare_openssl:
+          demo: webrtc_simple
+      - build_test:
+          demo: webrtc_simple
+      - build_test:
+          demo: webrtc_to_hls
+      - npm_install:
+          demo: webrtc_to_hls
+      - build_test:
+          demo: webrtc_videoroom
+      - npm_install:
+          demo: webrtc_videoroom

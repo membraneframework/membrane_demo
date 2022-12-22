@@ -3,7 +3,6 @@ commands:
   build_test:
     parameters:
       demo:
-        default: "rtp"
         type: string
     steps:
       - run: cd "<<parameters.demo>>" && mix deps.get
@@ -13,7 +12,6 @@ commands:
   npm_install:
     parameters:
       demo:
-        default: "rtp"
         type: string
     steps:
       - run: cd <<parameters.demo>>/assets && npm install
@@ -21,7 +19,6 @@ commands:
   prepare_openssl:
     parameters:
       demo:
-        default: "rtp"
         type: string
     steps:
       - run: cd <<parameters.demo>> && openssl req -newkey rsa:2048 -nodes -keyout priv/certs/key.pem -x509 -days 365 -out priv/certs/certificate.pem -subj "/C=US"
@@ -43,8 +40,8 @@ jobs:
           demo: rtp
       - build_test:
           demo: rtp_to_hls
-      # - build_test:
-      #     demo: rtsp_to_hls
+      - build_test:
+          demo: rtsp_to_hls
       - build_test:
           demo: simple_element
       - build_test:

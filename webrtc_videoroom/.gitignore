@@ -32,3 +32,5 @@ videoroom-*.tar
 
 node_modules
 
+# MacOS
+.DS_Store

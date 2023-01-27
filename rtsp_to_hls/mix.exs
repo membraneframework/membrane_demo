@@ -37,7 +37,10 @@ defmodule Membrane.Demo.RtspToHls.MixProject do
       {:membrane_rtp_plugin, "~> 0.14"},
       {:membrane_rtp_h264_plugin, "~> 0.13"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.8"},
-      {:membrane_h264_ffmpeg_plugin, "~> 0.21"}
+#      {:membrane_h264_ffmpeg_plugin, "~> 0.21"}
+#      {:membrane_h264_plugin, "~> 0.1"},
+#      {:membrane_h264_format, "~> 0.5"},
+      {:membrane_h264_plugin, git: "https://github.com/membraneframework/membrane_h264_plugin.git", branch: "refine_input_stream_format"},
     ]
   end
 

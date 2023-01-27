@@ -73,13 +73,14 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
     Logger.debug(":new_rtp_stream")
 
     children = %{
-      video_nal_parser: %Membrane.H264.FFmpeg.Parser{
+      video_nal_parser: %Membrane.H264.Parser{
         sps: state.video.sps,
         pps: state.video.pps,
-        skip_until_keyframe?: true,
-        framerate: {30, 1},
-        alignment: :au,
-        attach_nalus?: true
+#        skip_until_keyframe?: true,
+#        framerate: {30, 1},
+#        alignment: :au,
+#        attach_nalus?: true
+        mode: :au_aligned
       },
       video_payloader: Membrane.MP4.Payloader.H264,
       video_cmaf_muxer: Membrane.MP4.Muxer.CMAF

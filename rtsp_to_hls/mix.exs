@@ -27,19 +27,17 @@ defmodule Membrane.Demo.RtspToHls.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:membrane_core, "~> 0.11"},
+      {:membrane_core, "~> 0.10"},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
       {:credo, ">= 0.0.0", only: :dev, runtime: false},
       {:connection, "~> 1.1"},
-      {:membrane_rtsp, "0.3.0"},
-      {:membrane_udp_plugin, "~> 0.9"},
-      {:membrane_rtp_plugin, "~> 0.19.1"},
-      {:membrane_rtp_h264_plugin, "~> 0.14"},
-      {:membrane_http_adaptive_stream_plugin, "~> 0.10"},
-      {:membrane_h264_ffmpeg_plugin, "~> 0.25.2"},
-#      {:membrane_h264_plugin, "0.2.0"},
-#      {:membrane_h264_format, "~> 0.5.0"}
+      {:membrane_rtsp, "~> 0.3"},
+      {:membrane_udp_plugin, "~> 0.8"},
+      {:membrane_rtp_plugin, "~> 0.14"},
+      {:membrane_rtp_h264_plugin, "~> 0.13"},
+      {:membrane_http_adaptive_stream_plugin, "~> 0.8"},
+      {:membrane_h264_ffmpeg_plugin, "~> 0.21"}
     ]
   end
 

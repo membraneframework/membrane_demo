@@ -270,7 +270,6 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     |> String.split(",", parts: 2)
     |> Enum.map(fn elem -> <<0, 0, 0, 1>> <> Base.decode64!(elem) end)
     |> then(fn list -> [[:sps, :pps], list] |> List.zip() end)
-    |> IO.inspect(label: :xxxabcdef)
   end
 
   defp get_video_attributes(sdp_media) do

@@ -32,15 +32,17 @@ defmodule Membrane.Demo.RtspToHls.MixProject do
       {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
       {:credo, ">= 0.0.0", only: :dev, runtime: false},
       {:connection, "~> 1.1"},
-      {:membrane_rtsp, "~> 0.3"},
+      {:membrane_rtsp, "0.3.1"},
       {:membrane_udp_plugin, "~> 0.8"},
       {:membrane_rtp_plugin, "~> 0.14"},
       {:membrane_rtp_h264_plugin, "~> 0.13"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.8"},
-#      {:membrane_h264_ffmpeg_plugin, "~> 0.21"}
-#      {:membrane_h264_plugin, "~> 0.1"},
-#      {:membrane_h264_format, "~> 0.5"},
-      {:membrane_h264_plugin, git: "https://github.com/membraneframework/membrane_h264_plugin.git", branch: "refine_input_stream_format"},
+      #      {:membrane_h264_ffmpeg_plugin, "~> 0.21"}
+      #      {:membrane_h264_plugin, "~> 0.1"},
+      #      {:membrane_h264_format, "~> 0.5"},
+      {:membrane_h264_plugin,
+       git: "https://github.com/membraneframework/membrane_h264_plugin.git",
+       branch: "refine_input_stream_format"}
     ]
   end
 

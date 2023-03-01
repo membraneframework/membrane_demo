@@ -181,11 +181,11 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     Logger.debug("ConnectionManager: Setting up RTSP description")
 
     case RTSP.describe(rtsp_session) do
-      {:ok, %{status: 200, body: %{media: sdp_media}}} ->
-        attributes = get_video_attributes(sdp_media)
+      {:ok, %{status: 200} = response} ->
+        video_attributes = get_video_attributes(response)
 
-        get_sps_pps(attributes)
-        |> Keyword.put(:control, attributes["control"])
+        get_sps_pps(video_attributes)
+        |> Keyword.put(:control, get_control_path(video_attributes))
         |> then(
           &{:ok,
            Map.update(connection_status, :pipeline_options, [], fn pipeline_options ->
@@ -193,8 +193,8 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
            end)}
         )
 
-      _result ->
-        {:error, :getting_rtsp_description_failed}
+      _ ->
+        {:error, :getting_rtsp_description_failed, connection_status}
     end
   end
 
@@ -254,35 +254,37 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     end
   end
 
-  defp get_sps_pps(%{"fmtp" => fmtp}) do
-    [_payload_type, fmtp_attributes_string] = String.split(fmtp, " ", parts: 2)
+  defp get_sps_pps(video_attributes) do
+    acc = Keyword.new()
 
-    fmtp_attributes =
-      fmtp_attributes_string
-      |> String.split(";")
-      |> Enum.map(fn elem ->
-        [key, value] = String.trim(elem) |> String.split("=", parts: 2)
-        {key, value}
+    ExSDP.Media.get_attribute(video_attributes, ExSDP.Attribute.FMTP)
+    |> Map.get(:unknown)
+    |> Enum.reduce(acc, fn elem, acc ->
+      elem
+      |> String.split("=", parts: 2)
+      |> then(fn [key, value] ->
+        case key do
+          "sprop-parameter-sets" ->
+            value
+            |> String.split(",", parts: 2)
+            |> Enum.map(fn elem -> <<0, 0, 0, 1>> <> Base.decode64!(elem) end)
+            |> then(fn list -> [[:sps, :pps], list] |> List.zip() |> Keyword.merge(acc) end)
+
+          _ ->
+            acc
+        end
       end)
-      |> Enum.into(%{})
-
-    fmtp_attributes["sprop-parameter-sets"]
-    |> String.split(",", parts: 2)
-    |> Enum.map(fn elem -> <<0, 0, 0, 1>> <> Base.decode64!(elem) end)
-    |> then(fn list -> [[:sps, :pps], list] |> List.zip() end)
+    end)
   end
 
-  defp get_video_attributes(sdp_media) do
-    video_protocol = sdp_media |> Enum.find(fn elem -> elem.type == :video end)
+  defp get_video_attributes(%{body: %ExSDP{media: media_list}}) do
+    media_list |> Enum.find(fn elem -> elem.type && elem.type == :video end)
+  end
 
-    Map.fetch!(video_protocol, :attributes)
-    # fixing inconsistency in keys:
-    |> Enum.map(fn {key, value} ->
-      case is_atom(key) do
-        true -> {Atom.to_string(key), value}
-        false -> {key, value}
-      end
-    end)
-    |> Enum.into(%{})
+  defp get_control_path(video_attributes) do
+    case ExSDP.Media.get_attribute(video_attributes, "control") do
+      {"control", control_path} -> control_path
+      _ -> ""
+    end
   end
 end

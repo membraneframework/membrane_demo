@@ -22,13 +22,14 @@ defmodule Membrane.Demo.CameraToHls.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:membrane_core, "~> 0.9.0", override: true},
-      {:membrane_camera_capture_plugin, "~> 0.1.0"},
-      {:membrane_h264_ffmpeg_plugin, "~> 0.18.0"},
-      {:membrane_file_plugin, "~> 0.8.0"},
-      {:membrane_ffmpeg_swscale_plugin, "~> 0.8.0"},
-      {:membrane_mp4_plugin, "~> 0.11.0"},
-      {:membrane_http_adaptive_stream_plugin, "~> 0.5.0"}
+      {:membrane_core, "~> 0.11.0"},
+      {:membrane_camera_capture_plugin, "~> 0.4.0"},
+      {:membrane_h264_ffmpeg_plugin, "~> 0.26.2"},
+      {:membrane_file_plugin, "~> 0.13.2"},
+      {:membrane_ffmpeg_swscale_plugin, "~> 0.11.0"},
+      {:membrane_mp4_plugin, "~> 0.19.0"},
+      {:membrane_http_adaptive_stream_plugin, "~> 0.13.0"},
+      {:membrane_raw_video_format, "~> 0.3.0", override: true}
     ]
   end
 end

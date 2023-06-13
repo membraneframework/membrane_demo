@@ -10,13 +10,7 @@ This demo is responsible for:
 ### Mac OS X
 
 ```
-brew install srtp ffmpeg opus fdk-aac
-```
-
-### Ubuntu
-
-```
-sudo apt-get install libsrtp2-dev libavcodec-dev libavformat-dev libavutil-dev libopus-dev libfdk-aac-dev
+brew install srtp libnice clang-format ffmpeg opus fdk-aac
 ```
 
 ## Usage

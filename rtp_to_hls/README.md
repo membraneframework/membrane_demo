@@ -15,9 +15,58 @@ You must have following packages installed on your system:
 - GStreamer > 1.0 to provide RTP streams
 - python3 for running simple Web Server
 
+### MacOS:
+
+```
+brew install ffmpeg gstreamer python3
+```
+
+### Ubuntu:
+
+```
+apt install ffmpeg gstreamer python3
+```
+
+Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine. For installation details, see: https://elixir-lang.org/install.html
+
+On Ubuntu, we recommend installation through asdf, see: https://asdf-vm.com/guide/getting-started.html
+
 ## Run the demo
 
-Run the project with:
+To run the demo, clone the membrane_demo repository and checkout to the demo directory:
+
+```
+git clone https://github.com/membraneframework/membrane_demo
+cd membrane_demo/rtp_to_hls
+```
+
+Then you need to download the dependencies of the mix project:
+
+```
+mix deps.get
+```
+
+Then you may be asked to install `Hex` and then `rebar3`.
+
+In case of installation issues with Hex on Ubuntu, try updating the system packages first by entering the command:
+
+```shell
+sudo apt-get update
+```
+
+In case of issue with compilation of membrane_h264_ffmpeg_plugin, enter:
+
+```shell
+mix deps.update bundlex
+```
+
+and then install pkg-config (MacOS):
+
+```
+brew install pkg-config
+```
+
+Finally ,you can run the demo with:
 
 ```bash
 mix run --no-halt

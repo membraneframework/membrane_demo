@@ -74,7 +74,11 @@ In case of issue with compilation of membrane_h264_ffmpeg_plugin, enter:
 mix deps.update bundlex
 ```
 
-and then install pkg-config.
+and then install pkg-config (MacOS):
+
+```
+brew install pkg-config
+```
 
 Finally, you can start the phoenix server:
 

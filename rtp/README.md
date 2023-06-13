@@ -9,38 +9,99 @@ receiving and sending RTP streams.
 
 You have to have installed the following packages on your system:
 
-* FFmpeg 4.x
-* SDL 2
-* PortAudio
+- FFmpeg 4.x
+- SDL 2
+- PortAudio
 
-One-liner for Ubuntu:
+### Ubuntu:
+
 ```bash
 apt install ffmpeg portaudio19-dev libsdl2-dev
 ```
-One-liner for MacOS:
+
+### MacOS:
+
 ```bash
 brew install ffmpeg portaudio sdl2
 ```
 
-Then, install mix dependencies:
+Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine. For installation details, see: https://elixir-lang.org/install.html
 
-```bash
-mix deps.get
-```
+On Ubuntu, we recommend installation through asdf, see: https://asdf-vm.com/guide/getting-started.html
 
 ## Run the demo
 
-* Open a terminal in the project directory
-* Type `mix run --no-halt receive.exs`
-* Open another terminal in the project directory
-* Type: `mix run --no-halt send.exs`
+To run the demo, clone the membrane_demo repository and checkout to the demo directory:
+
+```
+git clone https://github.com/membraneframework/membrane_demo
+cd membrane_demo/rtp
+```
+
+Then you need to download the dependencies of the mix project:
+
+```
+mix deps.get
+```
+
+Then you may be asked to install `Hex` and then `rebar3`.
+
+In case of installation issues with Hex on Ubuntu, try updating the system packages first by entering the command:
+
+```shell
+sudo apt-get update
+```
+
+In case of issue with compilation of ex_libsrtp, enter:
+
+```shell
+mix deps.update bundlex
+```
+
+and then install pkg-config and srtp (MacOS):
+
+```
+brew install pkg-config srtp
+```
+
+In case of issue with compilation of membrane_opus_plugin, install `opus`:
+
+### MacOS:
+
+```
+brew install opus
+```
+
+and if you have MacOS M1/M2 (Apple silicon) add following lines to your `~/.zshrc` file:
+
+```
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:$(brew --cellar)/opus/1.3.1/include
+export LIBRARY_PATH=$LIBRARY_PATH:$(brew --cellar)/opus/1.3.1/lib
+```
+
+### Ubuntu:
+
+```
+apt install libopus-dev
+```
+
+and then install `libavcodec`:
+
+```
+apt install libavcodec-dev
+```
+
+Finally, you can run the demo:
+
+- Open a terminal in the project directory
+- Type: `mix run --no-halt receive.exs`
+- Open another terminal in the project directory
+- Type: `mix run --no-halt send.exs`
 
 You should be able to see an SDL player showing an example video.
 
-The sender pipeline (run with `send.exs`) takes sample audio and video files 
-and sends them with RTP.
+The sender pipeline (run with `send.exs`) takes sample audio and video files and sends them with RTP.
 The receiving pipeline (run with `receive.exs`) depayloads the audio and video streams and plays them.
-
 
 If you wish to stream using SRTP, add `--secure` flag when running both `receive.exs` and `send.exs`.
 

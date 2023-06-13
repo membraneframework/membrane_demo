@@ -9,46 +9,15 @@ You must have following packages installed on your system:
 - ffmpeg 4.\*
 - openssl
 
-### MacOS:
+### If using MACOS and `homebrew`:
 
 ```shell
-brew install ffmpeg openssl
+brew install ffmpeg
 ```
-
-### Ubuntu:
-
-```shell
-apt install ffmpeg
-```
-
-Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine. For installation details, see: https://elixir-lang.org/install.html
-
-On Ubuntu, we recommend installation through asdf, see: https://asdf-vm.com/guide/getting-started.html
 
 ## Run the demo
 
-To run the demo, clone the membrane_demo repository and checkout to the demo directory:
-
-```
-git clone https://github.com/membraneframework/membrane_demo
-cd membrane_demo/camera_to_hls
-```
-
-Then you need to download the dependencies of the mix project:
-
-```bash
-mix deps.get
-```
-
-Then you may be asked to install `Hex` and then `rebar3`.
-
-In case of installation issues with Hex on Ubuntu, try updating the system packages first by entering the command:
-
-```shell
-sudo apt-get update
-```
-
-Finally, you can run the project with:
+Run the project with:
 
 ```bash
 mix run --no-halt
@@ -56,7 +25,7 @@ mix run --no-halt
 
 CMAF header and segment files will be created in `output` directory along with HLS playlist files.
 
-To play the HLS stream you can just serve the content of `output` dir via regular HTTP server, e.g. by running in separate tab:
+To play the HLS stream you can just serve the content of `output` dir via regular HTTP server, e.g. by running:
 
 ```bash
 python3 -m http.server 8000
@@ -71,8 +40,6 @@ ffplay http://localhost:8000/output/index.m3u8
 Moreover you can open the url http://localhost:8000/stream in your browser and enjoy the video from your camera :)
 
 _You might be asked to grant access to your camera, as some operating systems require that_
-
-_In case of the absence of a physical camera, it is necessary to use a virtual camera (e.g. OBS)_
 
 ## Copyright and License
 

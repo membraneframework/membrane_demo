@@ -78,11 +78,13 @@ Configure a database for the application by running:
 psql -d postgres
 ```
 
+and then in the psql console:
+
 ```
 \du
 ```
 
-and change `username` in `config/config.exs` to the name of the user you have in table.
+Change `username` in `config/config.exs` to the name of the user you have in table.
 
 Then, create a database for the application:
 

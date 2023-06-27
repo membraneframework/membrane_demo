@@ -23,13 +23,13 @@ apt install ffmpeg
 
 Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine. For installation details, see: https://elixir-lang.org/install.html
 
-On Ubuntu, we recommend installation through asdf, see: https://asdf-vm.com/guide/getting-started.html
+On Ubuntu, we recommend installation through `asdf`, see: https://asdf-vm.com/guide/getting-started.html
 
 ## Run the demo
 
 To run the demo, clone the membrane_demo repository and checkout to the demo directory:
 
-```
+```bash
 git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/camera_to_hls
 ```
@@ -40,9 +40,8 @@ Then you need to download the dependencies of the mix project:
 mix deps.get
 ```
 
-Then you may be asked to install `Hex` and then `rebar3`.
-
-In case of installation issues with Hex on Ubuntu, try updating the system packages first by entering the command:
+You may be asked to install `Hex` and `rebar3`.
+In case of installation issues with `Hex` on Ubuntu, try updating the system packages first by entering the command:
 
 ```shell
 sudo apt-get update
@@ -56,7 +55,7 @@ mix run --no-halt
 
 CMAF header and segment files will be created in `output` directory along with HLS playlist files.
 
-To play the HLS stream you can just serve the content of `output` dir via regular HTTP server, e.g. by running in separate tab:
+To play the HLS stream you can just serve the content of `output` dir via regular HTTP server, e.g. by running in a separate terminal:
 
 ```bash
 python3 -m http.server 8000

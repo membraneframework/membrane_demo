@@ -12,7 +12,7 @@ The streamer sends multimedia using RTMP, a protocol supported by popular stream
 
 The system is divided into two parts:
 
-- the server, is responsible for receiving the RTMP stream, converting it into HLS, and then publishing the created files with an HTTP server,
+- the server, which is responsible for receiving the RTMP stream, converting it into HLS, and then publishing the created files with an HTTP server,
 - the client, responsible for playing the incoming HLS stream.
 
 ### Server
@@ -26,7 +26,7 @@ The client is just a simple javascript application using the [HLS.js](https://gi
 
 ## Prerequisites
 
-In order to successfully build and install the plugin, you need to have ffmpeg 4.\* installed on your system.
+In order to successfully build and install the plugin, you need to have FFmpeg 4.\* installed on your system.
 Below there are some one-liner commands that will allow you to install that dependency on the desired OS.
 
 ### Ubuntu:
@@ -68,7 +68,7 @@ In case of installation issues with Hex on Ubuntu, try updating the system packa
 sudo apt-get update
 ```
 
-In case of issue with compilation of membrane_h264_ffmpeg_plugin, enter:
+In case of issues with compilation of membrane_h264_ffmpeg_plugin, enter:
 
 ```shell
 mix deps.update bundlex
@@ -90,7 +90,7 @@ The server will be waiting for an RTMP stream on `localhost:9006`, and the clien
 
 ### Exemplary stream generation with OBS
 
-You can send RTMP stream onto `localhost:9006` with your favorite streaming tool. However, below we present how to generate an RTMP stream with
+You can send RTMP stream onto `localhost:9006` with your favorite streaming tool. Below we present how to generate an RTMP stream with
 [OBS](https://obsproject.com).
 Once you have OBS installed, you can perform the following steps:
 

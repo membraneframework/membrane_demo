@@ -43,7 +43,7 @@ git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/webrtc_authentication
 ```
 
-Custom ip, port or other Plug options can be set up in `config/config.exs`.
+Custom database's IP, port, name and other `Plug` options can be set up in `config/config.exs`.
 
 Then you need to download the dependencies of the mix project:
 

@@ -7,7 +7,7 @@ receiving and sending RTP streams.
 
 ## Prerequisites
 
-You have to have installed the following packages on your system:
+Make sure to have the following packages installed in your system:
 
 - FFmpeg 4.x
 - SDL 2

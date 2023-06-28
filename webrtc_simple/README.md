@@ -6,13 +6,13 @@ Simple example of signaling server based on `Membrane.WebRTC.Server`.
 
 Make sure you have Elixir installed on your machine. For installation details, see: https://elixir-lang.org/install.html
 
-On Ubuntu, we recommend installation through asdf, see: https://asdf-vm.com/guide/getting-started.html
+On Ubuntu, we recommend installation through `asdf`, see: https://asdf-vm.com/guide/getting-started.html
 
 ## Running the demo
 
 To run the demo, clone the `membrane_demo` repository and checkout to the demo directory:
 
-```console
+```shell
 git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/webrtc_simple
 ```
@@ -21,12 +21,11 @@ Custom ip, port or other Plug options can be set up in `config/config.exs`.
 
 Then you need to download the dependencies of the mix project:
 
-```
+```shell
 mix deps.get
 ```
 
-Then you may be asked to install `Hex` and then `rebar3`.
-
+You may be asked to install `Hex` and then `rebar3`.
 In case of installation issues with Hex on Ubuntu, try updating the system packages first by entering the command:
 
 ```shell
@@ -37,7 +36,7 @@ sudo apt-get update
 
 Since application uses HTTPS, certificate and key are needed to run it. You generate them with
 
-```
+```shell
 openssl req -newkey rsa:2048 -nodes -keyout priv/certs/key.pem -x509 -days 365 -out priv/certs/certificate.pem
 ```
 
@@ -47,7 +46,7 @@ To trust self-signed certificate follow instructions below:
 
 ### Ubuntu
 
-```
+```shell
 apt install ca-certificates
 cp priv/certs/certificate.pem /usr/local/share/ca-certificates/
 update-ca-certificates
@@ -55,13 +54,13 @@ update-ca-certificates
 
 ### Arch
 
-```
+```shell
 trust anchor --store priv/certs/certificate.pem
 ```
 
 ### MacOS
 
-```
+```shell
 security import priv/certs/certificate.pem -k ~/Library/Keychains/login.keychain-db
 ```
 
@@ -72,7 +71,7 @@ the SSL setting to "Always Trust".
 
 Run application with:
 
-```
+```shell
 mix start
 ```
 
@@ -82,7 +81,7 @@ video stream from your and every other peer cameras.
 
 _You might be asked to grant access to your camera, as some operating systems require that._
 
-_In case of the absence of a physical camera, it is necessary to use a virtual camera (e.g. OBS)._
+_In case of the absence of a physical camera, it is necessary to use a virtual camera (e.g. OBS, [see how to set up the virtual camera in OBS](https://obsproject.com/kb/virtual-camera-guide))_
 
 ## Copyright and License
 

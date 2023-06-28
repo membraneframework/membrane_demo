@@ -31,37 +31,36 @@ Below there are some one-liner commands that will allow you to install that depe
 
 ### Ubuntu:
 
-```
+```shell
 apt install ffmpeg
 ```
 
 ### MacOS:
 
-```
+```shell
 brew install ffmpeg
 ```
 
 Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine. For installation details, see: https://elixir-lang.org/install.html
 
-On Ubuntu, we recommend installation through asdf, see: https://asdf-vm.com/guide/getting-started.html
+On Ubuntu, we recommend installation through `asdf`, see: https://asdf-vm.com/guide/getting-started.html
 
 ## Running the demo
 
 To run the demo, clone the membrane_demo repository and checkout to the demo directory:
 
-```
+```shell
 git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/rtmp_to_hls
 ```
 
 Then you need to download the dependencies of the mix project:
 
-```
+```shell
 mix deps.get
 ```
 
-Then you may be asked to install `Hex` and then `rebar3`.
-
+You may be asked to install `Hex` and then `rebar3`.
 In case of installation issues with Hex on Ubuntu, try updating the system packages first by entering the command:
 
 ```shell
@@ -76,13 +75,13 @@ mix deps.update bundlex
 
 and then install pkg-config (MacOS):
 
-```
+```shell
 brew install pkg-config
 ```
 
 Finally, you can start the phoenix server:
 
-```
+```shell
 mix phx.server
 ```
 

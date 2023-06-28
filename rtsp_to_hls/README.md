@@ -17,30 +17,30 @@ The internal architecture of an application is presented below:
 
 In order to run this demo you have to run it on a machine with a publicly visible ip address.
 
-Make sure you have [ffmpeg](https://www.ffmpeg.org/) installed on your machine - you are going to
-use it to play the stream. We advise to use ffmpeg 5.0 or newer.
+Make sure you have [FFmpeg](https://www.ffmpeg.org/) installed on your machine - you are going to
+use it to play the stream. We advise to use FFmpeg 5.0 or newer.
 
 Ubuntu
 
-```console
+```shell
 apt install ffmpeg
 ```
 
 Mac OS
 
-```console
+```shell
 brew install ffmpeg
 ```
 
 Furthermore, make sure you have Elixir installed on your machine. For installation details, see: https://elixir-lang.org/install.html
 
-On Ubuntu, we recommend installation through asdf, see: https://asdf-vm.com/guide/getting-started.html
+On Ubuntu, we recommend installation through `asdf`, see: https://asdf-vm.com/guide/getting-started.html
 
 ## Running the demo
 
 To run the demo, clone the `membrane_demo` repository and checkout to the demo directory:
 
-```console
+```shell
 git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/rtsp_to_hls
 ```
@@ -59,19 +59,18 @@ By default we use our sample RTSP stream at rtsp.membrane.work.
 
 Then you need to download the dependencies of the mix project:
 
-```console
+```shell
 mix deps.get
 ```
 
-Then you may be asked to install `Hex` and then `rebar3`.
-
+You may be asked to install `Hex` and then `rebar3`.
 In case of installation issues with Hex on Ubuntu, try updating the system packages first by entering the command:
 
 ```shell
 sudo apt-get update
 ```
 
-In case of issue with compilation of membrane_h264_ffmpeg_plugin, enter:
+In case of issues with compilation of membrane_h264_ffmpeg_plugin, enter:
 
 ```shell
 mix deps.update bundlex
@@ -79,25 +78,25 @@ mix deps.update bundlex
 
 and then install pkg-config (MacOS):
 
-```
+```shell
 brew install pkg-config
 ```
 
 Finally, you can start the pipeline by running:
 
-```console
+```shell
 mix run --no-halt
 ```
 
 After a moment the pipeline will start generating HLS output files. In order to watch the stream we need to serve those files, e.g. by using python http server:
 
-```console
+```shell
 python3 -m http.server 8000
 ```
 
 You can then play the stream using ffmpeg:
 
-```console
+```shell
 ffplay http://localhost:8000/hls_output/index.m3u8
 ```
 

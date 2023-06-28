@@ -8,7 +8,7 @@ The whole idea has been described in [this blog post](https://blog.swmansion.com
 
 You must have following packages installed on your system:
 
-- ffmpeg 4.\*
+- FFmpeg 4.\*
 
 ### Additional tools used by the following guide
 
@@ -17,44 +17,43 @@ You must have following packages installed on your system:
 
 ### MacOS:
 
-```
+```shell
 brew install ffmpeg gstreamer python3
 ```
 
 ### Ubuntu:
 
-```
+```shell
 apt install ffmpeg gstreamer python3
 ```
 
 Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine. For installation details, see: https://elixir-lang.org/install.html
 
-On Ubuntu, we recommend installation through asdf, see: https://asdf-vm.com/guide/getting-started.html
+On Ubuntu, we recommend installation through `asdf`, see: https://asdf-vm.com/guide/getting-started.html
 
 ## Run the demo
 
 To run the demo, clone the membrane_demo repository and checkout to the demo directory:
 
-```
+```shell
 git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/rtp_to_hls
 ```
 
 Then you need to download the dependencies of the mix project:
 
-```
+```shell
 mix deps.get
 ```
 
-Then you may be asked to install `Hex` and then `rebar3`.
-
+You may be asked to install `Hex` and then `rebar3`.
 In case of installation issues with Hex on Ubuntu, try updating the system packages first by entering the command:
 
 ```shell
 sudo apt-get update
 ```
 
-In case of issue with compilation of membrane_h264_ffmpeg_plugin, enter:
+In case of issues with compilation of membrane_h264_ffmpeg_plugin, enter:
 
 ```shell
 mix deps.update bundlex
@@ -62,13 +61,13 @@ mix deps.update bundlex
 
 and then install pkg-config (MacOS):
 
-```
+```shell
 brew install pkg-config
 ```
 
 Finally ,you can run the demo with:
 
-```bash
+```shell
 mix run --no-halt
 ```
 
@@ -78,7 +77,7 @@ After that you can start sending any H264 video and AAC audio stream
 via RTP. Below you can see an example how to generate sample streams
 with GStreamer.
 
-```bash
+```shell
 gst-launch-1.0 -v audiotestsrc ! audio/x-raw,rate=44100 ! faac ! rtpmp4gpay  pt=127 ! udpsink host=127.0.0.1 port=5000 \
     videotestsrc ! video/x-raw,format=I420 ! x264enc key-int-max=10 tune=zerolatency ! rtph264pay pt=96 ! udpsink host=127.0.0.1 port=5000
 ```
@@ -87,13 +86,13 @@ HLS header and segment files will be created in `output` directory along with pl
 
 To play the HLS stream you need to serve the content of `output` dir, e.g. by running:
 
-```bash
+```shell
 cd output && python3 -m http.server 8000
 ```
 
 Then, you can open the url `http://localhost:8000/index.m3u8` in some player, e.g. `ffplay` or `vlc`
 
-```bash
+```shell
 ffplay http://localhost:8000/index.m3u8
 ```
 

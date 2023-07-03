@@ -6,7 +6,7 @@ An example of signaling server with authentication based on `Membrane.WebRTC.Ser
 
 Make sure you have `postgresql` installed on your computer.
 
-### MacOS
+### macOS
 
 ```shell
 brew install postgresql
@@ -71,21 +71,7 @@ and add it to the config file (`config/config.exs`).
 
 ### Database
 
-<!-- This part will be updated -->
-
-Configure a database for the application by running:
-
-```shell
-psql -d postgres
-```
-
-and then in the psql console:
-
-```shell
-\du
-```
-
-Change `username` in `config/config.exs` to the name of the user you have in table.
+Configure database in `config/config.exs`. In case you are not sure about the configuration that should be passed in `config/config.exs`, you can try to connect with you database with the use of `psql`.
 
 Then, create a database for the application:
 
@@ -135,11 +121,9 @@ update-ca-certificates
 trust anchor --store priv/certs/certificate.pem
 ```
 
-### MacOS
+### macOS
 
-shell
-
-```
+```shell
 security import priv/certs/certificate.pem -k ~/Library/Keychains/login.keychain-db
 ```
 

@@ -7,7 +7,7 @@ receiving and sending RTP streams.
 
 ## Prerequisites
 
-Make sure to have the following packages installed in your system:
+Make sure you have the following packages installed in your system:
 
 - FFmpeg 4.x
 - SDL 2
@@ -19,7 +19,7 @@ Make sure to have the following packages installed in your system:
 apt install ffmpeg portaudio19-dev libsdl2-dev
 ```
 
-### MacOS:
+### macOS:
 
 ```shell
 brew install ffmpeg portaudio sdl2
@@ -57,7 +57,7 @@ In case of issues with compilation of ex_libsrtp, enter:
 mix deps.update bundlex
 ```
 
-and then install pkg-config and srtp (MacOS):
+and then install pkg-config and srtp (macOS):
 
 ```shell
 brew install pkg-config srtp
@@ -65,13 +65,13 @@ brew install pkg-config srtp
 
 In case of issues with compilation of membrane_opus_plugin, install `opus`:
 
-### MacOS:
+### macOS:
 
 ```shell
 brew install opus
 ```
 
-and if you have MacOS M1/M2 (Apple silicon) add following lines to your `~/.zshrc` file:
+and if you have macOS M1/M2 (Apple silicon) add following lines to your `~/.zshrc` file:
 
 ```shell
 export C_INCLUDE_PATH=$C_INCLUDE_PATH:$(brew --cellar)/opus/1.3.1/include

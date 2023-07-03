@@ -76,7 +76,7 @@ In case of issues with compilation of membrane_h264_ffmpeg_plugin, enter:
 mix deps.update bundlex
 ```
 
-and then install pkg-config (MacOS):
+and then install pkg-config (macOS):
 
 ```shell
 brew install pkg-config

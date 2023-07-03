@@ -58,7 +58,7 @@ update-ca-certificates
 trust anchor --store priv/certs/certificate.pem
 ```
 
-### MacOS
+### macOS
 
 ```shell
 security import priv/certs/certificate.pem -k ~/Library/Keychains/login.keychain-db

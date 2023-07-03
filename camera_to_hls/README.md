@@ -9,7 +9,7 @@ You must have following packages installed on your system:
 - FFmpeg 4.\*
 - openssl
 
-### MacOS:
+### macOS:
 
 ```shell
 brew install ffmpeg openssl

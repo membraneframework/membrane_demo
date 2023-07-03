@@ -15,7 +15,7 @@ You must have following packages installed on your system:
 - GStreamer > 1.0 to provide RTP streams
 - python3 for running simple Web Server
 
-### MacOS:
+### macOS:
 
 ```shell
 brew install ffmpeg gstreamer python3
@@ -59,7 +59,7 @@ In case of issues with compilation of membrane_h264_ffmpeg_plugin, enter:
 mix deps.update bundlex
 ```
 
-and then install pkg-config (MacOS):
+and then install pkg-config (macOS):
 
 ```shell
 brew install pkg-config

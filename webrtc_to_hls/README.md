@@ -8,7 +8,7 @@ This demo is responsible for:
 
 ## Prerequisites
 
-Make sure you have `node.js`, `openssl`, `FFmpeg` and `srtp` installed on your computer.
+Make sure you have `node.js`, `openssl`, `FFmpeg 4.*` and `srtp` installed on your computer.
 
 ### Mac OS X
 

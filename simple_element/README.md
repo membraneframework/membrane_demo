@@ -4,26 +4,52 @@ This demo shows how to create a simple Membrane element and plug it into a pipel
 
 ## Prerequisites
 
-1. Make sure you have following libraries installed on your OS:
-   * clang-format, 
-   * portaudio19-dev, 
-   * ffmpeg, 
-   * libavutil-dev, 
-   * libswresample-dev, 
-   * libmad0-dev
-   
-    One-liner for Ubuntu
-    ```bash
-    apt install clang-format portaudio19-dev ffmpeg libavutil-dev libswresample-dev libmad0-dev
-    ```
-    One-liner for MacOS
-    ```bash
-    brew install clang-format portaudio ffmpeg libmad pkg-config
-    ```
-1. Make sure you have Elixir installed on your machine. See: https://elixir-lang.org/install.html
-1. Fetch the required dependencies by running `mix deps.get`
+Make sure you have following libraries installed on your OS:
 
-## Run the demo
+- clang-format,
+- portaudio19-dev,
+- FFmpeg 4.\*,
+- libavutil-dev,
+- libswresample-dev,
+- libmad0-dev
+
+### Ubuntu
+
+```shell
+apt install clang-format portaudio19-dev ffmpeg libavutil-dev libswresample-dev libmad0-dev
+```
+
+### macOS
+
+```shell
+brew install clang-format portaudio ffmpeg libmad pkg-config
+```
+
+Furthermore, make sure you have Elixir installed on your machine. For installation details, see: https://elixir-lang.org/install.html
+
+On Ubuntu, we recommend installation through `asdf`, see: https://asdf-vm.com/guide/getting-started.html
+
+## Running the demo
+
+To run the demo, clone the `membrane_demo` repository and checkout to the demo directory:
+
+```shell
+git clone https://github.com/membraneframework/membrane_demo
+cd membrane_demo/simple_element
+```
+
+Then you need to download the dependencies of the mix project:
+
+```shell
+mix deps.get
+```
+
+You may be asked to install `Hex` and then `rebar3`.
+In case of installation issues with Hex on Ubuntu, try updating the system packages first by entering the command:
+
+```shell
+sudo apt-get update
+```
 
 To start the demo pipeline run `mix run --no-halt run.exs` or type the following commands into an IEx shell (started by `iex -S mix`):
 

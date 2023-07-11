@@ -4,6 +4,7 @@ defmodule Membrane.Demo.SimplePipeline do
   """
 
   use Membrane.Pipeline
+  import Membrane.ChildrenSpec
 
   @doc """
   In order to play `.mp3` file we need to read it first.
@@ -23,29 +24,22 @@ defmodule Membrane.Demo.SimplePipeline do
   doesn't suite our needs and will yield data in format we want.
   """
   @impl true
-  def handle_init(path_to_mp3) do
-    children = %{
-      # Stream from file
-      file: %Membrane.File.Source{location: path_to_mp3},
-      # Decode frames
-      decoder: Membrane.MP3.MAD.Decoder,
-      # Convert Raw :s24le to Raw :s16le
-      converter: %Membrane.FFmpeg.SWResample.Converter{
-        output_caps: %Membrane.RawAudio{
+  def handle_init(_context, path_to_mp3) do
+
+    structure = [
+      child(:file, %Membrane.File.Source{location: path_to_mp3}),
+      child(:decoder, Membrane.MP3.MAD.Decoder),
+      child(:converter, %Membrane.FFmpeg.SWResample.Converter{
+        output_stream_format: %Membrane.RawAudio{
           sample_format: :s16le,
           sample_rate: 48000,
           channels: 2
         }
-      },
-      # Stream data into PortAudio to play it on speakers.
-      portaudio: Membrane.PortAudio.Sink
-    }
-
-    # Setup the flow of the data
-    links = [
-      link(:file) |> to(:decoder) |> to(:converter) |> to(:portaudio)
+      }),
+      child(:portaudio, Membrane.PortAudio.Sink),
+      get_child(:file) |> get_child(:decoder) |> get_child(:converter) |> get_child(:portaudio)
     ]
 
-    {{:ok, spec: %ParentSpec{children: children, links: links}, playback: :playing}, %{}}
+    {[spec: structure, playback: :playing], %{}}
   end
 end

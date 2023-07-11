@@ -12,6 +12,8 @@ defmodule RtmpToHls.Application do
 
   @impl true
   def start(_type, _args) do
+    File.mkdir_p("output")
+
     tcp_server_options = %TcpServer{
       port: @port,
       listen_options: [
@@ -21,7 +23,8 @@ defmodule RtmpToHls.Application do
         ip: @local_ip
       ],
       socket_handler: fn socket ->
-        Membrane.Demo.RtmpToHls.start_link(socket: socket)
+        {:ok, _sup, pid} = Membrane.Demo.RtmpToHls.start_link(socket: socket)
+        {:ok, pid}
       end
     }
 

@@ -8,7 +8,7 @@ Below is the instruction for the installation of required dependencies and how t
 
 <details>
 <summary>
-<b>MacOS</b>
+<b>macOS</b>
 </summary>
 
 ### Prerequisites
@@ -87,6 +87,7 @@ On Ubuntu, we recommend installation through `asdf`, see: https://asdf-vm.com/gu
 
 ```shell
 apt install ffmpeg
+apt install libssl-dev
 ```
 
 ### Run the demo
@@ -105,11 +106,12 @@ mix deps.get
 ```
 
 You may be asked to install `Hex` and `rebar3`.
-In case of installation issues with `Hex` on Ubuntu, try updating the system packages first by entering the command:
 
-```shell
-sudo apt-get update
-```
+> In case of installation issues with `Hex` on Ubuntu, try updating the system packages first by entering the command:
+>
+> ```shell
+> sudo apt-get update
+> ```
 
 Finally, you can run the project with:
 
@@ -138,7 +140,6 @@ _You might be asked to grant access to your camera, as some operating systems re
 _In case of the absence of a physical camera, it is necessary to use a virtual camera (e.g. OBS, [see how to set up the virtual camera in OBS](https://obsproject.com/kb/virtual-camera-guide))_
 
 </details>
-<br>
 
 ## Copyright and License
 

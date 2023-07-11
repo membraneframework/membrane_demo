@@ -43,7 +43,7 @@ Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine.
 brew install ffmpeg
 ```
 
-## Running the demo
+### Running the demo
 
 To run the demo, clone the membrane_demo repository and checkout to the demo directory:
 
@@ -66,7 +66,7 @@ You may be asked to install `Hex` and then `rebar3`.
 > mix deps.update bundlex
 > ```
 >
-> and then install pkg-config (macOS):
+> and then install pkg-config:
 >
 > ```shell
 > brew install pkg-config
@@ -114,7 +114,7 @@ Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine.
 
 On Ubuntu, we recommend installation through `asdf`, see: https://asdf-vm.com/guide/getting-started.html
 
-## Running the demo
+### Running the demo
 
 To run the demo, clone the membrane_demo repository and checkout to the demo directory:
 

@@ -81,7 +81,7 @@ To play the HLS stream you need to serve the content of the `output` dir, e.g. b
 cd output && python3 -m http.server 8000
 ```
 
-Then, you can open the URL `http://localhost:8000/index.m3u8` in some players, e.g. `ffplay` or `vlc`
+Then, you can open the URL `http://localhost:8000/index.m3u8` in some player, e.g. `ffplay` or `vlc`
 
 ```shell
 ffplay http://localhost:8000/index.m3u8
@@ -164,7 +164,7 @@ To play the HLS stream you need to serve the content of the `output` dir, e.g. b
 cd output && python3 -m http.server 8000
 ```
 
-Then, you can open the URL `http://localhost:8000/index.m3u8` in some players, e.g. `ffplay` or `vlc`
+Then, you can open the URL `http://localhost:8000/index.m3u8` in some player, e.g. `ffplay` or `vlc`
 
 ```shell
 ffplay http://localhost:8000/index.m3u8

@@ -106,8 +106,6 @@ In order to run this demo you have to run it on a machine with a publicly visibl
 Make sure you have [FFmpeg](https://www.ffmpeg.org/) installed on your machine - you are going to
 use it to play the stream. We advise to use FFmpeg 5.0 or newer.
 
-Ubuntu
-
 ```shell
 apt install ffmpeg
 ```

@@ -59,7 +59,9 @@ and add it to the config file (`config/config.exs`).
 
 #### Database
 
-Configure database in `config/config.exs`. In case you are not sure about the configuration that should be passed in `config/config.exs`, you can try to connect with you database with the use of `psql`.
+Configure database in `config/config.exs`.
+
+> In case you are not sure about the configuration that should be passed in `config/config.exs`, you can try to connect with your database with the use of `psql`.
 
 Then, create a database for the application:
 
@@ -181,7 +183,9 @@ and add it to the config file (`config/config.exs`).
 
 #### Database
 
-Configure database in `config/config.exs`. In case you are not sure about the configuration that should be passed in `config/config.exs`, you can try to connect with you database with the use of `psql`.
+Configure database in `config/config.exs`.
+
+> In case you are not sure about the configuration that should be passed in `config/config.exs`, you can try to connect with your database with the use of `psql`.
 
 Then, create a database for the application:
 
@@ -294,7 +298,9 @@ and add it to the config file (`config/config.exs`).
 
 #### Database
 
-Configure database in `config/config.exs`. In case you are not sure about the configuration that should be passed in `config/config.exs`, you can try to connect with you database with the use of `psql`.
+Configure database in `config/config.exs`.
+
+> In case you are not sure about the configuration that should be passed in `config/config.exs`, you can try to connect with your database with the use of `psql`.
 
 Then, create a database for the application:
 

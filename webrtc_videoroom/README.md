@@ -28,6 +28,8 @@ export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include/"
 export PKG_CONFIG_PATH="/usr/local/opt/openssl@1.1/lib/pkgconfig"
 ```
 
+and restart your terminal.
+
 Furthermore, make sure you have Elixir installed on your machine. For installation details, see: https://elixir-lang.org/install.html
 
 ### Running the demo
@@ -105,6 +107,8 @@ export LDFLAGS="-L/opt/homebrew/Cellar/openssl@1.1/1.1.1u/lib"
 export CFLAGS="-I/opt/homebrew/Cellar/openssl@1.1/1.1.1u/include"
 export CPPFLAGS="-I/opt/homebrew/Cellar/openssl@1.1/1.1.1u/include"
 ```
+
+and restart your terminal.
 
 Furthermore, make sure you have Elixir installed on your machine. For installation details, see: https://elixir-lang.org/install.html
 

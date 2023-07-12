@@ -56,7 +56,7 @@ You may be asked to install `Hex` and then `rebar3`.
 > brew install pkg-config
 > ```
 
-Finally ,you can run the demo with:
+Finally, you can run the demo with:
 
 ```shell
 mix run --no-halt
@@ -139,7 +139,7 @@ You may be asked to install `Hex` and then `rebar3`.
 > mix deps.update bundlex
 > ```
 
-Finally ,you can run the demo with:
+Finally, you can run the demo with:
 
 ```shell
 mix run --no-halt

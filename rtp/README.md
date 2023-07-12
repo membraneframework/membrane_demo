@@ -69,6 +69,8 @@ You may be asked to install `Hex` and then `rebar3`.
 > export C_INCLUDE_PATH=$C_INCLUDE_PATH:$(brew --cellar)/opus/1.3.1/include
 > export LIBRARY_PATH=$LIBRARY_PATH:$(brew --cellar)/opus/1.3.1/lib
 > ```
+>
+> and restart your terminal.
 
 Finally, you can run the demo:
 

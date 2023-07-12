@@ -13,7 +13,7 @@ Below is the instruction for the installation of required dependencies and how t
 
 ### Prerequisites
 
-Make sure you have `node.js`, `openssl`, `FFmpeg` and `srtp` installed on your computer.
+Make sure you have `node.js`, `openssl`, `FFmpeg`, and `srtp` installed on your computer.
 
 ```shell
 brew install srtp libnice clang-format ffmpeg opus openssl pkg-config
@@ -50,7 +50,7 @@ npm ci --prefix=assets
 
 You may be asked to install `Hex` and then `rebar3`.
 
-In order to run the demo, type:
+To run the demo, type:
 
 ```shell
 EXTERNAL_IP=<IPv4 address> mix phx.server
@@ -92,7 +92,7 @@ _In case of the absence of a physical camera, it is necessary to use a virtual c
 
 ### Prerequisites
 
-Make sure you have `node.js`, `openssl`, `FFmpeg` and `srtp` installed on your computer.
+Make sure you have `node.js`, `openssl`, `FFmpeg`, and `srtp` installed on your computer.
 
 ```shell
 brew install srtp libnice clang-format ffmpeg opus openssl pkg-config
@@ -130,7 +130,7 @@ npm ci --prefix=assets
 
 You may be asked to install `Hex` and then `rebar3`.
 
-In order to run the demo, type:
+To run the demo, type:
 
 ```shell
 EXTERNAL_IP=<IPv4 address> mix phx.server
@@ -172,7 +172,7 @@ _In case of the absence of a physical camera, it is necessary to use a virtual c
 
 ### Prerequisites
 
-Make sure you have `node.js`, `openssl`, `FFmpeg` and `srtp` installed on your computer.
+Make sure you have `node.js`, `openssl`, `FFmpeg`, and `srtp` installed on your computer.
 
 ```shell
 sudo apt-get install libsrtp2-dev libnice-dev libavcodec-dev libavformat-dev libavutil-dev libopus-dev libssl-dev
@@ -206,7 +206,7 @@ You may be asked to install `Hex` and then `rebar3`.
 > sudo apt-get update
 > ```
 
-In order to run the demo, type:
+To run the demo, type:
 
 ```shell
 EXTERNAL_IP=<IPv4 address> mix phx.server
@@ -243,7 +243,7 @@ _In case of the absence of a physical camera, it is necessary to use a virtual c
 
 ## Run with docker
 
-Videoroom demo provides a `Dockerfile` that you can use to run videoroom application yourself without any additional setup and dependencies.
+The Videoroom demo provides a `Dockerfile` that you can use to run the Videoroom application yourself without any additional setup and dependencies.
 
 ### To run:
 
@@ -251,7 +251,7 @@ Videoroom demo provides a `Dockerfile` that you can use to run videoroom applica
 docker run -p 4000:4000 membraneframework/demo_webrtc_videoroom:latest
 ```
 
-Or build and run docker image from source:
+Or build and run a docker image from the source:
 
 ```shell
 docker build  -t membrane_videoroom .
@@ -268,7 +268,7 @@ Then go to <http://localhost:4000/>.
 
 ## Run distributed
 
-Videoroom demo does not automatically start a cluster, but you can check the distributed functionalities by starting one manually.
+The Videoroom demo does not automatically start a cluster, but you can check the distributed functionalities by starting one manually.
 
 Open two terminals. On the first run:
 
@@ -300,7 +300,7 @@ iex(one@{your-local-hostname})2> :erlang.nodes()
 ```
 
 Then, open two tabs on your browser. Go to <http://localhost:4001/> on one, and <http://localhost:4002/> on the other.
-Join the same room, and you shall see two participants in the room. Every participant EndPoint will be running on their respective node.
+Join the same room, and you shall see two participants in the room. Every participant's EndPoint will be running on their respective node.
 
 _You might be asked to grant access to your camera, as some operating systems require that._
 

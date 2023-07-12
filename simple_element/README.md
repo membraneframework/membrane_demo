@@ -13,7 +13,7 @@ Below is the instruction for the installation of required dependencies and how t
 
 ### Prerequisites
 
-Make sure you have following libraries installed on your OS:
+Make sure you have the following libraries installed on your OS:
 
 - clang-format,
 - portaudio19-dev,
@@ -63,7 +63,7 @@ You should hear the audio sample playing and see the number of buffers processed
 
 ### Prerequisites
 
-Make sure you have following libraries installed on your OS:
+Make sure you have the following libraries installed on your OS:
 
 - clang-format,
 - portaudio19-dev,
@@ -116,7 +116,7 @@ You should hear the audio sample playing and see the number of buffers processed
 
 ## How it works
 
-The pipeline takes sample mp3 file, decodes it and plays the audio.
+The pipeline takes a sample mp3 file, decodes it, and plays the audio.
 The simple `counter` element is responsible for counting the number of buffers
 passing through it and periodically prints the number of buffers processed to the console.
 
@@ -124,7 +124,7 @@ The element is plugged in just before the audio player element in the pipeline.
 
 ## Sample License
 
-Sample is provided under Creative Commons. Song is called Swan Song by [Paper Navy](https://papernavy.bandcamp.com/album/all-grown-up).
+The sample is provided under Creative Commons. Song is called Swan Song by [Paper Navy](https://papernavy.bandcamp.com/album/all-grown-up).
 
 ## Copyright and License
 

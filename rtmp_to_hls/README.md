@@ -1,6 +1,6 @@
 # RTMP to HLS
 
-This demo is an application that is capable of receiving RTMP stream, converting it to HLS, and publishing via an HTTP server so that it can be played with a web player.
+This demo is an application that is capable of receiving an RTMP stream, converting it to HLS, and publishing via an HTTP server so that it can be played with a web player.
 
 ## Possible use cases
 
@@ -35,9 +35,9 @@ Below is the instruction for the installation of required dependencies and how t
 
 ### Prerequisites
 
-In order to successfully build and install the plugin, you need to have FFmpeg 4.\* installed on your system.
+To successfully build and install the plugin, you need to have FFmpeg 4.\* installed on your system.
 
-Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine. For installation details, see: https://elixir-lang.org/install.html
+Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine. For installation details, see: https://elixir-lang.org/install.html
 
 ```shell
 brew install ffmpeg
@@ -60,7 +60,7 @@ mix deps.get
 
 You may be asked to install `Hex` and then `rebar3`.
 
-> In case of issues with compilation of membrane_h264_ffmpeg_plugin, enter:
+> In case of issues with the compilation of membrane_h264_ffmpeg_plugin, enter:
 >
 > ```shell
 > mix deps.update bundlex
@@ -72,7 +72,7 @@ You may be asked to install `Hex` and then `rebar3`.
 > brew install pkg-config
 > ```
 
-Finally, you can start the phoenix server:
+Finally, you can start the Phoenix server:
 
 ```shell
 mix phx.server
@@ -89,10 +89,10 @@ Once you have OBS installed, you can perform the following steps:
 1. Open the OBS application
 2. Open the `Settings` windows
 3. Go to the `Stream` tab and set the value in the `Server` field to: `rtmp://localhost:9006` (the address where the server is waiting for the stream)
-4. Go to the `Output`, set output mode to `Advanced` and set `Keyframe Interval` to 2 seconds.
+4. Go to the `Output`, set output mode to `Advanced`, and set `Keyframe Interval` to 2 seconds.
 5. Finally, you can go back to the main window and start streaming with the `Start Streaming` button.
 
-Below you can see how to set the appropriate settings (step 2) and 3) from the list of steps above):
+Below you can see how to set the appropriate settings (steps 2) and 3) from the list of steps above):
 ![OBS settings](doc_assets/OBS_settings.webp)
 
 </details>
@@ -104,7 +104,7 @@ Below you can see how to set the appropriate settings (step 2) and 3) from the l
 
 ### Prerequisites
 
-In order to successfully build and install the plugin, you need to have FFmpeg 4.\* installed on your system.
+To successfully build and install the plugin, you need to have FFmpeg 4.\* installed on your system.
 
 ```shell
 apt install ffmpeg
@@ -137,13 +137,13 @@ You may be asked to install `Hex` and then `rebar3`.
 > sudo apt-get update
 > ```
 
-> In case of issues with compilation of membrane_h264_ffmpeg_plugin, enter:
+> In case of issues with the compilation of membrane_h264_ffmpeg_plugin, enter:
 >
 > ```shell
 > mix deps.update bundlex
 > ```
 
-Finally, you can start the phoenix server:
+Finally, you can start the Phoenix server:
 
 ```shell
 mix phx.server
@@ -160,10 +160,10 @@ Once you have OBS installed, you can perform the following steps:
 1. Open the OBS application
 2. Open the `Settings` windows
 3. Go to the `Stream` tab and set the value in the `Server` field to: `rtmp://localhost:9006` (the address where the server is waiting for the stream)
-4. Go to the `Output`, set output mode to `Advanced` and set `Keyframe Interval` to 2 seconds.
+4. Go to the `Output`, set output mode to `Advanced`, and set `Keyframe Interval` to 2 seconds.
 5. Finally, you can go back to the main window and start streaming with the `Start Streaming` button.
 
-Below you can see how to set the appropriate settings (step 2) and 3) from the list of steps above):
+Below you can see how to set the appropriate settings (steps 2) and 3) from the list of steps above):
 ![OBS settings](doc_assets/OBS_settings.webp)
 
 </details>

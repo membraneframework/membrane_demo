@@ -45,7 +45,7 @@ mix deps.get
 
 You may be asked to install `Hex` and then `rebar3`.
 
-> In case of issues with compilation of ex_libsrtp, enter:
+> In case of issues with the compilation of ex_libsrtp, enter:
 >
 > ```shell
 > mix deps.update bundlex
@@ -84,7 +84,7 @@ You should be able to see an SDL player showing an example video.
 The sender pipeline (run with `send.exs`) takes sample audio and video files and sends them with RTP.
 The receiving pipeline (run with `receive.exs`) depayloads the audio and video streams and plays them.
 
-If you wish to stream using SRTP, add `--secure` flag when running both `receive.exs` and `send.exs`.
+If you wish to stream using SRTP, add a `--secure` flag when running both `receive.exs` and `send.exs`.
 
 Alternatively, the stream can be sent using [gstreamer](https://gstreamer.freedesktop.org/). In this case, you only need to start the receiving pipeline:
 
@@ -145,7 +145,7 @@ You may be asked to install `Hex` and then `rebar3`.
 > sudo apt-get update
 > ```
 
-> In case of issues with compilation of ex_libsrtp, enter:
+> In case of issues with the compilation of ex_libsrtp, enter:
 >
 > ```shell
 > mix deps.update bundlex
@@ -175,7 +175,7 @@ You should be able to see an SDL player showing an example video.
 The sender pipeline (run with `send.exs`) takes sample audio and video files and sends them with RTP.
 The receiving pipeline (run with `receive.exs`) depayloads the audio and video streams and plays them.
 
-If you wish to stream using SRTP, add `--secure` flag when running both `receive.exs` and `send.exs`.
+If you wish to stream using SRTP, add a `--secure` flag when running both `receive.exs` and `send.exs`.
 
 Alternatively, the stream can be sent using [gstreamer](https://gstreamer.freedesktop.org/). In this case, you only need to start the receiving pipeline:
 

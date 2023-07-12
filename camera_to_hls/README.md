@@ -1,6 +1,6 @@
 # Membrane Demo - Camera Video to HLS
 
-This project demonstrates capturing camera video and converting it to HLS stream, which is then can be used wherever you want :)
+This project demonstrates capturing camera video and converting it to an HLS stream, which is then can be used wherever you want :)
 
 ## Prerequisites and running the demo
 
@@ -13,12 +13,12 @@ Below is the instruction for the installation of required dependencies and how t
 
 ### Prerequisites
 
-You must have following packages installed on your system:
+You must have the following packages installed on your system:
 
 - FFmpeg 4.\*
 - openssl
 
-Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine. For installation details, see: https://elixir-lang.org/install.html
+Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine. For installation details, see: https://elixir-lang.org/install.html
 
 ```shell
 brew install ffmpeg openssl
@@ -47,21 +47,21 @@ Finally, you can run the project with:
 mix run --no-halt
 ```
 
-CMAF header and segment files will be created in `output` directory along with HLS playlist files.
+CMAF header and segment files will be created in the `output` directory along with HLS playlist files.
 
-To play the HLS stream you can just serve the content of `output` dir via regular HTTP server, e.g. by running in a separate terminal:
+To play the HLS stream you can just serve the content of the `output` dir via a regular HTTP server, e.g. by running in a separate terminal:
 
 ```shell
 python3 -m http.server 8000
 ```
 
-Then, you can open the url http://localhost:8000/output/index.m3u8 in some player, e.g. `ffplay` or `vlc`
+Then, you can open the URL http://localhost:8000/output/index.m3u8 in some players, e.g. `ffplay` or `vlc`
 
 ```shell
 ffplay http://localhost:8000/output/index.m3u8
 ```
 
-Moreover you can open the url http://localhost:8000/stream in your browser and enjoy the video from your camera :)
+Moreover, you can open the URL http://localhost:8000/stream in your browser and enjoy the video from your camera :)
 
 _You might be asked to grant access to your camera, as some operating systems require that_
 
@@ -76,12 +76,12 @@ _In case of the absence of a physical camera, it is necessary to use a virtual c
 
 ### Prerequisites
 
-You must have following packages installed on your system:
+You must have the following packages installed on your system:
 
 - FFmpeg 4.\*
 - openssl
 
-Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine. For installation details, see: https://elixir-lang.org/install.html
+Furthermore, make sure you have `Elixir` and `Erlang` installed on your machine. For installation details, see: https://elixir-lang.org/install.html
 
 On Ubuntu, we recommend installation through `asdf`, see: https://asdf-vm.com/guide/getting-started.html
 
@@ -119,21 +119,21 @@ Finally, you can run the project with:
 mix run --no-halt
 ```
 
-CMAF header and segment files will be created in `output` directory along with HLS playlist files.
+CMAF header and segment files will be created in the `output` directory along with HLS playlist files.
 
-To play the HLS stream you can just serve the content of `output` dir via regular HTTP server, e.g. by running in a separate terminal:
+To play the HLS stream you can just serve the content of the `output` dir via a regular HTTP server, e.g. by running in a separate terminal:
 
 ```shell
 python3 -m http.server 8000
 ```
 
-Then, you can open the url http://localhost:8000/output/index.m3u8 in some player, e.g. `ffplay` or `vlc`
+Then, you can open the URL http://localhost:8000/output/index.m3u8 in some players, e.g. `ffplay` or `vlc`
 
 ```shell
 ffplay http://localhost:8000/output/index.m3u8
 ```
 
-Moreover you can open the url http://localhost:8000/stream in your browser and enjoy the video from your camera :)
+Moreover, you can open the URL http://localhost:8000/stream in your browser and enjoy the video from your camera :)
 
 _You might be asked to grant access to your camera, as some operating systems require that_
 

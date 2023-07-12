@@ -1,6 +1,6 @@
-# Membrane Demo - WebRTC Singaling Server
+# Membrane Demo - WebRTC Signaling Server
 
-Simple example of signaling server based on `Membrane.WebRTC.Server`.
+A simple example of a signaling server based on `Membrane.WebRTC.Server`.
 
 ## Prerequisites and running the demo
 
@@ -24,7 +24,7 @@ git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/webrtc_simple
 ```
 
-Custom ip, port or other Plug options can be set up in `config/config.exs`.
+Custom IP, port, or other Plug options can be set up in `config/config.exs`.
 
 Then you need to download the dependencies of the mix project:
 
@@ -36,34 +36,34 @@ You may be asked to install `Hex` and then `rebar3`.
 
 #### HTTPS
 
-Since application uses HTTPS, certificate and key are needed to run it. You generate them with
+Since the application uses HTTPS, a certificate and key are needed to run it. You generate them with
 
 ```shell
 openssl req -newkey rsa:2048 -nodes -keyout priv/certs/key.pem -x509 -days 365 -out priv/certs/certificate.pem
 ```
 
-Note that this certificate is not validated and thus may cause warnings in browser.
+Note that this certificate is not validated and thus may cause warnings in the browser.
 
-To trust self-signed certificate follow instructions below:
+To trust the self-signed certificate follow the instructions below:
 
 ```shell
 security import priv/certs/certificate.pem -k ~/Library/Keychains/login.keychain-db
 ```
 
-Then, find your certificate in Keychains, open it, expand the Trust section and change
+Then, find your certificate in Keychains, open it, expand the Trust section, and change
 the SSL setting to "Always Trust".
 
 ### Usage
 
-Run application with:
+Run the application with:
 
 ```shell
 mix start
 ```
 
-You can join videochat in:
+You can join the videochat in:
 `https://YOUR-IP-ADDRESS:PORT/NAME-OF-ROOM`, for example [here](https://localhost:8443/room). You should see
-video stream from your and every other peer cameras.
+the video stream from your and every other peer's cameras.
 
 _You might be asked to grant access to your camera, as some operating systems require that._
 
@@ -91,7 +91,7 @@ git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/webrtc_simple
 ```
 
-Custom ip, port or other Plug options can be set up in `config/config.exs`.
+Custom IP, port, or other Plug options can be set up in `config/config.exs`.
 
 Then you need to download the dependencies of the mix project:
 
@@ -109,15 +109,15 @@ You may be asked to install `Hex` and then `rebar3`.
 
 #### HTTPS
 
-Since application uses HTTPS, certificate and key are needed to run it. You generate them with
+Since the application uses HTTPS, a certificate and key are needed to run it. You generate them with
 
 ```shell
 openssl req -newkey rsa:2048 -nodes -keyout priv/certs/key.pem -x509 -days 365 -out priv/certs/certificate.pem
 ```
 
-Note that this certificate is not validated and thus may cause warnings in browser.
+Note that this certificate is not validated and thus may cause warnings in the browser.
 
-To trust self-signed certificate follow instructions below:
+To trust the self-signed certificate follow the instructions below:
 
 ```shell
 apt install ca-certificates
@@ -127,15 +127,15 @@ update-ca-certificates
 
 ### Usage
 
-Run application with:
+Run the application with:
 
 ```shell
 mix start
 ```
 
-You can join videochat in:
+You can join the videochat in:
 `https://YOUR-IP-ADDRESS:PORT/NAME-OF-ROOM`, for example [here](https://localhost:8443/room). You should see
-video stream from your and every other peer cameras.
+the video stream from your and every other peer's cameras.
 
 _You might be asked to grant access to your camera, as some operating systems require that._
 
@@ -161,7 +161,7 @@ git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/webrtc_simple
 ```
 
-Custom ip, port or other Plug options can be set up in `config/config.exs`.
+Custom IP, port, or other Plug options can be set up in `config/config.exs`.
 
 Then you need to download the dependencies of the mix project:
 
@@ -173,15 +173,15 @@ You may be asked to install `Hex` and then `rebar3`.
 
 #### HTTPS
 
-Since application uses HTTPS, certificate and key are needed to run it. You generate them with
+Since the application uses HTTPS, a certificate and key are needed to run it. You generate them with
 
 ```shell
 openssl req -newkey rsa:2048 -nodes -keyout priv/certs/key.pem -x509 -days 365 -out priv/certs/certificate.pem
 ```
 
-Note that this certificate is not validated and thus may cause warnings in browser.
+Note that this certificate is not validated and thus may cause warnings in the browser.
 
-To trust self-signed certificate follow instructions below:
+To trust the self-signed certificate follow the instructions below:
 
 ```shell
 trust anchor --store priv/certs/certificate.pem
@@ -189,15 +189,15 @@ trust anchor --store priv/certs/certificate.pem
 
 ### Usage
 
-Run application with:
+Run the application with:
 
 ```shell
 mix start
 ```
 
-You can join videochat in:
+You can join the videochat in:
 `https://YOUR-IP-ADDRESS:PORT/NAME-OF-ROOM`, for example [here](https://localhost:8443/room). You should see
-video stream from your and every other peer cameras.
+the video stream from your and every other peer's cameras.
 
 _You might be asked to grant access to your camera, as some operating systems require that._
 

@@ -1,8 +1,8 @@
 # Membrane video mixer demo
 
 This demo shows how to mix audio and video files.  
-Audio files in .wav format are merged to single .aac file.  
-Video files in .h264 are merged into single .h264 file.
+Audio files in .wav format are merged into a single .aac file.  
+Video files in .h264 are merged into a single .h264 file.
 
 ## Prerequisites and running the demo
 
@@ -15,7 +15,7 @@ Below is the instruction for the installation of required dependencies and how t
 
 ### Prerequisites
 
-Make sure you have following libraries installed on your OS:
+Make sure you have the following libraries installed on your OS:
 
 - clang-format,
 - portaudio19-dev,
@@ -76,7 +76,7 @@ Mixed video and audio are saved in the `output.h264` and `output.aac` files, acc
 
 ### Prerequisites
 
-Make sure you have following libraries installed on your OS:
+Make sure you have the following libraries installed on your OS:
 
 - clang-format,
 - portaudio19-dev,

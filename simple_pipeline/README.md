@@ -13,7 +13,7 @@ Below is the instruction for the installation of required dependencies and how t
 
 ### Prerequisites
 
-Make sure you have following libraries installed on your OS:
+Make sure you have the following libraries installed on your OS:
 
 - clang-format,
 - portaudio19-dev,
@@ -60,7 +60,7 @@ To start the demo pipeline run `mix run --no-halt run.exs` or type the following
 
 ### Prerequisites
 
-Make sure you have following libraries installed on your OS:
+Make sure you have the following libraries installed on your OS:
 
 - clang-format,
 - portaudio19-dev,
@@ -110,7 +110,7 @@ To start the demo pipeline run `mix run --no-halt run.exs` or type the following
 
 ## Sample License
 
-Sample is provided under Creative Commons. Song is called Swan Song by [Paper Navy](https://papernavy.bandcamp.com/album/all-grown-up).
+The sample is provided under Creative Commons. Song is called Swan Song by [Paper Navy](https://papernavy.bandcamp.com/album/all-grown-up).
 
 ## Copyright and License
 

@@ -2,9 +2,9 @@
 
 This demo is responsible for:
 
-- serving a phoenix app that will capture your camera and microphone
+- serving a Phoenix app that will capture your camera and microphone
 - transporting media streams via WebRTC to a membrane pipeline
-- dumping received streams to a HLS stream that can be further accessed either by a displayed URL or played via an embedded HLS player
+- dumping received streams to an HLS stream that can be further accessed either by a displayed URL or played via an embedded HLS player
 
 ## Prerequisites and running the demo
 
@@ -17,7 +17,7 @@ Below is the instruction for the installation of required dependencies and how t
 
 ### Prerequisites
 
-Make sure you have `node.js`, `openssl`, `FFmpeg 4.*` and `srtp` installed on your computer.
+Make sure you have `node.js`, `openssl`, `FFmpeg 4.*`, and `srtp` installed on your computer.
 
 ```shell
 brew install srtp ffmpeg opus fdk-aac openssl pkg-config
@@ -45,7 +45,7 @@ git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/webrtc_to_hls
 ```
 
-Firstly, generate certificate, as described in the [signaling server readme](https://github.com/membraneframework/membrane_demo/webrtc_simple).
+Firstly, generate a certificate, as described in the [signaling server readme](https://github.com/membraneframework/membrane_demo/webrtc_simple).
 
 Then you need to download the dependencies of the mix project:
 
@@ -56,7 +56,7 @@ npm ci --prefix=assets
 
 You may be asked to install `Hex` and then `rebar3`.
 
-In order to run the demo, type:
+To run the demo, type:
 
 ```shell
 mix phx.server
@@ -77,7 +77,7 @@ _In case of the absence of a physical camera, it is necessary to use a virtual c
 
 ### Prerequisites
 
-Make sure you have `node.js`, `openssl`, `FFmpeg 4.*` and `srtp` installed on your computer.
+Make sure you have `node.js`, `openssl`, `FFmpeg 4.*`, and `srtp` installed on your computer.
 
 ```shell
 brew install srtp ffmpeg opus fdk-aac openssl pkg-config
@@ -106,7 +106,7 @@ git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/webrtc_to_hls
 ```
 
-Firstly, generate certificate, as described in the [signaling server readme](https://github.com/membraneframework/membrane_demo/webrtc_simple).
+Firstly, generate a certificate, as described in the [signaling server readme](https://github.com/membraneframework/membrane_demo/webrtc_simple).
 
 Then you need to download the dependencies of the mix project:
 
@@ -117,7 +117,7 @@ npm ci --prefix=assets
 
 You may be asked to install `Hex` and then `rebar3`.
 
-In order to run the demo, type:
+To run the demo, type:
 
 ```shell
 mix phx.server
@@ -138,7 +138,7 @@ _In case of the absence of a physical camera, it is necessary to use a virtual c
 
 ### Prerequisites
 
-Make sure you have `node.js`, `openssl`, `FFmpeg 4.*` and `srtp` installed on your computer.
+Make sure you have `node.js`, `openssl`, `FFmpeg 4.*`, and `srtp` installed on your computer.
 
 ```shell
 sudo apt-get install libsrtp2-dev libavcodec-dev libavformat-dev libavutil-dev libopus-dev libfdk-aac-dev libssl-dev
@@ -157,7 +157,7 @@ git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/webrtc_to_hls
 ```
 
-Firstly, generate certificate, as described in the [signaling server readme](https://github.com/membraneframework/membrane_demo/webrtc_simple).
+Firstly, generate a certificate, as described in the [signaling server readme](https://github.com/membraneframework/membrane_demo/webrtc_simple).
 
 Then you need to download the dependencies of the mix project:
 
@@ -174,7 +174,7 @@ You may be asked to install `Hex` and then `rebar3`.
 > sudo apt-get update
 > ```
 
-In order to run the demo, type:
+To run the demo, type:
 
 ```shell
 mix phx.server

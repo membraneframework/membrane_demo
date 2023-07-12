@@ -15,7 +15,7 @@ Below is the instruction for the installation of required dependencies and how t
 
 ### Prerequisites
 
-You must have following packages installed on your system:
+You must have the following packages installed on your system:
 
 - FFmpeg 4.\*
 - GStreamer > 1.0 to provide RTP streams
@@ -44,7 +44,7 @@ mix deps.get
 
 You may be asked to install `Hex` and then `rebar3`.
 
-> In case of issues with compilation of membrane_h264_ffmpeg_plugin, enter:
+> In case of issues with the compilation of membrane_h264_ffmpeg_plugin, enter:
 >
 > ```shell
 > mix deps.update bundlex
@@ -62,10 +62,10 @@ Finally, you can run the demo with:
 mix run --no-halt
 ```
 
-Server will start listening for UDP connections by default on port 5000.
+The server will start listening for UDP connections by default on port 5000.
 
-After that you can start sending any H264 video and AAC audio stream
-via RTP. Below you can see an example how to generate sample streams
+After that, you can start sending any H264 video and AAC audio stream
+via RTP. Below you can see an example of how to generate sample streams
 with GStreamer.
 
 ```shell
@@ -73,15 +73,15 @@ gst-launch-1.0 -v audiotestsrc ! audio/x-raw,rate=44100 ! faac ! rtpmp4gpay  pt=
     videotestsrc ! video/x-raw,format=I420 ! x264enc key-int-max=10 tune=zerolatency ! rtph264pay pt=96 ! udpsink host=127.0.0.1 port=5000
 ```
 
-HLS header and segment files will be created in `output` directory along with playlist files.
+HLS header and segment files will be created in the `output` directory along with playlist files.
 
-To play the HLS stream you need to serve the content of `output` dir, e.g. by running:
+To play the HLS stream you need to serve the content of the `output` dir, e.g. by running:
 
 ```shell
 cd output && python3 -m http.server 8000
 ```
 
-Then, you can open the url `http://localhost:8000/index.m3u8` in some player, e.g. `ffplay` or `vlc`
+Then, you can open the URL `http://localhost:8000/index.m3u8` in some players, e.g. `ffplay` or `vlc`
 
 ```shell
 ffplay http://localhost:8000/index.m3u8
@@ -96,7 +96,7 @@ ffplay http://localhost:8000/index.m3u8
 
 ### Prerequisites
 
-You must have following packages installed on your system:
+You must have the following packages installed on your system:
 
 - FFmpeg 4.\*
 - GStreamer > 1.0 to provide RTP streams
@@ -133,7 +133,7 @@ You may be asked to install `Hex` and then `rebar3`.
 > sudo apt-get update
 > ```
 
-> In case of issues with compilation of membrane_h264_ffmpeg_plugin, enter:
+> In case of issues with the compilation of membrane_h264_ffmpeg_plugin, enter:
 >
 > ```shell
 > mix deps.update bundlex
@@ -145,10 +145,10 @@ Finally, you can run the demo with:
 mix run --no-halt
 ```
 
-Server will start listening for UDP connections by default on port 5000.
+The server will start listening for UDP connections by default on port 5000.
 
-After that you can start sending any H264 video and AAC audio stream
-via RTP. Below you can see an example how to generate sample streams
+After that, you can start sending any H264 video and AAC audio stream
+via RTP. Below you can see an example of how to generate sample streams
 with GStreamer.
 
 ```shell
@@ -156,15 +156,15 @@ gst-launch-1.0 -v audiotestsrc ! audio/x-raw,rate=44100 ! faac ! rtpmp4gpay  pt=
     videotestsrc ! video/x-raw,format=I420 ! x264enc key-int-max=10 tune=zerolatency ! rtph264pay pt=96 ! udpsink host=127.0.0.1 port=5000
 ```
 
-HLS header and segment files will be created in `output` directory along with playlist files.
+HLS header and segment files will be created in the `output` directory along with playlist files.
 
-To play the HLS stream you need to serve the content of `output` dir, e.g. by running:
+To play the HLS stream you need to serve the content of the `output` dir, e.g. by running:
 
 ```shell
 cd output && python3 -m http.server 8000
 ```
 
-Then, you can open the url `http://localhost:8000/index.m3u8` in some player, e.g. `ffplay` or `vlc`
+Then, you can open the URL `http://localhost:8000/index.m3u8` in some players, e.g. `ffplay` or `vlc`
 
 ```shell
 ffplay http://localhost:8000/index.m3u8

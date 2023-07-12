@@ -1,13 +1,13 @@
 # RTSP to HLS converter demo
 
-This demo demonstrates receiving RTSP stream and converting it to HLS stream.
+This demo demonstrates receiving the RTSP stream and converting it to the HLS stream.
 
 ## Components
 
 The project consists of 2 parts:
 
 - The pipeline, which converts the RTP stream to HLS
-- Connection Manager, which is started by the pipeline and is responsible for establishing RTSP connection
+- Connection Manager, which is started by the pipeline and is responsible for establishing the RTSP connection
 
 The internal architecture of an application is presented below:
 
@@ -24,10 +24,10 @@ Below is the instruction for the installation of required dependencies and how t
 
 ### Prerequisites
 
-In order to run this demo you have to run it on a machine with a publicly visible ip address.
+To run this demo you have to run it on a machine with a publicly visible IP address.
 
 Make sure you have [FFmpeg](https://www.ffmpeg.org/) installed on your machine - you are going to
-use it to play the stream. We advise to use FFmpeg 5.0 or newer.
+use it to play the stream. We advise you to use FFmpeg 5.0 or newer.
 
 ```shell
 brew install ffmpeg
@@ -54,7 +54,7 @@ You can configure the parameters for the converter in the `Application` module:
 @rtp_port 20000
 ```
 
-By default we use our sample RTSP stream at rtsp.membrane.work.
+By default, we use our sample RTSP stream at rtsp.membrane.work.
 
 Then you need to download the dependencies of the mix project:
 
@@ -64,7 +64,7 @@ mix deps.get
 
 You may be asked to install `Hex` and then `rebar3`.
 
-> In case of issues with compilation of membrane_h264_ffmpeg_plugin, enter:
+> In case of issues with the compilation of membrane_h264_ffmpeg_plugin, enter:
 >
 > ```shell
 > mix deps.update bundlex
@@ -82,7 +82,7 @@ Finally, you can start the pipeline by running:
 mix run --no-halt
 ```
 
-After a moment the pipeline will start generating HLS output files. In order to watch the stream we need to serve those files, e.g. by using python http server:
+After a moment the pipeline will start generating HLS output files. To watch the stream we need to serve those files, e.g. by using python HTTP server:
 
 ```shell
 python3 -m http.server 8000
@@ -101,10 +101,10 @@ ffplay http://localhost:8000/hls_output/index.m3u8
 <b>Ubuntu</b>
 </summary>
 
-In order to run this demo you have to run it on a machine with a publicly visible ip address.
+To run this demo you have to run it on a machine with a publicly visible IP address.
 
 Make sure you have [FFmpeg](https://www.ffmpeg.org/) installed on your machine - you are going to
-use it to play the stream. We advise to use FFmpeg 5.0 or newer.
+use it to play the stream. We advise you to use FFmpeg 5.0 or newer.
 
 ```shell
 apt install ffmpeg
@@ -133,7 +133,7 @@ You can configure the parameters for the converter in the `Application` module:
 @rtp_port 20000
 ```
 
-By default we use our sample RTSP stream at rtsp.membrane.work.
+By default, we use our sample RTSP stream at rtsp.membrane.work.
 
 Then you need to download the dependencies of the mix project:
 
@@ -149,7 +149,7 @@ You may be asked to install `Hex` and then `rebar3`.
 > sudo apt-get update
 > ```
 
-> In case of issues with compilation of membrane_h264_ffmpeg_plugin, enter:
+> In case of issues with the compilation of membrane_h264_ffmpeg_plugin, enter:
 >
 > ```shell
 > mix deps.update bundlex
@@ -161,7 +161,7 @@ Finally, you can start the pipeline by running:
 mix run --no-halt
 ```
 
-After a moment the pipeline will start generating HLS output files. In order to watch the stream we need to serve those files, e.g. by using python http server:
+After a moment the pipeline will start generating HLS output files. To watch the stream we need to serve those files, e.g. by using python HTTP server:
 
 ```shell
 python3 -m http.server 8000

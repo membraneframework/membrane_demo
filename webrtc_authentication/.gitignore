@@ -69,6 +69,7 @@ erl_crash.dump
 ## Private files ##
 /priv
 !/priv/certs/.gitkeep
+!/priv/repo/migrations/.gitkeep
 
 ### Elixir Patch ###
 ### Linux ###

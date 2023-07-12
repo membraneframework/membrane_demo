@@ -24,8 +24,7 @@ defmodule WebRTCToHLSWeb.Endpoint do
     parsers: [
       :urlencoded,
       :multipart,
-      :json,
-      Absinthe.Plug.Parser
+      :json
     ],
     pass: ["*/*"],
     json_decoder: Phoenix.json_library()

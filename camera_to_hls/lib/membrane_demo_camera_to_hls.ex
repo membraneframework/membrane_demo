@@ -9,9 +9,7 @@ defmodule Membrane.Demo.CameraToHls do
 
   @impl true
   def start(_type, _args) do
-    {:ok, pid} = Pipeline.start_link()
-    Membrane.Pipeline.play(pid)
-
-    {:ok, pid}
+    {:ok, _supervisor, pipeline} = Pipeline.start_link()
+    {:ok, pipeline}
   end
 end

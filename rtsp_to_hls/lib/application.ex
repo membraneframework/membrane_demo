@@ -5,7 +5,7 @@ defmodule Membrane.Demo.RtspToHls.Application do
   require Logger
   alias Membrane.Demo.RtspToHls.Pipeline
 
-  @rtsp_stream_url "rtsp://root:dupa123@192.168.83.150:554/axis-media/media.amp?videocodec=h264&resolution=640x480"
+  @rtsp_stream_url "rtsp://ktiv~ProspectHill:ktivHD4@gray.videstra.net:42554/ProspectHill"
   @output_path "hls_output"
   @rtp_port 20000
 

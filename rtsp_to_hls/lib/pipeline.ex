@@ -58,7 +58,6 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
           fmt_mapping: %{96 => {:H264, 90_000}}
         }
       ),
-
       child(
         :hls,
         %Membrane.HTTPAdaptiveStream.SinkBin{
@@ -68,7 +67,7 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
             directory: state[:output_path]
           }
         }
-      ),
+      )
     ]
 
     {[spec: structure], %{state | video: %{sps: options[:sps], pps: options[:pps]}}}
@@ -78,21 +77,21 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
   def handle_child_notification({:new_rtp_stream, ssrc, 96, _extensions}, :rtp, _ctx, state) do
     Logger.debug(":new_rtp_stream")
 
-    structure = [
+    structure =
       get_child(:rtp)
       |> via_out(Pad.ref(:output, ssrc),
-           options: [depayloader: Membrane.RTP.H264.Depayloader])
+        options: [depayloader: Membrane.RTP.H264.Depayloader]
+      )
       |> child(
         :video_nal_parser,
         %Membrane.H264.Parser{
           sps: state.video.sps,
           pps: state.video.pps,
-          framerate: {30, 1},
+          framerate: {30, 1}
         }
       )
       |> via_in(:input, options: [encoding: :H264, segment_duration: Membrane.Time.seconds(4)])
       |> get_child(:hls)
-    ]
 
     actions =
       if Map.has_key?(state, :rtp_started) do
@@ -108,18 +107,17 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
   def handle_child_notification({:new_rtp_stream, ssrc, _payload_type, _list}, :rtp, _ctx, state) do
     Logger.warn("new_rtp_stream Unsupported stream connected")
 
-    structure = [
+    structure =
       get_child(:rtp)
       |> via_out(Pad.ref(:output, ssrc))
       |> child({:fake_sink, ssrc}, Membrane.Element.Fake.Sink.Buffers)
-    ]
 
     {[spec: structure], state}
   end
 
   @impl true
   def handle_child_notification(notification, element, _ctx, state) do
-    Logger.warn("Unknown notification: #{inspect(notification)}, el: #{element}")
+    Logger.warn("Unknown notification: #{inspect(notification)}, el: #{inspect(element)}")
 
     {[], state}
   end

@@ -6,29 +6,6 @@ defmodule Membrane.Demo.RtmpToHls do
 
   @impl true
   def handle_init(_context, socket: socket) do
-    #    spec = %ParentSpec{
-    #      children: %{
-    #        src: %SourceBin{socket: socket},
-    #        sink: %Membrane.HTTPAdaptiveStream.SinkBin{
-    #          manifest_module: Membrane.HTTPAdaptiveStream.HLS,
-    #          target_window_duration: :infinity,
-    #          muxer_segment_duration: 8 |> Membrane.Time.seconds(),
-    #          persist?: false,
-    #          storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: "output"}
-    #        }
-    #      },
-    #      links: [
-    #        link(:src)
-    #        |> via_out(:audio)
-    #        |> via_in(Pad.ref(:input, :audio), options: [encoding: :AAC])
-    #        |> to(:sink),
-    #        link(:src)
-    #        |> via_out(:video)
-    #        |> via_in(Pad.ref(:input, :video), options: [encoding: :H264])
-    #        |> to(:sink)
-    #      ]
-    #    }
-
     structure = [
       child(:src, %SourceBin{socket: socket})
       |> via_out(:audio)

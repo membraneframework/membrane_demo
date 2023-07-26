@@ -7,10 +7,8 @@ defmodule Membrane.Demo.CameraToHls.Pipeline do
 
   @impl true
   def handle_init(_ctx, _opts) do
-    segment_duration = %Manifest.SegmentDuration{min: Time.seconds(2), target: Time.seconds(5)}
-
-    spec = [
-      # Captures video from the camera (raw video, depending on camera/os)
+    # Captures video from the camera (raw video, depending on camera/os)
+    spec =
       child(:source, Membrane.CameraCapture)
       # Converts pixel format to I420 (this is still a raw video)
       |> child(:converter, %Membrane.FFmpeg.SWScale.PixelFormatConverter{format: :I420})
@@ -31,7 +29,7 @@ defmodule Membrane.Demo.CameraToHls.Pipeline do
         options: [
           encoding: :H264,
           track_name: "My first track",
-          segment_duration: segment_duration
+          segment_duration: Time.seconds(5)
         ]
       )
       # Below element is a combination of:
@@ -50,7 +48,6 @@ defmodule Membrane.Demo.CameraToHls.Pipeline do
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
         storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: "output"}
       })
-    ]
 
     {[spec: spec, playback: :playing], %{}}
   end

@@ -1,6 +1,6 @@
 alias Membrane.Demo.RTP.ReceivePipeline
 
-{:ok, _pid} =
+{:ok, _supervisor, _pid} =
   ReceivePipeline.start_link(%{
     video_port: 5000,
     audio_port: 5002,

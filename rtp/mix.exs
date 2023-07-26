@@ -23,18 +23,18 @@ defmodule Membrane.Demo.RTP.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:membrane_core, "~> 0.10"},
-      {:membrane_rtp_plugin, "~> 0.14"},
-      {:membrane_udp_plugin, "~> 0.8"},
-      {:membrane_h264_ffmpeg_plugin, "~> 0.21"},
-      {:membrane_rtp_h264_plugin, "~> 0.13"},
-      {:membrane_opus_plugin, "~> 0.15"},
-      {:membrane_rtp_opus_plugin, "~> 0.6"},
-      {:membrane_sdl_plugin, "~> 0.14"},
-      {:membrane_portaudio_plugin, "~> 0.13"},
-      {:membrane_file_plugin, "~> 0.12.0"},
+      {:membrane_core, "~> 0.12.7"},
+      {:membrane_rtp_plugin, "~> 0.15"},
+      {:membrane_udp_plugin, "~> 0.9"},
+      {:membrane_h264_ffmpeg_plugin, "~> 0.22"},
+      {:membrane_rtp_h264_plugin, "~> 0.14"},
+      {:membrane_opus_plugin, "~> 0.16"},
+      {:membrane_rtp_opus_plugin, "~> 0.7"},
+      {:membrane_sdl_plugin, "~> 0.15"},
+      {:membrane_portaudio_plugin, "~> 0.14"},
+      {:membrane_file_plugin, "~> 0.13.0"},
       {:ex_libsrtp, "~> 0.4"},
-      {:membrane_realtimer_plugin, "~> 0.5"}
+      {:membrane_realtimer_plugin, "~> 0.6"}
     ]
   end
 end

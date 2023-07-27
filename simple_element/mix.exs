@@ -29,12 +29,11 @@ defmodule Membrane.Demo.SimpleElement.MixProject do
   defp deps do
     [
       {:membrane_core, "~> 0.12.7"},
-      {:membrane_file_plugin, "~> 0.13"},
-      {:membrane_portaudio_plugin, "~> 0.16"},
-      {:membrane_ffmpeg_swresample_plugin, "~> 0.17.0"},
+      {:membrane_file_plugin, "~> 0.14.0"},
+      {:membrane_portaudio_plugin, "~> 0.16.1"},
+      {:membrane_ffmpeg_swresample_plugin, "~> 0.17.2"},
       {:membrane_mp3_mad_plugin, "~> 0.16.0"},
       # to remove after membrane_portaudio_plugin is released with proper dependency to membrane_raw_audio_format
-      {:membrane_raw_audio_format, "~> 0.11.0", override: true},
       {:dialyxir, "~> 1.2", only: [:dev], runtime: false}
     ]
   end

@@ -50,7 +50,7 @@ defmodule WebRTCToHLS.Application do
         @cert_file_path
       )
     else
-      Membrane.Logger.warning("""
+      Membrane.Logger.warn("""
       Integrated TURN certificate or private key path not specified.
       Integrated TURN will not handle TLS connections.
       """)

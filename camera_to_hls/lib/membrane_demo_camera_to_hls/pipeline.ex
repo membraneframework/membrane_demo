@@ -48,6 +48,6 @@ defmodule Membrane.Demo.CameraToHls.Pipeline do
         storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: "output"}
       })
 
-    {[spec: spec, playback: :playing], %{}}
+    {[spec: spec], %{}}
   end
 end

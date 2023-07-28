@@ -24,8 +24,8 @@ defmodule Membrane.Demo.RtpToHls.MixProject do
     [
       {:membrane_core, "~> 0.12.7"},
       {:membrane_udp_plugin, "~> 0.10.0"},
-      {:membrane_file_plugin, "~> 0.14"},
-      {:membrane_h264_ffmpeg_plugin, "~> 0.27"},
+      {:membrane_file_plugin, "~> 0.14.0"},
+      {:membrane_h264_ffmpeg_plugin, "~> 0.27.0"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.15.0"},
       {:membrane_aac_format, "~> 0.7.0"},
       {:membrane_mp4_plugin, "~> 0.24.0"},
@@ -38,8 +38,8 @@ defmodule Membrane.Demo.RtpToHls.MixProject do
       {:membrane_tee_plugin, "~> 0.11.0"},
       {:membrane_fake_plugin, "~> 0.10.0"},
       {:membrane_aac_plugin, "~> 0.15.0"},
-      {:ex_libsrtp, "~> 0.6.0"},
-      {:membrane_rtp_format, "~> 0.7.0"}
+      {:membrane_rtp_format, "~> 0.7.0"},
+      {:ex_libsrtp, "~> 0.6.0"}
     ]
   end
 end

@@ -24,17 +24,17 @@ defmodule Membrane.Demo.RTP.MixProject do
   defp deps do
     [
       {:membrane_core, "~> 0.12.7"},
-      {:membrane_rtp_plugin, "~> 0.15"},
-      {:membrane_udp_plugin, "~> 0.9"},
-      {:membrane_h264_ffmpeg_plugin, "~> 0.22"},
-      {:membrane_rtp_h264_plugin, "~> 0.14"},
-      {:membrane_opus_plugin, "~> 0.16"},
-      {:membrane_rtp_opus_plugin, "~> 0.7"},
-      {:membrane_sdl_plugin, "~> 0.15"},
-      {:membrane_portaudio_plugin, "~> 0.14"},
-      {:membrane_file_plugin, "~> 0.13.0"},
-      {:ex_libsrtp, "~> 0.4"},
-      {:membrane_realtimer_plugin, "~> 0.6"}
+      {:membrane_rtp_plugin, "~> 0.23.0"},
+      {:membrane_udp_plugin, "~> 0.10.0"},
+      {:membrane_h264_ffmpeg_plugin, "~> 0.27.0"},
+      {:membrane_rtp_h264_plugin, "~> 0.16.0"},
+      {:membrane_opus_plugin, "~> 0.17.1"},
+      {:membrane_rtp_opus_plugin, "~> 0.8.0"},
+      {:membrane_sdl_plugin, "~> 0.16.0"},
+      {:membrane_portaudio_plugin, "~> 0.16.1"},
+      {:membrane_file_plugin, "~> 0.14.0"},
+      {:membrane_realtimer_plugin, "~> 0.7.0"},
+      {:ex_libsrtp, "~> 0.4"}
     ]
   end
 end

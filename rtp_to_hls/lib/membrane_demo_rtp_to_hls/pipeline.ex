@@ -32,8 +32,6 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
         alignment: :au,
         attach_nalus?: true
       })
-      # |> child(:video_payloader, Membrane.MP4.Payloader.H264)
-      # |> child(:video_cmaf_muxer, Membrane.MP4.Muxer.CMAF)
       |> via_in(Pad.ref(:input, :video),
         options: [encoding: :H264, segment_duration: Membrane.Time.seconds(4)]
       )
@@ -46,8 +44,6 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     spec =
       get_child(:rtp)
       |> via_out(Pad.ref(:output, ssrc), options: [depayloader: Membrane.RTP.AAC.Depayloader])
-      # |> child(:audio_payloader, Membrane.MP4.Payloader.AAC)
-      # |> child(:audio_cmaf_muxer, Membrane.MP4.Muxer.CMAF)
       |> via_in(Pad.ref(:input, :audio),
         options: [encoding: :AAC, segment_duration: Membrane.Time.seconds(4)]
       )
@@ -57,7 +53,7 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
   end
 
   def handle_child_notification({:new_rtp_stream, ssrc, _payload_type, _ext}, :rtp, _ctx, state) do
-    Logger.warn("Unsupported stream connected")
+    Logger.warning("Unsupported stream connected")
 
     spec =
       get_child(:rtp)

@@ -9,8 +9,6 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
   alias Membrane.Demo.RtspToHls.ConnectionManager
   alias Membrane.Pad
 
-  import Membrane.ChildrenSpec
-
   @impl true
   def handle_init(_context, options) do
     Logger.debug("Source handle_init options: #{inspect(options)}")

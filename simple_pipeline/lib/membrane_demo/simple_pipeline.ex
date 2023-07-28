@@ -5,8 +5,6 @@ defmodule Membrane.Demo.SimplePipeline do
 
   use Membrane.Pipeline
 
-  import Membrane.ChildrenSpec
-
   @doc """
   In order to play `.mp3` file we need to read it first.
 

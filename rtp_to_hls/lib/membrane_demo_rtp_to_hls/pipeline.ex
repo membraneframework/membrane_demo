@@ -1,8 +1,6 @@
 defmodule Membrane.Demo.RtpToHls.Pipeline do
   use Membrane.Pipeline
 
-  import Membrane.ChildrenSpec
-
   require Logger
 
   @impl true

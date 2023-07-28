@@ -5,8 +5,6 @@ defmodule Membrane.Demo.SimpleElement.Pipeline do
 
   use Membrane.Pipeline
 
-  import Membrane.ChildrenSpec
-
   alias Membrane.{File, FFmpeg, MP3.MAD, PortAudio, Time}
 
   @impl true

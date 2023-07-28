@@ -3,7 +3,6 @@ defmodule Membrane.Demo.CameraToHls.Pipeline do
 
   alias Membrane.HTTPAdaptiveStream.Manifest
   alias Membrane.Time
-  import Membrane.ChildrenSpec
 
   @impl true
   def handle_init(_ctx, _opts) do

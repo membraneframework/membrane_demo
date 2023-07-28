@@ -1,8 +1,6 @@
 defmodule Membrane.Demo.RTP.SendPipeline do
   use Membrane.Pipeline
 
-  import Membrane.ChildrenSpec
-
   alias Membrane.{File, H264, Opus, RTP, UDP}
 
   @impl true

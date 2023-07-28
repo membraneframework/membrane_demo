@@ -61,7 +61,7 @@ defmodule Membrane.Demo.SimpleElement.Counter do
   end
 
   @impl true
-  def handle_process(:input, %Membrane.Buffer{} = buffer, _context, state) do
+  def handle_buffer(:input, %Membrane.Buffer{} = buffer, _context, state) do
     state = %{state | counter: state.counter + 1}
     {[buffer: {:output, buffer}], state}
   end

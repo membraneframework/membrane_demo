@@ -3,8 +3,6 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
 
   require Logger
 
-  import Membrane.ChildrenSpec
-
   alias Membrane.{H264, Opus, RTP, UDP}
 
   @local_ip {127, 0, 0, 1}

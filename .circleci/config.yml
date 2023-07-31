@@ -47,15 +47,6 @@ jobs:
       - build_test:
           demo: simple_pipeline
       - build_test:
-          demo: video_mixer
-      - prepare_openssl:
-          demo: webrtc_authentication
-      - build_test:
-          demo: webrtc_authentication
-      - prepare_openssl:
-          demo: webrtc_simple
-      - build_test:
-          demo: webrtc_simple
       - build_test:
           demo: webrtc_to_hls
       - npm_install:

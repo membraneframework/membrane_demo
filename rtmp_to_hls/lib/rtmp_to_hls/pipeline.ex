@@ -2,7 +2,6 @@ defmodule Membrane.Demo.RtmpToHls do
   use Membrane.Pipeline
 
   alias Membrane.RTMP.SourceBin
-  import Membrane.ChildrenSpec
 
   @impl true
   def handle_init(_context, socket: socket) do

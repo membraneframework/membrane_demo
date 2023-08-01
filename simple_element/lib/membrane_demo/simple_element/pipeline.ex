@@ -4,39 +4,36 @@ defmodule Membrane.Demo.SimpleElement.Pipeline do
   """
 
   use Membrane.Pipeline
+
   alias Membrane.{File, FFmpeg, MP3.MAD, PortAudio, Time}
 
   @impl true
-  def handle_init(path_to_mp3) do
-    children = %{
-      file: %File.Source{location: path_to_mp3},
-      decoder: MAD.Decoder,
-      converter: %FFmpeg.SWResample.Converter{
-        output_caps: %Membrane.RawAudio{
+  def handle_init(_ctx, path_to_mp3) do
+    spec =
+      child(:file, %File.Source{location: path_to_mp3})
+      |> child(:decoder, MAD.Decoder)
+      |> child(:converter, %FFmpeg.SWResample.Converter{
+        output_stream_format: %Membrane.RawAudio{
           sample_format: :s16le,
           sample_rate: 48000,
           channels: 2
         }
-      },
-      # Here is the declaration of our element
-      counter: %Membrane.Demo.SimpleElement.Counter{interval: 5 |> Time.seconds()},
-      sink: PortAudio.Sink
-    }
-
-    links = [
-      link(:file)
-      |> to(:decoder)
-      |> to(:converter)
+      })
       |> via_in(:input, options: [divisor: 10])
-      |> to(:counter)
-      |> to(:sink)
-    ]
+      |> child(:counter, %Membrane.Demo.SimpleElement.Counter{interval: Time.seconds(5)})
+      |> child(:sink, PortAudio.Sink)
 
-    {{:ok, spec: %ParentSpec{children: children, links: links}, playback: :playing}, %{}}
+    {[spec: spec], %{}}
   end
 
   @impl true
-  def handle_notification(notification, _from, _ctx, state) do
-    {:ok, state}
+  def handle_child_notification({:counter, counter_value}, _from, _ctx, state) do
+    IO.inspect(counter_value, label: "Count of buffers processed:")
+    {[], state}
+  end
+
+  @impl true
+  def handle_child_notification(notification, _from, _ctx, state) do
+    {[], state}
   end
 end

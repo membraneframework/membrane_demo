@@ -1,2 +1,2 @@
 alias Membrane.Demo.SimpleElement.Pipeline
-{:ok, pid} = Pipeline.start_link("sample.mp3")
+{:ok, _supervisor, _pid} = Pipeline.start_link("sample.mp3")

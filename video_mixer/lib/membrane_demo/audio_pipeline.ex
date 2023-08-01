@@ -8,46 +8,31 @@ defmodule Membrane.Demo.AudioPipeline do
   alias Membrane.AudioMixer
 
   @impl true
-  def handle_init({path_to_wav_1, path_to_wav_2}) do
-    children = %{
-      # Stream from file
-      audio_file_1: %Source{location: path_to_wav_1},
-      audio_file_2: %Source{location: path_to_wav_2},
-      # Parse each wav file to raw audio
-      parser_1: Parser,
-      parser_2: Parser,
-      # Mix two files
-      mixer: %AudioMixer{
-        caps: %Membrane.Caps.Audio.Raw{
+  def handle_init(_ctx, {path_to_wav_1, path_to_wav_2}) do
+    # Setup the flow of the data
+    spec = [
+      # parse first file
+      child(:audio_file_1, %Source{location: path_to_wav_1})
+      |> child(:parser_1, Parser)
+      |> child(:mixer, %AudioMixer{
+        stream_format: %Membrane.RawAudio{
           channels: 1,
           sample_rate: 16_000,
-          format: :s16le
+          sample_format: :s16le
         }
-      },
-      # Convert mixed audio to aac format
-      aac_fdk: Membrane.AAC.FDK.Encoder,
-      # Save output in a file
-      file_sink: %Sink{location: "output.aac"}
-    }
-
-    # Setup the flow of the data
-    links = [
-      # parse first file
-      link(:audio_file_1)
-      |> to(:parser_1)
-      |> to(:mixer),
+      }),
       # parse second file
-      link(:audio_file_2)
-      |> to(:parser_2)
+      child(:audio_file_2, %Source{location: path_to_wav_2})
+      |> child(:parser_2, Parser)
       # offset file by 2 seconds
       |> via_in(:input, options: [offset: Membrane.Time.milliseconds(2000)])
-      |> to(:mixer),
+      |> get_child(:mixer),
       # convert and save mixer's output in .aac format
-      link(:mixer)
-      |> to(:aac_fdk)
-      |> to(:file_sink)
+      get_child(:mixer)
+      |> child(:aac_fdk, Membrane.AAC.FDK.Encoder)
+      |> child(:file_sink, %Sink{location: "output.aac"})
     ]
 
-    {{:ok, spec: %ParentSpec{children: children, links: links}}, %{}}
+    {[spec: spec], %{}}
   end
 end

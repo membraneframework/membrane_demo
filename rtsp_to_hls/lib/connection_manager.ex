@@ -70,7 +70,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
            :ok <- setup_rtsp_connection(connection_status),
            {:ok, connection_status} <- start_keep_alive(connection_status),
            :ok <- play(connection_status) do
-        Logger.warn(~s"""
+        Logger.warning(~s"""
         ConnectionManager processes:
           RTSP session: #{inspect(connection_status.rtsp_session)},
           Membrane Pipeline: #{inspect(connection_status.pipeline)},
@@ -85,7 +85,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
         {:ok, connection_status}
       else
         {:error, error_message} ->
-          Logger.warn("ConnectionManager: Connection failed: #{inspect(error_message)}")
+          Logger.warning("ConnectionManager: Connection failed: #{inspect(error_message)}")
           {:backoff, @delay, connection_status}
       end
     end
@@ -128,9 +128,9 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
         } = connection_status
       )
       when reason != :normal do
-    Logger.warn("ConnectionManager: Received DOWN message from #{inspect(pid)}")
+    Logger.warning("ConnectionManager: Received DOWN message from #{inspect(pid)}")
 
-    Logger.warn(~s"""
+    Logger.warning(~s"""
     ConnectionManager processes:
       RTSP session: #{inspect(rtsp_session)},
       RTSP keep alive: #{inspect(keep_alive)}
@@ -168,7 +168,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
         session
 
       {:error, error} ->
-        Logger.warn("ConnectionManager: Starting RTSP session failed - #{inspect(error)}")
+        Logger.warning("ConnectionManager: Starting RTSP session failed - #{inspect(error)}")
         nil
     end
   end
@@ -249,7 +249,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
         rtsp_keep_alive(rtsp_session)
 
       error ->
-        Logger.warn("RTSP ping failed: #{inspect(error)}")
+        Logger.warning("RTSP ping failed: #{inspect(error)}")
         Process.exit(self(), :connection_failed)
     end
   end

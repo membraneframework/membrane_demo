@@ -53,16 +53,14 @@ Start AudioPipeline
 
 ```elixir
 alias Membrane.Demo.AudioPipeline
-{:ok, pid} = AudioPipeline.start_link({"sound_500f.wav", "sound_1000f.wav"})
-AudioPipeline.play(pid)
+{:ok, _supervisor, pid} = AudioPipeline.start_link({"sound_500f.wav", "sound_1000f.wav"})
 ```
 
 Start VideoPipeline
 
 ```elixir
 alias Membrane.Demo.VideoPipeline
-{:ok, pid} = VideoPipeline.start_link({"video_red.h264", "video_green.h264"})
-VideoPipeline.play(pid)
+{:ok, _supervisor, pid} = VideoPipeline.start_link({"video_red.h264", "video_green.h264"})
 ```
 
 Mixed video and audio are saved in the `output.h264` and `output.aac` files, accordingly.

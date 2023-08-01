@@ -22,9 +22,7 @@ defmodule Membrane.Demo.RtspToHls.Application do
       stream_url: @rtsp_stream_url
     }
 
-    {:ok, pid} = Pipeline.start_link(pipeline_options)
-    Membrane.Pipeline.play(pid)
-
+    {:ok, _sup, pid} = Pipeline.start_link(pipeline_options)
     {:ok, pid}
   end
 end

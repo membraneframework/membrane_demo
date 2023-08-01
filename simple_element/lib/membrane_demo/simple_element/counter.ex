@@ -19,9 +19,9 @@ defmodule Membrane.Demo.SimpleElement.Counter do
 
   def_input_pad :input,
     availability: :always,
-    mode: :pull,
+    flow_control: :manual,
     demand_unit: :bytes,
-    caps: :any,
+    accepted_format: _any,
     options: [
       divisor: [
         type: :integer,
@@ -32,38 +32,38 @@ defmodule Membrane.Demo.SimpleElement.Counter do
 
   def_output_pad :output,
     availability: :always,
-    mode: :pull,
-    caps: :any
+    flow_control: :manual,
+    accepted_format: _any
 
   @impl true
-  def handle_init(%__MODULE{interval: interval}) do
+  def handle_init(_ctx, %__MODULE{interval: interval}) do
     state = %{
       interval: interval,
       counter: 0
     }
 
-    {:ok, state}
+    {[], state}
   end
 
   @impl true
-  def handle_prepared_to_stopped(_ctx, state) do
-    {{:ok, stop_timer: :timer}, %{state | counter: 0}}
+  def handle_terminate_request(_ctx, state) do
+    {[stop_timer: :timer, terminate: :normal], %{state | counter: 0}}
   end
 
   @impl true
-  def handle_prepared_to_playing(_ctx, state) do
-    {{:ok, start_timer: {:timer, state.interval}}, state}
+  def handle_playing(_ctx, state) do
+    {[start_timer: {:timer, state.interval}], state}
   end
 
   @impl true
   def handle_demand(:output, size, :bytes, _context, state) do
-    {{:ok, demand: {:input, size}}, state}
+    {[demand: {:input, size}], state}
   end
 
   @impl true
-  def handle_process(:input, %Membrane.Buffer{} = buffer, _context, state) do
+  def handle_buffer(:input, %Membrane.Buffer{} = buffer, _context, state) do
     state = %{state | counter: state.counter + 1}
-    {{:ok, buffer: {:output, buffer}}, state}
+    {[buffer: {:output, buffer}], state}
   end
 
   @impl true
@@ -77,6 +77,6 @@ defmodule Membrane.Demo.SimpleElement.Counter do
     # reset the counter
     new_state = %{state | counter: 0}
 
-    {{:ok, notify: notification}, new_state}
+    {[notify_parent: notification], new_state}
   end
 end

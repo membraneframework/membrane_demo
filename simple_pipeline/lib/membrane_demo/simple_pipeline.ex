@@ -23,29 +23,24 @@ defmodule Membrane.Demo.SimplePipeline do
   doesn't suite our needs and will yield data in format we want.
   """
   @impl true
-  def handle_init(path_to_mp3) do
-    children = %{
-      # Stream from file
-      file: %Membrane.File.Source{location: path_to_mp3},
+  def handle_init(_ctx, path_to_mp3) do
+    # Setup the flow of the data
+    # Stream from file
+    spec =
+      child(:file, %Membrane.File.Source{location: path_to_mp3})
       # Decode frames
-      decoder: Membrane.MP3.MAD.Decoder,
+      |> child(:decoder, Membrane.MP3.MAD.Decoder)
       # Convert Raw :s24le to Raw :s16le
-      converter: %Membrane.FFmpeg.SWResample.Converter{
-        output_caps: %Membrane.RawAudio{
+      |> child(:converter, %Membrane.FFmpeg.SWResample.Converter{
+        output_stream_format: %Membrane.RawAudio{
           sample_format: :s16le,
           sample_rate: 48000,
           channels: 2
         }
-      },
+      })
       # Stream data into PortAudio to play it on speakers.
-      portaudio: Membrane.PortAudio.Sink
-    }
+      |> child(:portaudio, Membrane.PortAudio.Sink)
 
-    # Setup the flow of the data
-    links = [
-      link(:file) |> to(:decoder) |> to(:converter) |> to(:portaudio)
-    ]
-
-    {{:ok, spec: %ParentSpec{children: children, links: links}, playback: :playing}, %{}}
+    {[spec: spec], %{}}
   end
 end

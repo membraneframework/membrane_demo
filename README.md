@@ -12,8 +12,6 @@ In the subdirectories of this repository you can find some examples of using the
 - [simple_element](https://github.com/membraneframework/membrane_demo/tree/master/simple_element) - an example of a simple Membrane's element capable of counting the incoming buffers
 - [simple_pipeline](https://github.com/membraneframework/membrane_demo/tree/master/simple_pipeline) - an example of a Membrane's pipeline playing an mp3 file
 - [video_mixer](https://github.com/membraneframework/membrane_demo/tree/master/video_mixer) - how to mix audio and video files
-- [webrtc_authentication](https://github.com/membraneframework/membrane_demo/tree/master/webrtc_authentication) - an example of signaling server with authentication based on [Membrane.WebRTC.Server](https://github.com/membraneframework/webrtc-server.git)
-- [webrtc_simple](https://github.com/membraneframework/membrane_demo/tree/master/webrtc_simple) - simple example of signaling server based on [Membrane.WebRTC.Server](https://github.com/membraneframework/webrtc-server.git)
 - [webrtc_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/webrtc_to_hls) - converting WebRTC stream into HLS
 - [webrtc_videoroom](https://github.com/membraneframework/membrane_demo/tree/master/webrtc_videoroom) - basic example of [Membrane RTC Engine](https://github.com/membraneframework/membrane_rtc_engine.git). It's as simple as possible just to show you how to use our API.
 ## Copyright and License

@@ -1,6 +1,6 @@
 alias Membrane.Demo.RTP.SendPipeline
 
-{:ok, _pid} =
+{:ok, _supervisor, _pid} =
   SendPipeline.start_link(%{
     video_port: 5000,
     video_ssrc: 1234,

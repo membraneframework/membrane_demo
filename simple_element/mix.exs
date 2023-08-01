@@ -33,7 +33,6 @@ defmodule Membrane.Demo.SimpleElement.MixProject do
       {:membrane_portaudio_plugin, "~> 0.16.1"},
       {:membrane_ffmpeg_swresample_plugin, "~> 0.17.2"},
       {:membrane_mp3_mad_plugin, "~> 0.16.0"},
-      # to remove after membrane_portaudio_plugin is released with proper dependency to membrane_raw_audio_format
       {:dialyxir, "~> 1.2", only: [:dev], runtime: false}
     ]
   end

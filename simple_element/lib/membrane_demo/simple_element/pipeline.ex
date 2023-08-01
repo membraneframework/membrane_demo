@@ -28,7 +28,7 @@ defmodule Membrane.Demo.SimpleElement.Pipeline do
 
   @impl true
   def handle_child_notification({:counter, counter_value}, _from, _ctx, state) do
-    IO.inspect(counter_value, label: "How many buffers flew:")
+    IO.inspect(counter_value, label: "Count of buffers processed:")
     {[], state}
   end
 

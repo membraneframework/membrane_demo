@@ -47,6 +47,8 @@ jobs:
       - build_test:
           demo: simple_pipeline
       - build_test:
+          demo: video_mixer
+      - build_test:
           demo: webrtc_to_hls
       - npm_install:
           demo: webrtc_to_hls

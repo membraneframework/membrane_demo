@@ -103,14 +103,10 @@ You may be asked to install `Hex` and then `rebar3`.
 To start the demo pipeline run `mix run --no-halt run.exs` or type the following commands into an IEx shell (started by `iex -S mix`):
 
 ```elixir
-{:ok, _pid} = Membrane.Demo.SimplePipeline.start_link("sample.mp3")
+Membrane.Demo.SimplePipeline.start_link("sample.mp3")
 ```
 
 </details>
-
-## Sample License
-
-The sample is provided under Creative Commons. Song is called Swan Song by [Paper Navy](https://papernavy.bandcamp.com/album/all-grown-up).
 
 ## Copyright and License
 

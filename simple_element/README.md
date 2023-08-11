@@ -48,8 +48,7 @@ You may be asked to install `Hex` and then `rebar3`.
 To start the demo pipeline run `mix run --no-halt run.exs` or type the following commands into an IEx shell (started by `iex -S mix`):
 
 ```elixir
-alias Membrane.Demo.SimpleElement.Pipeline
-{:ok, pid} = Pipeline.start_link("sample.mp3")
+Membrane.Demo.SimpleElement.Pipeline.start_link("sample.mp3")
 ```
 
 You should hear the audio sample playing and see the number of buffers processed being periodically printed to the console.
@@ -106,8 +105,7 @@ You may be asked to install `Hex` and then `rebar3`.
 To start the demo pipeline run `mix run --no-halt run.exs` or type the following commands into an IEx shell (started by `iex -S mix`):
 
 ```elixir
-alias Membrane.Demo.SimpleElement.Pipeline
-{:ok, pid} = Pipeline.start_link("sample.mp3")
+Membrane.Demo.SimpleElement.Pipeline.start_link("sample.mp3")
 ```
 
 You should hear the audio sample playing and see the number of buffers processed being periodically printed to the console.
@@ -121,10 +119,6 @@ The simple `counter` element is responsible for counting the number of buffers
 passing through it and periodically prints the number of buffers processed to the console.
 
 The element is plugged in just before the audio player element in the pipeline.
-
-## Sample License
-
-The sample is provided under Creative Commons. Song is called Swan Song by [Paper Navy](https://papernavy.bandcamp.com/album/all-grown-up).
 
 ## Copyright and License
 

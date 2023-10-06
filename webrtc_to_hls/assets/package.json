@@ -18,7 +18,7 @@
     "@types/phoenix": "^1.5.4",
     "autoprefixer": "^10.2.0",
     "playwright": "1.17",
-    "postcss": "^8.3.5",
+    "postcss": "^8.4.31",
     "postcss-import": "^14.0.2",
     "prettier": "^2.2.1",
     "tailwindcss": "^2.2.4"

@@ -18,7 +18,7 @@ Mix.install(
 
 ## Prerequisites
 
-On Linux, you need to install PortAudio, for example with `sudo apt install portaudio19-dev`.
+On Linux, you need to install PortAudio, for example with `sudo apt install portaudio19-dev`. Check [membrane_portaudio_plugin](https://github.com/membraneframework/membrane_portaudio_plugin#installation) for details.
 
 ## Introduction
 
@@ -28,7 +28,7 @@ You will see how to fetch the audio from your microphone, perform preprocessing 
 
 ## Element performing speech to text conversion
 
-We need to write a custom sink that will perform speech-to-text and display the resulting transcription. Let's call this element `SpeechToText`.
+We need to write a custom [filter](https://membrane.stream/learn/glossary#filter) that will perform speech-to-text and forward the resulting transcription. Let's call this element `SpeechToText`.
 
 To perform the transcription the element will use the Open AI's [Whisper](https://openai.com/research/whisper) model. 
 It can be easily loaded and used with a "little" help from [Bumblebee](https://github.com/elixir-nx/bumblebee).
@@ -41,15 +41,7 @@ In the initialization process, we load the `Whisper` model, along with the featu
 
 ### Buffers handling
 
-Once a buffer arrives, we check if it contains enough amount of audio and accumulate it in the state otherwise. Then we perform basic VAD (Voice Activity Detection) to remove silent chunks, which improves the model behaviour. Then we convert the audio to an Nx tensor, feed the model, and parse the output, which is then sent via the output pad.
-
-### Problems and potential improvements
-
-The main problem with our approach is that we feed the model with small chunks, so that it lacks the context of what is before and after. If a chunk starts or ends in a middle of a word, it's very hard for the model to recognize it properly. The solution for that is to make the chunks overlap and then apply a clever merging algorithm. This is almost implemented in the Bumblebee - see https://github.com/elixir-nx/bumblebee/issues/261. Merging could be also done outside of Bumblebee, but it's hard to say how it would perform, since it would have to rely on the output text or timestamps instead of tokens. Alternatively, we could apply some clever algorithm that would tell us where to split the chunks basing on silent breaks.
-
-Another issue is that Whisper seems to hallucinate when given a noise or silence. We're partially solving that by removing the silence whenever possible. The silence detection and removal is not a trivial task and can possibly be improved. Also, applying noise reduction could be helpful.
-
-We welcome ideas and contributions addressing these problems or bringing other improvements.
+Once a buffer arrives, we check if it contains enough amount of audio and accumulate it in the state otherwise. Then we perform basic VAD (Voice Activity Detection) to remove silent chunks, what improves the model behaviour. Then we convert the audio to an [Nx](https://hexdocs.pm/nx/Nx.html) tensor, feed the model and parse output, which is then sent to via the output pad.
 
 ```elixir
 defmodule SpeechToText do
@@ -58,8 +50,7 @@ defmodule SpeechToText do
   alias Membrane.RawAudio
   require Membrane.Logger
 
-  # 8000 4-byte samples, at 16kHz it's half a second
-  @vad_chunk_size 8_000 * 4
+  @vad_chunk_duration Membrane.Time.milliseconds(500)
 
   def_input_pad(:input,
     accepted_format: %RawAudio{sample_format: :f32le, channels: 1, sample_rate: 16_000},
@@ -112,7 +103,7 @@ defmodule SpeechToText do
         speech: <<>>,
         queue: <<>>,
         chunk_size: nil,
-        cut_silence: true
+        vad_chunk_size: nil
       })
 
     {[], state}
@@ -120,15 +111,20 @@ defmodule SpeechToText do
 
   @impl true
   def handle_stream_format(:input, stream_format, _ctx, state) do
-    chunk_size = Membrane.RawAudio.time_to_bytes(state.chunk_duration, stream_format)
-    {[stream_format: {:output, %Membrane.RemoteStream{}}], %{state | chunk_size: chunk_size}}
+    state = %{
+      state
+      | chunk_size: RawAudio.time_to_bytes(state.chunk_duration, stream_format),
+        vad_chunk_size: RawAudio.time_to_bytes(@vad_chunk_duration, stream_format)
+    }
+
+    {[stream_format: {:output, %Membrane.RemoteStream{}}], state}
   end
 
   @impl true
   def handle_buffer(:input, buffer, _ctx, state) do
     input = state.queue <> buffer.payload
 
-    if byte_size(input) > @vad_chunk_size do
+    if byte_size(input) > state.vad_chunk_size do
       process_data(input, %{state | queue: <<>>})
     else
       {[], %{state | queue: input}}
@@ -162,20 +158,22 @@ defmodule SpeechToText do
 
   defp filter_silence(samples, state) do
     samples
-    |> generate_chunks()
+    |> generate_chunks(state.vad_chunk_size)
     |> Enum.drop_while(&(calc_volume(&1) < state.vad_threshold))
     |> Enum.join()
   end
 
-  defp generate_chunks(samples) when byte_size(samples) >= 2 * @vad_chunk_size do
-    <<chunk::binary-size(@vad_chunk_size), rest::binary>> = samples
-    [chunk | generate_chunks(rest)]
+  defp generate_chunks(samples, chunk_size) when byte_size(samples) >= 2 * chunk_size do
+    <<chunk::binary-size(chunk_size), rest::binary>> = samples
+    [chunk | generate_chunks(rest, chunk_size)]
   end
 
-  defp generate_chunks(samples) do
+  defp generate_chunks(samples, _chunk_size) do
     [samples]
   end
 
+  # Calculates audio volume based on standard deviation
+  # of the samples
   defp calc_volume(chunk) do
     samples = for <<sample::float-32-little <- chunk>>, do: sample
     samples_cnt = Enum.count(samples)
@@ -186,13 +184,15 @@ defmodule SpeechToText do
 end
 ```
 
-## Pipeline structure definition
+## Pipeline
 
 The pipeline consists of the following elements:
 
 * The `Membrane.PortAudio.Source` - responsible for fetching the audio input from your microphone
-* The `SpeechToText` sink we have previously created
+* The `SpeechToText` filter we have previously created
 * The `Membrane.Debug.Sink` that will print the transcriptions to the standard output
+
+Running the cell below will start the pipeline. It may ask you for permission to use your microphone. Try saying something in English and the transcription of your words should appear below the cell.
 
 ```elixir
 import Membrane.ChildrenSpec
@@ -207,11 +207,16 @@ pipeline = RCPipeline.start_link!()
 RCPipeline.exec_actions(pipeline, spec: spec)
 ```
 
-The prints with the transcription should start appearing below the last cell you have evaluated.
-Try saying something to the microphone in English and the transcription of your words should appear.
-
 You can terminate the pipeline with the following code:
 
 ```elixir
 RCPipeline.terminate(pipeline)
 ```
+
+## Problems and potential improvements
+
+The main problem with our approach is that we feed the model with small chunks, so that it lacks the context of what is before and after. If a chunk starts or ends in a middle of a word, it's very hard for the model to recognize it properly. The solution for that is to make the chunks overlap and then apply a clever merging algorithm. This is almost implemented in the Bumblebee - see https://github.com/elixir-nx/bumblebee/issues/261. Merging could be also done outside of Bumblebee, but it's hard to say how it would perform, since it would have to rely on the output text or timestamps instead of tokens. Alternatively, we could apply some clever algorithm that would tell us where to split the chunks basing on silent breaks.
+
+Another issue is that Whisper seems to hallucinate when given a noise or silence. We're partially solving that by removing the silence whenever possible. The silence detection and removal is not a trivial task and can possibly be improved. Also, applying noise reduction could be helpful.
+
+We welcome ideas and contributions addressing these problems or bringing other improvements.

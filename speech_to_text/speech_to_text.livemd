@@ -26,7 +26,7 @@ This livebook example shows how to perform a real-time speech-to-text conversion
 
 You will see how to fetch the audio from your microphone, perform preprocessing and create your own Membrane element that runs an AI speech-to-text conversion model.
 
-## Element performing a speech to text
+## Element performing speech to text conversion
 
 We need to write a custom sink that will perform speech-to-text and display the resulting transcription. Let's call this element `SpeechToText`.
 
@@ -41,7 +41,7 @@ In the initialization process, we load the `Whisper` model, along with the featu
 
 ### Buffers handling
 
-Once a buffer arrives, we check if it contains enough amount of audio and accumulate it in the state otherwise. Then we perform basic VAD (Voice Activity Detection) to remove silent chunks, what improves the model behaviour. Then we convert the audio to an Nx tensor, feed the model and parse output, which is then sent to via the output pad.
+Once a buffer arrives, we check if it contains enough amount of audio and accumulate it in the state otherwise. Then we perform basic VAD (Voice Activity Detection) to remove silent chunks, which improves the model behaviour. Then we convert the audio to an Nx tensor, feed the model, and parse the output, which is then sent via the output pad.
 
 ### Problems and potential improvements
 

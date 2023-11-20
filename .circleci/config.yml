@@ -48,11 +48,3 @@ jobs:
           demo: simple_pipeline
       - build_test:
           demo: video_mixer
-      - build_test:
-          demo: webrtc_to_hls
-      - npm_install:
-          demo: webrtc_to_hls
-      - build_test:
-          demo: webrtc_videoroom
-      - npm_install:
-          demo: webrtc_videoroom

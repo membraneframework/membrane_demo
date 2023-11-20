@@ -2,7 +2,7 @@
 
 This script demonstrates capturing camera video and broadcasting it via HLS.
 
-To run the demo, you need [Elixir installed](https://elixir-lang.org/install.html) on your machine. Then, run
+To run the demo, you need [Elixir installed](https://elixir-lang.org/install.html) on your machine (it's best to use a version manager, like `asdf`). Then, run
 
 ```bash
 elixir camera_to_hls.exs

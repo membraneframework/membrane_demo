@@ -15,6 +15,6 @@ defmodule Membrane.Demo.RtpToHls do
 
   @impl true
   def start(_type, _args) do
-    {:ok, _suppervisor, pid} = Pipeline.start_link(@port)
+    {:ok, _suppervisor, pid} = Membrane.Pipeline.start_link(Pipeline, @port)
   end
 end

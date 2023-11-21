@@ -5,7 +5,7 @@ defmodule Membrane.Demo.RtspToHls.Application do
   require Logger
   alias Membrane.Demo.RtspToHls.Pipeline
 
-  @rtsp_stream_url "rtsp://rtsp.membrane.work:554/testsrc.264"
+  @rtsp_stream_url "rtsp://localhost:8554/live.stream"
   @output_path "hls_output"
   @rtp_port 20000
 
@@ -22,7 +22,7 @@ defmodule Membrane.Demo.RtspToHls.Application do
       stream_url: @rtsp_stream_url
     }
 
-    {:ok, _sup, pid} = Pipeline.start_link(pipeline_options)
+    {:ok, _sup, pid} = Membrane.Pipeline.start_link(Pipeline, pipeline_options)
     {:ok, pid}
   end
 end

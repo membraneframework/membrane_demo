@@ -217,7 +217,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     end
   end
 
-  defp play(%ConnectionStatus{rtsp_session: rtsp_session, pipeline: pipeline}) do
+  defp play(%ConnectionStatus{rtsp_session: rtsp_session, pipeline: _pipeline}) do
     Logger.debug("ConnectionManager: Setting RTSP on play mode")
 
     case RTSP.play(rtsp_session) do
@@ -254,34 +254,20 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     end
   end
 
-  defp get_sps_pps(%{"fmtp" => fmtp}) do
-    [_payload_type, fmtp_attributes_string] = String.split(fmtp, " ", parts: 2)
-
-    fmtp_attributes =
-      fmtp_attributes_string
-      |> String.split(";")
-      |> Enum.map(fn elem ->
-        [key, value] = String.trim(elem) |> String.split("=", parts: 2)
-        {key, value}
-      end)
-      |> Enum.into(%{})
-
-    fmtp_attributes["sprop-parameter-sets"]
-    |> String.split(",", parts: 2)
-    |> Enum.map(fn elem -> <<0, 0, 0, 1>> <> Base.decode64!(elem) end)
-    |> then(fn list -> [[:sps, :pps], list] |> List.zip() end)
+  defp get_sps_pps(%{ExSDP.Attribute.FMTP => fmtp}) do
+    [sps: fmtp.sprop_parameter_sets.sps, pps: fmtp.sprop_parameter_sets.pps]
   end
 
   defp get_video_attributes(sdp_media) do
     video_protocol = sdp_media |> Enum.find(fn elem -> elem.type == :video end)
 
     Map.fetch!(video_protocol, :attributes)
-    # fixing inconsistency in keys:
-    |> Enum.map(fn {key, value} ->
-      case is_atom(key) do
-        true -> {Atom.to_string(key), value}
-        false -> {key, value}
-      end
+    |> Enum.map(fn
+      %module{} = attribute ->
+        {module, attribute}
+
+      {key, value} ->
+        {key, value}
     end)
     |> Enum.into(%{})
   end

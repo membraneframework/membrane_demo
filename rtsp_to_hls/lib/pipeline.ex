@@ -74,18 +74,20 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
   @impl true
   def handle_child_notification({:new_rtp_stream, ssrc, 96, _extensions}, :rtp, _ctx, state) do
     Logger.debug(":new_rtp_stream")
+    IO.inspect("wtf123")
 
     structure =
       get_child(:rtp)
       |> via_out(Pad.ref(:output, ssrc),
         options: [depayloader: Membrane.RTP.H264.Depayloader]
       )
+      |> child(%Membrane.Debug.Filter{handle_buffer: &IO.inspect(&1, label: :Xdbuf)})
       |> child(
         :video_nal_parser,
         %Membrane.H264.Parser{
-          sps: state.video.sps,
-          pps: state.video.pps,
-          framerate: {30, 1}
+          spss: state.video.sps,
+          ppss: state.video.pps,
+          generate_best_effort_timestamps: %{framerate: {30, 1}}
         }
       )
       |> via_in(:input, options: [encoding: :H264, segment_duration: Membrane.Time.seconds(4)])
@@ -103,7 +105,7 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
 
   @impl true
   def handle_child_notification({:new_rtp_stream, ssrc, _payload_type, _list}, :rtp, _ctx, state) do
-    Logger.warn("new_rtp_stream Unsupported stream connected")
+    Logger.warning("new_rtp_stream Unsupported stream connected")
 
     structure =
       get_child(:rtp)
@@ -115,7 +117,7 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
 
   @impl true
   def handle_child_notification(notification, element, _ctx, state) do
-    Logger.warn("Unknown notification: #{inspect(notification)}, el: #{inspect(element)}")
+    Logger.warning("Unknown notification: #{inspect(notification)}, el: #{inspect(element)}")
 
     {[], state}
   end

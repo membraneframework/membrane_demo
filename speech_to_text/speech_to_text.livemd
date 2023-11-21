@@ -5,10 +5,10 @@ Logger.configure(level: :info)
 
 Mix.install(
   [
-    :bumblebee,
-    :exla,
-    :membrane_core,
-    :membrane_portaudio_plugin
+    {:bumblebee, "~> 0.4.2"},
+    {:exla, "~> 0.6.4"},
+    {:membrane_core, "~> 1.0"},
+    {:membrane_portaudio_plugin, "~> 0.18.0"}
   ],
   config: [
     nx: [default_backend: EXLA.Backend]
@@ -53,11 +53,10 @@ defmodule SpeechToText do
   @vad_chunk_duration Membrane.Time.milliseconds(500)
 
   def_input_pad(:input,
-    accepted_format: %RawAudio{sample_format: :f32le, channels: 1, sample_rate: 16_000},
-    flow_control: :auto
+    accepted_format: %RawAudio{sample_format: :f32le, channels: 1, sample_rate: 16_000}
   )
 
-  def_output_pad(:output, accepted_format: Membrane.RemoteStream, flow_control: :auto)
+  def_output_pad(:output, accepted_format: Membrane.RemoteStream)
 
   def_options(
     chunk_duration: [

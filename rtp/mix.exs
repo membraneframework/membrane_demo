@@ -26,21 +26,16 @@ defmodule Membrane.Demo.RTP.MixProject do
       {:membrane_core, "~> 1.0"},
       {:membrane_rtp_plugin, "~> 0.24.0"},
       {:membrane_udp_plugin, "~> 0.12.0"},
-      {:membrane_h264_ffmpeg_plugin, "~> 0.31.0"},
+      {:membrane_h264_ffmpeg_plugin, "~> 0.31.1"},
       {:membrane_h264_plugin, "~> 0.9.0"},
       {:membrane_rtp_h264_plugin, "~> 0.19.0"},
       {:membrane_opus_plugin, "~> 0.19.0"},
       {:membrane_rtp_opus_plugin, "~> 0.9.0"},
       {:membrane_sdl_plugin, "~> 0.18.0"},
-      # {:membrane_portaudio_plugin, "~> 0.18.1"},
-      {:membrane_portaudio_plugin,
-       github: "membraneframework/membrane_portaudio_plugin", branch: "update_bundlex"},
+      {:membrane_portaudio_plugin, "~> 0.18.1"},
       {:membrane_file_plugin, "~> 0.16.0"},
       {:membrane_realtimer_plugin, "~> 0.9.0"},
-      {:ex_libsrtp, "~> 0.7"},
-      ### TO BE REMOVED
-      {:bundlex,
-       github: "membraneframework/bundlex", branch: "config-precompiled", override: true}
+      {:ex_libsrtp, "~> 0.7"}
     ]
   end
 end

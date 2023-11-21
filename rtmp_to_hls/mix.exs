@@ -20,7 +20,7 @@ defmodule RtmpToHls.MixProject do
   def application do
     [
       mod: {RtmpToHls.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :inets]
     ]
   end
 
@@ -47,9 +47,9 @@ defmodule RtmpToHls.MixProject do
       {:plug_cowboy, "~> 2.5"},
 
       ## Membrane deps
-      {:membrane_core, "~> 0.12.7"},
-      {:membrane_rtmp_plugin, "~> 0.14.0"},
-      {:membrane_http_adaptive_stream_plugin, "~> 0.15.0"}
+      {:membrane_core, "~> 1.0"},
+      {:membrane_rtmp_plugin, "~> 0.19.0"},
+      {:membrane_http_adaptive_stream_plugin, "~> 0.18.0"}
     ]
   end
 

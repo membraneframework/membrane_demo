@@ -23,7 +23,9 @@ defmodule RtmpToHls.Application do
         ip: @local_ip
       ],
       socket_handler: fn socket ->
-        {:ok, _sup, pid} = Membrane.Demo.RtmpToHls.start_link(socket: socket)
+        {:ok, _sup, pid} =
+          Membrane.Pipeline.start_link(Membrane.Demo.RtmpToHls, socket: socket)
+
         {:ok, pid}
       end
     }

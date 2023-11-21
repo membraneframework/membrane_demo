@@ -52,6 +52,12 @@ defmodule CameraToHls do
   end
 end
 
+# On CI we just check if the script compiles
+if System.get_env("CI") == "true" do
+  Logger.info("CI=true, exiting")
+  exit(:normal)
+end
+
 File.rm_rf!("output")
 File.mkdir!("output")
 

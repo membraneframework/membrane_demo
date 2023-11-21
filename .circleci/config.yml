@@ -9,31 +9,26 @@ commands:
       - run: cd "<<parameters.demo>>" && mix deps.compile --all
       - run: cd "<<parameters.demo>>" && mix format --check-formatted
       - run: cd "<<parameters.demo>>" && mix test
-  npm_install:
+  build_exs:
     parameters:
       demo:
         type: string
     steps:
-      - run: cd <<parameters.demo>>/assets && npm install
-      - run: cd <<parameters.demo>>/assets && npm run format:check
-  prepare_openssl:
-    parameters:
-      demo:
-        type: string
-    steps:
-      - run: cd <<parameters.demo>> && openssl req -newkey rsa:2048 -nodes -keyout priv/certs/key.pem -x509 -days 365 -out priv/certs/certificate.pem -subj "/C=US"
+      - run: cd "<<parameters.demo>>" && mix format --check-formatted
+      - run: cd "<<parameters.demo>>" && elixir <<parameters.demo>>.exs
+  
 jobs:
   build:
     docker:
       - image: membraneframeworklabs/docker_membrane:latest
     environment:
       MIX_ENV: test
+      CI: true
     working_directory: '~/app'
     steps:
       - checkout
-      - run: cd camera_to_hls && mix deps.get
-      - run: cd camera_to_hls && mix deps.compile --all
-      - run: cd camera_to_hls && mix format --check-formatted
+      - build_exs:
+          demo: camera_to_hls
       - build_test:
           demo: rtmp_to_hls
       - build_test:

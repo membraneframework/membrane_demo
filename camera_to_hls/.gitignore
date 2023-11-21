@@ -1,6 +1,7 @@
 # HLS output
 /output/*
-!/output/.gitkeep
+
+.elixir_ls
 
 # The directory Mix will write compiled artifacts to.
 /_build/

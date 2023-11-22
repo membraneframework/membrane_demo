@@ -27,10 +27,9 @@ defmodule Membrane.Demo.RtpToHls.Pipeline do
     spec =
       get_child(:rtp)
       |> via_out(Pad.ref(:output, ssrc), options: [depayloader: Membrane.RTP.H264.Depayloader])
-      |> child(:video_nal_parser, %Membrane.H264.FFmpeg.Parser{
-        framerate: {30, 1},
-        alignment: :au,
-        attach_nalus?: true
+      |> child(:video_nal_parser, %Membrane.H264.Parser{
+        generate_best_effort_timestamps: %{framerate: {30, 1}},
+        output_alignment: :au
       })
       |> via_in(Pad.ref(:input, :video),
         options: [encoding: :H264, segment_duration: Membrane.Time.seconds(4)]

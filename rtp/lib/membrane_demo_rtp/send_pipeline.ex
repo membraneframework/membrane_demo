@@ -18,7 +18,10 @@ defmodule Membrane.Demo.RTP.SendPipeline do
       child(:video_src, %File.Source{
         location: "samples/video.h264"
       })
-      |> child(:video_parser, %H264.FFmpeg.Parser{framerate: {30, 1}, alignment: :nal})
+      |> child(:video_parser, %H264.Parser{
+        generate_best_effort_timestamps: %{framerate: {30, 1}},
+        output_alignment: :nalu
+      })
       |> via_in(Pad.ref(:input, video_ssrc), options: [payloader: RTP.H264.Payloader])
       |> child(:rtp, %RTP.SessionBin{
         secure?: secure?,

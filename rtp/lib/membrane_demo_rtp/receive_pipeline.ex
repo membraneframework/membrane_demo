@@ -82,7 +82,9 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
       {[
          get_child(:rtp)
          |> via_out(Pad.ref(:output, video_ssrc), options: [depayloader: RTP.H264.Depayloader])
-         |> child(:video_parser, %H264.FFmpeg.Parser{framerate: {30, 1}})
+         |> child(:video_parser, %H264.Parser{
+           generate_best_effort_timestamps: %{framerate: {30, 1}}
+         })
          |> child(:video_decoder, H264.FFmpeg.Decoder)
          |> child(:video_player, Membrane.SDL.Player),
          get_child(:rtp)

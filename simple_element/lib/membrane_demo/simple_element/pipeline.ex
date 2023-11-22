@@ -33,7 +33,7 @@ defmodule Membrane.Demo.SimpleElement.Pipeline do
   end
 
   @impl true
-  def handle_child_notification(notification, _from, _ctx, state) do
+  def handle_child_notification(_notification, _from, _ctx, state) do
     {[], state}
   end
 end

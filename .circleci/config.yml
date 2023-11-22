@@ -41,5 +41,5 @@ jobs:
           demo: simple_element
       - build_test:
           demo: simple_pipeline
-      - build_test:
-          demo: video_mixer
+      - build_exs:
+          demo: mix_audio

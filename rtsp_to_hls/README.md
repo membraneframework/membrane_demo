@@ -17,23 +17,8 @@ The internal architecture of an application is presented below:
 
 Below is the instruction for the installation of required dependencies and how to run this demo on various operating systems:
 
-<details>
-<summary>
-<b>macOS</b>
-</summary>
-
 ### Prerequisites
-
-To run this demo you have to run it on a machine with a publicly visible IP address.
-
-Make sure you have [FFmpeg](https://www.ffmpeg.org/) installed on your machine - you are going to
-use it to play the stream. We advise you to use FFmpeg 5.0 or newer.
-
-```shell
-brew install ffmpeg
-```
-
-Furthermore, make sure you have Elixir installed on your machine. For installation details, see: https://elixir-lang.org/install.html
+Make sure you have Elixir installed on your machine. For installation details, see: https://elixir-lang.org/install.html
 
 ### Running the demo
 
@@ -44,136 +29,49 @@ git clone https://github.com/membraneframework/membrane_demo
 cd membrane_demo/rtsp_to_hls
 ```
 
-You can configure the parameters for the converter in the `Application` module:
-
-##### lib/application.ex
-
-```elixir
-@rtsp_stream_url "rtsp://rtsp.membrane.work:554/testsrc.264"
-@output_path "hls_output"
-@rtp_port 20000
-```
-
-By default, we use our sample RTSP stream at rtsp.membrane.work.
-
 Then you need to download the dependencies of the mix project:
 
 ```shell
 mix deps.get
 ```
-
 You may be asked to install `Hex` and then `rebar3`.
 
-> In case of issues with the compilation of membrane_h264_ffmpeg_plugin, enter:
->
-> ```shell
-> mix deps.update bundlex
-> ```
->
-> and then install pkg-config:
->
-> ```shell
-> brew install pkg-config
-> ```
+### Running simple RTSP server
+We will use a custom implementation of a simple RTSP server that you will be able to run with the `server.exs` script.
+That script will setup a server listening for RTSP connection on `rtsp://localhost:8554`.
 
-Finally, you can start the pipeline by running:
+In order to run a server, type: 
 
 ```shell
-mix run --no-halt
+mix run server.exs
 ```
 
-After a moment the pipeline will start generating HLS output files. To watch the stream we need to serve those files, e.g. by using python HTTP server:
+### Running RTSP to HLS conversion
+After you have launched the RTSP server, you can run the pipeline that performs RTSP to HLS conversion:
 
 ```shell
-python3 -m http.server 8000
+mix run rtsp_to_hls.exs
 ```
 
-You can then play the stream using ffmpeg:
+By default the pipeline is configured to connect to the RTSP server launched in the previous step of this manual. 
+You can change the default pipeline configuration in the `rtsp_to_hls.exs` script implementation by modification of the following 
+attributes:
 
-```shell
-ffplay http://localhost:8000/hls_output/index.m3u8
-```
-
-</details>
-
-<details>
-<summary>
-<b>Ubuntu</b>
-</summary>
-
-To run this demo you have to run it on a machine with a publicly visible IP address.
-
-Make sure you have [FFmpeg](https://www.ffmpeg.org/) installed on your machine - you are going to
-use it to play the stream. We advise you to use FFmpeg 5.0 or newer.
-
-```shell
-apt install ffmpeg
-```
-
-Furthermore, make sure you have Elixir installed on your machine. For installation details, see: https://elixir-lang.org/install.html
-
-On Ubuntu, we recommend installation through `asdf`, see: https://asdf-vm.com/guide/getting-started.html
-
-### Running the demo
-
-To run the demo, clone the `membrane_demo` repository and checkout to the demo directory:
-
-```shell
-git clone https://github.com/membraneframework/membrane_demo
-cd membrane_demo/rtsp_to_hls
-```
-
-You can configure the parameters for the converter in the `Application` module:
-
-##### lib/application.ex
+##### rtsp_to_hls.exs
 
 ```elixir
-@rtsp_stream_url "rtsp://rtsp.membrane.work:554/testsrc.264"
+@rtsp_stream_url "rtsp://localhost:8554/livestream"
 @output_path "hls_output"
 @rtp_port 20000
 ```
 
-By default, we use our sample RTSP stream at rtsp.membrane.work.
-
-Then you need to download the dependencies of the mix project:
-
-```shell
-mix deps.get
-```
-
-You may be asked to install `Hex` and then `rebar3`.
-
-> In case of installation issues with Hex on Ubuntu, try updating the system packages first by entering the command:
->
-> ```shell
-> sudo apt-get update
-> ```
-
-> In case of issues with the compilation of membrane_h264_ffmpeg_plugin, enter:
->
-> ```shell
-> mix deps.update bundlex
-> ```
-
-Finally, you can start the pipeline by running:
+After a moment the pipeline will start generating HLS output files (by default in the `hls_output` directory).
+To watch the stream we need to serve those files, e.g. by using python HTTP server:
 
 ```shell
-mix run --no-halt
-```
-
-After a moment the pipeline will start generating HLS output files. To watch the stream we need to serve those files, e.g. by using python HTTP server:
-
-```shell
+cd hls_output
 python3 -m http.server 8000
 ```
-
-You can then play the stream using ffmpeg:
-
-```shell
-ffplay http://localhost:8000/hls_output/index.m3u8
-```
-
-</details>
 
 ## Copyright and License
 

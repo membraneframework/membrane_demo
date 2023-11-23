@@ -17,7 +17,6 @@ defmodule Membrane.Demo.RtspToHls.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {Membrane.Demo.RtspToHls.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end
@@ -37,8 +36,8 @@ defmodule Membrane.Demo.RtspToHls.MixProject do
       {:membrane_rtp_plugin, "~> 0.24.0"},
       {:membrane_rtp_h264_plugin, "~> 0.19.0"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.18.0"},
-      {:membrane_h264_ffmpeg_plugin, "~> 0.31.0"},
-      {:membrane_h264_plugin, "~> 0.9.0"}
+      {:membrane_h264_plugin, "~> 0.9.0"},
+      {:membrane_realtimer_plugin, "~> 0.9.0"}
     ]
   end
 

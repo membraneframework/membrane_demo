@@ -74,19 +74,29 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
   @impl true
   def handle_child_notification({:new_rtp_stream, ssrc, 96, _extensions}, :rtp, _ctx, state) do
     Logger.debug(":new_rtp_stream")
-    IO.inspect("wtf123")
+
+    spss =
+      case state.video.sps do
+        <<>> -> []
+        sps -> [sps]
+      end
+
+    ppss =
+      case state.video.pps do
+        <<>> -> []
+        pps -> [pps]
+      end
 
     structure =
       get_child(:rtp)
       |> via_out(Pad.ref(:output, ssrc),
         options: [depayloader: Membrane.RTP.H264.Depayloader]
       )
-      |> child(%Membrane.Debug.Filter{handle_buffer: &IO.inspect(&1, label: :Xdbuf)})
       |> child(
         :video_nal_parser,
         %Membrane.H264.Parser{
-          spss: state.video.sps,
-          ppss: state.video.pps,
+          spss: spss,
+          ppss: ppss,
           generate_best_effort_timestamps: %{framerate: {30, 1}}
         }
       )
@@ -119,6 +129,18 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
   def handle_child_notification(notification, element, _ctx, state) do
     Logger.warning("Unknown notification: #{inspect(notification)}, el: #{inspect(element)}")
 
+    {[], state}
+  end
+
+  @impl true
+  def handle_element_end_of_stream(Pad.ref(:input), _pad, _context, state) do
+    IO.inspect("terminating")
+    {[terminate: :normal], state}
+  end
+
+  @impl true
+  def handle_element_end_of_stream(_child, _pad, _context, state) do
+    IO.inspect("terminating2")
     {[], state}
   end
 end

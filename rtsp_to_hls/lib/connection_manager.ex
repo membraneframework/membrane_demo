@@ -66,7 +66,8 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     if is_nil(rtsp_session) do
       {:backoff, @delay, connection_status}
     else
-      with {:ok, connection_status} <- get_rtsp_description(connection_status),
+      with {:ok, connection_status} <-
+             get_rtsp_description(connection_status),
            :ok <- setup_rtsp_connection(connection_status),
            {:ok, connection_status} <- start_keep_alive(connection_status),
            :ok <- play(connection_status) do
@@ -204,7 +205,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
        }) do
     Logger.debug("ConnectionManager: Setting up RTSP connection")
 
-    case RTSP.setup(rtsp_session, "/#{pipeline_options[:control]}", [
+    case RTSP.setup(rtsp_session, "#{pipeline_options[:control]}", [
            {"Transport", "RTP/AVP;unicast;client_port=#{pipeline_options[:port]}"}
          ]) do
       {:ok, %{status: 200}} ->
@@ -255,7 +256,13 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
   end
 
   defp get_sps_pps(%{ExSDP.Attribute.FMTP => fmtp}) do
-    [sps: fmtp.sprop_parameter_sets.sps, pps: fmtp.sprop_parameter_sets.pps]
+    {sps, pps} =
+      case fmtp.sprop_parameter_sets do
+        nil -> {<<>>, <<>>}
+        parameter_sets -> {parameter_sets.sps, parameter_sets.pps}
+      end
+
+    [sps: sps, pps: pps]
   end
 
   defp get_video_attributes(sdp_media) do

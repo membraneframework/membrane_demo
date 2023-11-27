@@ -1,6 +1,8 @@
 defmodule RTSPServer do
   @moduledoc false
 
+  require Membrane.Logger
+
   @test_ssrc 0xABCDEFFF
   @test_pt 96
   @test_clock_rate 90_000
@@ -36,6 +38,12 @@ defmodule RTSPServer do
           ]
         )
         |> child(:realtimer, Membrane.Realtimer)
+        |> child(%Membrane.Debug.Filter{
+          handle_buffer:
+            &Membrane.Logger.warning(
+              "buffer123 #{inspect(Membrane.Time.os_time())}: #{inspect(&1)}"
+            )
+        })
         |> child(:udp_sink, %Membrane.UDP.Sink{
           destination_address: address,
           destination_port_no: opts.client_port,
@@ -196,7 +204,7 @@ defmodule RTSPServer do
 
   defp generate_response(request_type, state) do
     case request_type do
-    :describe ->
+      :describe ->
         sdp =
           "v=0\r\nm=video 0 RTP/AVP 96\r\na=control:rtsp://#{state.ip}:#{state.port}/control\r\n" <>
             "a=rtpmap:#{@test_pt} H264/#{@test_clock_rate}\r\na=fmtp:#{@test_pt} " <>
@@ -221,19 +229,16 @@ rtp_server_port = 20000
 fixture_path = "./assets/video.h264"
 fixture_framerate = {60, 1}
 
-{:ok, pid} = RTSPServer.start(
-  ip: server_ip,
-  port: rtsp_server_port,
-  client_port: rtp_server_port,
-  parent_pid: self(),
-  stream_ctx: %{
+{:ok, _pid} =
+  RTSPServer.start(
+    ip: server_ip,
+    port: rtsp_server_port,
+    client_port: rtp_server_port,
+    parent_pid: self(),
+    stream_ctx: %{
       fixture_path: fixture_path,
       framerate: fixture_framerate
     }
-)
+  )
 
-Process.monitor(pid)
-
-receive do
-  {:DOWN, _ref, :process, _pid, _reason} -> :ok
-end
+Process.sleep(:infinity)

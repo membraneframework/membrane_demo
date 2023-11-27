@@ -218,7 +218,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     end
   end
 
-  defp play(%ConnectionStatus{rtsp_session: rtsp_session, pipeline: _pipeline}) do
+  defp play(%ConnectionStatus{rtsp_session: rtsp_session}) do
     Logger.debug("ConnectionManager: Setting RTSP on play mode")
 
     case RTSP.play(rtsp_session) do

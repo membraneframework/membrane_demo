@@ -36,12 +36,18 @@ mix deps.get
 ```
 You may be asked to install `Hex` and then `rebar3`.
 
+
+Now you need to compile the project:
+
+```shell
+mix compile
+```
+
 ### Running simple RTSP server
 We will use a custom implementation of a simple RTSP server that you will be able to run with the `server.exs` script.
 That script will setup a server listening for RTSP connection on `rtsp://localhost:8554`.
 
-In order to run a server, type: 
-
+You can run the server with the following command:
 ```shell
 mix run server.exs
 ```
@@ -60,20 +66,16 @@ attributes:
 ##### rtsp_to_hls.exs
 
 ```elixir
-@rtsp_stream_url "rtsp://localhost:8554/livestream"
-@output_path "hls_output"
-@rtp_port 20000
+rtsp_stream_url = "rtsp://localhost:8554/livestream"
+output_path = "hls_output"
+rtp_port = 20000
 ```
 
 After a moment the pipeline will start generating HLS output files (by default in the `hls_output` directory).
-To watch the stream we need to serve those files, e.g. by using python HTTP server:
-
-```shell
-cd hls_output
-python3 -m http.server 8000
+Once that happens, an HTTP server is started and now you can watch the stream by visiting the following page in your browser:
 ```
-
-## Copyright and License
+http://localhost:8000/stream.html
+```
 
 Copyright 2022, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
 

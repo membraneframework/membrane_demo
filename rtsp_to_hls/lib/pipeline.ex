@@ -34,7 +34,13 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
       name: Membrane.Demo.RtspToHls.Supervisor
     )
 
-    {[], %{video: nil, port: options.port, output_path: options.output_path}}
+    {[],
+     %{
+       video: nil,
+       port: options.port,
+       output_path: options.output_path,
+       parent_pid: options.parent_pid
+     }}
   end
 
   @impl true
@@ -126,21 +132,15 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
   end
 
   @impl true
-  def handle_child_notification(notification, element, _ctx, state) do
-    Logger.warning("Unknown notification: #{inspect(notification)}, el: #{inspect(element)}")
-
+  def handle_child_notification({:track_playable, _ref}, :hls, _ctx, state) do
+    send(state.parent_pid, :track_playable)
     {[], state}
   end
 
   @impl true
-  def handle_element_end_of_stream(Pad.ref(:input), _pad, _context, state) do
-    IO.inspect("terminating")
-    {[terminate: :normal], state}
-  end
+  def handle_child_notification(notification, element, _ctx, state) do
+    Logger.warning("Unknown notification: #{inspect(notification)}, el: #{inspect(element)}")
 
-  @impl true
-  def handle_element_end_of_stream(_child, _pad, _context, state) do
-    IO.inspect("terminating2")
     {[], state}
   end
 end

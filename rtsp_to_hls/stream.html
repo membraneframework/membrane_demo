@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <div style="font-family: Arial; size:15px; max-width: 500px; margin: 10px;">
+        The video should show up below. If it doesn't, make sure that the index.m3u8 file is generated in the output
+        directory and refresh the page.
+    </div>
+    <video id="player" autoplay muted></video>
+    <script>
+        var video = document.getElementById('player');
+        var hls = new Hls();
+        hls.loadSource("/hls_output/index.m3u8");
+        hls.attachMedia(video);
+    </script>
+
+</body>
+
+</html>

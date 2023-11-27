@@ -47,10 +47,9 @@ defmodule CameraToHlsNerves.MixProject do
       {:ring_logger, "~> 0.10.0"},
       {:toolshed, "~> 0.3.0"},
 
-      {:membrane_rpicam_plugin, github: "membraneframework-labs/membrane_rpicam_plugin", branch: "basic-functionality", override: true},
+      {:membrane_rpicam_plugin, github: "membraneframework/membrane_rpicam_plugin", branch: "basic-functionality", override: true},
       {:membrane_h264_plugin, "~> 0.9.0"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.18.0"},
-      {:membrane_aac_plugin, github: "membraneframework/membrane_aac_plugin", branch: "remove-crc-calculation", override: true},
 
       # Allow Nerves.Runtime on host to support development, testing and CI.
       # See config/host.exs for usage.

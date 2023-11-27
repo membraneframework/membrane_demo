@@ -34,7 +34,13 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
       name: Membrane.Demo.RtspToHls.Supervisor
     )
 
-    {[], %{video: nil, port: options.port, output_path: options.output_path}}
+    {[],
+     %{
+       video: nil,
+       port: options.port,
+       output_path: options.output_path,
+       parent_pid: options.parent_pid
+     }}
   end
 
   @impl true
@@ -75,6 +81,18 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
   def handle_child_notification({:new_rtp_stream, ssrc, 96, _extensions}, :rtp, _ctx, state) do
     Logger.debug(":new_rtp_stream")
 
+    spss =
+      case state.video.sps do
+        <<>> -> []
+        sps -> [sps]
+      end
+
+    ppss =
+      case state.video.pps do
+        <<>> -> []
+        pps -> [pps]
+      end
+
     structure =
       get_child(:rtp)
       |> via_out(Pad.ref(:output, ssrc),
@@ -83,9 +101,9 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
       |> child(
         :video_nal_parser,
         %Membrane.H264.Parser{
-          sps: state.video.sps,
-          pps: state.video.pps,
-          framerate: {30, 1}
+          spss: spss,
+          ppss: ppss,
+          generate_best_effort_timestamps: %{framerate: {30, 1}}
         }
       )
       |> via_in(:input, options: [encoding: :H264, segment_duration: Membrane.Time.seconds(4)])
@@ -103,7 +121,7 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
 
   @impl true
   def handle_child_notification({:new_rtp_stream, ssrc, _payload_type, _list}, :rtp, _ctx, state) do
-    Logger.warn("new_rtp_stream Unsupported stream connected")
+    Logger.warning("new_rtp_stream Unsupported stream connected")
 
     structure =
       get_child(:rtp)
@@ -114,8 +132,14 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
   end
 
   @impl true
+  def handle_child_notification({:track_playable, _ref}, :hls, _ctx, state) do
+    send(state.parent_pid, :track_playable)
+    {[], state}
+  end
+
+  @impl true
   def handle_child_notification(notification, element, _ctx, state) do
-    Logger.warn("Unknown notification: #{inspect(notification)}, el: #{inspect(element)}")
+    Logger.warning("Unknown notification: #{inspect(notification)}, el: #{inspect(element)}")
 
     {[], state}
   end

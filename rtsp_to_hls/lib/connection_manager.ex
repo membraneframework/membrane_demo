@@ -66,7 +66,8 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     if is_nil(rtsp_session) do
       {:backoff, @delay, connection_status}
     else
-      with {:ok, connection_status} <- get_rtsp_description(connection_status),
+      with {:ok, connection_status} <-
+             get_rtsp_description(connection_status),
            :ok <- setup_rtsp_connection(connection_status),
            {:ok, connection_status} <- start_keep_alive(connection_status),
            :ok <- play(connection_status) do
@@ -204,7 +205,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
        }) do
     Logger.debug("ConnectionManager: Setting up RTSP connection")
 
-    case RTSP.setup(rtsp_session, "/#{pipeline_options[:control]}", [
+    case RTSP.setup(rtsp_session, "#{pipeline_options[:control]}", [
            {"Transport", "RTP/AVP;unicast;client_port=#{pipeline_options[:port]}"}
          ]) do
       {:ok, %{status: 200}} ->
@@ -217,7 +218,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     end
   end
 
-  defp play(%ConnectionStatus{rtsp_session: rtsp_session, pipeline: pipeline}) do
+  defp play(%ConnectionStatus{rtsp_session: rtsp_session}) do
     Logger.debug("ConnectionManager: Setting RTSP on play mode")
 
     case RTSP.play(rtsp_session) do
@@ -254,34 +255,26 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
     end
   end
 
-  defp get_sps_pps(%{"fmtp" => fmtp}) do
-    [_payload_type, fmtp_attributes_string] = String.split(fmtp, " ", parts: 2)
+  defp get_sps_pps(%{ExSDP.Attribute.FMTP => fmtp}) do
+    {sps, pps} =
+      case fmtp.sprop_parameter_sets do
+        nil -> {<<>>, <<>>}
+        parameter_sets -> {parameter_sets.sps, parameter_sets.pps}
+      end
 
-    fmtp_attributes =
-      fmtp_attributes_string
-      |> String.split(";")
-      |> Enum.map(fn elem ->
-        [key, value] = String.trim(elem) |> String.split("=", parts: 2)
-        {key, value}
-      end)
-      |> Enum.into(%{})
-
-    fmtp_attributes["sprop-parameter-sets"]
-    |> String.split(",", parts: 2)
-    |> Enum.map(fn elem -> <<0, 0, 0, 1>> <> Base.decode64!(elem) end)
-    |> then(fn list -> [[:sps, :pps], list] |> List.zip() end)
+    [sps: sps, pps: pps]
   end
 
   defp get_video_attributes(sdp_media) do
     video_protocol = sdp_media |> Enum.find(fn elem -> elem.type == :video end)
 
     Map.fetch!(video_protocol, :attributes)
-    # fixing inconsistency in keys:
-    |> Enum.map(fn {key, value} ->
-      case is_atom(key) do
-        true -> {Atom.to_string(key), value}
-        false -> {key, value}
-      end
+    |> Enum.map(fn
+      %module{} = attribute ->
+        {module, attribute}
+
+      {key, value} ->
+        {key, value}
     end)
     |> Enum.into(%{})
   end

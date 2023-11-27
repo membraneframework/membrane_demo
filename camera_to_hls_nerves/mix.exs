@@ -46,9 +46,8 @@ defmodule CameraToHlsNerves.MixProject do
       {:shoehorn, "~> 0.9.1"},
       {:ring_logger, "~> 0.10.0"},
       {:toolshed, "~> 0.3.0"},
-      {:httpoison, "~> 2.0"},
 
-      {:membrane_rpicam_plugin, path: "~/Membrane/membrane_rpicam_plugin", override: true},
+      {:membrane_rpicam_plugin, github: "membraneframework-labs/membrane_rpicam_plugin", branch: "basic-functionality", override: true},
       {:membrane_h264_plugin, "~> 0.9.0"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.18.0"},
       {:membrane_aac_plugin, github: "membraneframework/membrane_aac_plugin", branch: "remove-crc-calculation", override: true},

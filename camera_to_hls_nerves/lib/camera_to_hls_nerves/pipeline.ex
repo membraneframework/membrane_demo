@@ -7,9 +7,12 @@ defmodule CameraToHlsNerves.Pipeline do
 
   @impl true
   def handle_init(_ctx, _opts) do
+    # Not waiting causes libcamera-vid to crash
+    Process.sleep(50)
+
     spec = [
-      child(:source, %Membrane.Rpicam.Source{framerate: {30, 1}})
-      |> child(:parser, %Membrane.H264.Parser{generate_best_effort_timestamps: %{framerate: {30, 1}}})
+      child(:source, Membrane.Rpicam.Source)
+      |> child(:parser, Membrane.H264.Parser)
       |> via_in(:input,
         options: [
           encoding: :H264,
@@ -24,9 +27,17 @@ defmodule CameraToHlsNerves.Pipeline do
       })
     ]
 
-    # Not waiting causes libcamera-vid to crash
-    Process.sleep(50)
-
     {[spec: spec], %{}}
+  end
+
+  @impl true
+  def handle_child_notification({:track_playable, _track_info}, :hls_sink, _context, state) do
+    send(:hls_server, :playlist_ready)
+    {[], state}
+  end
+
+  @impl true
+  def handle_child_notification(_notification, _child, _context, state) do
+    {[], state}
   end
 end

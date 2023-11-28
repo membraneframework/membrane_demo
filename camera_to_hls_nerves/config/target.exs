@@ -32,16 +32,16 @@ keys =
   ]
   |> Enum.filter(&File.exists?/1)
 
-if keys == [],
-  do:
-    Mix.raise("""
-    No SSH public keys found in ~/.ssh. An ssh authorized key is needed to
-    log into the Nerves device and update firmware on it using ssh.
-    See your project's config.exs for this error message.
-    """)
-
-config :nerves_ssh,
-  authorized_keys: Enum.map(keys, &File.read!/1)
+if keys == [] do
+  IO.warn("""
+  No SSH public keys found in ~/.ssh. An ssh authorized key is needed to
+  log into the Nerves device and update firmware on it using ssh. For current build
+  the ssh will be disabled. See your project's config.exs for this warning message.
+  """)
+else
+  config :nerves_ssh,
+    authorized_keys: Enum.map(keys, &File.read!/1)
+end
 
 # Configure the network using vintage_net
 #

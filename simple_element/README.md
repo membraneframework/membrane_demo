@@ -2,20 +2,11 @@
 
 This demo shows how to create a simple Membrane element and plug it into a pipeline.
 
-## Prerequisites and running the demo
-
-Below is the instruction for the installation of required dependencies and how to run this demo on various operating systems:
-
-<details>
-<summary>
-<b>macOS</b>
-</summary>
-
-### Prerequisites
+## Prerequisites
 
 To run the demo, you need [Elixir installed](https://elixir-lang.org/install.html) on your machine (it's best to use a version manager, like `asdf`).
 
-### Running the demo
+## Running the demo
 
 To run the demo, clone the `membrane_demo` repository and checkout to the demo directory:
 

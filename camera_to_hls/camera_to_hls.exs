@@ -16,7 +16,7 @@ defmodule CameraToHls do
   def handle_init(_ctx, _opts) do
     # Captures video from the camera (raw video, depending on camera/os)
     spec =
-      child(:source, Membrane.CameraCapture)
+      child(:source, %Membrane.CameraCapture{framerate: 60})
       # Converts pixel format to I420 (this is still a raw video)
       |> child(:converter, %Membrane.FFmpeg.SWScale.PixelFormatConverter{format: :I420})
       # Takes raw video in I420 pixel format and encodes it into H264.

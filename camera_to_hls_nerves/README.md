@@ -1,12 +1,12 @@
 # Membrane Demo - Camera Video to HLS on Nerves
 
-This demo demonstrates capturing video from a camera module on RaspberryPi running Nerves and broadcasting it to a browser via HLS.
+This demo demonstrates capturing video from a camera module on Raspberry Pi running Nerves and broadcasting it to a browser via HLS.
 
 ## Hardware Prerequisites
 
-To run this demo you'll need a RaspberryPi and a official RaspberryPi camera module. Currently the following devices are supported:
+To run this demo you'll need a Raspberry Pi and a official Raspberry Pi camera module. Currently the following devices are supported:
 
-* RaspberryPi 4 and 4B
+* Raspberry Pi 4 Model B
 
 ## Software Prerequisites
 
@@ -115,7 +115,7 @@ One of the possible options is connection by ssh. For this option to be availabl
 ssh nerves.local
 ```
 
-You should see a Nerves homescreen and an iex prompt. If you see an information `camera_to_hls_nerves not started` it means that the application crashed on start. You can then access the logs by running `RingLogger.next`. If the reason for the crash was `** (RuntimeError) libcamera-vid error, exit status: <exit_status>` then there was a problem with accessing the camera with `libcamera-vid` (one of the `rpicam-apps`). You can try opening the camera manually with `cmd "libcamera-vid -t 3000 -o /data/output.h264"` and see if any errors are logged. For more information about `rpicam-apps` refer to the [RaspberryPi's documentation](https://www.raspberrypi.com/documentation/computers/camera_software.html).
+You should see a Nerves homescreen and an iex prompt. If you see an information `camera_to_hls_nerves not started` it means that the application crashed on start. You can then access the logs by running `RingLogger.next`. If the reason for the crash was `** (RuntimeError) libcamera-vid error, exit status: <exit_status>` then there was a problem with accessing the camera with `libcamera-vid` (one of the `rpicam-apps`). You can try opening the camera manually with `cmd "libcamera-vid -t 3000 -o /data/output.h264"` and see if any errors are logged. For more information about `rpicam-apps` refer to the [Raspberry Pi's documentation](https://www.raspberrypi.com/documentation/computers/camera_software.html).
 
 You can also connect to your device with HDMI cable and USB keyboard, which could be useful if your device didn't connect to your network. Networking is implemented by the `vintage_net` package, so in case of networking issues refer to it's [documentation](https://hexdocs.pm/vintage_net).
 

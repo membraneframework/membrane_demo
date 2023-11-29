@@ -4,7 +4,7 @@ defmodule CameraToHlsNerves.MixProject do
   @app :camera_to_hls_nerves
   @version "0.1.0"
   @all_targets [
-    :rpi3,
+    :rpi3_libcamera,
     :rpi4
   ]
 
@@ -54,7 +54,7 @@ defmodule CameraToHlsNerves.MixProject do
       # bumps to Nerves systems. Since these include Linux kernel and Erlang
       # version updates, please review their release notes in case
       # changes to your application are needed.
-      {:nerves_system_rpi3_libcamera, github: "membraneframework-labs/nerves_system_rpi3_libcamera", runtime: false, targets: :rpi3},
+      {:nerves_system_rpi3_libcamera, github: "membraneframework-labs/nerves_system_rpi3_libcamera", runtime: false, targets: :rpi3_libcamera},
       {:nerves_system_rpi4, "~> 1.24", runtime: false, targets: :rpi4},
     ]
   end

@@ -1,10 +1,12 @@
 # Membrane Demo - Camera Video to HLS on Nerves
 
-This demo demonstrates capturing video from a camera on RaspberryPi running Nerves and broadcasting it to a browser via HLS.
+This demo demonstrates capturing video from a camera module on RaspberryPi running Nerves and broadcasting it to a browser via HLS.
 
 ## Hardware Prerequisites
 
-For this demo to work you'll need a RaspberryPi and a official RaspberryPi camera module. The demo has been tested on Raspberry 4B. 
+To run this demo you'll need a RaspberryPi and a official RaspberryPi camera module. Currently the following devices are supported:
+
+* RaspberryPi 4 and 4B
 
 ## Software Prerequisites
 
@@ -39,9 +41,9 @@ To run the demo, you need [Elixir and Erlang installed](https://elixir-lang.org/
 
 ```bash
 sudo apt install build-essential automake autoconf git squashfs-tools ssh-askpass pkg-config curl libmnl-dev
-sudo curl -o /opt/fwup_1.10.1_amd64.deb https://github.com/fwup-home/fwup/releases/download/v1.10.1/fwup_1.10.1_amd64.deb
-sudo apt install /opt/fwup_1.10.1_amd64.deb
-sudo rm /opt/fwup_1.10.1_amd64.deb
+sudo curl -L https://github.com/fwup-home/fwup/releases/download/v1.10.1/fwup_1.10.1_amd64.deb -o fwup_1.10.1_amd64.deb
+sudo dpkg -i fwup_1.10.1_amd64.deb
+sudo rm fwup_1.10.1_amd64.deb
 ```
 
 Then you'll need to add `nerves_bootstrap` archive to your Mix environment by running
@@ -81,7 +83,6 @@ Nerves applications produce images for hardware targets based on the `MIX_TARGET
 
 This demo is suitable for the following targets:
   * rpi4
-  * rpi3_libcamera (like rpi3 but with enabled libcamera-apps)
 
 ## Running the demo
 
@@ -106,7 +107,7 @@ To run the demo:
 <b>Debugging</b>
 </summary>
 
-If any problems occured you can connect to the device and manually inspect the issue. 
+If any problems occur you can connect to the device and manually inspect the issue. 
 
 One of the possible options is connection by ssh. For this option to be available you have to have any ssh keys in the `~/.ssh` directory. Then, if your target connected to your network correctly and the device you'll be connecting with is also on the same network, run
 
@@ -114,9 +115,9 @@ One of the possible options is connection by ssh. For this option to be availabl
 ssh nerves.local
 ```
 
-You should see a Nerves homescreen and an iex prompt. If you see an information `camera_to_hls_nerves not started` it means that the application crashed on start. You can then access the logs by running `RingLogger.next`.
+You should see a Nerves homescreen and an iex prompt. If you see an information `camera_to_hls_nerves not started` it means that the application crashed on start. You can then access the logs by running `RingLogger.next`. If the reason for the crash was `** (RuntimeError) libcamera-vid error, exit status: <exit_status>` then there was a problem with accessing the camera with `libcamera-vid` (one of the `rpicam-apps`). You can try opening the camera manually with `cmd "libcamera-vid -t 3000 -o /data/output.h264"` and see if any errors are logged. For more information about `rpicam-apps` refer to the [RaspberryPi's documentation](https://www.raspberrypi.com/documentation/computers/camera_software.html).
 
-You can also connect to your device with HDMI cable and USB keyboard, which could be useful if your device didn't seem to connect to your network. Networking is implemented by the `vintage_net` package, so in case of networking issues refer to it's [documentation](https://hexdocs.pm/vintage_net).
+You can also connect to your device with HDMI cable and USB keyboard, which could be useful if your device didn't connect to your network. Networking is implemented by the `vintage_net` package, so in case of networking issues refer to it's [documentation](https://hexdocs.pm/vintage_net).
 
 For more information about connecting to Nerves targets refer to the [Nerves guide](https://hexdocs.pm/nerves/connecting-to-a-nerves-target.html).
 

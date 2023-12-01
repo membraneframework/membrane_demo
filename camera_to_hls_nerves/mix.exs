@@ -4,7 +4,6 @@ defmodule CameraToHlsNerves.MixProject do
   @app :camera_to_hls_nerves
   @version "0.1.0"
   @all_targets [
-    :rpi3_libcamera,
     :rpi4
   ]
 
@@ -38,7 +37,7 @@ defmodule CameraToHlsNerves.MixProject do
       {:ring_logger, "~> 0.10.0"},
       {:toolshed, "~> 0.3.0"},
 
-      {:membrane_rpicam_plugin, github: "membraneframework/membrane_rpicam_plugin", branch: "basic-functionality", override: true},
+      {:membrane_rpicam_plugin, "~> 0.1.0"},
       {:membrane_h264_plugin, "~> 0.9.0"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.18.0"},
 
@@ -54,7 +53,6 @@ defmodule CameraToHlsNerves.MixProject do
       # bumps to Nerves systems. Since these include Linux kernel and Erlang
       # version updates, please review their release notes in case
       # changes to your application are needed.
-      {:nerves_system_rpi3_libcamera, github: "membraneframework-labs/nerves_system_rpi3_libcamera", runtime: false, targets: :rpi3_libcamera},
       {:nerves_system_rpi4, "~> 1.24", runtime: false, targets: :rpi4},
     ]
   end

@@ -10,34 +10,21 @@ To run this demo you'll need a Raspberry Pi and a official Raspberry Pi camera m
 
 ## Software Prerequisites
 
-<details>
-<summary>
-<b>MacOS</b>
-</summary>
-
-To run the demo, you need [Elixir and Erlang installed](https://elixir-lang.org/install.html) on your machine (it's best to use a version manager, like `asdf`). Additionally the following Homebrew command will install all the required packages for nerves to work:
-
-```bash
-brew update
-brew install fwup squashfs coreutils xz pkg-config
-```
-
-Then you'll need to add `nerves_bootstrap` archive to your Mix environment by running
+To run the demo, you need [Elixir and Erlang installed](https://elixir-lang.org/install.html) on your machine (it's best to use a version manager, like `asdf`). Then you'll need to add `nerves_bootstrap` archive to your Mix environment by running
 
 ```bash
 mix archive.install hex nerves_bootstrap
 ```
 
-If any problems occur refer to [Nerves installation guide](https://hexdocs.pm/nerves/installation.html) for more information.
+Additionally the following packages need to be installed for nerves to work:
 
-</details>
+#### MacOS
 
-<details>
-<summary>
-<b>Debian-based linux</b>
-</summary>
+```bash
+brew install fwup squashfs coreutils xz pkg-config
+```
 
-To run the demo, you need [Elixir and Erlang installed](https://elixir-lang.org/install.html) on your machine (it's best to use a version manager, like `asdf`). Additionally the following commands will install all the required packages for nerves to work:
+#### Debian-based linux
 
 ```bash
 sudo apt install build-essential automake autoconf git squashfs-tools ssh-askpass pkg-config curl libmnl-dev
@@ -46,36 +33,13 @@ sudo dpkg -i fwup_1.10.1_amd64.deb
 sudo rm fwup_1.10.1_amd64.deb
 ```
 
-Then you'll need to add `nerves_bootstrap` archive to your Mix environment by running
-
-```bash
-mix archive.install hex nerves_bootstrap
-```
-
-If any problems occur refer to [Nerves installation guide](https://hexdocs.pm/nerves/installation.html) for more information.
-
-</details>
-
-<details>
-<summary>
-<b>Arch-based linux</b>
-</summary>
-
-To run the demo, you need [Elixir and Erlang installed](https://elixir-lang.org/install.html) on your machine (it's best to use a version manager, like `asdf`). Additionally the following yay command will install all the required packages for nerves to work:
+#### Arch-based linux
 
 ```bash
 yay -S base-devel ncurses5-compat-libs openssh-askpass git squashfs-tools curl fwup
 ```
 
-Then you'll need to add `nerves_bootstrap` archive to your Mix environment by running
-
-```bash
-mix archive.install hex nerves_bootstrap
-```
-
 If any problems occur refer to [Nerves installation guide](https://hexdocs.pm/nerves/installation.html) for more information.
-
-</details>
 
 ## Targets
 
@@ -87,8 +51,7 @@ This demo is suitable for the following targets:
 ## Running the demo
 
 To run the demo:
-  * `export MIX_TARGET=my_target` or prefix every command with
-    `MIX_TARGET=my_target`. For example, `MIX_TARGET=rpi4`
+  * set the `MIX_TARGET` environment variable to your target. For example, `export MIX_TARGET=rpi4` or `MIX_TARGET=rpi4 <your_command>`
   * `export SSID=my_wifi_ssid` and (optionally) `export PSK=my_wifi_password`. This will allow the target to connect to the network that you should also be on to access the broadcast
   * Install dependencies with `mix deps.get`
   * Create firmware with `mix firmware`

@@ -4,7 +4,8 @@ defmodule CameraToHlsNerves.MixProject do
   @app :camera_to_hls_nerves
   @version "0.1.0"
   @all_targets [
-    :rpi4
+    :rpi4,
+    :rpi4_membrane
   ]
 
   def project do
@@ -39,6 +40,8 @@ defmodule CameraToHlsNerves.MixProject do
 
       {:membrane_rpicam_plugin, "~> 0.1.0"},
       {:membrane_h264_plugin, "~> 0.9.0"},
+      {:membrane_h264_ffmpeg_plugin, "~> 0.31.0"},
+      {:bundlex, path: "~/Membrane/bundlex", override: true},
       {:membrane_http_adaptive_stream_plugin, "~> 0.18.0"},
 
       # Allow Nerves.Runtime on host to support development, testing and CI.
@@ -54,6 +57,7 @@ defmodule CameraToHlsNerves.MixProject do
       # version updates, please review their release notes in case
       # changes to your application are needed.
       {:nerves_system_rpi4, "~> 1.24", runtime: false, targets: :rpi4},
+      {:nerves_system_rpi4_membrane, github: "membraneframework-labs/nerves_system_rpi4_membrane", runtime: false, targets: :rpi4_membrane},
     ]
   end
 

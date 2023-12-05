@@ -7,8 +7,6 @@ defmodule CameraToHlsNerves.Pipeline do
 
   @impl true
   def handle_init(_ctx, _opts) do
-    # Not waiting causes libcamera-vid to crash
-    Process.sleep(50)
 
     spec = [
       child(:source, Membrane.Rpicam.Source)

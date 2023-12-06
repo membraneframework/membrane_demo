@@ -2,33 +2,20 @@
 
 This demo shows how to create a simple Membrane element and plug it into a pipeline.
 
-## Prerequisites and running the demo
+## Prerequisites
 
-Below is the instruction for the installation of required dependencies and how to run this demo on various operating systems:
+To run the demo, you need [Elixir installed](https://elixir-lang.org/install.html) on your machine (it's best to use a version manager, like `asdf`).
 
-<details>
-<summary>
-<b>macOS</b>
-</summary>
-
-### Prerequisites
-
-Make sure you have the following libraries installed on your OS:
-
-- clang-format,
+If you are running the demo on Linux, make sure to have the following dependencies installed in your system:
 - portaudio19-dev,
-- FFmpeg 4.\*,
-- libavutil-dev,
-- libswresample-dev,
-- libmad0-dev
+- pkg-config 
 
+On Ubuntu, you can install them with the following command:
 ```shell
-brew install clang-format portaudio ffmpeg libmad pkg-config
+apt install portaudio19-dev pkg-config
 ```
 
-Furthermore, make sure you have Elixir installed on your machine. For installation details, see: https://elixir-lang.org/install.html
-
-### Running the demo
+## Running the demo
 
 To run the demo, clone the `membrane_demo` repository and checkout to the demo directory:
 
@@ -53,64 +40,10 @@ Membrane.Pipeline.start_link(Membrane.Demo.SimpleElement.Pipeline, "sample.mp3")
 
 You should hear the audio sample playing and see the number of buffers processed being periodically printed to the console.
 
-</details>
-
-<details>
-<summary>
-<b>Ubuntu</b>
-</summary>
-
-### Prerequisites
-
-Make sure you have the following libraries installed on your OS:
-
-- clang-format,
-- portaudio19-dev,
-- FFmpeg 4.\*,
-- libavutil-dev,
-- libswresample-dev,
-- libmad0-dev
-
-```shell
-apt install clang-format portaudio19-dev ffmpeg libavutil-dev libswresample-dev libmad0-dev
-```
-
-Furthermore, make sure you have Elixir installed on your machine. For installation details, see: https://elixir-lang.org/install.html
-
-On Ubuntu, we recommend installation through `asdf`, see: https://asdf-vm.com/guide/getting-started.html
-
-### Running the demo
-
-To run the demo, clone the `membrane_demo` repository and checkout to the demo directory:
-
-```shell
-git clone https://github.com/membraneframework/membrane_demo
-cd membrane_demo/simple_element
-```
-
-Then you need to download the dependencies of the mix project:
-
-```shell
-mix deps.get
-```
-
-You may be asked to install `Hex` and then `rebar3`.
-
-> In case of installation issues with Hex on Ubuntu, try updating the system packages first by entering the command:
->
-> ```shell
-> sudo apt-get update
-> ```
-
-To start the demo pipeline run `mix run --no-halt run.exs` or type the following commands into an IEx shell (started by `iex -S mix`):
-
-```elixir
-Membrane.Pipeline.start_link(Membrane.Demo.SimpleElement.Pipeline, "sample.mp3")
-```
-
-You should hear the audio sample playing and see the number of buffers processed being periodically printed to the console.
-
-</details>
+Should there be any errors when compiling the script's dependencies, you may need to install the some dependencies manually on your system:
+* [PortAudio](https://www.portaudio.com/) - which we use to play the audio
+* [FFmpeg](https://ffmpeg.org/) - which we use to resample the audio
+* [MAD](https://www.underbit.com/products/mad/) - which is used to decode audio
 
 ## How it works
 

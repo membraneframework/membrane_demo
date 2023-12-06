@@ -38,7 +38,7 @@ defmodule CameraToHlsNerves.MixProject do
       {:ring_logger, "~> 0.10.0"},
       {:toolshed, "~> 0.3.0"},
 
-      {:membrane_rpicam_plugin, "~> 0.1.0"},
+      {:membrane_rpicam_plugin, "~> 0.1.1"},
       {:membrane_h264_plugin, "~> 0.9.0"},
       {:membrane_h264_ffmpeg_plugin, "~> 0.31.0"},
       {:bundlex, path: "~/Membrane/bundlex", override: true},

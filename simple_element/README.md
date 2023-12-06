@@ -6,11 +6,11 @@ This demo shows how to create a simple Membrane element and plug it into a pipel
 
 To run the demo, you need [Elixir installed](https://elixir-lang.org/install.html) on your machine (it's best to use a version manager, like `asdf`).
 
-If you are running the demo on Ubuntu, make sure to have the following dependencies installed in your system:
+If you are running the demo on Linux, make sure to have the following dependencies installed in your system:
 - portaudio19-dev,
 - pkg-config 
 
-You can install them with the following command:
+On Ubuntu, you can install them with the following command:
 ```shell
 apt install portaudio19-dev pkg-config
 ```

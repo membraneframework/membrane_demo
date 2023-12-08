@@ -10,9 +10,6 @@ Application.start(:nerves_bootstrap)
 
 config :camera_to_hls_nerves, target: Mix.target()
 
-config :bundlex, :disable_precompiled_os_deps,
-  apps: [:membrane_h264_ffmpeg_plugin]
-# Customize non-Elixir parts of the firmware. See
 # https://hexdocs.pm/nerves/advanced-configuration.html for details.
 
 config :nerves, :firmware, rootfs_overlay: "rootfs_overlay"

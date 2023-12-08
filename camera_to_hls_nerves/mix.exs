@@ -37,7 +37,7 @@ defmodule CameraToHlsNerves.MixProject do
       {:ring_logger, "~> 0.10.0"},
       {:toolshed, "~> 0.3.0"},
 
-      {:membrane_rpicam_plugin, "~> 0.1.1"},
+      {:membrane_rpicam_plugin, "~> 0.1.2"},
       {:membrane_h264_plugin, "~> 0.9.0"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.18.0"},
 

@@ -7,16 +7,18 @@ defmodule CameraToHlsNerves.HlsServer do
 
   @impl true
   def init(_arg) do
-    {:ok, %{}}
+    {:ok, %{server: nil}}
   end
 
   @impl true
-  def handle_info(:playlist_ready, _state) do
+  def handle_info(:playlist_ready, state) do
     File.cd!("/")
 
     :inets.start()
 
-    :inets.start(:httpd, httpd_options())
+    {:ok, server} = :inets.start(:httpd, httpd_options())
+
+    {:noreply, %{state | server: server}}
   end
 
   defp httpd_options() do

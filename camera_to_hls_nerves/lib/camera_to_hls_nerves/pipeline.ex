@@ -7,7 +7,6 @@ defmodule CameraToHlsNerves.Pipeline do
 
   @impl true
   def handle_init(_ctx, _opts) do
-
     spec = [
       child(:source, Membrane.Rpicam.Source)
       |> child(:parser, Membrane.H264.Parser)

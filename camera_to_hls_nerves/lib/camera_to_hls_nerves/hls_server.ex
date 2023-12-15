@@ -21,6 +21,12 @@ defmodule CameraToHlsNerves.HlsServer do
     {:noreply, %{state | server: server}}
   end
 
+  @impl true
+  def terminate(_reason, state) do
+    :inets.stop(:httpd, state.server)
+    state
+  end
+
   defp httpd_options() do
     [
       bind_address: ~c"0.0.0.0",

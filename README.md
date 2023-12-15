@@ -6,6 +6,7 @@ In the subdirectories of this repository you can find some examples of using the
 - [simple_element](https://github.com/membraneframework/membrane_demo/tree/master/simple_element) - an example of a simple Membrane's element capable of counting the incoming buffers
 - [simple_pipeline](https://github.com/membraneframework/membrane_demo/tree/master/simple_pipeline) - an example of a Membrane's pipeline playing an mp3 file
 - [camera_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/camera_to_hls) - a demonstration of capturing camera output and converting it to an HLS stream
+- [camera_to_hls_nerves](https://github.com/membraneframework/membrane_demo/tree/master/camera_to_hls_nerves) - a demonstration of capturing video from a camera module on Raspberry Pi running Nerves and broadcasting it to a browser via HLS
 - [rtmp_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtmp_to_hls) - receiving RTMP stream and broadcasting it via HLS
 - [rtp](https://github.com/membraneframework/membrane_demo/tree/master/rtp) - sending and receiving RTP/SRTP stream
 - [rtp_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtp_to_hls) - receiving RTP stream and broadcasting it via HLS

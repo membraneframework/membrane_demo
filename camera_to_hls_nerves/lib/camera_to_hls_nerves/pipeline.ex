@@ -26,4 +26,28 @@ defmodule CameraToHlsNerves.Pipeline do
 
     {[spec: spec], %{}}
   end
+
+  @impl true
+  def handle_child_notification({:track_playable, _track_info}, :hls_sink, _context, state) do
+    Supervisor.start_child(CameraToHlsNervesSupervisor, %{
+      id: :hls_server,
+      start: {:inets, :start, [:httpd, httpd_options(), :stand_alone]}
+    })
+
+    {[], state}
+  end
+
+  def handle_child_notification(_notification, _child, _context, state) do
+    {[], state}
+  end
+
+  defp httpd_options() do
+    [
+      bind_address: ~c"0.0.0.0",
+      port: 8000,
+      document_root: ~c".",
+      server_name: ~c"camera_to_hls_nerves",
+      server_root: ~c"/"
+    ]
+  end
 end

@@ -18,6 +18,7 @@ config :nerves, :firmware, rootfs_overlay: "rootfs_overlay"
 # See https://reproducible-builds.org/docs/source-date-epoch/ for more information
 
 config :nerves, source_date_epoch: "1698662793"
+
 if Mix.target() == :host do
   import_config "host.exs"
 else

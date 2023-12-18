@@ -4,12 +4,13 @@ defmodule CameraToHlsNerves.Application do
   def start(_type, _args) do
     File.rm_rf!("/data/output")
     File.mkdir!("/data/output")
+    File.cd!("/")
 
     children = [
-      CameraToHlsNerves.HlsServer,
       CameraToHlsNerves.Pipeline
     ]
 
-    Supervisor.start_link(children, strategy: :one_for_one)
+    Supervisor.start_link(children, strategy: :one_for_one, name: CameraToHlsNervesSupervisor)
   end
+
 end

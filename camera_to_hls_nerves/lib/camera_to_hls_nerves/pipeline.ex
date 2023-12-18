@@ -7,7 +7,6 @@ defmodule CameraToHlsNerves.Pipeline do
 
   @impl true
   def handle_init(_ctx, _opts) do
-
     spec = [
       child(:source, Membrane.Rpicam.Source)
       |> child(:parser, Membrane.H264.Parser)
@@ -30,12 +29,25 @@ defmodule CameraToHlsNerves.Pipeline do
 
   @impl true
   def handle_child_notification({:track_playable, _track_info}, :hls_sink, _context, state) do
-    send(:hls_server, :playlist_ready)
+    Supervisor.start_child(CameraToHlsNervesSupervisor, %{
+      id: :hls_server,
+      start: {:inets, :start, [:httpd, httpd_options(), :stand_alone]}
+    })
+
     {[], state}
   end
 
-  @impl true
   def handle_child_notification(_notification, _child, _context, state) do
     {[], state}
+  end
+
+  defp httpd_options() do
+    [
+      bind_address: ~c"0.0.0.0",
+      port: 8000,
+      document_root: ~c".",
+      server_name: ~c"camera_to_hls_nerves",
+      server_root: ~c"/"
+    ]
   end
 end

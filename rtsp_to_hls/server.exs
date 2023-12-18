@@ -38,12 +38,6 @@ defmodule RTSPServer do
           ]
         )
         |> child(:realtimer, Membrane.Realtimer)
-        |> child(%Membrane.Debug.Filter{
-          handle_buffer:
-            &Membrane.Logger.warning(
-              "buffer123 #{inspect(Membrane.Time.os_time())}: #{inspect(&1)}"
-            )
-        })
         |> child(:udp_sink, %Membrane.UDP.Sink{
           destination_address: address,
           destination_port_no: opts.client_port,

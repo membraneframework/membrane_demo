@@ -5,5 +5,5 @@
     "{config,lib,test}/**/*.{ex,exs}",
     "rootfs_overlay/etc/iex.exs"
   ],
-  import_deps: [:membrane_core, :unifex]
+  import_deps: [:membrane_core]
 ]

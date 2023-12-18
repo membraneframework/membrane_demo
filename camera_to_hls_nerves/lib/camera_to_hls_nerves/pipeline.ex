@@ -26,15 +26,4 @@ defmodule CameraToHlsNerves.Pipeline do
 
     {[spec: spec], %{}}
   end
-
-  @impl true
-  def handle_child_notification({:track_playable, _track_info}, :hls_sink, _context, state) do
-    send(:hls_server, :playlist_ready)
-    {[], state}
-  end
-
-  @impl true
-  def handle_child_notification(_notification, _child, _context, state) do
-    {[], state}
-  end
 end

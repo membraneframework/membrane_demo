@@ -33,7 +33,7 @@ jobs:
           demo: rtmp_to_hls
       - build_test:
           demo: rtp
-      - build_test:
+      - build_exs:
           demo: rtp_to_hls
       - build_test:
           demo: rtsp_to_hls

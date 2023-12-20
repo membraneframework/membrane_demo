@@ -9,3 +9,5 @@ alias Membrane.Demo.RTP.SendPipeline
     secure?: "--secure" in System.argv(),
     srtp_key: String.duplicate("a", 30)
   })
+
+Process.sleep(:infinity)

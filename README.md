@@ -13,9 +13,9 @@ In the subdirectories of this repository you can find some examples of using the
 - [rtsp_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtsp_to_hls) - receiving RTSP stream and converting it to HLS
 - [video_mixer](https://github.com/membraneframework/membrane_demo/tree/master/video_mixer) - how to mix audio and video files
 - [speech_to_text](https://github.com/membraneframework/membrane_demo/tree/master/speech_to_text) - real-time speech recognition using [Whisper](https://github.com/openai/whisper) in [Livebook]
-- [webrtc_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/webrtc_to_hls) - converting WebRTC stream into HLS
-- [webrtc_videoroom](https://github.com/membraneframework/membrane_demo/tree/master/webrtc_videoroom) - basic example of [Membrane RTC Engine](https://github.com/membraneframework/membrane_rtc_engine.git). It's as simple as possible just to show you how to use our API.
-
+- [webrtc_to_hls](https://github.com/jellyfish-dev/membrane_rtc_engine/tree/master/examples/webrtc_to_hls) - converting WebRTC stream into HLS
+- [webrtc_videoroom](https://github.com/jellyfish-dev/membrane_rtc_engine/tree/master/examples/webrtc_videoroom) - basic example of [Membrane RTC Engine](https://github.com/jellyfish-dev/membrane_rtc_engine.git). It's as simple as possible just to show you how to use our API.
+- 
 ## Copyright and License
 
 Copyright 2018, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)

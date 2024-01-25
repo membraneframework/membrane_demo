@@ -1,15 +1,5 @@
 # Soundwave plotting example
 
-## Introduction
-
-This livebook example shows how to perform real-time soundwave plotting with the use of the [Membrane Framework](https://github.com/membraneframework) and [Vega-Lite](https://vega.github.io/vega-lite/).
-
-By following that example you will learn how to read the audio from the microphone, how is audio represented, and how to create your custom Membrane element that plots the soundwave with the use of the elixir bindings to the Vega-Lite.
-
-## Installation
-
-You need to have `FFmpeg` installed. For installation details take a look [here](https://www.ffmpeg.org/).
-
 ```elixir
 File.cd(__DIR__)
 Logger.configure(level: :error)
@@ -22,6 +12,16 @@ Mix.install([
   {:kino_vega_lite, "~> 0.1.11"}
 ])
 ```
+
+## Introduction
+
+This livebook example shows how to perform real-time soundwave plotting with the use of the [Membrane Framework](https://github.com/membraneframework) and [Vega-Lite](https://vega.github.io/vega-lite/).
+
+By following that example you will learn how to read the audio from the microphone, how is audio represented, and how to create your custom Membrane element that plots the soundwave with the use of the elixir bindings to the Vega-Lite.
+
+## Installation
+
+You need to have `FFmpeg` installed. For installation details take a look [here](https://www.ffmpeg.org/).
 
 ## Soundwave plotting sink
 

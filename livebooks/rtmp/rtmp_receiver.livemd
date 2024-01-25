@@ -5,11 +5,10 @@ File.cd(__DIR__)
 Logger.configure(level: :error)
 
 Mix.install([
-  # {:membrane_kino_plugin, github: "membraneframework-labs/membrane_kino_plugin", tag: "v0.3.0"},
-  {:membrane_kino_plugin, path: "/Users/bartekch/Desktop/membrane_kino_plugin"},
   {:membrane_core, "~> 1.0"},
   {:membrane_realtimer_plugin, "~> 0.9.0"},
-  {:membrane_rtmp_plugin, "~> 0.19.0"}
+  {:membrane_rtmp_plugin, "~> 0.19.0"},
+  {:membrane_kino_plugin, github: "membraneframework-labs/membrane_kino_plugin", tag: "v0.3.1"}
 ])
 ```
 

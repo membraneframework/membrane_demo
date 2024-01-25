@@ -82,10 +82,9 @@ defmodule Visualizer do
 
   @points_per_update @window_size / (@window_duration * @plot_update_frequency)
 
-  def_input_pad(:input,
+  def_input_pad :input,
     accepted_format: %RawAudio{},
     flow_control: :auto
-  )
 
   @impl true
   def handle_init(_ctx, _opts) do

@@ -5,10 +5,11 @@ File.cd(__DIR__)
 Logger.configure(level: :error)
 
 Mix.install([
-  {:membrane_kino_plugin, github: "membraneframework-labs/membrane_kino_plugin"},
-  {:membrane_core, "~>0.11.2"},
-  {:membrane_realtimer_plugin, "~>0.6.1"},
-  {:membrane_rtmp_plugin, "~>0.11.0"}
+  # {:membrane_kino_plugin, github: "membraneframework-labs/membrane_kino_plugin", tag: "v0.3.0"},
+  {:membrane_kino_plugin, path: "/Users/bartekch/Desktop/membrane_kino_plugin"},
+  {:membrane_core, "~> 1.0"},
+  {:membrane_realtimer_plugin, "~> 0.9.0"},
+  {:membrane_rtmp_plugin, "~> 0.19.0"}
 ])
 ```
 
@@ -45,7 +46,6 @@ defmodule RTMP.Receiver.Pipeline do
       get_child(:source)
       |> via_out(:audio)
       |> child(:audio_parser, %Membrane.AAC.Parser{
-        in_encapsulation: :none,
         out_encapsulation: :ADTS
       })
       |> via_in(:audio)
@@ -54,8 +54,9 @@ defmodule RTMP.Receiver.Pipeline do
     playing_video =
       get_child(:source)
       |> via_out(:video)
-      |> child(:video_parser, %Membrane.H264.FFmpeg.Parser{
-        framerate: {25, 1}
+      |> child(:video_parser, %Membrane.H264.Parser{
+        generate_best_effort_timestamps: %{framerate: {25, 1}},
+        output_stream_structure: :annexb
       })
       |> via_in(:video)
       |> get_child(:player)
@@ -63,7 +64,7 @@ defmodule RTMP.Receiver.Pipeline do
     player = child(:player, %Membrane.Kino.Player.Sink{kino: kino})
 
     structure = [source, playing_audio, playing_video, player]
-    {[spec: structure, playback: :playing], %{}}
+    {[spec: structure], %{}}
   end
 
   # Once the source initializes, we grant it the control over the tcp socket
@@ -133,7 +134,9 @@ defmodule RTMP.Receiver do
       ],
       socket_handler: fn socket ->
         # On new connection a pipeline is started
-        {:ok, _supervisor, pipeline} = RTMP.Receiver.Pipeline.start(socket: socket, kino: kino)
+        {:ok, _supervisor, pipeline} =
+          Membrane.Pipeline.start(RTMP.Receiver.Pipeline, socket: socket, kino: kino)
+
         send(parent, {:pipeline_spawned, pipeline})
         {:ok, pipeline}
       end
@@ -171,6 +174,5 @@ port = 1942
 
 kino = Membrane.Kino.Player.new(video: true, audio: true)
 Kino.render(kino)
-
 RTMP.Receiver.run(port: port, kino: kino)
 ```

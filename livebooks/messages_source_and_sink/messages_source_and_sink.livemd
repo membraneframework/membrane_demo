@@ -5,7 +5,7 @@ File.cd(__DIR__)
 Logger.configure(level: :error)
 
 Mix.install([
-  {:membrane_core, "~> 0.12.7"}
+  {:membrane_core, "~> 1.0"}
 ])
 ```
 
@@ -18,7 +18,7 @@ defmodule MessageSource do
   require Membrane.Logger
 
   def_output_pad(:output,
-    mode: :push,
+    flow_control: :push,
     accepted_format: _any
   )
 
@@ -75,7 +75,7 @@ end
 defmodule MessageSink do
   use Membrane.Sink
 
-  def_input_pad(:input, mode: :push, accepted_format: _any)
+  def_input_pad(:input, flow_control: :push, accepted_format: _any)
   def_options(receiver: [description: "PID of the process that will 
     receive messages from the sink", spec: pid()])
 
@@ -111,7 +111,7 @@ defmodule MyPipeline do
   end
 end
 
-{:ok, _supervisor, pipeline} = MyPipeline.start(receiver: self())
+{:ok, _supervisor, pipeline} = Membrane.Pipeline.start(MyPipeline, receiver: self())
 payloads = 1..10
 
 Task.async(fn ->

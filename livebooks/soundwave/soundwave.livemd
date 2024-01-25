@@ -1,29 +1,27 @@
 # Soundwave plotting example
 
-## Introduction
-
-This livebook example shows how to perform real-time soundwave plotting with the use of the [Membrane Framework](https://github.com/membraneframework) and [Vega-Lite](https://vega.github.io/vega-lite/).
-
-By following that example you will learn how to read the audio from the microphone, how is audio represented, and how to create your custom Membrane element that plots the soundwave with the use of the elixir bindings to the Vega-Lite.
-
-## Installation
-
-You need to install the following `mix` dependencies:
-
 ```elixir
 File.cd(__DIR__)
 Logger.configure(level: :error)
 
 Mix.install([
-  {:membrane_core, "~> 0.12.7"},
-  {:membrane_raw_audio_parser_plugin, "~> 0.2.0"},
-  {:membrane_portaudio_plugin, "~>0.16.0"},
-  {:vega_lite, "~> 0.1.7"},
-  {:kino_vega_lite, "~> 0.1.8"}
+  {:membrane_core, "~> 1.0"},
+  {:membrane_raw_audio_parser_plugin, "~> 0.4.0"},
+  {:membrane_portaudio_plugin, "~> 0.18.0"},
+  {:vega_lite, "~> 0.1.8"},
+  {:kino_vega_lite, "~> 0.1.11"}
 ])
 ```
 
-Furthermore, you need to have `FFmpeg` installed. For installation details take a look [here](https://www.ffmpeg.org/).
+## Installation
+
+You need to have `FFmpeg` installed. For installation details take a look [here](https://www.ffmpeg.org/).
+
+## Introduction
+
+This livebook example shows how to perform real-time soundwave plotting with the use of the [Membrane Framework](https://github.com/membraneframework) and [Vega-Lite](https://vega.github.io/vega-lite/).
+
+By following that example you will learn how to read the audio from the microphone, how is audio represented, and how to create your custom Membrane element that plots the soundwave with the use of the elixir bindings to the Vega-Lite.
 
 ## Soundwave plotting sink
 
@@ -172,7 +170,7 @@ defmodule Visualizer do
               x =
                 (pts + (chunk_i * samples_per_point + sample_i) * sample_duration -
                    state.initial_pts)
-                |> Membrane.Time.round_to_milliseconds()
+                |> Membrane.Time.as_milliseconds(:round)
 
               %{x: x, y: value}
             end)

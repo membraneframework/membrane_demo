@@ -2,7 +2,7 @@
 
 This livebook shows how to mix a beep sound into background music over a period of time.
 
-To run the demo, [install Livebook](https://livebook.dev/#install) and open the `rtmp_sender.livemd` file there.
+To run the demo, [install Livebook](https://github.com/livebook-dev/livebook#escript) and open the `audio_mixer.livemd` file there.
 
 ## Copyright and License
 

@@ -2,7 +2,7 @@
 
 This livebook shows how to load `MP3` audio from the file, transcode it to the `AAC` codec, and play it.
 
-To run the demo, [install Livebook](https://livebook.dev/#install) and open the `rtmp_sender.livemd` file there.
+To run the demo, [install Livebook](https://github.com/livebook-dev/livebook#escript) and open the `playing_mp3_file.livemd` file there.
 
 ## Copyright and License
 

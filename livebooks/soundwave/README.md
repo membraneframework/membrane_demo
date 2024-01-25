@@ -2,7 +2,7 @@
 
 This livebook example shows how to perform real-time soundwave plotting with the use of the [Membrane Framework](https://github.com/membraneframework) and [Vega-Lite](https://vega.github.io/vega-lite/).
 
-To run the demo, [install Livebook](https://livebook.dev/#install) and open the `soundwave.livemd` file there.
+To run the demo, [install Livebook](https://github.com/livebook-dev/livebook#escript) and open the `soundwave.livemd` file there.
 
 ## Copyright and License
 

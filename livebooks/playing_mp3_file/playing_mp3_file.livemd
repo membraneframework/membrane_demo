@@ -1,0 +1,82 @@
+# Playing MP3 File
+
+```elixir
+File.cd(__DIR__)
+Logger.configure(level: :error)
+
+Mix.install([
+  {:membrane_core, "~> 0.11.2"},
+  {:membrane_file_plugin, "~> 0.13.0"},
+  {:membrane_mp3_mad_plugin, "~> 0.14.0"},
+  {:membrane_ffmpeg_swresample_plugin, "~> 0.16.1"},
+  {:membrane_aac_fdk_plugin, "~> 0.14.0"},
+  {:membrane_kino_plugin, github: "membraneframework-labs/membrane_kino_plugin"}
+])
+```
+
+## Installation
+
+To run this demo one needs to install native dependencies:
+
+1. [MP3 MAD](https://github.com/membraneframework/membrane_mp3_mad_plugin/tree/v0.14.0#installation)
+2. [AAC FDK](https://github.com/membraneframework/membrane_aac_fdk_plugin#installation)
+3. [SWResample FFmpeg](https://github.com/membraneframework/membrane_ffmpeg_swresample_plugin#installation)
+
+## Description
+
+This is example of loading `MP3` audio from the file, transcoding it to the `AAC` codec, and playing it via `Membrane.Kino.Player`.
+
+## Pipeline definition
+
+Defines simple linear pipeline of the given structure:
+
+1. Load `MP3` file from the file.
+2. Transcode `MP3` to `AAC` (it is required by `Kino.Player`):
+   1. Decode `MP3` format to `RawAudio`,
+   2. Change `sample_format` from `s24le` to `s16le` (it is required by `FDK.Encoder`),
+   3. Encode it to `AAC` format.
+3. Fill in audio stream to the player via `:audio` input pad.
+
+```elixir
+import Membrane.ChildrenSpec,
+  only: [{:child, 2}, {:child, 3}, {:via_in, 2}]
+
+alias Membrane.{
+  File,
+  MP3,
+  FFmpeg,
+  RawAudio,
+  AAC,
+  Kino
+}
+
+# https://freemusicarchive.org/music/Paper_Navy/All_Grown_Up/08_Swan_Song/
+audio_path = "./assets/sample.mp3"
+kino = Membrane.Kino.Player.new(audio: true)
+
+structure =
+  child(:file_source, %File.Source{location: audio_path})
+  |> child(:decoder_mp3, MP3.MAD.Decoder)
+  |> child(:converter, %FFmpeg.SWResample.Converter{
+    input_stream_format: %RawAudio{channels: 2, sample_format: :s24le, sample_rate: 44_100},
+    output_stream_format: %RawAudio{channels: 2, sample_format: :s16le, sample_rate: 44_100}
+  })
+  |> child(:encoder_aac, AAC.FDK.Encoder)
+  |> via_in(:audio)
+  |> child(:player, %Kino.Player.Sink{kino: kino})
+
+:ok
+```
+
+## Player
+
+Run pipeline:
+
+```elixir
+alias Membrane.RemoteControlled, as: RC
+
+pipeline = RC.Pipeline.start!()
+RC.Pipeline.exec_actions(pipeline, spec: structure, playback: :playing)
+
+kino
+```

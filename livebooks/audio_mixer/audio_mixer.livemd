@@ -1,0 +1,120 @@
+# Mixing audio files
+
+```elixir
+File.cd(__DIR__)
+Logger.configure(level: :error)
+
+Mix.install([
+  {:membrane_core, "~> 0.11.2"},
+  {:membrane_audio_mix_plugin, "~> 0.12.0"},
+  {:membrane_file_plugin, "~> 0.13.0"},
+  {:membrane_mp3_mad_plugin, "~> 0.14.0"},
+  {:membrane_ffmpeg_swresample_plugin, "~> 0.16.1"},
+  {:membrane_aac_fdk_plugin, "~> 0.14.0"},
+  {:membrane_kino_plugin, github: "membraneframework-labs/membrane_kino_plugin"},
+  {:membrane_tee_plugin, "~> 0.10.1"}
+])
+```
+
+## Installation
+
+To run this demo one needs to install native dependencies:
+
+1. [MP3 MAD](https://github.com/membraneframework/membrane_mp3_mad_plugin/tree/v0.14.0#installation)
+2. [AAC FDK](https://github.com/membraneframework/membrane_aac_fdk_plugin#installation)
+3. [SWResample FFmpeg](https://github.com/membraneframework/membrane_ffmpeg_swresample_plugin#installation)
+
+## Description
+
+This is an example of mixing multiple short "beep" sound into background music, one by one, every second.
+
+## Pipeline definition
+
+Define all constants.
+
+```elixir
+n_beeps = 30
+beep_filepath = "./assets/beep.aac"
+background_filepath = "./assets/sample_music_short.mp3"
+:ok
+```
+
+The file's "beep" sound input is decoded from `AAC` and split into separate inputs using the `Tee` element. These inputs are then filled into the mixer with corresponding time offsets.
+
+```elixir
+import Membrane.ChildrenSpec
+
+alias Membrane.{File, AAC, Tee, Time}
+
+beep_audio_input =
+  child({:file_source, :beep}, %File.Source{location: beep_filepath})
+  |> child({:decoder_aac, :beep}, AAC.FDK.Decoder)
+  |> child(:beeps, Tee.PushOutput)
+
+beeps_split =
+  for i <- 1..n_beeps do
+    get_child(:beeps)
+    |> via_in(:input, options: [offset: Time.seconds(i)])
+    |> get_child(:mixer)
+  end
+
+:ok
+```
+
+The background music is loaded from a file and then decoded from the `MP3` format to the appropriate `Raw Audio` format.
+
+All mixer inputs must be of the same format.
+
+```elixir
+import Membrane.ChildrenSpec
+
+alias Membrane.{File, RawAudio, MP3}
+alias Membrane.FFmpeg.SWResample.Converter
+
+background_audio_input =
+  child(:file_source, %File.Source{location: background_filepath})
+  |> child(:decoder_mp3, MP3.MAD.Decoder)
+  |> child(:converter, %Converter{
+    input_stream_format: %RawAudio{channels: 2, sample_format: :s24le, sample_rate: 44_100},
+    output_stream_format: %RawAudio{channels: 1, sample_format: :s16le, sample_rate: 44_100}
+  })
+  |> get_child(:mixer)
+
+:ok
+```
+
+Mixer is created and directly connected to audio input of the player.
+
+```elixir
+import Membrane.ChildrenSpec
+
+alias Membrane.{AudioMixer, AAC, Kino}
+
+kino = Membrane.Kino.Player.new(audio: true)
+
+mixer_output =
+  child(:mixer, Membrane.AudioMixer)
+  |> child(:encoder_aac, AAC.FDK.Encoder)
+  |> via_in(:audio)
+  |> child(:player, %Kino.Player.Sink{kino: kino})
+
+:ok
+```
+
+Whole pipeline structure.
+
+```elixir
+structure = beeps_split ++ [beep_audio_input, background_audio_input, mixer_output]
+:ok
+```
+
+## Playing audio
+
+```elixir
+alias Membrane.RemoteControlled, as: RC
+
+pipeline = RC.Pipeline.start!()
+RC.Pipeline.exec_actions(pipeline, spec: structure, playback: :playing)
+
+kino
+```

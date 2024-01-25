@@ -64,7 +64,7 @@ defmodule RTMP.Sender.Pipeline do
         max_attempts: :infinity
       })
 
-    structure = [
+    spec = [
       video_source
       |> via_in(Pad.ref(:video, 0))
       |> get_child(:rtmp_sink),
@@ -74,7 +74,7 @@ defmodule RTMP.Sender.Pipeline do
       rtmp_sink
     ]
 
-    {[spec: structure], %{streams_to_end: 2}}
+    {[spec: spec], %{streams_to_end: 2}}
   end
 
   # The rest of the example module is only used for self-termination of the pipeline after processing finishes

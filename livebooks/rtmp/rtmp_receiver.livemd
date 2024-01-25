@@ -62,8 +62,8 @@ defmodule RTMP.Receiver.Pipeline do
 
     player = child(:player, %Membrane.Kino.Player.Sink{kino: kino})
 
-    structure = [source, playing_audio, playing_video, player]
-    {[spec: structure], %{}}
+    spec = [source, playing_audio, playing_video, player]
+    {[spec: spec], %{}}
   end
 
   # Once the source initializes, we grant it the control over the tcp socket

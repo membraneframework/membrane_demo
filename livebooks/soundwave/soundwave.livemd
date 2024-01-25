@@ -239,7 +239,7 @@ alias Membrane.RCPipeline
 pipeline = RCPipeline.start!()
 ```
 
-Finally, we can commission `spec` action execution with the previously created `structure`:
+Finally, we can commission `spec` action execution with the previously created pipeline stucture:
 
 ```elixir
 RCPipeline.exec_actions(pipeline, spec: spec)

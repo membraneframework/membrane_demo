@@ -12,13 +12,20 @@ In the subdirectories of this repository you can find some examples of using the
 - [rtp_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtp_to_hls) - receiving RTP stream and broadcasting it via HLS
 - [rtsp_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtsp_to_hls) - receiving RTSP stream and converting it to HLS
 - [video_mixer](https://github.com/membraneframework/membrane_demo/tree/master/video_mixer) - how to mix audio and video files
-- [speech_to_text](https://github.com/membraneframework/membrane_demo/tree/master/speech_to_text) - real-time speech recognition using [Whisper](https://github.com/openai/whisper) in [Livebook]
 - [webrtc_to_hls](https://github.com/jellyfish-dev/membrane_rtc_engine/tree/master/examples/webrtc_to_hls) - converting WebRTC stream into HLS
 - [webrtc_videoroom](https://github.com/jellyfish-dev/membrane_rtc_engine/tree/master/examples/webrtc_videoroom) - basic example of [Membrane RTC Engine](https://github.com/jellyfish-dev/membrane_rtc_engine.git). It's as simple as possible just to show you how to use our API.
-- 
+
+Also there are some livebook examples located in [livebooks](https://github.com/membraneframework/membrane_demo/tree/master/livebooks) directory:
+
+- [speech_to_text](https://github.com/membraneframework/membrane_demo/tree/master/livebooks/speech_to_text) - real-time speech recognition using [Whisper](https://github.com/openai/whisper) in [Livebook]
+- [audio_mixer](https://github.com/membraneframework/membrane_demo/tree/master/livebooks/audio_mixer) - mix a beep sound into background music
+- [messages_source_and_sink](https://github.com/membraneframework/membrane_demo/tree/master/livebooks/messages_source_and_sink) - setup a simple pipeline and send messages through it
+- [playing_mp3_file](https://github.com/membraneframework/membrane_demo/tree/master/livebooks/playing_mp3_file) - read mp3 file, transcode to acc and play
+- [rtmp](https://github.com/membraneframework/membrane_demo/tree/master/livebooks/rtmp) - send and receive `RTMP` stream
+- [soundwave](https://github.com/membraneframework/membrane_demo/tree/master/livebooks/soundwave) - plot live audio amplitude on a graph
 ## Copyright and License
 
-Copyright 2018, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
+Copyright 2024, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
 
 [![Software Mansion](https://logo.swmansion.com/logo?color=white&variant=desktop&width=200&tag=membrane-github)](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
 

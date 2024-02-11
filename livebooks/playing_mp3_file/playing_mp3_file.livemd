@@ -42,7 +42,6 @@ alias Membrane.{
   Kino
 }
 
-# https://freemusicarchive.org/music/Paper_Navy/All_Grown_Up/08_Swan_Song/
 audio_path = "./assets/sample.mp3"
 kino = Membrane.Kino.Player.new(audio: true)
 

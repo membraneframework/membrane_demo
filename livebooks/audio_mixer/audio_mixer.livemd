@@ -27,7 +27,7 @@ Define all constants.
 ```elixir
 n_beeps = 30
 beep_filepath = "./assets/beep.aac"
-background_filepath = "./assets/sample_music_short.mp3"
+background_filepath = "./assets/sample.mp3"
 :ok
 ```
 

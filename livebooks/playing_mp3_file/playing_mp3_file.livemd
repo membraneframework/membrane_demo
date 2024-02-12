@@ -49,7 +49,7 @@ spec =
   child(:file_source, %File.Source{location: audio_path})
   |> child(:decoder_mp3, MP3.MAD.Decoder)
   |> child(:converter, %FFmpeg.SWResample.Converter{
-    input_stream_format: %RawAudio{channels: 2, sample_format: :s24le, sample_rate: 44_100},
+    input_stream_format: %RawAudio{channels: 2, sample_format: :s24le, sample_rate: 48_000},
     output_stream_format: %RawAudio{channels: 2, sample_format: :s16le, sample_rate: 44_100}
   })
   |> child(:encoder_aac, AAC.FDK.Encoder)

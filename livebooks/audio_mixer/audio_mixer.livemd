@@ -67,7 +67,7 @@ background_audio_input =
   child(:file_source, %File.Source{location: background_filepath})
   |> child(:decoder_mp3, MP3.MAD.Decoder)
   |> child(:converter, %Converter{
-    input_stream_format: %RawAudio{channels: 2, sample_format: :s24le, sample_rate: 44_100},
+    input_stream_format: %RawAudio{channels: 2, sample_format: :s24le, sample_rate: 48_000},
     output_stream_format: %RawAudio{channels: 1, sample_format: :s16le, sample_rate: 44_100}
   })
   |> get_child(:mixer)

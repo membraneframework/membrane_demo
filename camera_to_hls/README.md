@@ -21,6 +21,24 @@ You might be asked to grant access to your camera, as some operating systems req
 
 For an example of serving HLS within a Phoenix project, see the [rtmp_to_hls demo](../rtmp_to_hls/).
 
+<details>
+<summary>
+<b>Debugging</b>
+</summary>
+
+### Camera not found
+If you have a camera but you still receiving the error
+```
+[video4linux2,v4l2 @ 0x745cf00b0440] Cannot open video device default: No such file or directory
+```
+The [Membrane CameraCapture Plugin](https://github.com/membraneframework/membrane_camera_capture_plugin) isn't able to find the default camera.
+You can find it manually with `v4l2-ctl --list-devices` and then manually set it on the CameraCapture Plugin.
+```diff
+-       child(:source, Membrane.CameraCapture)
++       child(:source, %Membrane.CameraCapture{device: "/dev/video0"})
+```
+</details>
+
 ## Copyright and License
 
 Copyright 2022, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)

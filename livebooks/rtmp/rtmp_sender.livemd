@@ -12,12 +12,6 @@ Mix.install([
 ])
 ```
 
-## Installation
-
-To run this demo one needs to install native dependencies:
-
-1. [H264 FFmpeg](https://github.com/membraneframework/membrane_h264_ffmpeg_plugin/#installation)
-
 ## Description
 
 Defines a pipeline downloading [Big Buck Bunny](https://en.wikipedia.org/wiki/Big_Buck_Bunny) trailer video and audio from Membranes' asset samples page using the `Hackney` plugin, and sending it via `RTMP` to the other Livebook.

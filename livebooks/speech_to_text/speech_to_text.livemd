@@ -8,17 +8,13 @@ Mix.install(
     {:bumblebee, "~> 0.4.2"},
     {:exla, "~> 0.6.4"},
     {:membrane_core, "~> 1.0"},
-    {:membrane_portaudio_plugin, "~> 0.18.0"}
+    {:membrane_portaudio_plugin, "~> 0.18.3"}
   ],
   config: [
     nx: [default_backend: EXLA.Backend]
   ]
 )
 ```
-
-## Prerequisites
-
-On Linux, you need to install PortAudio, for example with `sudo apt install portaudio19-dev`. Check [membrane_portaudio_plugin](https://github.com/membraneframework/membrane_portaudio_plugin#installation) for details.
 
 ## Introduction
 

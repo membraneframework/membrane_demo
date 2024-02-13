@@ -1,7 +1,3 @@
 # Livebook examples 
 
-This folder contains interactive livebook examples. To launch them you need to install livebook first.
-
-## Installation
-
-It is recommended to install Livebook via command line ([see official installation guide](https://github.com/livebook-dev/livebook#escript)). 
+This folder contains interactive Livebook examples. To launch them you need to install [Livebook](https://livebook.dev) first. For Linux, we recommend [installing it via EScript](https://github.com/livebook-dev/livebook?tab=readme-ov-file#escript).

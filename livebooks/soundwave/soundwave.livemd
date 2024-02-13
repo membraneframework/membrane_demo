@@ -133,19 +133,16 @@ defmodule Visualizer do
   end
 
   defp render_chart() do
-    chart =
-      Vl.new(width: 600, height: 400, title: "Amplitude in time")
-      |> Vl.mark(:line, interpolate: "basis")
-      |> Vl.encode_field(:x, "x", title: "Time [s]", type: :quantitative)
-      |> Vl.encode_field(:y, "y",
-        title: "Amplitude",
-        type: :quantitative,
-        scale: %{domain: [-1.1, 1.1]}
-      )
-      |> Kino.VegaLite.new()
-
-    Kino.render(chart)
-    chart
+    Vl.new(width: 600, height: 400, title: "Amplitude in time")
+    |> Vl.mark(:line, point: true)
+    |> Vl.encode_field(:x, "x", title: "Time [s]", type: :quantitative)
+    |> Vl.encode_field(:y, "y",
+      title: "Amplitude",
+      type: :quantitative,
+      scale: %{domain: [-1.1, 1.1]}
+    )
+    |> Kino.VegaLite.new()
+    |> Kino.render()
   end
 end
 ```

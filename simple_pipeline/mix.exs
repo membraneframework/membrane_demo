@@ -33,7 +33,18 @@ defmodule Membrane.Demo.SimplePipeline.MixProject do
       {:membrane_portaudio_plugin, "~> 0.18.1"},
       {:membrane_ffmpeg_swresample_plugin, "~> 0.19.0"},
       {:membrane_mp3_mad_plugin, "~> 0.18.1"},
-      {:dialyxir, "~> 1.2", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.2", only: [:dev], runtime: false},
+
+      # tmp
+      {:membrane_rtc_engine, "~> 0.21.0"},
+      {:membrane_rtc_engine_webrtc, "~> 0.7.0"},
+      {:membrane_rtc_engine_hls, "~> 0.6.0"},
+      {:membrane_rtc_engine_rtsp, "~> 0.6.0"},
+      {:membrane_rtc_engine_file, "~> 0.4.0"},
+      {:membrane_stream_plugin, "~> 0.4.0"},
+      {:membrane_flv_plugin, "~> 0.12.0"}
+      # {:membrane_mp4_plugin, "~> 0.33.0"},
+      # {:membrane_opus_plugin, "~> 0.19.0"},
     ]
   end
 end

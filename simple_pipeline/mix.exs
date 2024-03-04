@@ -42,7 +42,9 @@ defmodule Membrane.Demo.SimplePipeline.MixProject do
       {:membrane_rtc_engine_rtsp, "~> 0.6.0"},
       {:membrane_rtc_engine_file, "~> 0.4.0"},
       {:membrane_stream_plugin, "~> 0.4.0"},
-      {:membrane_flv_plugin, "~> 0.12.0"}
+      {:membrane_flv_plugin, "~> 0.12.0"},
+      {:membrane_matroska_plugin, "~> 0.5.0"}
+      # {:membrane_audio_mix_plugin, "~> 0.16.0"}
       # {:membrane_mp4_plugin, "~> 0.33.0"},
       # {:membrane_opus_plugin, "~> 0.19.0"},
     ]

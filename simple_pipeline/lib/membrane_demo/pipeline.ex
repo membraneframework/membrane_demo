@@ -25,7 +25,8 @@ defmodule Videoroom.FlvPipeline do
     spec = [
       # Part of pipeline which saves to FLV file
       # child(:muxer, Membrane.MP4.Muxer.ISOM)
-      child(:muxer, Membrane.FLV.Muxer)
+      # child(:muxer, Membrane.FLV.Muxer)
+      child(:muxer, Membrane.Matroska.Muxer)
       |> child(:sink, %Membrane.File.Sink{location: output_file}),
       # Part of pipeline which reads from file and prepare video for muxing
       child(:source, %Membrane.File.Source{location: tracks.video})
@@ -35,10 +36,10 @@ defmodule Videoroom.FlvPipeline do
         clock_rate: 90_000
       })
       |> child(:parser_video, %Membrane.H264.Parser{
-        generate_best_effort_timestamps: %{framerate: {0, 1}},
+        # generate_best_effort_timestamps: %{framerate: {0, 1}},
         output_stream_structure: :avc1
       })
-      |> via_in(Pad.ref(:video, 0))
+      # |> via_in(Pad.ref(:video, 0))
       |> get_child(:muxer),
       # Part of pipeline which reads from file and prepare audio for muxing
       child(:source_audio, %Membrane.File.Source{location: tracks.audio})
@@ -47,13 +48,15 @@ defmodule Videoroom.FlvPipeline do
         depayloader: Membrane.RTP.Opus.Depayloader,
         clock_rate: 48_000
       })
-      |> child(:opus_decoder, Membrane.Opus.Decoder)
-      |> child(:aac_encoder, Membrane.AAC.FDK.Encoder)
-      |> child(:aac_parser, %Membrane.AAC.Parser{
-        out_encapsulation: :none,
-        output_config: :audio_specific_config
-      })
-      |> via_in(Pad.ref(:audio, 0))
+      |> child(:opus_parser, Membrane.Opus.Parser)
+      # |> child(:opus_decoder, Membrane.Opus.Decoder)
+      # |> child(:aac_encoder, Membrane.AAC.FDK.Encoder)
+      # |> child(:aac_parser, %Membrane.AAC.Parser{
+      #   out_encapsulation: :none,
+      #   output_config: :audio_specific_config
+      # })
+      # |> child(:time_mover, %MembraneDemo.TimeMover{offset: 60_394_396})
+      # |> via_in(Pad.ref(:audio, 0))
       |> get_child(:muxer)
     ]
 

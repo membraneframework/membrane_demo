@@ -8,6 +8,7 @@
     },
     # "output.flv"
     "output.mkv"
+    # "output.mp4"
   ])
 
 monitor_ref = Process.monitor(pipeline_pid)

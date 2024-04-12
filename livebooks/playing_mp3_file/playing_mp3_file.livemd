@@ -43,7 +43,7 @@ alias Membrane.{
   Kino
 }
 
-audio_path = "./sample.mp3"
+audio_path = "./assets/sample.mp3"
 kino = Membrane.Kino.Player.new(audio: true)
 
 spec =

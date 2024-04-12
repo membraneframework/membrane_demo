@@ -9,7 +9,7 @@ Mix.install([
   {:membrane_file_plugin, "~> 0.16.0"},
   {:membrane_mp3_mad_plugin, "~> 0.18.2"},
   {:membrane_raw_audio_parser_plugin, "~> 0.4.0"},
-  {:membrane_ffmpeg_swresample_plugin, "~> 0.19.0"},
+  {:membrane_ffmpeg_swresample_plugin, "~> 0.20.0"},
   {:membrane_aac_fdk_plugin, "~> 0.18.5"},
   {:membrane_kino_plugin, github: "membraneframework-labs/membrane_kino_plugin", tag: "v0.3.1"}
 ])
@@ -43,17 +43,17 @@ alias Membrane.{
   Kino
 }
 
-audio_path = "./assets/sample.mp3"
+audio_path = "./sample.mp3"
 kino = Membrane.Kino.Player.new(audio: true)
 
 spec =
   child(:file_source, %File.Source{location: audio_path})
   |> child(:decoder_mp3, MP3.MAD.Decoder)
+  |> child(%Membrane.RawAudioParser{overwrite_pts?: true})
   |> child(:converter, %FFmpeg.SWResample.Converter{
     input_stream_format: %RawAudio{channels: 2, sample_format: :s24le, sample_rate: 48_000},
     output_stream_format: %RawAudio{channels: 2, sample_format: :s16le, sample_rate: 44_100}
   })
-  |> child(%Membrane.RawAudioParser{overwrite_pts?: true})
   |> child(:encoder_aac, AAC.FDK.Encoder)
   |> via_in(:audio)
   |> child(:player, %Kino.Player.Sink{kino: kino})

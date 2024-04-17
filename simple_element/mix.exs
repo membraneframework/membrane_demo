@@ -28,11 +28,11 @@ defmodule Membrane.Demo.SimpleElement.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:membrane_core, "~> 1.0"},
-      {:membrane_file_plugin, "~> 0.16.0"},
-      {:membrane_portaudio_plugin, "~> 0.18.1"},
-      {:membrane_ffmpeg_swresample_plugin, "~> 0.19.0"},
-      {:membrane_mp3_mad_plugin, "~> 0.18.1"},
+      {:membrane_core, "~> 1.0.1"},
+      {:membrane_file_plugin, "~> 0.17.0"},
+      {:membrane_portaudio_plugin, "~> 0.19.0"},
+      {:membrane_ffmpeg_swresample_plugin, "~> 0.20.0"},
+      {:membrane_mp3_mad_plugin, "~> 0.18.2"},
       {:dialyxir, "~> 1.2", only: [:dev], runtime: false}
     ]
   end

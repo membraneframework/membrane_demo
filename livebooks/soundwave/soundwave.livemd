@@ -5,10 +5,10 @@ File.cd(__DIR__)
 Logger.configure(level: :error)
 
 Mix.install([
-  {:membrane_core, "~> 1.0"},
+  {:membrane_core, "~> 1.0.1"},
   {:membrane_raw_audio_parser_plugin, "~> 0.4.0"},
-  {:membrane_portaudio_plugin, "~> 0.18.3"},
-  {:vega_lite, "~> 0.1.8"},
+  {:membrane_portaudio_plugin, "~> 0.19.0"},
+  {:vega_lite, "~> 0.1.9"},
   {:kino_vega_lite, "~> 0.1.11"}
 ])
 ```

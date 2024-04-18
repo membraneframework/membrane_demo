@@ -13,91 +13,122 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
   def handle_init(_context, options) do
     Logger.debug("Source handle_init options: #{inspect(options)}")
 
-    connection_manager_spec = [
-      %{
-        id: "ConnectionManager",
-        start:
-          {ConnectionManager, :start_link,
-           [
-             [
-               stream_url: options.stream_url,
-               port: options.port,
-               pipeline: self()
-             ]
-           ]},
-        restart: :transient
-      }
-    ]
-
-    Supervisor.start_link(connection_manager_spec,
-      strategy: :one_for_one,
-      name: Membrane.Demo.RtspToHls.Supervisor
-    )
-
-    {[],
-     %{
-       video: nil,
-       port: options.port,
-       output_path: options.output_path,
-       parent_pid: options.parent_pid
-     }}
-  end
-
-  @impl true
-  def handle_info({:rtsp_setup_complete, options}, _ctx, state) do
-    Logger.debug("Source received pipeline options: #{inspect(options)}")
-
-    structure = [
-      child(
-        :app_source,
-        %Membrane.UDP.Source{
-          local_port_no: state[:port],
-          recv_buffer_size: 500_000
-        }
-      )
-      |> via_in(:rtp_input)
-      |> child(
-        :rtp,
-        %Membrane.RTP.SessionBin{
-          fmt_mapping: %{96 => {:H264, 90_000}}
-        }
-      ),
+    spec = [
+      child(:source, %Membrane.RTSP.Source{
+        transport: :tcp,
+        allowed_media_types: [:video],
+        stream_uri: options.stream_url
+      }),
       child(
         :hls,
         %Membrane.HTTPAdaptiveStream.SinkBin{
           target_window_duration: Membrane.Time.seconds(120),
           manifest_module: Membrane.HTTPAdaptiveStream.HLS,
           storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{
-            directory: state[:output_path]
+            directory: options.output_path
           }
         }
       )
     ]
 
-    {[spec: structure], %{state | video: %{sps: options[:sps], pps: options[:pps]}}}
+    # connection_manager_spec = [
+    #   %{
+    #     id: "ConnectionManager",
+    #     start:
+    #       {ConnectionManager, :start_link,
+    #        [
+    #          [
+    #            stream_url: options.stream_url,
+    #            port: options.port,
+    #            pipeline: self()
+    #          ]
+    #        ]},
+    #     restart: :transient
+    #   }
+    # ]
+
+    # Supervisor.start_link(connection_manager_spec,
+    #   strategy: :one_for_one,
+    #   name: Membrane.Demo.RtspToHls.Supervisor
+    # )
+
+    {[spec: spec],
+     %{
+       video: nil,
+       port: options.port,
+       output_path: options.output_path,
+       parent_pid: options.parent_pid
+     }}
+
+    # {[spec: spec], options}
   end
 
+  # @impl true
+  # def handle_info({:rtsp_setup_complete, options}, _ctx, state) do
+  #   Logger.debug("Source received pipeline options: #{inspect(options)}")
+
+  #   structure = [
+  #     child(
+  #       :app_source,
+  #       %Membrane.UDP.Source{
+  #         local_port_no: state[:port],
+  #         recv_buffer_size: 500_000
+  #       }
+  #     )
+  #     |> via_in(:rtp_input)
+  #     |> child(
+  #       :rtp,
+  #       %Membrane.RTP.SessionBin{
+  #         fmt_mapping: %{96 => {:H264, 90_000}}
+  #       }
+  #     ),
+  #     child(
+  #       :hls,
+  #       %Membrane.HTTPAdaptiveStream.SinkBin{
+  #         target_window_duration: Membrane.Time.seconds(120),
+  #         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
+  #         storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{
+  #           directory: state[:output_path]
+  #         }
+  #       }
+  #     )
+  #   ]
+
+  #   {[spec: structure], %{state | video: %{sps: options[:sps], pps: options[:pps]}}}
+  # end
+
   @impl true
-  def handle_child_notification({:new_rtp_stream, ssrc, 96, _extensions}, :rtp, _ctx, state) do
+  def handle_child_notification({:new_track, ssrc, track}, :source, _ctx, state) do
     Logger.debug(":new_rtp_stream")
+    IO.inspect(track, label: "track")
 
-    spss =
-      case state.video.sps do
-        <<>> -> []
-        sps -> [sps]
+    {spss, ppss} =
+      case track.fmtp.sprop_parameter_sets do
+        nil -> {[], []}
+        parameter_sets -> {parameter_sets.sps, parameter_sets.pps}
       end
 
-    ppss =
-      case state.video.pps do
-        <<>> -> []
-        pps -> [pps]
-      end
+    # spss =
+    #   case state.video.sps do
+    #     <<>> -> []
+    #     sps -> [sps]
+    #   end
+
+    # ppss =
+    #   case state.video.pps do
+    #     <<>> -> []
+    #     pps -> [pps]
+    #   end
+    # spss = []
+    # ppss = []
 
     structure =
-      get_child(:rtp)
-      |> via_out(Pad.ref(:output, ssrc),
-        options: [depayloader: Membrane.RTP.H264.Depayloader]
+      get_child(:source)
+      |> via_out(
+        Pad.ref(:output, ssrc)
+        # options: [depayloader: Membrane.RTP.H264.Depayloader]
       )
+      # |> child(:depayloader, Membrane.RTP.H264.Depayloader)
       |> child(
         :video_nal_parser,
         %Membrane.H264.Parser{
@@ -120,7 +151,7 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
   end
 
   @impl true
-  def handle_child_notification({:new_rtp_stream, ssrc, _payload_type, _list}, :rtp, _ctx, state) do
+  def handle_child_notification({:new_track, ssrc, _track}, :source, _ctx, state) do
     Logger.warning("new_rtp_stream Unsupported stream connected")
 
     structure =

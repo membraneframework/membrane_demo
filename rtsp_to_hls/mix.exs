@@ -31,13 +31,9 @@ defmodule Membrane.Demo.RtspToHls.MixProject do
       {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
       {:credo, ">= 0.0.0", only: :dev, runtime: false},
       {:connection, "~> 1.1"},
-      {:membrane_rtsp, "~> 0.6.2"},
-      {:membrane_udp_plugin, "~> 0.13.0"},
-      {:membrane_rtp_plugin, "~> 0.27.1"},
-      {:membrane_rtp_h264_plugin, "~> 0.19.0"},
-      {:membrane_http_adaptive_stream_plugin, "~> 0.18.4"},
-      {:membrane_h26x_plugin, "~> 0.10.1"},
-      {:membrane_realtimer_plugin, "~> 0.9.0"}
+      {:membrane_http_adaptive_stream_plugin, "~> 0.18.0"},
+      {:membrane_realtimer_plugin, "~> 0.9.0"},
+      {:membrane_rtsp_plugin, path: "../../membrane_rtsp_plugin"}
     ]
   end
 

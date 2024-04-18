@@ -6,7 +6,7 @@ defmodule Membrane.Demo.RtspToHls.ConnectionManager do
 
   alias Membrane.RTSP
 
-  @delay 15_000
+  @delay 1_000
   @keep_alive_interval 15_000
 
   defmodule ConnectionStatus do

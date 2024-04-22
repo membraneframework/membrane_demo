@@ -3,12 +3,13 @@ Logger.configure(level: :info)
 
 Mix.install([
   {:membrane_core, "~> 1.0"},
-  {:membrane_udp_plugin, "~> 0.12.0"},
-  {:membrane_rtp_plugin, "~> 0.24.0"},
+  {:membrane_udp_plugin, "~> 0.13.0"},
+  {:membrane_rtp_plugin, "~> 0.27.1"},
   {:membrane_rtp_aac_plugin, "~> 0.8.0"},
-  {:membrane_rtp_h264_plugin, "~> 0.19.0"},
-  {:membrane_http_adaptive_stream_plugin, "~> 0.18.0"},
-  {:membrane_fake_plugin, "~> 0.11.0"}
+  {:membrane_rtp_h264_plugin, "~> 0.19.1"},
+  {:membrane_http_adaptive_stream_plugin, "~> 0.18.4"},
+  {:membrane_fake_plugin, "~> 0.11.0"},
+  {:membrane_h26x_plugin, "~> 0.10.0"}
 ])
 
 defmodule RtpToHls do
@@ -24,7 +25,7 @@ defmodule RtpToHls do
       |> child(:rtp, Membrane.RTP.SessionBin),
       child(:hls, %Membrane.HTTPAdaptiveStream.SinkBin{
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
-        target_window_duration: Membrane.Time.seconds(10),
+        target_window_duration: Membrane.Time.seconds(15),
         storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: "output"}
       })
     ]
@@ -36,7 +37,9 @@ defmodule RtpToHls do
   def handle_child_notification({:new_rtp_stream, ssrc, 96, _ext}, :rtp, _ctx, state) do
     spec =
       get_child(:rtp)
-      |> via_out(Pad.ref(:output, ssrc), options: [depayloader: Membrane.RTP.H264.Depayloader])
+      |> via_out(Pad.ref(:output, ssrc),
+        options: [depayloader: Membrane.RTP.H264.Depayloader]
+      )
       |> via_in(Pad.ref(:input, :video),
         options: [encoding: :H264, segment_duration: Membrane.Time.seconds(4)]
       )
@@ -49,7 +52,9 @@ defmodule RtpToHls do
   def handle_child_notification({:new_rtp_stream, ssrc, 127, _ext}, :rtp, _ctx, state) do
     spec =
       get_child(:rtp)
-      |> via_out(Pad.ref(:output, ssrc), options: [depayloader: Membrane.RTP.AAC.Depayloader])
+      |> via_out(Pad.ref(:output, ssrc),
+        options: [depayloader: Membrane.RTP.AAC.Depayloader]
+      )
       |> via_in(Pad.ref(:input, :audio),
         options: [encoding: :AAC, segment_duration: Membrane.Time.seconds(4)]
       )

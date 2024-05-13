@@ -5,7 +5,7 @@ Mix.install([
   {:membrane_core, "~> 1.0.1"},
   {:membrane_camera_capture_plugin, "~> 0.7.2"},
   {:membrane_ffmpeg_swscale_plugin, "~> 0.15.1"},
-  {:membrane_h264_ffmpeg_plugin, "~> 0.31.5"},
+  {:membrane_h264_ffmpeg_plugin, "~> 0.31.6"},
   {:membrane_http_adaptive_stream_plugin, "~> 0.18.4"}
 ])
 

@@ -8,7 +8,7 @@ Mix.install(
     {:bumblebee, "~> 0.5.3"},
     {:exla, "~> 0.7.1"},
     {:membrane_core, "~> 1.0.1"},
-    {:membrane_portaudio_plugin, "~> 0.19.0"}
+    {:membrane_portaudio_plugin, "~> 0.19.2"}
   ],
   config: [
     nx: [default_backend: EXLA.Backend]

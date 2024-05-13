@@ -41,7 +41,11 @@ defmodule Membrane.Demo.RTP.SendPipeline do
       child(:audio_src, %File.Source{
         location: "samples/audio.opus"
       })
-      |> child(:audio_parser, %Opus.Parser{input_delimitted?: true, delimitation: :undelimit, generate_best_effort_timestamps?: true })
+      |> child(:audio_parser, %Opus.Parser{
+        input_delimitted?: true,
+        delimitation: :undelimit,
+        generate_best_effort_timestamps?: true
+      })
       |> via_in(Pad.ref(:input, audio_ssrc), options: [payloader: RTP.Opus.Payloader])
       |> get_child(:rtp)
       |> via_out(Pad.ref(:rtp_output, audio_ssrc), options: [encoding: :OPUS])

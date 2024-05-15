@@ -1,7 +1,7 @@
 Logger.configure(level: :info)
 
 Mix.install([
-  {:membrane_core, "~> 1.0.1"},
+  {:membrane_core, "~> 1.0"},
   {:membrane_file_plugin, "~> 0.17.0"},
   {:membrane_wav_plugin, "~> 0.10.1"},
   {:membrane_audio_mix_plugin, "~> 0.16.0"},

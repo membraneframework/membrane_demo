@@ -6,11 +6,11 @@ Logger.configure(level: :error)
 
 Mix.install([
   {:membrane_core, "~> 1.0"},
-  {:membrane_file_plugin, "~> 0.16.0"},
-  {:membrane_mp3_mad_plugin, "~> 0.18.2"},
-  {:membrane_ffmpeg_swresample_plugin, "~> 0.19.1"},
-  {:membrane_aac_fdk_plugin, "~> 0.18.5"},
-  {:membrane_kino_plugin, github: "membraneframework-labs/membrane_kino_plugin", tag: "v0.3.1"}
+  {:membrane_file_plugin, "~> 0.17.0"},
+  {:membrane_mp3_mad_plugin, "~> 0.18.3"},
+  {:membrane_ffmpeg_swresample_plugin, "~> 0.20.2"},
+  {:membrane_aac_fdk_plugin, "~> 0.18.8"},
+  {:membrane_kino_plugin, github: "membraneframework-labs/membrane_kino_plugin", tag: "v0.3.2"}
 ])
 ```
 

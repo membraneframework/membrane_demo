@@ -17,15 +17,17 @@ defmodule MessageSource do
 
   require Membrane.Logger
 
-  def_output_pad :output,
+  def_output_pad(:output,
     flow_control: :push,
     accepted_format: _any
+  )
 
-  def_options register_name: [
-                description: "The name under which the element's process will be registered",
-                spec: atom()
-              ]
-  
+  def_options(
+    register_name: [
+      description: "The name under which the element's process will be registered",
+      spec: atom()
+    ]
+  )
 
   @impl true
   def handle_init(_ctx, opts) do
@@ -73,14 +75,17 @@ end
 defmodule MessageSink do
   use Membrane.Sink
 
-  def_input_pad :input,
+  def_input_pad(:input,
     flow_control: :push,
     accepted_format: _any
+  )
 
-  def_options receiver: [
-                description: "PID of the process that will receive messages from the sink",
-                spec: pid()
-              ]
+  def_options(
+    receiver: [
+      description: "PID of the process that will receive messages from the sink",
+      spec: pid()
+    ]
+  )
 
   @impl true
   def handle_init(_ctx, opts) do

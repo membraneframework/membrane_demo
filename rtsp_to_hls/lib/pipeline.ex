@@ -39,7 +39,6 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
   @impl true
   def handle_child_notification({:new_track, ssrc, %{type: :video} = track}, :source, _ctx, state) do
     Logger.debug(":new_rtp_stream")
-    IO.inspect(track, label: "track")
 
     {spss, ppss} =
       case track.fmtp.sprop_parameter_sets do

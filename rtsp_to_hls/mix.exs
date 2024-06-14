@@ -33,7 +33,7 @@ defmodule Membrane.Demo.RtspToHls.MixProject do
       {:connection, "~> 1.1"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.18.0"},
       {:membrane_realtimer_plugin, "~> 0.9.0"},
-      {:membrane_rtsp_plugin, path: "../../membrane_rtsp_plugin"}
+      {:membrane_rtsp_plugin, "~> 0.2.0"}
     ]
   end
 

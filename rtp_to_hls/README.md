@@ -12,13 +12,10 @@ To run the demo, you'll need to have [Elixir installed](https://elixir-lang.org/
 elixir rtp_to_hls.exs
 ```
 
-After a while, the server will start listening for UDP connections on port 5000.
-
-After that, you can start sending any H264 video and AAC audio stream via RTP. Below you can see an example of how to generate sample streams with [GStreamer](https://gstreamer.freedesktop.org/).
+After a while, the server will start listening for UDP connections on port 5000. Then, start the RTP stream with
 
 ```shell
-gst-launch-1.0 -v audiotestsrc ! audio/x-raw,rate=44100 ! faac ! rtpmp4gpay  pt=127 ! udpsink host=127.0.0.1 port=5000 \
-    videotestsrc ! video/x-raw,format=I420 ! x264enc key-int-max=10 tune=zerolatency ! rtph264pay pt=96 ! udpsink host=127.0.0.1 port=5000
+elixir send.exs
 ```
 
 When the server prints that playback is available, visit `http://localhost:8000/stream.html` and you should see the stream there. The stream can be also played with players other than the browser, like `vlc` or `ffplay`, for example
@@ -26,6 +23,14 @@ When the server prints that playback is available, visit `http://localhost:8000/
 ```bash
 ffplay http://localhost:8000/output/index.m3u8
 ```
+
+The RTP stream can be sent with other tools as well, for example with [GStreamer](https://gstreamer.freedesktop.org/):
+
+```shell
+gst-launch-1.0 -v audiotestsrc ! audio/x-raw,rate=44100 ! faac ! rtpmp4gpay  pt=127 ! udpsink host=127.0.0.1 port=5000 \
+    videotestsrc ! video/x-raw,format=I420 ! x264enc key-int-max=10 tune=zerolatency ! rtph264pay pt=96 ! udpsink host=127.0.0.1 port=5000
+```
+
 
 ## Copyright and License
 

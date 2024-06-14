@@ -29,10 +29,10 @@ defmodule Membrane.Demo.SimpleElement.MixProject do
   defp deps do
     [
       {:membrane_core, "~> 1.0"},
-      {:membrane_file_plugin, "~> 0.16.0"},
-      {:membrane_portaudio_plugin, "~> 0.18.1"},
-      {:membrane_ffmpeg_swresample_plugin, "~> 0.19.0"},
-      {:membrane_mp3_mad_plugin, "~> 0.18.1"},
+      {:membrane_file_plugin, "~> 0.17.0"},
+      {:membrane_portaudio_plugin, "~> 0.19.2"},
+      {:membrane_ffmpeg_swresample_plugin, "~> 0.20.2"},
+      {:membrane_mp3_mad_plugin, "~> 0.18.3"},
       {:dialyxir, "~> 1.2", only: [:dev], runtime: false}
     ]
   end

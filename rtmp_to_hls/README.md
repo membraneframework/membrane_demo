@@ -24,7 +24,6 @@ The internal architecture of the server is presented below:
 
 The client is just a simple JavaScript application using the [HLS.js](https://github.com/video-dev/hls.js/) web player.
 
-
 ## Running the demo
 
 To run the demo, you'll need to have [Elixir installed](https://elixir-lang.org/install.html). Then, download the dependencies and start the server:
@@ -44,7 +43,7 @@ Once you have OBS installed, you can perform the following steps:
 
 1. Open the OBS application
 2. Open the `Settings` windows
-3. Go to the `Stream` tab and set the value in the `Server` field to `rtmp://localhost:9006` (the address where the server is waiting for the stream)
+3. Go to the `Stream` tab, set `Service` to `Custom...` and then set the value in the `Server` field to `rtmp://localhost:9006` (the address where the server is waiting for the stream)
 4. Go to the `Output`, set output mode to `Advanced`, and set `Keyframe Interval` to 2 seconds.
 5. Finally, you can go back to the main window and start streaming with the `Start Streaming` button.
 

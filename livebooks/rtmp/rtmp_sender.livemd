@@ -8,7 +8,7 @@ Mix.install([
   {:membrane_core, "~> 1.0"},
   {:membrane_realtimer_plugin, "~> 0.9.0"},
   {:membrane_hackney_plugin, "~> 0.11.0"},
-  {:membrane_rtmp_plugin, "~> 0.21.0"}
+  {:membrane_rtmp_plugin, "~> 0.23.3"}
 ])
 ```
 

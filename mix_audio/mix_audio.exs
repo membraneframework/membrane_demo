@@ -2,10 +2,10 @@ Logger.configure(level: :info)
 
 Mix.install([
   {:membrane_core, "~> 1.0"},
-  {:membrane_file_plugin, "~> 0.16.0"},
-  {:membrane_wav_plugin, "~> 0.10.0"},
+  {:membrane_file_plugin, "~> 0.17.0"},
+  {:membrane_wav_plugin, "~> 0.10.1"},
   {:membrane_audio_mix_plugin, "~> 0.16.0"},
-  {:membrane_aac_fdk_plugin, "~> 0.18.0"}
+  {:membrane_aac_fdk_plugin, "0.18.8"}
 ])
 
 defmodule MixAudio do

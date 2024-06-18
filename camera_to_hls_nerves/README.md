@@ -51,13 +51,13 @@ This demo is suitable for the following targets:
 ## Running the demo
 
 To run the demo:
-  * set the `MIX_TARGET` environment variable to your target. For example, `export MIX_TARGET=rpi4` or `MIX_TARGET=rpi4 <your_command>`
-  * `export SSID=my_wifi_ssid` and (optionally) `export PSK=my_wifi_password`. This will allow the target to connect to the network that you should also be on to access the broadcastmix fi
+  * set the `MIX_TARGET` environment variable to your target. For example, `export MIX_TARGET=rpi4` or `MIX_TARGET=rpi4 <your_command>`. It's crucial that this is set before getting dependencies, since it tells nerves what precompiled system and toolchain to download
+  * `export SSID=my_wifi_ssid` and (optionally) `export PSK=my_wifi_password`. This will allow the target to connect to the specified network
   * Install dependencies with `mix deps.get`
   * Create firmware with `mix firmware`
   * Put a SD card into your host machine and burn the firmware to in with `mix burn`. In case it fails you can also pass `-d <device>` argument to the command to specify the intended device, for example `mix burn -d /dev/rdisk3`. You can also use `-d <filename>` to specify an output file that is a raw image of the SD card. This binary image can be burned to an SD card using Raspberry Pi Imager, Etcher, dd, Win32DiskImager, or other image copying utilities.
   * Put the SD card into the target and turn it on.
-  * Go to `http://nerves.local:8000/stream.html` and wait for the stream.
+  * Go to `http://nerves.local:8000/stream.html` and wait for the stream. Make sure you are connected to the same network as yout target board
 
   The stream can be also played with players other than the browser, like vlc or ffplay, for example
 

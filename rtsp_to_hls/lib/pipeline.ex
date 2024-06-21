@@ -32,12 +32,18 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
      %{
        video: nil,
        output_path: options.output_path,
-       parent_pid: options.parent_pid
+       parent_pid: options.parent_pid,
+       rtp_started: false
      }}
   end
 
   @impl true
-  def handle_child_notification({:new_track, ssrc, %{type: :video} = track}, :source, _ctx, state) do
+  def handle_child_notification(
+        {:new_track, ssrc, %{type: :video} = track},
+        :source,
+        _ctx,
+        %{rtp_started: false} = state
+      ) do
     Logger.debug(":new_rtp_stream")
 
     {spss, ppss} =
@@ -60,14 +66,7 @@ defmodule Membrane.Demo.RtspToHls.Pipeline do
       |> via_in(:input, options: [encoding: :H264, segment_duration: Membrane.Time.seconds(4)])
       |> get_child(:hls)
 
-    actions =
-      if Map.has_key?(state, :rtp_started) do
-        []
-      else
-        [spec: structure]
-      end
-
-    {actions, Map.put(state, :rtp_started, true)}
+    {[spec: structure], %{state | rtp_started: true}}
   end
 
   @impl true

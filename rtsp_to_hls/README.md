@@ -2,17 +2,6 @@
 
 This demo demonstrates receiving the RTSP stream and converting it to the HLS stream.
 
-## Components
-
-The project consists of 2 parts:
-
-- The pipeline, which converts the RTP stream to HLS
-- Connection Manager, which is started by the pipeline and is responsible for establishing the RTSP connection
-
-The internal architecture of an application is presented below:
-
-![Application scheme](doc_assets/RTSP_to_HLS_pipeline.png)
-
 ## Prerequisites and running the demo
 
 Below is the instruction for the installation of required dependencies and how to run this demo on various operating systems:

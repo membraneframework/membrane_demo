@@ -27,9 +27,9 @@ end
   :inets.start(:httpd,
     bind_address: ~c"localhost",
     port: 8000,
-    document_root: ~c".",
+    document_root: ~c"/Users/noarkhh/",
     server_name: ~c"rtsp_to_hls",
-    server_root: "/tmp"
+    server_root: ~c"/Users/noarkhh/"
   )
 
 Logger.info("Playback available at http://localhost:8000/stream.html")

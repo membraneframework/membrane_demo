@@ -35,7 +35,7 @@ You may be asked to install `Hex` and then `rebar3`.
 To start the demo pipeline run `mix run --no-halt run.exs` or type the following commands into an IEx shell (started by `iex -S mix`):
 
 ```elixir
-{:ok, _pid} = Membrane.Pipeline.start_link(Membrane.Demo.SimplePipeline, "sample.mp3")
+{:ok, _supervisor, _pid} = Membrane.Pipeline.start_link(Membrane.Demo.SimplePipeline, "sample.mp3")
 ```
 
 Should there be any errors when compiling the script's dependencies, you may need to install the some dependencies manually on your system:

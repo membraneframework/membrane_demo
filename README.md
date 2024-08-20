@@ -12,8 +12,7 @@ In the subdirectories of this repository you can find some examples of using the
 - [rtp_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtp_to_hls) - receiving RTP stream and broadcasting it via HLS
 - [rtsp_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtsp_to_hls) - receiving RTSP stream and converting it to HLS
 - [video_mixer](https://github.com/membraneframework/membrane_demo/tree/master/video_mixer) - how to mix audio and video files
-- [webrtc_to_hls](https://github.com/jellyfish-dev/membrane_rtc_engine/tree/master/examples/webrtc_to_hls) - converting WebRTC stream into HLS
-- [webrtc_videoroom](https://github.com/jellyfish-dev/membrane_rtc_engine/tree/master/examples/webrtc_videoroom) - basic example of [Membrane RTC Engine](https://github.com/jellyfish-dev/membrane_rtc_engine.git). It's as simple as possible just to show you how to use our API.
+- [webrtc_to_hls](https://github.com/jellyfish-dev/membrane_rtc_engine/tree/master/examples/webrtc_to_hls) - converting WebRTC stream into HLS using [Membrane RTC Engine](https://github.com/jellyfish-dev/membrane_rtc_engine.git)
 
 Also, there are some [Livebook](https://livebook.dev) examples located in [livebooks](https://github.com/membraneframework/membrane_demo/tree/master/livebooks) directory:
 

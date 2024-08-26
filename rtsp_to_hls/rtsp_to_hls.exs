@@ -1,5 +1,5 @@
 require Logger
-alias Membrane.Demo.RtspToHls
+alias Membrane.Demo.RTSPToHLS
 
 rtsp_stream_url = "rtsp://localhost:8554/livestream"
 output_path = "hls_output"
@@ -16,7 +16,7 @@ pipeline_options = %{
   parent_pid: self()
 }
 
-{:ok, _sup, _pid} = Membrane.Pipeline.start_link(RtspToHls.Pipeline, pipeline_options)
+{:ok, _sup, _pid} = Membrane.Pipeline.start_link(RTSPToHLS.Pipeline, pipeline_options)
 
 # Wait until first chunks of the stream become available
 receive do

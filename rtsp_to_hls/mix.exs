@@ -1,9 +1,9 @@
-defmodule Membrane.Demo.RtspToHls.MixProject do
+defmodule Membrane.Demo.RTSPToHLS.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :hls_proxy_api,
+      app: :rtsp_to_hls_demo,
       version: "0.1.0",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -33,7 +33,14 @@ defmodule Membrane.Demo.RtspToHls.MixProject do
       {:connection, "~> 1.1"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.18.0"},
       {:membrane_realtimer_plugin, "~> 0.9.0"},
-      {:membrane_rtsp_plugin, "~> 0.2.0"}
+      {:membrane_rtsp_plugin,
+       github: "membraneframework-labs/membrane_rtsp_plugin",
+       branch: "allow-for-eos",
+       override: true},
+      {:membrane_rtsp, "~> 0.8.0"},
+      {:membrane_mp4_plugin, "~> 0.35.2", override: true},
+      {:membrane_udp_plugin, "~> 0.14.0"}
+      # {:membrane_rtsp_plugin, "~> 0.2.0"}
     ]
   end
 

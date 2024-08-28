@@ -4,7 +4,7 @@ Sender livebook shows how to download video and audio from the web using the `Ha
 
 Receiver livebook shows how to receive `RTMP` stream mentioned above and play it in the livebook.
 
-To run the demo, [install Livebook](https://github.com/livebook-dev/livebook#escript) and open both `rtmp_sender.livemd` and `rtmp_sender.livemd` files there. 
+To run the demo, [install Livebook](https://github.com/livebook-dev/livebook#escript) and open both `rtmp_sender.livemd` and `rtmp_receiver.livemd` files there. 
 
 ## Copyright and License
 

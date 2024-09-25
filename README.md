@@ -1,6 +1,8 @@
 # Membrane Demo
 
-In the subdirectories of this repository you can find some examples of using the Membrane Framework:
+The simplest way to start using Membrane is via [Boombox](https://github.com/membraneframework/boombox/) - see [examples](https://hexdocs.pm/boombox/examples.html). This repo contains examples of using Membrane directly.
+
+In the subdirectories of this repository you can find the following examples of using Membrane:
 
 
 - [simple_element](https://github.com/membraneframework/membrane_demo/tree/master/simple_element) - an example of a simple Membrane's element capable of counting the incoming buffers
@@ -22,7 +24,11 @@ Also, there are some [Livebook](https://livebook.dev) examples located in [liveb
 - [rtmp](https://github.com/membraneframework/membrane_demo/tree/master/livebooks/rtmp) - send and receive RTMP stream
 - [soundwave](https://github.com/membraneframework/membrane_demo/tree/master/livebooks/soundwave) - plot live audio amplitude on a graph
 
-## Copyright and License
+## Authors
+
+Membrane Framework is created by Software Mansion.
+
+Since 2012 [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane) is a software agency with experience in building web and mobile apps as well as complex multimedia solutions. We are Core React Native Contributors and experts in live streaming and broadcasting technologies. We can help you build your next dream product – [Hire us](https://swmansion.com/contact/projects).
 
 Copyright 2024, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane)
 

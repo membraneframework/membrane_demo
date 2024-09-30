@@ -35,12 +35,19 @@ defmodule Membrane.Demo.RTSPToHLS.MixProject do
       {:membrane_realtimer_plugin, "~> 0.9.0"},
       {:membrane_rtsp_plugin,
        github: "membraneframework-labs/membrane_rtsp_plugin",
-       branch: "allow-for-eos",
+       branch: "audio-depayloading",
        override: true},
-      {:membrane_rtsp, "~> 0.8.0"},
+      {:membrane_aac_plugin,
+       github: "membraneframework/membrane_aac_plugin", branch: "config-option", override: true},
+      {:membrane_rtp_aac_plugin,
+       github: "membraneframework/membrane_rtp_aac_plugin",
+       branch: "fix-depayloader",
+       override: true},
+      {:membrane_simple_rtsp_server,
+       github: "membraneframework-labs/simple_rtsp_server", branch: "create-server"},
+      {:ex_sdp, github: "membraneframework/ex_sdp", branch: "aac-fmtp", override: true},
       {:membrane_mp4_plugin, "~> 0.35.2", override: true},
       {:membrane_udp_plugin, "~> 0.14.0"}
-      # {:membrane_rtsp_plugin, "~> 0.2.0"}
     ]
   end
 

@@ -13,42 +13,67 @@ defmodule Membrane.Demo.RTSPToHLS.Pipeline do
     spec = [
       child(:source, %Membrane.RTSP.Source{
         transport: {:udp, options.port, options.port + 5},
-        allowed_media_types: [:video],
+        allowed_media_types: [:video, :audio],
         stream_uri: options.stream_url,
         on_connection_closed: :send_eos
-      }),
-      child(
-        :hls,
-        %Membrane.HTTPAdaptiveStream.SinkBin{
-          target_window_duration: Membrane.Time.seconds(120),
-          manifest_module: Membrane.HTTPAdaptiveStream.HLS,
-          storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{
-            directory: options.output_path
-          }
-        }
-      )
+      })
     ]
 
     {[spec: spec],
      %{
-       video: nil,
        output_path: options.output_path,
-       parent_pid: options.parent_pid
+       parent_pid: options.parent_pid,
+       tracks_left_to_link: nil,
+       track_specs: []
      }}
   end
 
   @impl true
-  def handle_child_notification({:new_tracks, tracks}, :source, _ctx, state) do
-    Logger.debug(":new_rtp_stream")
+  def handle_child_notification({:set_up_tracks, tracks}, :source, _ctx, state) do
+    tracks_left_to_link =
+      [:audio, :video]
+      |> Enum.filter(fn media_type -> Enum.any?(tracks, &(&1.type == media_type)) end)
 
-    {spec, rtp_playing} =
-      Enum.map_reduce(tracks, false, fn {ssrc, track}, rtp_playing ->
-        create_spec_for_track(ssrc, track, rtp_playing)
-      end)
+    {[], %{state | tracks_left_to_link: tracks_left_to_link}}
+  end
 
-    if not rtp_playing, do: raise("No video tracks received")
+  @impl true
+  def handle_child_notification({:new_track, ssrc, track}, :source, _ctx, state) do
+    if Enum.member?(state.tracks_left_to_link, track.type) do
+      tracks_left_to_link = List.delete(state.tracks_left_to_link, track.type)
+      track_specs = [get_track_spec(ssrc, track) | state.track_specs]
 
-    {[spec: spec], state}
+      spec_action =
+        if tracks_left_to_link == [] do
+          [
+            spec: [
+              child(:hls, %Membrane.HTTPAdaptiveStream.SinkBin{
+                target_window_duration: Membrane.Time.seconds(120),
+                manifest_module: Membrane.HTTPAdaptiveStream.HLS,
+                storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{
+                  directory: state.output_path
+                }
+              })
+              | track_specs
+            ]
+          ]
+        else
+          []
+        end
+
+      IO.inspect(spec_action, label: "ppp")
+
+      {spec_action, %{state | track_specs: track_specs, tracks_left_to_link: tracks_left_to_link}}
+    else
+      Logger.warning("Unsupported stream connected")
+
+      spec =
+        get_child(:source)
+        |> via_out(Pad.ref(:output, ssrc))
+        |> child({:fake_sink, ssrc}, Membrane.Debug.Sink)
+
+      {[spec: spec], state}
+    end
   end
 
   @impl true
@@ -64,42 +89,18 @@ defmodule Membrane.Demo.RTSPToHLS.Pipeline do
     {[], state}
   end
 
-  @spec create_spec_for_track(pos_integer(), map(), boolean()) ::
-          {Membrane.ChildrenSpec.t(), boolean()}
-  defp create_spec_for_track(ssrc, %{type: :video} = track, false) do
-    {spss, ppss} =
-      case track.fmtp.sprop_parameter_sets do
-        nil -> {[], []}
-        parameter_sets -> {parameter_sets.sps, parameter_sets.pps}
+  defp get_track_spec(ssrc, track) do
+    encoding =
+      case track do
+        %{type: :audio} -> :AAC
+        %{type: :video} -> :H264
       end
 
-    spec =
-      get_child(:source)
-      |> via_out(Pad.ref(:output, ssrc))
-      |> child(
-        :video_nal_parser,
-        %Membrane.H264.Parser{
-          spss: spss,
-          ppss: ppss,
-          generate_best_effort_timestamps: %{framerate: {30, 1}}
-        }
-      )
-      |> via_in(:input,
-        options: [encoding: :H264, segment_duration: Membrane.Time.seconds(4)]
-      )
-      |> get_child(:hls)
-
-    {spec, true}
-  end
-
-  defp create_spec_for_track(ssrc, _track, rtp_playing) do
-    Logger.warning("new_rtp_stream Unsupported stream connected")
-
-    spec =
-      get_child(:rtp)
-      |> via_out(Pad.ref(:output, ssrc))
-      |> child({:fake_sink, ssrc}, Membrane.Element.Fake.Sink.Buffers)
-
-    {spec, rtp_playing}
+    get_child(:source)
+    |> via_out(Pad.ref(:output, ssrc))
+    |> via_in(:input,
+      options: [encoding: encoding, segment_duration: Membrane.Time.seconds(4)]
+    )
+    |> get_child(:hls)
   end
 end

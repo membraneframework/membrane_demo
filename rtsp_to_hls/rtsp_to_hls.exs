@@ -1,7 +1,7 @@
 require Logger
 alias Membrane.Demo.RTSPToHLS
 
-rtsp_stream_url = "rtsp://localhost:8554/livestream"
+rtsp_stream_url = "rtsp://localhost:30001/"
 output_path = "hls_output"
 rtp_port = 20000
 

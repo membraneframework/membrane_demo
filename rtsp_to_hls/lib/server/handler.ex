@@ -58,7 +58,7 @@ defmodule Membrane.Demo.RTSPToHLS.Server.Handler do
       client_port: client_rtp_port,
       client_ip: media_context.address,
       server_rtp_socket: media_context.rtp_socket,
-      fixture_path: state.fixture_path
+      mp4_path: state.mp4_path
     }
 
     {:ok, _sup_pid, pipeline_pid} =
@@ -79,4 +79,8 @@ defmodule Membrane.Demo.RTSPToHLS.Server.Handler do
 
   @impl true
   def handle_closed_connection(_state), do: :ok
+
+  defp get_audio_specific_config(mp4_path) do
+    nil
+  end
 end

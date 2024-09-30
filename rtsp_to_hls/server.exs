@@ -12,4 +12,6 @@ fixture_path = "assets/video.mp4"
     udp_rtcp_port: rtp_server_port + 1
   )
 
+Membrane.SimpleRTSPServer.start_link("assets/video.mp4")
+
 Process.sleep(:infinity)

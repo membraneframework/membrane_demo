@@ -61,8 +61,6 @@ defmodule Membrane.Demo.RTSPToHLS.Pipeline do
           []
         end
 
-      IO.inspect(spec_action, label: "ppp")
-
       {spec_action, %{state | track_specs: track_specs, tracks_left_to_link: tracks_left_to_link}}
     else
       Logger.warning("Unsupported stream connected")
@@ -83,9 +81,7 @@ defmodule Membrane.Demo.RTSPToHLS.Pipeline do
   end
 
   @impl true
-  def handle_child_notification(notification, element, _ctx, state) do
-    Logger.warning("Unknown notification: #{inspect(notification)}, el: #{inspect(element)}")
-
+  def handle_child_notification(_notification, _element, _ctx, state) do
     {[], state}
   end
 

@@ -18,9 +18,9 @@ Mix.install([
 
 ## Description and steps
 
-This demo shows how you can use Membrane Framework to create a simple app that allow you to have a verbal conversation with ChatGPT using newest OpenAI Realtime API.
+This demo shows how to use Membrane Framework to create a simple app that allows you to have a conversation with ChatGPT using the newest OpenAI Realtime API.
 
-OpenAI Realtime API requires sending and receiving audio via websocket. Let's create a module responsible for handling it using WebSockex library.
+OpenAI Realtime API requires sending and receiving audio via the WebSocket. Let's create a module responsible for handling it with `WebSockex` library.
 
 ```elixir
 defmodule OpenAIWebSocket do
@@ -45,7 +45,7 @@ defmodule OpenAIWebSocket do
 end
 ```
 
-Then, we will write a Membrane Element, that will receive and send raw audio frames via the websocket.
+Then, we will write a Membrane Element that will receive and send raw audio frames via the WebSocket.
 
 ```elixir
 defmodule OpenAIEndpoint do
@@ -99,9 +99,9 @@ defmodule OpenAIEndpoint do
 end
 ```
 
-Now, let's write a Pipeline module, that exchange the media with the browser using `Membrane.WebRTC.Source` and `Sink` and with OpenAI server using `OpenAIEndpoint`.
+Now, let's write a Pipeline module that exchanges the media with the browser using `Membrane.WebRTC.Source` and `Sink` and with OpenAI server using `OpenAIEndpoint`.
 
-Because WebRTC requires and provides audio encoded using OPUS codec and OpenAI Relatime API uses raw audio, we have to spawn proper encoder and decoder between WebRTC and OpenAI elements.
+Because WebRTC requires and provides audio in OPUS format and OpenAI Realtime API uses raw audio, we have to spawn the proper encoder and decoder between WebRTC and OpenAI elements.
 
 ```elixir
 defmodule BrowserToOpenAi do
@@ -132,7 +132,7 @@ defmodule BrowserToOpenAi do
 end
 ```
 
-Let's set the websocket options (remember to set `OPENAI_API KEY` env).
+Let's set the WebSocket options (remember to set `OPENAI_API KEY` env).
 
 ```elixir
 openai_api_key = System.get_env("OPENAI_API_KEY")
@@ -151,7 +151,7 @@ openai_ws_opts = [
 :ok
 ```
 
-Now, let's start the pipline. Enter <http://localhost:8000/index.html> from the new tab of Google Chrome and start your conversation with the AI!
+Now, let's start the pipeline. Enter <http://localhost:8000/index.html> from the new tab of Google Chrome and start your conversation with the AI!
 
 Transcription of AI answers will be available in the logs of the cell below.
 

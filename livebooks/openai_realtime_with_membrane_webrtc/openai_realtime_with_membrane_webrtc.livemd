@@ -1,4 +1,4 @@
-# OpenAI Realtime with Membrane WebRTC demo
+# OpenAI Realtime Integration with Membrane WebRTC
 
 ```elixir
 File.cd(__DIR__)
@@ -16,9 +16,11 @@ Mix.install([
 ])
 ```
 
-## Description and steps
+## Introduction
 
-This demo shows how to use Membrane Framework to create a simple app that allows you to have a conversation with ChatGPT using the newest OpenAI Realtime API.
+This demo shows how to use Membrane Framework to create a simple WebRTC based app that allows you to have a conversation with ChatGPT using the newest [OpenAI Realtime API](https://openai.com/index/introducing-the-realtime-api/).
+
+## WebSocket handler
 
 OpenAI Realtime API requires sending and receiving audio via the WebSocket. Let's create a module responsible for handling it with `WebSockex` library.
 
@@ -36,6 +38,7 @@ defmodule OpenAIWebSocket do
     )
   end
 
+  @impl true
   def handle_frame(frame, state) do
     send(state.parent, {:websocket_frame, frame})
     {:ok, state}
@@ -45,7 +48,9 @@ defmodule OpenAIWebSocket do
 end
 ```
 
-Then, we will write a Membrane Element that will receive and send raw audio frames via the WebSocket.
+## Membrane Components
+
+Then, we will create a Membrane Element that will receive and send raw audio frames via the WebSocket.
 
 ```elixir
 defmodule OpenAIEndpoint do
@@ -104,7 +109,7 @@ Now, let's write a Pipeline module that exchanges the media with the browser usi
 Because WebRTC requires and provides audio in OPUS format and OpenAI Realtime API uses raw audio, we have to spawn the proper encoder and decoder between WebRTC and OpenAI elements.
 
 ```elixir
-defmodule BrowserToOpenAi do
+defmodule OpenAIPipeline do
   use Membrane.Pipeline
 
   @impl true
@@ -132,6 +137,8 @@ defmodule BrowserToOpenAi do
 end
 ```
 
+## Getting OpenAI API key from the env
+
 Let's set the WebSocket options (remember to set `OPENAI_API KEY` env).
 
 ```elixir
@@ -151,13 +158,13 @@ openai_ws_opts = [
 :ok
 ```
 
-Now, let's start the pipeline. Enter <http://localhost:8000/index.html> from the new tab of Google Chrome and start your conversation with the AI!
+## Running the server
 
-Transcription of AI answers will be available in the logs of the cell below.
+Now, let's start the pipeline.
 
 ```elixir
 {:ok, _supervisor, pipeline} =
-  Membrane.Pipeline.start_link(BrowserToOpenAi,
+  Membrane.Pipeline.start_link(OpenAIPipeline,
     openai_ws_opts: openai_ws_opts,
     webrtc_source_ws_port: 8829,
     webrtc_sink_ws_port: 8831
@@ -179,3 +186,7 @@ receive do
   {:DOWN, _ref, :process, ^pipeline, _reason} -> :ok
 end
 ```
+
+Enter <http://localhost:8000/index.html> from the new tab of Google Chrome and start your conversation with the AI!
+
+Transcription of AI answers will be available in the logs of the cell below.

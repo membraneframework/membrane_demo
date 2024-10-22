@@ -17,6 +17,7 @@ In the subdirectories of this repository you can find the following examples of 
 
 Also, there are some [Livebook](https://livebook.dev) examples located in [livebooks](https://github.com/membraneframework/membrane_demo/tree/master/livebooks) directory:
 
+- [openai_realtime_with_membrane_webrtc](https://github.com/membraneframework/membrane_demo/tree/master/livebooks/openai_realtime_with_membrane_webrtc) - conversation with AI via browser using [OpenAI Realtime API](https://openai.com/index/introducing-the-realtime-api/)
 - [speech_to_text](https://github.com/membraneframework/membrane_demo/tree/master/livebooks/speech_to_text) - real-time speech recognition using [Whisper](https://github.com/openai/whisper)
 - [audio_mixer](https://github.com/membraneframework/membrane_demo/tree/master/livebooks/audio_mixer) - mix a beep sound into background music
 - [messages_source_and_sink](https://github.com/membraneframework/membrane_demo/tree/master/livebooks/messages_source_and_sink) - send and receive media from the pipeline via Elixir messages

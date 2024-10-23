@@ -29,6 +29,7 @@ hls_proxy_api-*.tar
 *.m3u8
 *.m4s
 *.mp4
+!assets/video.mp4
 
 # macOS
 .DS_Store

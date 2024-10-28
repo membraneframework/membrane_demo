@@ -1,0 +1,22 @@
+<script type="module">
+  import {
+    VidstackPlayer,
+    VidstackPlayerLayout 
+  } from 'https://cdn.vidstack.io/player.core';
+
+  var videoSrc = window.location.origin + `/video/index.m3u8`;
+
+  const player = await VidstackPlayer.create({
+    target: '#player',
+    title: 'Membrane Demo',
+    src: videoSrc,
+    streamType: "live-dvr",
+    load: 'eager',
+    layout: new VidstackPlayerLayout(),
+  });
+
+</script>
+
+<div id="container">
+  <video id="player" muted autoplay />
+</div>

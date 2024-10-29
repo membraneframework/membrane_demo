@@ -1,7 +1,7 @@
 defmodule Membrane.Demo.RtmpToAdaptiveHls do
   use Membrane.Pipeline
 
-  alias Membrane.RTMP.{SourceBin, Messages}
+  alias Membrane.RTMP.SourceBin
 
   @segment_duration Membrane.Time.seconds(4)
   @transcode_targets [{720, 60}, {720, 30}, {360, 30}, {180, 30}, {180, 2}]
@@ -22,24 +22,26 @@ defmodule Membrane.Demo.RtmpToAdaptiveHls do
 
       get_child(:src)
       |> via_out(:audio)
-      |> child(:tee_audio, Membrane.Tee.Parallel),
+      |> via_in(Pad.ref(:input, "audio_master"),
+        options: [
+          encoding: :AAC,
+          segment_duration: @segment_duration
+        ]
+      )
+      |> get_child(:sink),
 
       get_child(:src)
       |> via_out(:video)
-      |> child(:tee_video, Membrane.Tee.Parallel),
+      |> child(:tee_video, Membrane.Tee.Parallel)
     ]
 
     {[spec: structure], %{client_ref: client_ref}}
   end
 
   @impl true
-  def handle_child_notification(_notification, _child, _ctx, state) do
-    {[], state}
-  end
-
-  def handle_info(%Messages.SetDataFrame{} = message, _ctx, state) do
-    %{ height: source_height, width: source_width, framerate: source_framerate } = message
-    source_framerate = trunc(source_framerate)
+  def handle_info(%Membrane.RTMP.Messages.SetDataFrame{} = message, _ctx, state) do
+    %{height: source_height, width: source_width, framerate: source_framerate} = message
+    source_framerate = if source_framerate, do: trunc(source_framerate), else: 60
 
     spec = @transcode_targets
     |> Enum.filter(fn({target_height, framerate}) ->
@@ -76,6 +78,11 @@ defmodule Membrane.Demo.RtmpToAdaptiveHls do
     end)
 
     {[spec: spec], state}
+  end
+
+  @impl true
+  def handle_info( message, _ctx, state) do
+    {[], state}
   end
 
   @impl true

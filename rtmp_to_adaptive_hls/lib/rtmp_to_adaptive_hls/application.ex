@@ -5,8 +5,6 @@ defmodule RtmpToAdaptiveHls.Application do
 
   use Application
 
-  alias Membrane.RTMP.Source.TcpServer
-
   @port 9006
   @local_ip {127, 0, 0, 1}
 
@@ -30,7 +28,7 @@ defmodule RtmpToAdaptiveHls.Application do
             stream_key: stream_key
           })
 
-        {Membrane.RTMP.Source.ClientHandlerImpl, %{}, pid}
+        {Membrane.Demo.RtmpToAdaptiveHls.ClientHandler, %{pipeline: pid}}
       end
     }
 

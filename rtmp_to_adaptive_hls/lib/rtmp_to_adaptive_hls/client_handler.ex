@@ -1,4 +1,3 @@
-
 defmodule Membrane.Demo.RtmpToAdaptiveHls.ClientHandler do
   @moduledoc """
   An implementation of `Membrane.RTMPServer.ClienHandlerBehaviour` compatible with the
@@ -54,13 +53,8 @@ defmodule Membrane.Demo.RtmpToAdaptiveHls.ClientHandler do
   end
 
   @impl true
-  def handle_rtmp_message(%Membrane.RTMP.Messages.SetDataFrame{} = message, state) do
+  def handle_metadata(message, state) do
     send(state.pipeline, message)
-    state
-  end
-
-  @impl true
-  def handle_rtmp_message(_msg, state) do
     state
   end
 

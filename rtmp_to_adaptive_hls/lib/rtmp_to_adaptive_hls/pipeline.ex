@@ -39,7 +39,7 @@ defmodule Membrane.Demo.RtmpToAdaptiveHls do
   end
 
   @impl true
-  def handle_info(%Membrane.RTMP.Messages.SetDataFrame{} = message, _ctx, state) do
+  def handle_info({:metadata_message, %Membrane.RTMP.Messages.SetDataFrame{} = message}, _ctx, state) do
     %{height: source_height, width: source_width, framerate: source_framerate} = message
     source_framerate = if source_framerate, do: trunc(source_framerate), else: 60
 
@@ -81,7 +81,7 @@ defmodule Membrane.Demo.RtmpToAdaptiveHls do
   end
 
   @impl true
-  def handle_info( message, _ctx, state) do
+  def handle_info(_message, _ctx, state) do
     {[], state}
   end
 

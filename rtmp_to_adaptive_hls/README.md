@@ -1,19 +1,19 @@
-# RTMP to HLS
+# RTMP to Adaptive Bitrate HLS
 
-This demo is an application that is capable of receiving an RTMP stream, converting it to HLS, and publishing via an HTTP server so that it can be played with a web player.
+This demo is an application that is capable of receiving an RTMP stream, down-scaling it into multiple bitrate streams, then converting it to HLS, packaged as a [multi-variant](https://developer.apple.com/documentation/http-live-streaming/creating-a-multivariant-playlist) playlist. This demo also includes a web player that showcases adaptive track switching based on the viewer's current network throughput.
 
 ## Possible use cases
 
 The application presented in this demo could be used in the following scenario.
-There is one person, the so-called "streamer", and multiple "viewers", who want to see the stream of multimedia sent by the streamer.
-The streamer sends multimedia using RTMP, a protocol supported by popular streaming software (i.e. OBS). Such an RTMP stream is then converted into HLS and published by the HTTP server, which is capable of handling many HTTP requests. The viewers can then play the multimedia delivered with HTTP. Such a solution scales well because the streamer doesn't have a direct connection with any of the viewers.
+There is one person, the so-called "streamer", and multiple "viewers", who want to see the stream of multimedia sent by the streamer. The streamer is expecting to interact live with their audience and wants everyone viewing to be as close to the 'live edge' as possible.
+The streamer sends multimedia using RTMP, a protocol supported by popular streaming software (i.e. OBS). Such an RTMP stream is then converted into multi-variant HLS and published by the HTTP server, which is capable of handling many HTTP requests. The viewers can then play the multimedia delivered with HTTP. Such a solution scales well because the streamer doesn't have a direct connection with any of the viewers and the multi-variant playlist allows viewers with poor internet connection to avoid buffering by offering them smaller, low bitrate media.
 
 ## Architecture of the solution
 
 The system is divided into two parts:
 
-- the server, which is responsible for receiving the RTMP stream, converting it into HLS, and then publishing the created files with an HTTP server,
-- the client, responsible for playing the incoming HLS stream.
+- the server, which is responsible for receiving the RTMP stream, copying and down-scaling the stream into multiple bitrates, packaging it into multi-variant HLS, and then publishing the created files with an HTTP server,
+- the client, responsible for playing the incoming HLS stream and switching between the different bitrate tracks.
 
 ### Server
 

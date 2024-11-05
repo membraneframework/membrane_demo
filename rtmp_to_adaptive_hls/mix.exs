@@ -52,7 +52,7 @@ defmodule RtmpToAdaptiveHls.MixProject do
       {:membrane_ffmpeg_swscale_plugin, "~> 0.15.1"},
       {:membrane_h264_ffmpeg_plugin, "~> 0.31.6"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.18.5"},
-      {:membrane_rtmp_plugin, github: "lastcanal/membrane_rtmp_plugin", branch: "send_messages_to_client_handler_impl"},
+      {:membrane_rtmp_plugin, "~> 0.27.2"},
       {:membrane_tee_plugin, "~> 0.12.0"}
     ]
   end

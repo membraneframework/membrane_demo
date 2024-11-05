@@ -12,7 +12,7 @@ defmodule RtmpToAdaptiveHls.Application do
   def start(_type, _args) do
     File.mkdir_p("output")
 
-    tcp_server_options = %{
+    rtmp_server_options = %{
       port: @port,
       listen_options: [
         :binary,
@@ -36,7 +36,7 @@ defmodule RtmpToAdaptiveHls.Application do
       # Start the RTMP server
       %{
         id: Membrane.RTMPServer,
-        start: {Membrane.RTMPServer, :start_link, [tcp_server_options]}
+        start: {Membrane.RTMPServer, :start_link, [rtmp_server_options]}
       },
       # Start the Telemetry supervisor
       RtmpToAdaptiveHlsWeb.Telemetry,

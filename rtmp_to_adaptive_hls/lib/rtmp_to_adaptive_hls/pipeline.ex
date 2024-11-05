@@ -8,6 +8,8 @@ defmodule Membrane.Demo.RtmpToAdaptiveHls do
 
   @impl true
   def handle_init(_context, %{client_ref: client_ref}) do
+    state = %{client_ref: client_ref, metadata: nil}
+
     structure = [
       child(:src, %SourceBin{
         client_ref: client_ref
@@ -32,14 +34,14 @@ defmodule Membrane.Demo.RtmpToAdaptiveHls do
       |> child(:tee_video, Membrane.Tee.Parallel)
     ]
 
-    {[spec: structure], %{client_ref: client_ref}}
+    {[spec: structure], state}
   end
 
   @impl true
   def handle_info(
         {:metadata_message, %Membrane.RTMP.Messages.SetDataFrame{} = message},
         _ctx,
-        state
+        %{metadata: nil} = state
       ) do
     %{height: source_height, width: source_width, framerate: source_framerate} = message
     source_framerate = if source_framerate, do: trunc(source_framerate), else: 60
@@ -79,17 +81,12 @@ defmodule Membrane.Demo.RtmpToAdaptiveHls do
         |> get_child(:sink)
       end)
 
-    {[spec: spec], state}
+    {[spec: spec], %{state | metadata: message}}
   end
 
   @impl true
-  def handle_info(_message, _ctx, state) do
+  def handle_info(_msg, _ctx, state) do
     {[], state}
-  end
-
-  @impl true
-  def handle_call(:get_video_id, _ctx, state) do
-    {[{:reply, state.video.id}], state}
   end
 
   defp normalize_scale(scale) when is_float(scale), do: scale |> trunc() |> normalize_scale()

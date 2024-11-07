@@ -10,6 +10,7 @@ In the subdirectories of this repository you can find the following examples of 
 - [camera_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/camera_to_hls) - a demonstration of capturing camera output and converting it to an HLS stream
 - [camera_to_hls_nerves](https://github.com/membraneframework/membrane_demo/tree/master/camera_to_hls_nerves) - a demonstration of capturing video from a camera module on Raspberry Pi running Nerves and broadcasting it to a browser via HLS
 - [rtmp_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtmp_to_hls) - receiving RTMP stream and broadcasting it via HLS
+- [rtmp_to_adaptive_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtmp_to_adaptive_hls) - receiving RTMP stream and broadcasting via multi-bitrate adaptive HLS
 - [rtp](https://github.com/membraneframework/membrane_demo/tree/master/rtp) - sending and receiving RTP/SRTP stream
 - [rtp_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtp_to_hls) - receiving RTP stream and broadcasting it via HLS
 - [rtsp_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtsp_to_hls) - receiving RTSP stream and converting it to HLS

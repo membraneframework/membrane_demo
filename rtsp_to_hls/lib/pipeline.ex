@@ -39,24 +39,22 @@ defmodule Membrane.Demo.RTSPToHLS.Pipeline do
 
   @impl true
   def handle_child_notification({:new_track, ssrc, track}, :source, _ctx, state) do
-    if Enum.member?(state.tracks_left_to_link, track.type) do
+    if track.type in state.tracks_left_to_link do
       tracks_left_to_link = List.delete(state.tracks_left_to_link, track.type)
       track_specs = [get_track_spec(ssrc, track) | state.track_specs]
 
       spec_action =
         if tracks_left_to_link == [] do
-          [
-            spec: [
-              child(:hls, %Membrane.HTTPAdaptiveStream.SinkBin{
-                target_window_duration: Membrane.Time.seconds(120),
-                manifest_module: Membrane.HTTPAdaptiveStream.HLS,
-                storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{
-                  directory: state.output_path
-                }
-              })
-              | track_specs
-            ]
-          ]
+          hls =
+            child(:hls, %Membrane.HTTPAdaptiveStream.SinkBin{
+              target_window_duration: Membrane.Time.seconds(120),
+              manifest_module: Membrane.HTTPAdaptiveStream.HLS,
+              storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{
+                directory: state.output_path
+              }
+            })
+
+          [spec: [hls | track_specs]]
         else
           []
         end

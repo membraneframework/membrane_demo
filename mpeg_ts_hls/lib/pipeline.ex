@@ -4,11 +4,10 @@ defmodule HLSPipeline do
   alias Membrane.HLS.Source
   alias HLS.Playlist.Master
 
-  @master_playlist_uri URI.new!("./fixtures/mpeg-ts/stream.m3u8")
-
   @impl true
   def handle_init(_ctx, opts) do
-    structure = child(:source, %Source{reader: %Reader{}, master_playlist_uri: @master_playlist_uri})
+    structure =
+      child(:source, %Source{reader: %Reader{}, master_playlist_uri: opts[:uri]})
 
     {[spec: structure], opts}
   end
@@ -18,9 +17,8 @@ defmodule HLSPipeline do
     stream =
       master
       |> Master.variant_streams()
-      |> Enum.at(0) # we always choose stream variant 0 here
-
-
+      # we always choose stream variant 0 here
+      |> Enum.at(0)
 
     case stream do
       nil ->

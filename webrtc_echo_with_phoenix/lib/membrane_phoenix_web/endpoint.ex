@@ -15,7 +15,7 @@ defmodule MembranePhoenixWeb.Endpoint do
     websocket: [connect_info: [session: @session_options]],
     longpoll: [connect_info: [session: @session_options]]
 
-  socket "/boombox", Membrane.WebRTC.PhoenixSignaling.Socket,
+  socket "/signaling", Membrane.WebRTC.PhoenixSignaling.Socket,
     websocket: true,
     longpoll: false
 

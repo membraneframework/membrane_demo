@@ -86,7 +86,7 @@ async function startIngressConnection(channel, topic) {
 import {Socket} from "phoenix"
 var sessionID = document.body.getAttribute('session-id');
 
-let socket = new Socket("/boombox", {params: {token: window.userToken}})
+let socket = new Socket("/signaling", {params: {token: window.userToken}})
 socket.connect()
 let egressChannel = socket.channel(`${sessionID}_egress`)
 egressChannel.join()

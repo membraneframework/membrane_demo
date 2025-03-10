@@ -10,8 +10,6 @@ defmodule MembranePhoenixWeb.PageController do
     unique_id = UUID.uuid4()
 
     Task.start(fn ->
-      #Process.sleep(10_000)
-
       input_sg = PhoenixSignaling.new("#{unique_id}_egress")
       output_sg = PhoenixSignaling.new("#{unique_id}_ingress")
       Boombox.run(
@@ -22,6 +20,11 @@ defmodule MembranePhoenixWeb.PageController do
 
     conn = put_session(conn, :session_id, unique_id)
 
-    render(conn, :home, layout: false, session_id: unique_id)
+    html(conn, """
+    <body class="bg-white" session-id=#{unique_id}>
+    <video id="videoPlayer" controls muted autoplay></video>
+    </body>
+    <script src="assets/app.js"></script>
+    """)
   end
 end

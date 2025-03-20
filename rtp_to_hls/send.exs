@@ -6,14 +6,16 @@ Mix.install([
   {:membrane_hackney_plugin, "~> 0.11.0"},
   {:membrane_realtimer_plugin, "~> 0.9.0"},
   {:membrane_h26x_plugin, "~> 0.10.0"},
-  {:membrane_aac_plugin, "~> 0.18.1"},
   {:membrane_funnel_plugin, "~> 0.9.0"},
   {:membrane_mp4_plugin, "~> 0.34.1"},
-  {:membrane_udp_plugin, "~> 0.13.0"},
-  {:membrane_rtp_plugin, "~> 0.27.1"},
-  {:membrane_rtp_aac_plugin, "~> 0.9.0"},
-  {:membrane_rtp_h264_plugin, "~> 0.19.1"}
-])
+  {:membrane_rtp_plugin, path: "../../membrane_rtp_plugin/"},
+  #{:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin", branch: "improve-muxer"},
+  #{:membrane_rtp_plugin, "~> 0.30.0"},
+  {:membrane_rtp_h264_plugin, "~> 0.20.0"},
+  {:membrane_rtp_aac_plugin, "~> 0.9.1"},
+  {:membrane_udp_plugin, "~> 0.14.0"},
+  {:membrane_aac_plugin, "~> 0.19.0"},
+], force: true)
 
 defmodule SendRTP do
   use Membrane.Pipeline
@@ -49,27 +51,18 @@ defmodule SendRTP do
         output_alignment: :nalu
       })
       |> child(:video_realtimer, Membrane.Realtimer)
-      |> via_in(Pad.ref(:input, video_ssrc),
-        options: [payloader: Membrane.RTP.H264.Payloader]
-      )
-      |> child(:rtp, Membrane.RTP.SessionBin)
-      |> via_out(Pad.ref(:rtp_output, video_ssrc), options: [encoding: :H264])
-      |> get_child(:funnel),
-      get_child(:mp4)
-      |> via_out(Pad.ref(:output, audio_id))
-      |> child(:audio_realtimer, Membrane.Realtimer)
-      |> child(:audio_parser, %Membrane.AAC.Parser{out_encapsulation: :none})
-      |> via_in(Pad.ref(:input, audio_ssrc),
-        options: [payloader: %Membrane.RTP.AAC.Payloader{frames_per_packet: 1, mode: :hbr}]
-      )
-      |> get_child(:rtp)
-      |> via_out(Pad.ref(:rtp_output, audio_ssrc), options: [encoding: :AAC])
-      |> get_child(:funnel),
-      child(:funnel, Membrane.Funnel)
+      |> child(:video_payloader, Membrane.RTP.H264.Payloader)
+      |> child(:rtp_muxer, Membrane.RTP.Muxer)
       |> child(:udp, %Membrane.UDP.Sink{
         destination_port_no: 5000,
         destination_address: {127, 0, 0, 1}
-      })
+      }),
+      get_child(:mp4)
+      |> via_out(Pad.ref(:output, audio_id))
+      |> child(:audio_parser, %Membrane.AAC.Parser{out_encapsulation: :none})
+      |> child(:audio_realtimer, Membrane.Realtimer)
+      |> child(:audio_payloader, %Membrane.RTP.AAC.Payloader{frames_per_packet: 1, mode: :hbr})
+      |> get_child(:rtp_muxer)
     ]
 
     {[spec: spec], state}

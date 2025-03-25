@@ -12,7 +12,7 @@ Mix.install([
   {:membrane_http_adaptive_stream_plugin, "~> 0.18.4"},
   {:membrane_fake_plugin, "~> 0.11.0"},
   {:membrane_h26x_plugin, "~> 0.10.0"}
-], force: true)
+])
 
 defmodule RTPToHLS do
   use Membrane.Pipeline

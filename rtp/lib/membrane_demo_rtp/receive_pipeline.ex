@@ -11,9 +11,9 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
   def handle_init(_ctx, opts) do
     %{audio_port: audio_port, video_port: video_port, secure?: secure?, srtp_key: srtp_key} = opts
 
-    use_srtp =
+    srtp =
       if secure? do
-        {true, [%ExLibSRTP.Policy{ssrc: :any_inbound, key: srtp_key}]}
+        [%ExLibSRTP.Policy{ssrc: :any_inbound, key: srtp_key}]
       else
         false
       end
@@ -24,7 +24,7 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
            local_port_no: video_port,
            local_address: @local_ip
          })
-         |> child(:video_rtp_demuxer, %RTP.Demuxer{use_srtp: use_srtp})
+         |> child(:video_rtp_demuxer, %RTP.Demuxer{srtp: srtp})
          |> via_out(:output, options: [stream_id: {:encoding_name, :H264}])
          |> child(:video_depayloader, RTP.H264.Depayloader)
          |> child(:video_parser, %H264.Parser{
@@ -36,7 +36,7 @@ defmodule Membrane.Demo.RTP.ReceivePipeline do
            local_port_no: audio_port,
            local_address: @local_ip
          })
-         |> child(:audio_rtp_demuxer, %RTP.Demuxer{use_srtp: use_srtp})
+         |> child(:audio_rtp_demuxer, %RTP.Demuxer{srtp: srtp})
          |> via_out(:output, options: [stream_id: {:encoding_name, :opus}])
          |> child(:audio_depayloader, RTP.Opus.Depayloader)
          |> child(:audio_decoder, Opus.Decoder)

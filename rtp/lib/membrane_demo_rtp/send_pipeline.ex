@@ -12,9 +12,9 @@ defmodule Membrane.Demo.RTP.SendPipeline do
       srtp_key: srtp_key
     } = opts
 
-    use_srtp =
+    srtp =
       if secure? do
-        {true, [%ExLibSRTP.Policy{ssrc: :any_inbound, key: srtp_key}]}
+        [%ExLibSRTP.Policy{ssrc: :any_inbound, key: srtp_key}]
       else
         false
       end
@@ -28,7 +28,7 @@ defmodule Membrane.Demo.RTP.SendPipeline do
         output_alignment: :nalu
       })
       |> child(:video_payloader, RTP.H264.Payloader)
-      |> child(:video_rtp_muxer, %RTP.Muxer{use_srtp: use_srtp})
+      |> child(:video_rtp_muxer, %RTP.Muxer{srtp: srtp})
       |> child(:video_realtimer, Membrane.Realtimer)
       |> child(:video_sink, %UDP.Sink{
         destination_port_no: video_port,
@@ -43,7 +43,7 @@ defmodule Membrane.Demo.RTP.SendPipeline do
         generate_best_effort_timestamps?: true
       })
       |> child(:audio_payloader, RTP.Opus.Payloader)
-      |> child(:audio_rtp_muxer, %RTP.Muxer{use_srtp: use_srtp})
+      |> child(:audio_rtp_muxer, %RTP.Muxer{srtp: srtp})
       |> child(:audio_realtimer, Membrane.Realtimer)
       |> child(:audio_sink, %UDP.Sink{
         destination_port_no: audio_port,

@@ -8,14 +8,13 @@ Mix.install([
   {:membrane_h26x_plugin, "~> 0.10.0"},
   {:membrane_funnel_plugin, "~> 0.9.0"},
   {:membrane_mp4_plugin, "~> 0.34.1"},
-  {:membrane_rtp_plugin, path: "../../membrane_rtp_plugin/"},
-  #{:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin", branch: "improve-muxer"},
+  {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin", branch: "improve-muxer"},
   #{:membrane_rtp_plugin, "~> 0.30.0"},
   {:membrane_rtp_h264_plugin, "~> 0.20.0"},
   {:membrane_rtp_aac_plugin, "~> 0.9.1"},
   {:membrane_udp_plugin, "~> 0.14.0"},
   {:membrane_aac_plugin, "~> 0.19.0"},
-], force: true)
+])
 
 defmodule SendRTP do
   use Membrane.Pipeline

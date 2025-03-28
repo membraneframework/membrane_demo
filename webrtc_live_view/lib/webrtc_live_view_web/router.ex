@@ -17,7 +17,7 @@ defmodule WebrtcLiveViewWeb.Router do
   scope "/", WebrtcLiveViewWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live"/", Live.EchoLive, :index
   end
 
   # Other scopes may use custom stacks.

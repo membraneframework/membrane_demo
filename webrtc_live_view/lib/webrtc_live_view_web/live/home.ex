@@ -24,9 +24,12 @@ defmodule WebrtcLiveViewWeb.Live.EchoLive do
               flags = Bitwise.bor(Constant.cv_THRESH_BINARY(), Constant.cv_THRESH_OTSU())
               {_ok, bw} = Evision.threshold(grayscale, 50, 255, flags)
 
-              {contours, _} = Evision.findContours(
-                bw, Constant.cv_RETR_LIST(), Constant.cv_CHAIN_APPROX_NONE()
-              )
+              {contours, _} =
+                Evision.findContours(
+                  bw,
+                  Constant.cv_RETR_LIST(),
+                  Constant.cv_CHAIN_APPROX_NONE()
+                )
 
               contours =
                 Enum.filter(contours, fn c ->
@@ -34,8 +37,9 @@ defmodule WebrtcLiveViewWeb.Live.EchoLive do
                 end)
 
               {:ok, image} =
-                Evision.drawContours(
-                  image, contours, index = -1, edge_color = {0, 0, 255}, thickness: 2
+                image
+                |> Evision.drawContours(contours, _index = -1, _edge_color = {0, 0, 255},
+                  thickness: 2
                 )
                 |> Image.from_evision()
 
@@ -52,7 +56,8 @@ defmodule WebrtcLiveViewWeb.Live.EchoLive do
           id: "mediaCapture",
           signaling: ingress_signaling,
           audio?: false,
-          video?: true
+          video?: true,
+          preview?: false
         )
         |> Player.attach(
           id: "videoPlayer",

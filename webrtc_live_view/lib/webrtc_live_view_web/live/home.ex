@@ -11,7 +11,7 @@ defmodule WebrtcLiveViewWeb.Live.EchoLive do
 
         {:ok, _task_pid} =
           Task.start_link(fn ->
-            Membrane.Pipeline.start_link(WebrtcLiveView.Pipeline,
+            Membrane.Pipeline.start_link(WebRTCLiveView.Pipeline,
               ingress_signaling: ingress_signaling,
               egress_signaling: egress_signaling
             )

@@ -8,11 +8,16 @@ defmodule Membrane.Demo.RTP.SendPipeline do
     %{
       audio_port: audio_port,
       video_port: video_port,
-      audio_ssrc: audio_ssrc,
-      video_ssrc: video_ssrc,
       secure?: secure?,
       srtp_key: srtp_key
     } = opts
+
+    srtp =
+      if secure? do
+        [%ExLibSRTP.Policy{ssrc: :any_inbound, key: srtp_key}]
+      else
+        false
+      end
 
     spec = [
       child(:video_src, %File.Source{
@@ -22,17 +27,8 @@ defmodule Membrane.Demo.RTP.SendPipeline do
         generate_best_effort_timestamps: %{framerate: {30, 1}},
         output_alignment: :nalu
       })
-      |> via_in(Pad.ref(:input, video_ssrc), options: [payloader: RTP.H264.Payloader])
-      |> child(:rtp, %RTP.SessionBin{
-        secure?: secure?,
-        srtp_policies: [
-          %ExLibSRTP.Policy{
-            ssrc: :any_inbound,
-            key: srtp_key
-          }
-        ]
-      })
-      |> via_out(Pad.ref(:rtp_output, video_ssrc), options: [encoding: :H264])
+      |> child(:video_payloader, RTP.H264.Payloader)
+      |> child(:video_rtp_muxer, %RTP.Muxer{srtp: srtp})
       |> child(:video_realtimer, Membrane.Realtimer)
       |> child(:video_sink, %UDP.Sink{
         destination_port_no: video_port,
@@ -46,9 +42,8 @@ defmodule Membrane.Demo.RTP.SendPipeline do
         delimitation: :undelimit,
         generate_best_effort_timestamps?: true
       })
-      |> via_in(Pad.ref(:input, audio_ssrc), options: [payloader: RTP.Opus.Payloader])
-      |> get_child(:rtp)
-      |> via_out(Pad.ref(:rtp_output, audio_ssrc), options: [encoding: :OPUS])
+      |> child(:audio_payloader, RTP.Opus.Payloader)
+      |> child(:audio_rtp_muxer, %RTP.Muxer{srtp: srtp})
       |> child(:audio_realtimer, Membrane.Realtimer)
       |> child(:audio_sink, %UDP.Sink{
         destination_port_no: audio_port,

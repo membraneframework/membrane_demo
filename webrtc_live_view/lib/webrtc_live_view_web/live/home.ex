@@ -1,7 +1,6 @@
 defmodule WebrtcLiveViewWeb.Live.EchoLive do
   use WebrtcLiveViewWeb, :live_view
 
-  alias Evision.{ColorConversionCodes, Constant}
   alias Membrane.WebRTC.Live.{Capture, Player}
 
   def mount(_params, _session, socket) do

@@ -32,11 +32,12 @@ defmodule WebrtcLiveView.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      # {:membrane_webrtc_plugin, "~> 0.25.2", override: true},
-      {:membrane_webrtc_plugin, path: "../../membrane_webrtc_plugin", override: true},
-      {:boombox, github: "membraneframework/boombox"},
-      # {:membrane_webrtc_plugin, path: "../../membrane_webrtc_plugin"},
+      {:membrane_webrtc_plugin, "~> 0.25.3"},
+      {:membrane_transcoder_plugin, "~> 0.2.1"},
+      {:membrane_ffmpeg_swscale_plugin, "~> 0.16.2"},
       {:evision, "~> 0.2.11"},
+      {:vix, "~> 0.33.0"},
+      {:image, "~> 0.59.0"},
       {:phoenix, "~> 1.7.21"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},

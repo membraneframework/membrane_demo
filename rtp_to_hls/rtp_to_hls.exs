@@ -4,8 +4,7 @@ Logger.configure(level: :info)
 Mix.install([
   {:membrane_core, "~> 1.0"},
   {:membrane_udp_plugin, "~> 0.13.0"},
-  {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin", branch: "improve-muxer"},
-  #{:membrane_rtp_plugin, "~> 0.30.0"},
+  {:membrane_rtp_plugin, "~> 0.31.0"},
   {:membrane_rtp_h264_plugin, "~> 0.20.0"},
   {:membrane_rtp_aac_plugin, "~> 0.9.1"},
   {:membrane_aac_plugin, "~> 0.19.1"},

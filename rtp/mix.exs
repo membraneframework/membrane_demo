@@ -24,9 +24,7 @@ defmodule Membrane.Demo.RTP.MixProject do
   defp deps do
     [
       {:membrane_core, "~> 1.0"},
-      {:membrane_rtp_plugin,
-       github: "membraneframework/membrane_rtp_plugin", branch: "srtp-demuxer-muxer"},
-      # {:membrane_rtp_plugin, "~> 0.27.1"},
+      {:membrane_rtp_plugin, "~> 0.31.0"},
       {:membrane_udp_plugin, "~> 0.13.0"},
       {:membrane_h264_ffmpeg_plugin, "~> 0.31.6"},
       {:membrane_h26x_plugin, "~> 0.10.1"},

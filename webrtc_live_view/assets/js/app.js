@@ -25,9 +25,9 @@ import { createCaptureHook, createPlayerHook } from "membrane_webrtc_plugin";
 
 const iceServers = [{ urls: "stun:stun.l.google.com:19302" }];
 
-let Hooks = {};
-Hooks.Capture = createCaptureHook(iceServers);
-Hooks.Player = createPlayerHook(iceServers);
+let hooks = {};
+hooks.Capture = createCaptureHook(iceServers);
+hooks.Player = createPlayerHook(iceServers);
 
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
@@ -35,7 +35,7 @@ let csrfToken = document
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
-  hooks: Hooks,
+  hooks: hooks,
 });
 
 // Show progress bar on live navigation and form submits

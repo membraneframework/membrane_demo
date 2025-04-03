@@ -3,8 +3,8 @@ defmodule WebRTCLiveView.CountoursDrawer do
 
   alias Evision.{ColorConversionCodes, Constant}
 
-  def_input_pad :input, accepted_format: Membrane.RawVideo
-  def_output_pad :output, accepted_format: Membrane.RawVideo
+  def_input_pad :input, accepted_format: %Membrane.RawVideo{pixel_format: :RGB}
+  def_output_pad :output, accepted_format: %Membrane.RawVideo{pixel_format: :RGB}
 
   @impl true
   def handle_buffer(:input, buffer, ctx, state) do

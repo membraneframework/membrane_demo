@@ -36,7 +36,10 @@ defmodule RTPToHLS do
       get_child(:rtp_demuxer)
       |> via_out(:output, options: [stream_id: {:payload_type, 127}])
       |> child(:rtp_aac_depayloader, %Membrane.RTP.AAC.Depayloader{mode: :hbr})
-      |> child(:aac_parser, %Membrane.AAC.Parser{audio_specific_config: Base.decode16!("1210"), out_encapsulation: :none})
+      |> child(:aac_parser, %Membrane.AAC.Parser{
+        audio_specific_config: Base.decode16!("1210"),
+        out_encapsulation: :none
+      })
       |> via_in(Pad.ref(:input, :audio),
         options: [encoding: :AAC, segment_duration: Membrane.Time.seconds(4)]
       )

@@ -12,7 +12,7 @@ Mix.install([
   {:membrane_rtp_h264_plugin, "~> 0.20.0"},
   {:membrane_rtp_aac_plugin, "~> 0.9.1"},
   {:membrane_udp_plugin, "~> 0.14.0"},
-  {:membrane_aac_plugin, "~> 0.19.0"},
+  {:membrane_aac_plugin, "~> 0.19.0"}
 ])
 
 defmodule SendRTP do

@@ -1,6 +1,6 @@
 defmodule Membrane.Demo.RTSPToHLS.Pipeline do
   @moduledoc """
-  The pipeline, which converts the RTP stream to HLS.
+  The pipeline which converts the stream to HLS.
   """
   use Membrane.Pipeline
 
@@ -8,68 +8,46 @@ defmodule Membrane.Demo.RTSPToHLS.Pipeline do
 
   @impl true
   def handle_init(_context, options) do
-    Logger.debug("Source handle_init options: #{inspect(options)}")
-
     spec = [
       child(:source, %Membrane.RTSP.Source{
         transport: {:udp, options.port, options.port + 5},
         allowed_media_types: [:video, :audio],
         stream_uri: options.stream_url,
         on_connection_closed: :send_eos
+      }),
+      child(:hls, %Membrane.HTTPAdaptiveStream.SinkBin{
+        target_window_duration: Membrane.Time.seconds(120),
+        manifest_module: Membrane.HTTPAdaptiveStream.HLS,
+        storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{
+          directory: options.output_path
+        }
       })
     ]
 
-    {[spec: spec],
-     %{
-       output_path: options.output_path,
-       parent_pid: options.parent_pid,
-       tracks_left_to_link: nil,
-       track_specs: []
-     }}
+    {[spec: spec], %{parent_pid: options.parent_pid}}
   end
 
   @impl true
   def handle_child_notification({:set_up_tracks, tracks}, :source, _ctx, state) do
-    tracks_left_to_link =
-      [:audio, :video]
-      |> Enum.filter(fn media_type -> Enum.any?(tracks, &(&1.type == media_type)) end)
+    track_specs =
+      Enum.uniq_by(tracks, & &1.type)
+      |> Enum.filter(&(&1.type in [:audio, :video]))
+      |> Enum.map(fn track ->
+        encoding =
+          case track do
+            %{type: :audio} -> :AAC
+            %{type: :video} -> :H264
+          end
 
-    {[], %{state | tracks_left_to_link: tracks_left_to_link}}
-  end
-
-  @impl true
-  def handle_child_notification({:new_track, ssrc, track}, :source, _ctx, state) do
-    if track.type in state.tracks_left_to_link do
-      tracks_left_to_link = List.delete(state.tracks_left_to_link, track.type)
-      track_specs = [get_track_spec(ssrc, track) | state.track_specs]
-
-      spec_action =
-        if tracks_left_to_link == [] do
-          hls =
-            child(:hls, %Membrane.HTTPAdaptiveStream.SinkBin{
-              target_window_duration: Membrane.Time.seconds(120),
-              manifest_module: Membrane.HTTPAdaptiveStream.HLS,
-              storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{
-                directory: state.output_path
-              }
-            })
-
-          [spec: [hls | track_specs]]
-        else
-          []
-        end
-
-      {spec_action, %{state | track_specs: track_specs, tracks_left_to_link: tracks_left_to_link}}
-    else
-      Logger.warning("Unsupported stream connected")
-
-      spec =
         get_child(:source)
-        |> via_out(Pad.ref(:output, ssrc))
-        |> child({:fake_sink, ssrc}, Membrane.Debug.Sink)
+        |> via_out(Pad.ref(:output, track.control_path))
+        |> via_in(:input,
+          options: [encoding: encoding, segment_duration: Membrane.Time.seconds(4)]
+        )
+        |> get_child(:hls)
+      end)
 
-      {[spec: spec], state}
-    end
+    {[spec: track_specs], state}
   end
 
   @impl true
@@ -79,22 +57,8 @@ defmodule Membrane.Demo.RTSPToHLS.Pipeline do
   end
 
   @impl true
-  def handle_child_notification(_notification, _element, _ctx, state) do
+  def handle_child_notification(notification, _element, _ctx, state) do
+    Logger.warning("Ignoring notification #{notification}")
     {[], state}
-  end
-
-  defp get_track_spec(ssrc, track) do
-    encoding =
-      case track do
-        %{type: :audio} -> :AAC
-        %{type: :video} -> :H264
-      end
-
-    get_child(:source)
-    |> via_out(Pad.ref(:output, ssrc))
-    |> via_in(:input,
-      options: [encoding: encoding, segment_duration: Membrane.Time.seconds(4)]
-    )
-    |> get_child(:hls)
   end
 end

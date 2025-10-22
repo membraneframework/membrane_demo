@@ -31,13 +31,13 @@ defmodule Membrane.Demo.RTSPToHLS.MixProject do
       {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
       {:credo, ">= 0.0.0", only: :dev, runtime: false},
       {:connection, "~> 1.1"},
-      {:membrane_http_adaptive_stream_plugin, "~> 0.18.0"},
+      {:membrane_http_adaptive_stream_plugin, "~> 0.19.0"},
       {:membrane_realtimer_plugin, "~> 0.9.0"},
-      {:membrane_rtsp_plugin, "~> 0.5.0"},
+      {:membrane_rtsp_plugin, "~> 0.7.0"},
       {:membrane_aac_plugin, "~> 0.19.0"},
       {:membrane_rtp_aac_plugin, "~> 0.9.1"},
-      {:membrane_simple_rtsp_server, "~> 0.1.1"},
-      {:membrane_mp4_plugin, "~> 0.35.2"},
+      {:membrane_simple_rtsp_server, "~> 0.1.6"},
+      {:membrane_mp4_plugin, "~> 0.36.0"},
       {:membrane_udp_plugin, "~> 0.14.0"}
     ]
   end

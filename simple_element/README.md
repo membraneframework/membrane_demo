@@ -1,4 +1,4 @@
-# Membrane simple element demo
+# Simple Membrane Element
 
 This demo shows how to create a simple Membrane element and plug it into a pipeline.
 

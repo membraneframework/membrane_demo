@@ -1,4 +1,4 @@
-# RTSP to HLS converter demo
+# RTSP to HLS
 
 This demo demonstrates receiving the RTSP stream and converting it to the HLS stream.
 

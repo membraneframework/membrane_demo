@@ -1,4 +1,4 @@
-# Membrane Demo - RTP to HLS
+# RTP to HLS
 
 This project demonstrates handling RTP streams and converting them to HLS streams.
 

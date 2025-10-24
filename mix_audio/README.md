@@ -1,4 +1,4 @@
-# Membrane Demo - Mix Audio
+# Audio mixing
 
 This script demonstrates mixing two audio tracks
 

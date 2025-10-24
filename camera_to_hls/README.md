@@ -1,4 +1,4 @@
-# Membrane Demo - Camera Video to HLS
+# Camera feed to HLS
 
 This script demonstrates capturing camera video and broadcasting it via HLS.
 

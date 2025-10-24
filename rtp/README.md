@@ -1,4 +1,4 @@
-# Membrane Demo - RTP
+# RTP
 
 This project demonstrates handling RTP in Membrane.
 

@@ -58,7 +58,7 @@ defmodule Membrane.Demo.RTSPToHLS.Pipeline do
 
   @impl true
   def handle_child_notification(notification, _element, _ctx, state) do
-    Logger.warning("Ignoring notification #{notification}")
+    Logger.warning("Ignoring notification #{inspect(notification)}")
     {[], state}
   end
 end

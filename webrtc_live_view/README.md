@@ -1,4 +1,4 @@
-# Membrane Demo - WebRTC LiveView
+# WebRTC LiveView
 
 This project demonstrates how to use Membrane WebRTC with dedicated Phoenix LiveViews.
 

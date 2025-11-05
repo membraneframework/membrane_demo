@@ -1,4 +1,4 @@
-# Membrane Demo - Camera Video to HLS on Nerves
+# Camera feed to HLS with Nerves
 
 This demo demonstrates capturing video from a camera module on Raspberry Pi running Nerves and broadcasting it to a browser via HLS.
 

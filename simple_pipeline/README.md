@@ -1,4 +1,4 @@
-# Membrane simple pipeline demo
+# Simple Membrane Pipeline
 
 This demo shows how to create a pipeline that plays an mp3 file.
 

@@ -11,6 +11,7 @@ File.mkdir_p(output_path)
 
 pipeline_options = %{
   port: rtp_port,
+  port_range_size: 5,
   output_path: output_path,
   stream_url: rtsp_stream_url,
   parent_pid: self()

@@ -10,7 +10,7 @@ defmodule Membrane.Demo.RTSPToHLS.Pipeline do
   def handle_init(_context, options) do
     spec = [
       child(:source, %Membrane.RTSP.Source{
-        transport: {:udp, options.port, options.port + 5},
+        transport: {:udp, options.port, options.port + options.port_range_size},
         allowed_media_types: [:video, :audio],
         stream_uri: options.stream_url,
         on_connection_closed: :send_eos

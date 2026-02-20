@@ -14,7 +14,6 @@ In the subdirectories of this repository you can find the following examples of 
 - [rtp](https://github.com/membraneframework/membrane_demo/tree/master/rtp) - sending and receiving RTP/SRTP stream
 - [rtp_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtp_to_hls) - receiving RTP stream and broadcasting it via HLS
 - [rtsp_to_hls](https://github.com/membraneframework/membrane_demo/tree/master/rtsp_to_hls) - receiving RTSP stream and converting it to HLS
-- [video_mixer](https://github.com/membraneframework/membrane_demo/tree/master/video_mixer) - how to mix audio and video files
 
 Also, there are some [Livebook](https://livebook.dev) examples located in [livebooks](https://github.com/membraneframework/membrane_demo/tree/master/livebooks) directory:
 

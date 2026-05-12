@@ -1,0 +1,148 @@
+# Style Transfer Demos
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.13"},
+  {:membrane_style_transfer_plugin,
+   github: "membraneframework-labs/membrane_style_transfer_plugin", tag: "v0.1.0"},
+  {:membrane_camera_capture_plugin, "~> 0.7.2"},
+  {:membrane_ffmpeg_swscale_plugin, "~> 0.15.1"},
+  {:membrane_webrtc_plugin, "~> 0.25.3"},
+  {:membrane_h264_ffmpeg_plugin, "~> 0.31.0"},
+  {:membrane_h26x_plugin, "~> 0.10.0"}
+])
+
+Logger.configure(level: :info)
+```
+
+## Browser player
+
+A small Kino widget that renders the styled output inside the notebook.
+
+```elixir
+defmodule WebRTCPlayer do
+  use Kino.JS, assets_path: "#{__DIR__}/assets", entrypoint: "webrtc_player.js"
+
+  def new() do
+    Kino.JS.new(__MODULE__, File.read!("#{__DIR__}/assets/webrtc_player.html"))
+  end
+end
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Single style
+
+`%Membrane.StyleTransfer{style: opts[:style]}` is the whole demo — it takes raw `RGB` frames in and emits stylised `RGB` frames out, picking the model based on the `:style` option. Available styles: `:candy`, `:kaganawa`, `:mosaic`, `:mosaic_mobile`, `:picasso`, `:princess`, `:udnie`, `:vangogh`.
+
+The model has a fixed input size, so the frame is scaled down before the filter. If you see latency climbing, drop `output_height` / `output_width`; if you have headroom, bump them up for sharper output.
+
+```elixir
+defmodule Example do
+  use Membrane.Pipeline
+
+  alias Membrane.FFmpeg.SWScale
+
+  @impl true
+  def handle_init(_ctx, opts) do
+    height = opts[:output_height]
+    width = opts[:output_width]
+
+    spec =
+      child(Membrane.CameraCapture)
+      |> child(%SWScale.PixelFormatConverter{format: :I420})
+      |> child(%SWScale.Scaler{output_height: height, output_width: width})
+      |> child(%SWScale.PixelFormatConverter{format: :RGB})
+      |> child(%Membrane.StyleTransfer{style: opts[:style]})
+      |> child(%SWScale.PixelFormatConverter{format: :I420})
+      |> child(Membrane.H264.FFmpeg.Encoder)
+      |> child(%Membrane.H264.Parser{output_alignment: :nalu})
+      |> via_in(:input, options: [kind: :video])
+      |> child(%Membrane.WebRTC.Sink{
+        tracks: [:video],
+        video_codec: :h264,
+        signaling: {:websocket, port: 8829}
+      })
+
+    {[spec: spec], %{}}
+  end
+end
+```
+
+```elixir
+{:ok, _supervisor, _pipeline} =
+  Membrane.Pipeline.start_link(Example, style: :vangogh, output_height: 400, output_width: 400)
+
+WebRTCPlayer.new() |> Kino.render()
+
+Process.sleep(:infinity)
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Rotating styles
+
+The interesting part: the `Membrane.StyleTransfer` filter can swap its model at runtime. The element is given a name (`:style_tranfer`) so the parent can address it. A Membrane timer fires every 1.5 s and the parent sends a `{:set_style, new_style}` notification — the filter loads the new ONNX model on the next frame, without disturbing the pipeline.
+
+```elixir
+defmodule RotatingExample do
+  use Membrane.Pipeline
+
+  alias Membrane.FFmpeg.SWScale
+  alias Membrane.StyleTransfer
+
+  @style_change_time_interval Membrane.Time.milliseconds(1_500)
+
+  @impl true
+  def handle_init(_ctx, opts) do
+    height = opts[:output_height]
+    width = opts[:output_width]
+    first_style = :picasso
+
+    spec =
+      child(Membrane.CameraCapture)
+      |> child(%SWScale.PixelFormatConverter{format: :I420})
+      |> child(%SWScale.Scaler{output_height: height, output_width: width})
+      |> child(%SWScale.PixelFormatConverter{format: :RGB})
+      |> child(:style_tranfer, %StyleTransfer{style: first_style})
+      |> child(%SWScale.PixelFormatConverter{format: :I420})
+      |> child(Membrane.H264.FFmpeg.Encoder)
+      |> child(%Membrane.H264.Parser{output_alignment: :nalu})
+      |> via_in(:input, options: [kind: :video])
+      |> child(%Membrane.WebRTC.Sink{
+        tracks: [:video],
+        video_codec: :h264,
+        signaling: {:websocket, port: 8829}
+      })
+
+    {[spec: spec], %{current_style: first_style}}
+  end
+
+  @impl true
+  def handle_playing(_ctx, state) do
+    {[start_timer: {:timer, @style_change_time_interval}], state}
+  end
+
+  @impl true
+  def handle_tick(:timer, _ctx, state) do
+    new_style =
+      StyleTransfer.available_styles()
+      |> List.delete(state.current_style)
+      |> Enum.random()
+
+    notification = {:set_style, new_style}
+    state = %{state | current_style: new_style}
+
+    {[notify_child: {:style_tranfer, notification}], state}
+  end
+end
+```
+
+```elixir
+{:ok, _supervisor, _pipeline} =
+  Membrane.Pipeline.start_link(RotatingExample, output_height: 400, output_width: 400)
+
+WebRTCPlayer.new() |> Kino.render()
+
+Process.sleep(:infinity)
+```

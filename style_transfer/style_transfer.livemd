@@ -23,8 +23,9 @@ A small Kino widget that renders the styled output inside the notebook.
 defmodule WebRTCPlayer do
   use Kino.JS, assets_path: "#{__DIR__}/assets", entrypoint: "webrtc_player.js"
 
-  def new() do
-    Kino.JS.new(__MODULE__, File.read!("#{__DIR__}/assets/webrtc_player.html"))
+  def new(port) do
+    html = File.read!("#{__DIR__}/assets/webrtc_player.html")
+    Kino.JS.new(__MODULE__, %{html: html, port: port})
   end
 end
 ```
@@ -61,7 +62,7 @@ defmodule Example do
       |> child(%Membrane.WebRTC.Sink{
         tracks: [:video],
         video_codec: :h264,
-        signaling: {:websocket, port: 8829}
+        signaling: {:websocket, port: opts[:port]}
       })
 
     {[spec: spec], %{}}
@@ -70,10 +71,17 @@ end
 ```
 
 ```elixir
-{:ok, _supervisor, _pipeline} =
-  Membrane.Pipeline.start_link(Example, style: :vangogh, output_height: 400, output_width: 400)
+port = 8832
 
-WebRTCPlayer.new() |> Kino.render()
+{:ok, _supervisor, _pipeline} =
+  Membrane.Pipeline.start_link(Example,
+    style: :vangogh,
+    output_height: 400,
+    output_width: 400,
+    port: port
+  )
+
+WebRTCPlayer.new(port) |> Kino.render()
 
 Process.sleep(:infinity)
 ```
@@ -112,7 +120,7 @@ defmodule RotatingExample do
       |> child(%Membrane.WebRTC.Sink{
         tracks: [:video],
         video_codec: :h264,
-        signaling: {:websocket, port: 8829}
+        signaling: {:websocket, port: opts[:port]}
       })
 
     {[spec: spec], %{current_style: first_style}}
@@ -139,10 +147,16 @@ end
 ```
 
 ```elixir
-{:ok, _supervisor, _pipeline} =
-  Membrane.Pipeline.start_link(RotatingExample, output_height: 400, output_width: 400)
+port = 8833
 
-WebRTCPlayer.new() |> Kino.render()
+{:ok, _supervisor, _pipeline} =
+  Membrane.Pipeline.start_link(RotatingExample,
+    output_height: 400,
+    output_width: 400,
+    port: port
+  )
+
+WebRTCPlayer.new(port) |> Kino.render()
 
 Process.sleep(:infinity)
 ```

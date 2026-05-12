@@ -1,0 +1,314 @@
+# YOLO Demos
+
+```elixir
+hardware_acceleration =
+  case :os.type() do
+    {:unix, :darwin} -> :coreml
+    {:unix, :linux} -> :cuda
+  end
+
+with {:unix, :darwin} <- :os.type() do
+  System.put_env("PATH", "/opt/homebrew/bin:#{System.get_env("PATH")}")
+end
+
+Mix.install(
+  [
+    {:kino, "~> 0.13"},
+    {:membrane_yolo_plugin, "~> 0.1.0"},
+    {:membrane_camera_capture_plugin, "~> 0.7.4"},
+    {:membrane_ffmpeg_swscale_plugin, "~> 0.16.3"},
+    {:membrane_webrtc_plugin, "~> 0.26.0"},
+    {:membrane_h264_ffmpeg_plugin, "~> 0.32.0"},
+    {:membrane_h26x_plugin, "~> 0.10.0"},
+    {:membrane_transcoder_plugin, "~> 0.3.2"},
+    {:boombox, "~> 0.2.8"},
+    {:exla, "~> 0.10"},
+    {:req, "~> 0.5"}
+  ],
+  config: [
+    ortex: [
+      {Ortex.Native, [features: [hardware_acceleration]]}
+    ],
+    nx: [
+      default_backend: EXLA.Backend
+    ]
+  ]
+)
+
+Logger.configure(level: :info)
+```
+
+## Download fixtures and model
+
+The detector needs the YOLOX-L ONNX weights and the COCO class list. Fetch them along with two sample clips into a tmp directory; subsequent runs are cached.
+
+```elixir
+tmp_dir = System.tmp_dir!() |> Path.join("membrane_yolo_plugin")
+File.mkdir_p!(tmp_dir)
+
+model_name = "yolox_l.onnx"
+model_path = Path.join(tmp_dir, model_name)
+
+if not File.exists?(model_path) do
+  model_url =
+    "https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/#{model_name}"
+
+  %{body: data} = Req.get!(model_url)
+  File.write!(model_path, data)
+end
+
+fixtures_url =
+  "https://raw.githubusercontent.com/membraneframework/membrane_yolo_plugin/master/examples/fixtures"
+
+long_mp4_path = Path.join(tmp_dir, "street.mp4")
+
+if not File.exists?(long_mp4_path) do
+  %{status: 200, body: data} = Req.get!("#{fixtures_url}/street.mp4")
+  File.write!(long_mp4_path, data)
+end
+
+short_mp4_path = Path.join(tmp_dir, "street_short.mp4")
+
+if not File.exists?(short_mp4_path) do
+  %{status: 200, body: data} = Req.get!("#{fixtures_url}/street_short.mp4")
+  File.write!(short_mp4_path, data)
+end
+
+classes_path = Path.join(tmp_dir, "coco_classes.json")
+
+if not File.exists?(classes_path) do
+  classes_url =
+    "https://raw.githubusercontent.com/membraneframework/membrane_yolo_plugin/master/examples/models/coco_classes.json"
+
+  %{status: 200, body: data} = Req.get!(classes_url)
+  File.write!(classes_path, data)
+end
+
+:ok
+```
+
+## Browser player
+
+A small Kino widget that renders the YOLO-annotated stream inside the notebook over WebRTC.
+
+```elixir
+defmodule WebRTCPlayer do
+  use Kino.JS, assets_path: "#{__DIR__}/assets", entrypoint: "webrtc_player.js"
+
+  def new(port) do
+    html = File.read!("#{__DIR__}/assets/webrtc_player.html")
+    Kino.JS.new(__MODULE__, %{html: html, port: port})
+  end
+end
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Live object detection on the local camera
+
+`Membrane.YOLO.Detector` is the whole demo — it takes raw `RGB` frames, runs them through the ONNX model loaded with `YOLO.load/1`, and emits the same frames annotated with detections. `Membrane.YOLO.Drawer` then draws bounding boxes onto the frames. A `Boombox.Bin` sink takes the raw `I420` output and handles the encode + WebRTC plumbing internally.
+
+`mode: :live_low_latency` skips frames when the model can't keep up so the preview stays close to wall-clock time. If you see boxes lagging behind the scene, lower `output_width` for a smaller (faster) input to the model.
+
+```elixir
+defmodule YOLO.CameraCapture.Pipeline do
+  use Membrane.Pipeline
+
+  alias Membrane.FFmpeg.SWScale
+
+  @impl true
+  def handle_init(_ctx, opts) do
+    spec =
+      child(:camera, Membrane.CameraCapture)
+      |> child(:to_rgb, %SWScale.Converter{format: :RGB, output_width: 640})
+      |> child(:detector, %Membrane.YOLO.Detector{
+        mode: :live_low_latency,
+        yolo_model:
+          YOLO.load(
+            model_impl: YOLO.Models.YOLOX,
+            model_path: opts[:model_path],
+            classes_path: opts[:classes_path],
+            eps: [opts[:hardware_acceleration]]
+          )
+      })
+      |> child(:drawer, Membrane.YOLO.Drawer)
+      |> child(:to_i420, %SWScale.Converter{format: :I420})
+      |> via_in(:input, options: [kind: :video])
+      |> child(:sink, %Boombox.Bin{output: {:webrtc, "ws://0.0.0.0:#{opts[:port]}"}})
+
+    {[spec: spec], %{}}
+  end
+end
+```
+
+```elixir
+port = 8829
+
+{:ok, _supervisor, _pipeline} =
+  Membrane.Pipeline.start_link(YOLO.CameraCapture.Pipeline,
+    port: port,
+    model_path: model_path,
+    classes_path: classes_path,
+    hardware_acceleration: hardware_acceleration
+  )
+
+WebRTCPlayer.new(port) |> Kino.render()
+
+Process.sleep(:infinity)
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Live object detection on an MP4 file
+
+Pulls an MP4 from disk, extracts the video track, decodes it to raw frames, scales/converts to `RGB`, and feeds it to the detector at wall-clock speed via `Membrane.Realtimer`. `mode: :live` keeps every frame (no skipping) but allows the pipeline to drift up to `additional_latency` behind realtime before catching up.
+
+```elixir
+defmodule YOLO.MP4.LivePipeline do
+  use Membrane.Pipeline
+
+  alias Membrane.FFmpeg.SWScale
+
+  @impl true
+  def handle_init(_ctx, opts) do
+    spec =
+      child(:source, %Boombox.Bin{input: opts[:file]})
+      |> via_out(:output, options: [kind: :video])
+      |> child(:transcoder, %Membrane.Transcoder{output_stream_format: Membrane.RawVideo})
+      |> child(:to_rgb, %SWScale.Converter{format: :RGB, output_width: 640})
+      |> child(:realtimer, Membrane.Realtimer)
+      |> child(:detector, %Membrane.YOLO.Detector{
+        mode: :live,
+        yolo_model:
+          YOLO.load(
+            model_impl: YOLO.Models.YOLOX,
+            model_path: opts[:model_path],
+            classes_path: opts[:classes_path],
+            eps: [opts[:hardware_acceleration]]
+          ),
+        additional_latency: Membrane.Time.milliseconds(500)
+      })
+      |> child(:drawer, Membrane.YOLO.Drawer)
+      |> child(:to_i420, %SWScale.Converter{format: :I420})
+      |> via_in(:input, options: [kind: :video])
+      |> child(:sink, %Boombox.Bin{output: {:webrtc, "ws://0.0.0.0:#{opts[:port]}"}})
+
+    {[spec: spec], %{}}
+  end
+
+  @impl true
+  def handle_child_notification(:processing_finished, :sink, _ctx, state) do
+    {[terminate: :normal], state}
+  end
+
+  def handle_child_notification(_notification, _child, _ctx, state), do: {[], state}
+end
+```
+
+```elixir
+port = 8830
+
+{:ok, supervisor, _pipeline} =
+  Membrane.Pipeline.start_link(YOLO.MP4.LivePipeline,
+    file: long_mp4_path,
+    port: port,
+    model_path: model_path,
+    classes_path: classes_path,
+    hardware_acceleration: hardware_acceleration
+  )
+
+Process.monitor(supervisor)
+
+WebRTCPlayer.new(port) |> Kino.render()
+
+receive do
+  {:DOWN, _ref, :process, _pid, _reason} -> :ok
+end
+```
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Offline object detection on an MP4 file
+
+The live demos use `mode: :live*`, which trades frame fidelity for keeping up with wall time. When you don't need realtime — e.g. you're batch-processing a clip and want every frame annotated — switch the detector to `mode: :offline`. The pipeline below runs as fast as the model allows and writes the annotated video to a new MP4. A `Membrane.Debug.Filter` taps the stream to publish progress into a Kino frame.
+
+```elixir
+result_file = Path.join(tmp_dir, "street_with_bounding_boxes.mp4")
+
+defmodule YOLO.MP4.OfflinePipeline do
+  use Membrane.Pipeline
+
+  alias Membrane.FFmpeg.SWScale
+
+  @impl true
+  def handle_init(_ctx, opts) do
+    frame = opts[:frame]
+    Kino.Frame.render(frame, Kino.Markdown.new("Processed 0 ms of 10000 ms"))
+
+    spec =
+      child(:source, %Boombox.Bin{input: opts[:file]})
+      |> via_out(:output, options: [kind: :video])
+      |> child(:transcoder, %Membrane.Transcoder{output_stream_format: Membrane.RawVideo})
+      |> child(:to_rgb, %SWScale.Converter{format: :RGB, output_width: 640})
+      |> child(:detector, %Membrane.YOLO.Detector{
+        mode: :offline,
+        yolo_model:
+          YOLO.load(
+            model_impl: YOLO.Models.YOLOX,
+            model_path: opts[:model_path],
+            classes_path: opts[:classes_path],
+            eps: [opts[:hardware_acceleration]]
+          )
+      })
+      |> child(:drawer, Membrane.YOLO.Drawer)
+      |> child(:progress, %Membrane.Debug.Filter{
+        handle_buffer: fn buffer ->
+          pts_ms = Membrane.Time.as_milliseconds(buffer.pts, :round)
+          Kino.Frame.render(frame, Kino.Markdown.new("Processed #{pts_ms} ms of 10000 ms"))
+        end
+      })
+      |> child(:to_i420, %SWScale.Converter{format: :I420})
+      |> via_in(:input, options: [kind: :video])
+      |> child(:sink, %Boombox.Bin{output: opts[:output]})
+
+    {[spec: spec], %{}}
+  end
+
+  @impl true
+  def handle_child_notification(:processing_finished, :sink, _ctx, state) do
+    {[terminate: :normal], state}
+  end
+
+  def handle_child_notification(_notification, _child, _ctx, state), do: {[], state}
+end
+```
+
+```elixir
+progress_frame = Kino.Frame.new() |> Kino.render()
+
+{:ok, supervisor, _pipeline} =
+  Membrane.Pipeline.start_link(YOLO.MP4.OfflinePipeline,
+    file: short_mp4_path,
+    output: result_file,
+    frame: progress_frame,
+    model_path: model_path,
+    classes_path: classes_path,
+    hardware_acceleration: hardware_acceleration
+  )
+
+Process.monitor(supervisor)
+
+receive do
+  {:DOWN, _ref, :process, _pid, :normal} -> :ok
+end
+```
+
+Once processing has finished, replay the saved MP4 to the same WebRTC player using `Boombox.run/1`. It handles the demuxing, re-encoding, and pacing internally — no extra pipeline needed.
+
+```elixir
+port = 8831
+
+WebRTCPlayer.new(port) |> Kino.render()
+
+Boombox.run(input: result_file, output: {:webrtc, "ws://0.0.0.0:#{port}"})
+```

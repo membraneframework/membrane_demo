@@ -1,0 +1,160 @@
+# Whisper Demos
+
+```elixir
+Mix.install(
+  [
+    {:kino, "~> 0.13"},
+    {:membrane_whisper_plugin, "~> 0.1.0"},
+    {:membrane_portaudio_plugin, "~> 0.19.4"},
+    {:membrane_transcoder_plugin, "~> 0.3.2"},
+    {:membrane_raw_audio_format, "~> 0.12.0"},
+    {:membrane_ffmpeg_swresample_plugin, "~> 0.20.5"},
+    {:boombox, "~> 0.2.8"},
+    {:exla, "~> 0.10"}
+  ],
+  config: [
+    nx: [default_backend: EXLA.Backend]
+  ]
+)
+
+Logger.configure(level: :info)
+```
+
+## Transcript widget
+
+`Membrane.Whisper.TranscriberFilter` wraps a Bumblebee `speech_to_text_whisper` serving. It accepts raw `f32le` mono audio at 16 kHz and emits `Membrane.Whisper.TranscriptEvent` events as the model finishes each chunk (chunk length is set on the serving via `:chunk_num_seconds`). The sink below soaks up buffers and pipes each event's text into a Kino frame so the transcript grows in the notebook as it's produced.
+
+```elixir
+defmodule TranscriptSink do
+  use Membrane.Sink
+
+  def_input_pad :input,
+    accepted_format: _any,
+    flow_control: :auto
+
+  def_options frame: [spec: Kino.Frame.t()]
+
+  @impl true
+  def handle_init(_ctx, opts), do: {[], %{frame: opts.frame, text: ""}}
+
+  @impl true
+  def handle_buffer(:input, _buffer, _ctx, state), do: {[], state}
+
+  @impl true
+  def handle_event(:input, %Membrane.Whisper.TranscriptEvent{text: text}, _ctx, state) do
+    new_text = state.text <> text
+    Kino.Frame.render(state.frame, Kino.Markdown.new(new_text))
+    {[], %{state | text: new_text}}
+  end
+
+  def handle_event(pad, event, ctx, state), do: super(pad, event, ctx, state)
+end
+```
+
+```elixir
+defmodule WhisperServing do
+  def new(opts \\ []) do
+    hf_repo = "openai/whisper-tiny"
+
+    {:ok, whisper} = Bumblebee.load_model({:hf, hf_repo})
+    {:ok, featurizer} = Bumblebee.load_featurizer({:hf, hf_repo})
+    {:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, hf_repo})
+    {:ok, generation_config} = Bumblebee.load_generation_config({:hf, hf_repo})
+
+    Bumblebee.Audio.speech_to_text_whisper(
+      whisper,
+      featurizer,
+      tokenizer,
+      generation_config,
+      stream: true,
+      chunk_num_seconds: Keyword.get(opts, :chunk_num_seconds, 10)
+    )
+  end
+end
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## Live microphone
+
+Streams the system microphone into the filter and renders the rolling transcript below. Speak into the mic — chunks land in the frame every `chunk_num_seconds` once enough audio has buffered.
+
+```elixir
+defmodule MicPipeline do
+  use Membrane.Pipeline
+
+  @impl true
+  def handle_init(_ctx, opts) do
+    spec =
+      child(:mic, %Membrane.PortAudio.Source{
+        sample_format: :f32le,
+        channels: 1,
+        sample_rate: 16_000,
+        latency: :low
+      })
+      |> via_in(:input, toilet_capacity: 1_000)
+      |> child(:whisper, %Membrane.Whisper.TranscriberFilter{
+        serving: WhisperServing.new(chunk_num_seconds: 10)
+      })
+      |> child(:sink, %TranscriptSink{frame: opts[:frame]})
+
+    {[spec: spec], %{}}
+  end
+end
+```
+
+```elixir
+frame = Kino.Frame.new() |> Kino.render()
+
+{:ok, _supervisor, _pipeline} =
+  Membrane.Pipeline.start_link(MicPipeline, frame: frame)
+
+Process.sleep(:infinity)
+```
+
+<!-- livebook:{"branch_parent_index":0} -->
+
+## MP4 file
+
+Pulls an MP4 from a URL, extracts the audio track, resamples it to what the filter expects, and transcribes it. `Membrane.Realtimer` paces the stream at wall-clock speed so transcripts arrive at roughly the same rate as the audio plays in the source.
+
+```elixir
+defmodule MP4Pipeline do
+  use Membrane.Pipeline
+
+  @samples_url "https://raw.githubusercontent.com/membraneframework/static/gh-pages/samples"
+
+  @impl true
+  def handle_init(_ctx, opts) do
+    spec =
+      child(:source, %Boombox.Bin{input: "#{@samples_url}/sherlock_librivox.mp4"})
+      |> via_out(:output, options: [kind: :audio])
+      |> child(:transcoder, %Membrane.Transcoder{
+        output_stream_format: Membrane.RawAudio
+      })
+      |> child(:resampler, %Membrane.FFmpeg.SWResample.Converter{
+        output_stream_format: %Membrane.RawAudio{
+          sample_format: :f32le,
+          channels: 1,
+          sample_rate: 16_000
+        }
+      })
+      |> child(:realtimer, Membrane.Realtimer)
+      |> child(:whisper, %Membrane.Whisper.TranscriberFilter{
+        serving: WhisperServing.new(chunk_num_seconds: 8)
+      })
+      |> child(:sink, %TranscriptSink{frame: opts[:frame]})
+
+    {[spec: spec], %{}}
+  end
+end
+```
+
+```elixir
+frame = Kino.Frame.new() |> Kino.render()
+
+{:ok, _supervisor, _pipeline} =
+  Membrane.Pipeline.start_link(MP4Pipeline, frame: frame)
+
+Process.sleep(:infinity)
+```

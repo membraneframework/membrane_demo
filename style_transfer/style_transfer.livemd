@@ -34,9 +34,11 @@ end
 
 ## Single style
 
-`%Membrane.StyleTransfer{style: opts[:style]}` is the whole demo — it takes raw `RGB` frames in and emits stylised `RGB` frames out, picking the model based on the `:style` option. Available styles: `:candy`, `:kaganawa`, `:mosaic`, `:mosaic_mobile`, `:picasso`, `:princess`, `:udnie`, `:vangogh`.
+`Membrane.StyleTransfer` runs raw `RGB` frames through an ONNX model picked by `:style` and emits stylised `RGB` frames. Available styles: `:candy`, `:kaganawa`, `:mosaic`, `:mosaic_mobile`, `:picasso`, `:princess`, `:udnie`, `:vangogh`.
 
-The model has a fixed input size, so the frame is scaled down before the filter. If you see latency climbing, drop `output_height` / `output_width`; if you have headroom, bump them up for sharper output.
+The rest of the pipeline scales camera frames to `output_width × output_height`, converts them to `RGB` for the model, then back to `I420` for the H.264 encoder, which feeds the WebRTC sink.
+
+The model has a fixed input size, so the scaler dictates how much work it does per frame. Lower `output_width` / `output_height` if latency climbs, raise them for sharper output.
 
 ```elixir
 defmodule Example do
@@ -90,7 +92,7 @@ Process.sleep(:infinity)
 
 ## Rotating styles
 
-The interesting part: the `Membrane.StyleTransfer` filter can swap its model at runtime. The element is given a name (`:style_tranfer`) so the parent can address it. A Membrane timer fires every 1.5 s and the parent sends a `{:set_style, new_style}` notification — the filter loads the new ONNX model on the next frame, without disturbing the pipeline.
+`Membrane.StyleTransfer` can swap its model at runtime. The element gets a name (`:style_transfer`) so the parent pipeline can address it. A 1.5 s timer in the parent picks a new style and sends `{:set_style, new_style}` to the filter, which loads the new ONNX model on the next frame without restarting the pipeline.
 
 ```elixir
 defmodule RotatingExample do
@@ -112,7 +114,7 @@ defmodule RotatingExample do
       |> child(%SWScale.PixelFormatConverter{format: :I420})
       |> child(%SWScale.Scaler{output_height: height, output_width: width})
       |> child(%SWScale.PixelFormatConverter{format: :RGB})
-      |> child(:style_tranfer, %StyleTransfer{style: first_style})
+      |> child(:style_transfer, %StyleTransfer{style: first_style})
       |> child(%SWScale.PixelFormatConverter{format: :I420})
       |> child(Membrane.H264.FFmpeg.Encoder)
       |> child(%Membrane.H264.Parser{output_alignment: :nalu})
@@ -141,7 +143,7 @@ defmodule RotatingExample do
     notification = {:set_style, new_style}
     state = %{state | current_style: new_style}
 
-    {[notify_child: {:style_tranfer, notification}], state}
+    {[notify_child: {:style_transfer, notification}], state}
   end
 end
 ```

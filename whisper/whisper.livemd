@@ -22,7 +22,7 @@ Logger.configure(level: :info)
 
 ## Transcript widget
 
-`Membrane.Whisper.TranscriberFilter` wraps a Bumblebee `speech_to_text_whisper` serving. It accepts raw `f32le` mono audio at 16 kHz and emits `Membrane.Whisper.TranscriptEvent` events as the model finishes each chunk (chunk length is set on the serving via `:chunk_num_seconds`). The sink below soaks up buffers and pipes each event's text into a Kino frame so the transcript grows in the notebook as it's produced.
+`Membrane.Whisper.TranscriberFilter` wraps a Bumblebee `speech_to_text_whisper` serving. It takes raw `f32le` mono audio at 16 kHz and emits a `Membrane.Whisper.TranscriptEvent` for each chunk (chunk length set on the serving via `:chunk_num_seconds`). The sink below drops the buffers and appends each event's text to a Kino frame.
 
 ```elixir
 defmodule TranscriptSink do
@@ -77,7 +77,7 @@ end
 
 ## Live microphone
 
-Streams the system microphone into the filter and renders the rolling transcript below. Speak into the mic — chunks land in the frame every `chunk_num_seconds` once enough audio has buffered.
+Streams the system microphone into the filter. Chunks land in the frame every `chunk_num_seconds` once enough audio has buffered.
 
 ```elixir
 defmodule MicPipeline do
@@ -116,7 +116,7 @@ Process.sleep(:infinity)
 
 ## MP4 file
 
-Pulls an MP4 from a URL, extracts the audio track, resamples it to what the filter expects, and transcribes it. `Membrane.Realtimer` paces the stream at wall-clock speed so transcripts arrive at roughly the same rate as the audio plays in the source.
+Pulls an MP4 from a URL, extracts the audio track, resamples to `f32le` mono 16 kHz, and transcribes it. `Membrane.Realtimer` paces the stream at wall-clock speed.
 
 ```elixir
 defmodule MP4Pipeline do

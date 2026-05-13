@@ -106,9 +106,9 @@ end
 
 ## Live object detection on the local camera
 
-`Membrane.YOLO.Detector` is the whole demo — it takes raw `RGB` frames, runs them through the ONNX model loaded with `YOLO.load/1`, and emits the same frames annotated with detections. `Membrane.YOLO.Drawer` then draws bounding boxes onto the frames. A `Boombox.Bin` sink takes the raw `I420` output and handles the encode + WebRTC plumbing internally.
+`Membrane.YOLO.Detector` runs raw `RGB` frames through an ONNX model loaded by `YOLO.load/1` and emits the same frames with detections attached as metadata. `Membrane.YOLO.Drawer` reads that metadata and burns bounding boxes onto the pixels. A `Boombox.Bin` sink takes the resulting `I420` frames and handles encoding plus WebRTC signaling.
 
-`mode: :live_low_latency` skips frames when the model can't keep up so the preview stays close to wall-clock time. If you see boxes lagging behind the scene, lower `output_width` for a smaller (faster) input to the model.
+`mode: :live_low_latency` drops frames when the model falls behind, keeping the preview close to wall-clock time. Lower `output_width` if boxes lag behind the scene.
 
 ```elixir
 defmodule YOLO.CameraCapture.Pipeline do
@@ -161,7 +161,7 @@ Process.sleep(:infinity)
 
 ## Live object detection on an MP4 file
 
-Pulls an MP4 from disk, extracts the video track, decodes it to raw frames, scales/converts to `RGB`, and feeds it to the detector at wall-clock speed via `Membrane.Realtimer`. `mode: :live` keeps every frame (no skipping) but allows the pipeline to drift up to `additional_latency` behind realtime before catching up.
+Pulls an MP4 from disk, decodes the video track, scales and converts to `RGB`, and pushes it through `Membrane.Realtimer` so the detector runs at wall-clock speed. `mode: :live` keeps every frame but lets the pipeline drift up to `additional_latency` behind realtime before catching up.
 
 ```elixir
 defmodule YOLO.MP4.LivePipeline do
@@ -230,7 +230,7 @@ end
 
 ## Offline object detection on an MP4 file
 
-The live demos use `mode: :live*`, which trades frame fidelity for keeping up with wall time. When you don't need realtime — e.g. you're batch-processing a clip and want every frame annotated — switch the detector to `mode: :offline`. The pipeline below runs as fast as the model allows and writes the annotated video to a new MP4. A `Membrane.Debug.Filter` taps the stream to publish progress into a Kino frame.
+For batch processing where every frame matters and wall time doesn't, switch the detector to `mode: :offline`. The pipeline runs as fast as the model allows and writes the annotated video to a new MP4. A `Membrane.Debug.Filter` taps the stream to publish progress into a Kino frame.
 
 ```elixir
 result_file = Path.join(tmp_dir, "street_with_bounding_boxes.mp4")
@@ -303,7 +303,7 @@ receive do
 end
 ```
 
-Once processing has finished, replay the saved MP4 to the same WebRTC player using `Boombox.run/1`. It handles the demuxing, re-encoding, and pacing internally — no extra pipeline needed.
+Replay the saved MP4 through the same WebRTC player using `Boombox.run/1`. It handles demuxing, re-encoding, and pacing internally.
 
 ```elixir
 port = 8831

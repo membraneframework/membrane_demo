@@ -40,7 +40,7 @@ Logger.configure(level: :info)
 
 ## Download fixtures and model
 
-The detector needs the YOLOX-L ONNX weights and the COCO class list. Fetch them along with two sample clips into a tmp directory; subsequent runs are cached.
+The detector needs the YOLOX-L ONNX weights and the COCO class list. Fetch them along with two sample clips into a tmp directory.
 
 ```elixir
 tmp_dir = System.tmp_dir!() |> Path.join("membrane_yolo_plugin")
@@ -106,9 +106,11 @@ end
 
 ## Live object detection on the local camera
 
-`Membrane.YOLO.Detector` runs raw `RGB` frames through an ONNX model loaded by `YOLO.load/1` and emits the same frames with detections attached as metadata. `Membrane.YOLO.Drawer` reads that metadata and burns bounding boxes onto the pixels. A `Boombox.Bin` sink takes the resulting `I420` frames and handles encoding plus WebRTC signaling.
+`Membrane.YOLO.Detector` runs raw `RGB` frames through an ONNX model loaded by `YOLO.load/1` and emits the same frames with detections attached as metadata. `Membrane.YOLO.Drawer` reads that metadata and burns bounding boxes onto the pixels. A `Boombox.Bin` sink takes the raw video frames in `I420` format and sends them to the browser over WebRTC.
 
-`mode: :live_low_latency` drops frames when the model falls behind, keeping the preview close to wall-clock time. Lower `output_width` if boxes lag behind the scene.
+`mode: :live_low_latency` runs model inference on every n-th frame, adjusting dynamically to the inference time and pace of the stream. It doesn't add any latency to the stream; however, the bounding boxes can be a little bit shifted in time to the stream compared to the `mode: :live` option.
+
+If you lower `output_width`, the model inference time will decrease and you will see more frequent bounding box updates in the stream.
 
 ```elixir
 defmodule YOLO.CameraCapture.Pipeline do
@@ -161,7 +163,7 @@ Process.sleep(:infinity)
 
 ## Live object detection on an MP4 file
 
-Pulls an MP4 from disk, decodes the video track, scales and converts to `RGB`, and pushes it through `Membrane.Realtimer` so the detector runs at wall-clock speed. `mode: :live` keeps every frame but lets the pipeline drift up to `additional_latency` behind realtime before catching up.
+Pulls an MP4 from disk, decodes the video track, and pushes it through `Membrane.Realtimer` so the stream flows through the pipeline at a realtime pace. `mode: :live` performs model inferences as fast as it can and adds a latency of approximately one inference time to the stream, but bounding boxes fit the stream better compared to the `:live_low_latency` mode.
 
 ```elixir
 defmodule YOLO.MP4.LivePipeline do
@@ -230,7 +232,7 @@ end
 
 ## Offline object detection on an MP4 file
 
-For batch processing where every frame matters and wall time doesn't, switch the detector to `mode: :offline`. The pipeline runs as fast as the model allows and writes the annotated video to a new MP4. A `Membrane.Debug.Filter` taps the stream to publish progress into a Kino frame.
+For batch processing where every frame matters and wall time doesn't, switch the detector to `mode: :offline`. The pipeline runs the model inference on every frame and writes the annotated video to a new MP4.
 
 ```elixir
 result_file = Path.join(tmp_dir, "street_with_bounding_boxes.mp4")
@@ -303,7 +305,7 @@ receive do
 end
 ```
 
-Replay the saved MP4 through the same WebRTC player using `Boombox.run/1`. It handles demuxing, re-encoding, and pacing internally.
+Let's play the MP4 with bounding boxes in the WebRTC player using `Boombox.run/1`.
 
 ```elixir
 port = 8831

@@ -1,0 +1,3 @@
+[submodule "membrane_gemini_demo"]
+	path = gemini_audio_chatbot
+	url = git@github.com:membraneframework/membrane_gemini_demo.git

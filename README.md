@@ -31,6 +31,7 @@ In the subdirectories of this repository you can find the following examples of 
 
 ### AI
 
+- [gemini_audio_chatbot](https://github.com/membraneframework/membrane_demo/tree/master/gemini_audio_chatbot) - Terminal chatbot app integrating with [Gemini Live API](https://ai.google.dev/gemini-api/docs/live-api), also available in Livebook!
 - [openai_realtime_with_membrane_webrtc](https://github.com/membraneframework/membrane_demo/tree/master/openai_realtime_with_membrane_webrtc) - conversation with AI via browser using [OpenAI Realtime API](https://openai.com/index/introducing-the-realtime-api/)
 - [speech_to_text](https://github.com/membraneframework/membrane_demo/tree/master/speech_to_text) - real-time speech recognition using [Whisper](https://github.com/openai/whisper)
 - [style_transfer](https://github.com/membraneframework/membrane_demo/tree/master/style_transfer) - real-time neural style transfer on a camera stream
